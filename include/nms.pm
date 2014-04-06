@@ -134,4 +134,27 @@ sub snmp_open_session {
 	return $session;
 }
 
+# Not currently in use; kept around for reference.
+sub fetch_multi_snmp {
+	my ($session, @oids) = @_;
+
+	my %results = ();
+
+	# Do bulk reads of 40 and 40; seems to be about the right size for 1500-byte packets.
+	for (my $i = 0; $i < scalar @oids; $i += 40) {
+		my $end = $i + 39;
+		$end = $#oids if ($end > $#oids);
+		my @oid_slice = @oids[$i..$end];
+
+		my $localresults = $session->get_request(-varbindlist => \@oid_slice);
+		return undef if (!defined($localresults));
+
+		while (my ($key, $value) = each %$localresults) {
+			$results{$key} = $value;
+		}
+	}
+
+	return \%results;
+}
+
 1;
