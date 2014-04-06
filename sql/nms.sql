@@ -572,7 +572,6 @@ ALTER TABLE public.switches_switch_seq OWNER TO nms;
 CREATE TABLE switchtypes (
     switchtype character varying NOT NULL,
     ports character varying NOT NULL,
-    wide_counters boolean DEFAULT false NOT NULL
 );
 
 
@@ -1542,26 +1541,26 @@ SELECT pg_catalog.setval('switches_switch_seq', 417, true);
 -- Data for Name: switchtypes; Type: TABLE DATA; Schema: public; Owner: nms
 --
 
-COPY switchtypes (switchtype, ports, wide_counters) FROM stdin;
-dlink3100	1-44,46-48	t
-dlink3100full	1-48	t
-ciscoap		f
-nocgw	1-114	t
-telegw	1-94,99-102	t
-camgw	1-52,55	t
-stageboh	1-52,55	t
-wtfgw	1-52,55	t
-logistikkgw	1-52,55	t
-crewgw	1-52,55	t
-gamegw	1-52,55	t
-resepsjongw	10101-10110	t
-sponsorgw		t
-eldregw	1-5	t
-distro0	1-201	t
-distro1	1-201	t
-distro2	1-201	t
-distro3	1-201	t
-distro4	1-201	t
+COPY switchtypes (switchtype, ports) FROM stdin;
+dlink3100	1-44,46-48
+dlink3100full	1-48
+ciscoap	
+nocgw	1-114
+telegw	1-94,99-102
+camgw	1-52,55
+stageboh	1-52,55
+wtfgw	1-52,55
+logistikkgw	1-52,55
+crewgw	1-52,55
+gamegw	1-52,55
+resepsjongw	10101-10110
+sponsorgw	
+eldregw	1-5
+distro0	1-201
+distro1	1-201
+distro2	1-201
+distro3	1-201
+distro4	1-201
 \.
 
 
