@@ -1,0 +1,31 @@
+<html>
+  <body>
+    <div id="d"></div>
+    <script type="text/javascript">
+    <!--
+       var existing_img = null;
+
+       function load_new() {
+           var i = document.createElement('img');
+	   i.onload = function() { loaded(i); };
+           i.style.display = 'none';
+           i.src = '/nettkart.pl?random=' + (new Date()).getTime();
+           document.getElementById('d').appendChild(i);
+       }
+
+       function loaded(i) {
+           i.style.display = '';
+
+           if (existing_img) {
+               existing_img.parentElement.removeChild(existing_img);
+           }
+           existing_img = i;
+       
+           setTimeout(function() { load_new(); }, 10000);
+       }
+       
+       load_new();
+    -->
+    </script>
+  </body>
+</html>

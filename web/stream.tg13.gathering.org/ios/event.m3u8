@@ -1,0 +1,16 @@
+#EXTM3U
+#EXT-X-TARGETDURATION:5
+#EXT-X-VERSION:3
+#EXT-X-ALLOW-CACHE:NO
+#EXT-X-MEDIA-SEQUENCE:27432
+#EXTINF:4.97,
+http://stream.tg13.gathering.org/ios/event-00027432.ts
+#EXTINF:4.04,
+http://stream.tg13.gathering.org/ios/event-00027433.ts
+#EXTINF:3.99,
+http://stream.tg13.gathering.org/ios/event-00027434.ts
+#EXTINF:3.97,
+http://stream.tg13.gathering.org/ios/event-00027435.ts
+#EXTINF:3.74,
+http://stream.tg13.gathering.org/ios/event-00027436.ts
+#EXT-X-ENDLIST

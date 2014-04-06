@@ -1,0 +1,26 @@
+make-first-zones.pl does not add AAAA records for NS'es (pri/sec)
+None of the tools add IPv4 reverse for pri/sec
+nsupdate log for adding reverse after building base-requires:
+
+	nsupdate -k Kdhcp_updater.+157+57267.key
+	server 176.110.126.2
+	prereq nxdomain 2.126.110.176.in-addr.arpa.
+	update add 2.126.110.176.in-addr.arpa. 3600  in ptr abscess.tg12.gathering.org.
+	send
+	prereq nxdomain 2.125.110.176.in-addr.arpa.
+	update add 2.125.110.176.in-addr.arpa. 3600  in ptr acetat.tg12.gathering.org.
+	send
+	prereq nxdomain 3.125.110.176.in-addr.arpa.
+	update add 3.125.110.176.in-addr.arpa. 3600  in ptr abc.tg12.gathering.org.
+	send
+
+Another handy dump, not a TODO-item, just a reminder:
+
+	prereq nxdomain 3.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.5.2.1.0.a.6.7.0.8.9.7.0.1.0.a.2.ip6.arpa.
+	update add 3.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.5.2.1.0.a.6.7.0.8.9.7.0.1.0.a.2.ip6.arpa. 3600 IN PTR abc.tg12.gathering.org.
+	send
+
+
+Uhm, our $dhcp_server1 = "176.110.126.2"; <- wtf?
+
+Opps, forgot to asdd CiscoWLC magic to make-dhcpd.pl includes...

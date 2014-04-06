@@ -1,0 +1,61 @@
+
+zone "valve.vo.llnwd.net" {
+	type forward;
+	forwarders { 2001:67c:29f4::51; };
+};
+zone "steampowered.com" {
+	type forward;
+	forwarders { 2001:67c:29f4::51; };
+};
+zone "steamcommunity.com" {
+	type forward;
+	forwarders { 2001:67c:29f4::51; };
+};
+
+zone "origin.com" {
+	type forward;
+	forwarders { 2001:67c:29f4::51; };
+};
+zone "ea.com" {
+	type forward;
+	forwarders { 2001:67c:29f4::51; };
+};
+
+
+zone "www.ea.com.edgekey.net" {
+	type forward;
+	forwarders { 2001:67c:29f4::51; };
+};
+zone "e6909.g.akamaiedge.net" {
+	type forward;
+	forwarders { 2001:67c:29f4::51; };
+};
+zone "ecommerce-origin-1434850512.us-east-1.elb.amazonaws.com" {
+	type forward;
+	forwarders { 2001:67c:29f4::51; };
+};
+zone "prod-chat-orgin-1410280267.us-east-1.elb.amazonaws.com" {
+	type forward;
+	forwarders { 2001:67c:29f4::51; };
+};
+zone "prod-avatar-origin-1061716926.us-east-1.elb.amazonaws.com" {
+	type forward;
+	forwarders { 2001:67c:29f4::51; };
+};
+zone "prod-friends-origin-1309711156.us-east-1.elb.amazonaws.com" {
+	type forward;
+	forwarders { 2001:67c:29f4::51; };
+};
+zone "prod-loginregistration-origin-1419075154.us-east-1.elb.amazonaws.com" {
+	type forward;
+	forwarders { 2001:67c:29f4::51; };
+};
+zone "static.ea.com.edgesuite.net" {
+	type forward;
+	forwarders { 2001:67c:29f4::51; };
+};
+zone "a1560.g.akamai.net" {
+	type forward;
+	forwarders { 2001:67c:29f4::51; };
+};
+

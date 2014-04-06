@@ -1,0 +1,24 @@
+* { font-family: 'Open Sans', sans-serif; 
+
+}
+
+body {
+	background:  #fff; color: #000; opacity: 1; 
+}
+
+#spaceship { background: url('singularity.png'); width: 237px; height: 200px;position:absolute; top: 0; right: 0;z-index: -1}
+
+@media screen and (max-width: 1145px) { /* Min iPad size*/
+	#spaceship {
+		background: #fff;
+	}
+}
+
+
+/* #innhold { position: absolute; left:0px ; top: 50px; margin: 0 50px 0 50px;  z-index: 9;  width: 520px; }*/
+#innhold { width: 480px; }
+footer { clear: both; width:480px; }
+a { color: #000; }
+h4 { margin: 0;  margin-top: 35px;}
+p { margin: 0; padding: 0; }
+li { margin-bottom: 14px; }

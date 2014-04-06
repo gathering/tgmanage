@@ -1,0 +1,31 @@
+<html>
+<head>
+	<title>The Gathering <TMPL_VAR NAME=TG_FULL></title>
+	<link rel="stylesheet" type="text/css" media="screen" href="superawesomeness.css"> 
+	<link href='http://fonts.googleapis.com/css?family=Open+Sans&subset=latin,latin-ext' rel='stylesheet' type='text/css'>
+</head>
+<body>
+	<div id="spaceship"></div>
+	<div id="innhold">
+		<h1>The Gathering <TMPL_VAR NAME=TG_FULL></h1>
+		<ul>
+		<TMPL_LOOP NAME="STREAMS"> 
+			<li><a href="<TMPL_VAR NAME=TITLE_LINK>"><TMPL_VAR NAME=TITLE ></a>
+			<p>
+			Source: <TMPL_VAR NAME=SOURCE >
+			<br/>Delivery: <TMPL_VAR NAME=delivery> <TMPL_IF NAME=IS_MULTICAST>(<a href='<TMPL_VAR NAME=UNICAST_LINK>'>problems? try unicast vlc link here</a>)</TMPL_IF>
+			<TMPL_IF NAME="DESCRIPTION"><br /><TMPL_VAR NAME=DESCRIPTION></TMPL_IF></li>
+		 </TMPL_LOOP>
+		</ul>
+	</div>
+	<footer>
+	<p>Problems with the non game streams? The easiest way to get hold of us is on IRC (EFNet);
+  one of ViD, Rockj and Sesse should be available if there's too much traffic
+  on #tg to be heard.</p>
+	<p><a href="http://stream.tg<TMPL_VAR NAME="TG">.gathering.org">http://stream.tg<TMPL_VAR NAME="TG">.gathering.org</a></p>
+
+	</footer>
+</body>
+</html>
+
+

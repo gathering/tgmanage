@@ -1,0 +1,28 @@
+diff --git a/src/network/io.c b/src/network/io.c
+index 7cc9764..08a0b56 100644
+--- a/src/network/io.c
++++ b/src/network/io.c
+@@ -87,14 +87,15 @@ int net_Socket (vlc_object_t *p_this, int family, int socktype,
+ 
+     setsockopt (fd, SOL_SOCKET, SO_REUSEADDR, &(int){ 1 }, sizeof (int));
+ 
+-#ifdef IPV6_V6ONLY
+-    /*
+-     * Accepts only IPv6 connections on IPv6 sockets.
+-     * If possible, we should open two sockets, but it is not always possible.
+-     */
+-    if (family == AF_INET6)
+-        setsockopt (fd, IPPROTO_IPV6, IPV6_V6ONLY, &(int){ 1 }, sizeof (int));
+-#endif
++    // sesse fix monday night
++// #ifdef IPV6_V6ONLY
++//     /*
++//      * Accepts only IPv6 connections on IPv6 sockets.
++//      * If possible, we should open two sockets, but it is not always possible.
++//      */
++//     if (family == AF_INET6)
++//         setsockopt (fd, IPPROTO_IPV6, IPV6_V6ONLY, &(int){ 1 }, sizeof (int));
++// #endif
+ 
+ #if defined (WIN32)
+ # ifndef IPV6_PROTECTION_LEVEL

@@ -1,0 +1,36 @@
+$ORIGIN .
+$TTL 3600	; 1 hour
+2.0.d.e.2.0.a.2.ip6.arpa IN SOA	ns1.tg13.gathering.org. abuse.gathering.org. (
+				2013736881 ; serial
+				3600       ; refresh (1 hour)
+				1800       ; retry (30 minutes)
+				608400     ; expire (1 week 1 hour)
+				3600       ; minimum (1 hour)
+				)
+			NS	ns1.tg13.gathering.org.
+			NS	ns2.tg13.gathering.org.
+$ORIGIN 0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.f.f.f.f.2.0.d.e.2.0.a.2.ip6.arpa.
+$TTL 3600	; 1 hour
+1			PTR	telegw.infra.tg13.gathering.org.
+2			PTR	nocgw.infra.tg13.gathering.org.
+3			PTR	camgw.infra.tg13.gathering.org.
+4			PTR	stageboh.infra.tg13.gathering.org.
+5			PTR	wtfgw.infra.tg13.gathering.org.
+6			PTR	logistikkgw.infra.tg13.gathering.org.
+7			PTR	corengw.infra.tg13.gathering.org.
+8			PTR	coresgw.infra.tg13.gathering.org.
+9			PTR	crewgw.infra.tg13.gathering.org.
+$ORIGIN 1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.f.f.f.f.2.0.d.e.2.0.a.2.ip6.arpa.
+0			PTR	tvgw.infra.tg13.gathering.org.
+1			PTR	gamegw.infra.tg13.gathering.org.
+2			PTR	resepsjongw.infra.tg13.gathering.org.
+3			PTR	pressegw.infra.tg13.gathering.org.
+4			PTR	sponsorgw.infra.tg13.gathering.org.
+5			PTR	komplettgw.infra.tg13.gathering.org.
+6			PTR	eldregw.infra.tg13.gathering.org.
+7			PTR	distro0.infra.tg13.gathering.org.
+8			PTR	distro1.infra.tg13.gathering.org.
+9			PTR	distro2.infra.tg13.gathering.org.
+$ORIGIN 2.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.f.f.f.f.2.0.d.e.2.0.a.2.ip6.arpa.
+0			PTR	distro3.infra.tg13.gathering.org.
+1			PTR	distro4.infra.tg13.gathering.org.

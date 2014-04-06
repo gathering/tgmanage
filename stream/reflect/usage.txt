@@ -1,0 +1,3 @@
+event-sd -   ./reflect-event-sd.sh
+event - ./reflect-event-lol.sh
+event-flash - ./transcode-event-flash.sh 

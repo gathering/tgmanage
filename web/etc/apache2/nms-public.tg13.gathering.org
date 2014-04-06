@@ -1,0 +1,11 @@
+<VirtualHost *:80>
+        ServerAdmin drift@gathering.org
+        ServerName nms-public.tg13.gathering.org
+
+	DocumentRoot /srv/www/nms-public.tg13.gathering.org
+	AddHandler cgi-script .cgi .sh .pl .py
+	
+        LogLevel warn
+        ErrorLog /var/log/apache2/error-nms-public.tg13.gathering.org.log
+        CustomLog /var/log/apache2/access-nms-public.tg13.gathering.org.log combined
+</VirtualHost>

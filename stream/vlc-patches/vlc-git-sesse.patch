@@ -1,0 +1,131 @@
+diff --git a/modules/access_output/http.c b/modules/access_output/http.c
+index 61095f5..18ffc9a 100644
+--- a/modules/access_output/http.c
++++ b/modules/access_output/http.c
+@@ -72,9 +72,17 @@ vlc_module_begin ()
+                   PASS_TEXT, PASS_LONGTEXT, true )
+     add_string( SOUT_CFG_PREFIX "mime", "",
+                 MIME_TEXT, MIME_LONGTEXT, true )
++    add_integer( SOUT_CFG_PREFIX "mark-start", "",
++                "lol", "Fancy option", -1 )
++    add_integer( SOUT_CFG_PREFIX "mark-end", "",
++                "rotfl", "Should maybe also be set", -1 )
+     set_callbacks( Open, Close )
+ vlc_module_end ()
+ 
++// globals
++extern vlc_mutex_t mark_lock;
++extern int *mark_used;
++extern int mark_start, mark_end;
+ 
+ /*****************************************************************************
+  * Exported prototypes
+@@ -178,6 +186,21 @@ static int Open( vlc_object_t *p_this )
+         return VLC_EGENERIC;
+     }
+ 
++    fprintf(stderr, "tjobing\n");
++    if (mark_used == NULL) {
++      mark_start = var_InheritInteger( p_access, SOUT_CFG_PREFIX "mark-start");
++      mark_end = var_InheritInteger( p_access, SOUT_CFG_PREFIX "mark-end");
++      fprintf(stderr, "jabla: %d -> %d\n", mark_start, mark_end);
++
++      if (mark_start >= 0 && mark_end > mark_start) {
++        vlc_mutex_init(&mark_lock);
++        mark_used = (int *)malloc((mark_end - mark_start) * sizeof(int));
++        for (int i = 0; i < mark_end - mark_start; ++i) {
++          mark_used[i] = 0;
++        }
++      }
++    }
++
+     psz_user = var_GetNonEmptyString( p_access, SOUT_CFG_PREFIX "user" );
+     psz_pwd = var_GetNonEmptyString( p_access, SOUT_CFG_PREFIX "pwd" );
+     if( p_access->psz_access && !strcmp( p_access->psz_access, "mmsh" ) )
+diff --git a/src/libvlccore.sym b/src/libvlccore.sym
+index 25d83c5..335edda 100644
+--- a/src/libvlccore.sym
++++ b/src/libvlccore.sym
+@@ -631,3 +631,7 @@ xml_ReaderDelete
+ xml_ReaderReset
+ vlc_keycode2str
+ vlc_str2keycode
++mark_end
++mark_lock
++mark_start
++mark_used
+diff --git a/src/network/httpd.c b/src/network/httpd.c
+index f76c47c..d7897bb 100644
+--- a/src/network/httpd.c
++++ b/src/network/httpd.c
+@@ -67,6 +67,50 @@
+ 
+ static void httpd_ClientClean( httpd_client_t *cl );
+ 
++VLC_API vlc_mutex_t mark_lock;
++VLC_API int *mark_used = NULL;
++VLC_API int mark_start = -1;
++VLC_API int mark_end = -1;
++
++void mark_socket(int fd)
++{
++    vlc_mutex_lock(&mark_lock);
++    int best_mark = mark_start;
++    int best_mark_val = mark_used[0];
++
++    for (int i = 1; i < mark_end - mark_start; ++i) {
++        if (mark_used[i] < best_mark_val) {
++            best_mark = mark_start + i;
++            best_mark_val = mark_used[i];
++        }
++    }
++    fprintf( stderr, "PICKED MARK %d WITH OLD USAGE %d\n", best_mark, best_mark_val);
++    if (setsockopt (fd, SOL_SOCKET, SO_MARK, &best_mark, sizeof(best_mark)) == -1) {
++        perror("setsockopt(SO_MARK)");
++    } else {
++        ++mark_used[best_mark - mark_start];
++    }
++    vlc_mutex_unlock(&mark_lock);
++}
++
++void unmark_socket(int fd)
++{
++    int mark;
++    socklen_t mark_len = sizeof(mark);
++    if (getsockopt (fd, SOL_SOCKET, SO_MARK, &mark, &mark_len) == -1) {
++        perror("getsockopt(SO_MARK)");
++        return;
++    }
++    if (mark < mark_start || mark >= mark_end) {
++        fprintf("UNKNOWN MARK %d\n", mark);
++    }
++
++    vlc_mutex_lock(&mark_lock);
++    --mark_used[mark - mark_start];
++    fprintf(stderr, "UNMARKED MARK %d WITH NEW USAGE %d\n", mark, mark_used[mark - mark_start]);
++    vlc_mutex_unlock(&mark_lock);
++}
++
+ /* each host run in his own thread */
+ struct httpd_host_t
+ {
+@@ -1295,6 +1339,7 @@ static void httpd_ClientClean( httpd_client_t *cl )
+     {
+         if( cl->p_tls != NULL )
+             vlc_tls_SessionDelete( cl->p_tls );
++        unmark_socket( cl->fd );
+         net_Close( cl->fd );
+         cl->fd = -1;
+     }
+@@ -2309,6 +2354,11 @@ static void* httpd_HostThread( void *data )
+             setsockopt (fd, SOL_SOCKET, SO_REUSEADDR,
+                         &(int){ 1 }, sizeof(int));
+ 
++            // find a free mark
++            if (mark_used != NULL) {
++                mark_socket(fd);
++            }
++
+             vlc_tls_t *p_tls;
+ 
+             if( host->p_tls != NULL )

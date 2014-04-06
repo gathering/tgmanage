@@ -1,0 +1,31 @@
+<html>
+<head>
+	<title>The Gathering <TMPL_VAR NAME=TG_FULL> Streams</title>
+	<link rel="stylesheet" type="text/css" href="singularity.css" media="all">
+</head>
+<body>
+	<div id="innhold">
+		<h1>The Gathering <TMPL_VAR NAME=TG_FULL> Streams</h1>
+		<TMPL_LOOP NAME="STREAMS">
+			<div class="stream-link">
+				<div class="stream-icon"><img src="img/icon_<TMPL_VAR NAME=QUALITY>.png" /> <img src="img/icon_<TMPL_VAR NAME=TYPE>.png" /> <TMPL_IF NAME=LOCATION><img src="img/icon_<TMPL_VAR NAME=LOCATION>.png"></TMPL_IF></div>
+				<div class="stream-link-content">
+					<a href="<TMPL_VAR NAME=TITLE_LINK>"><TMPL_VAR NAME=TITLE></a><br>
+					Source: <TMPL_VAR NAME=SOURCE><br>
+					Delivery: <TMPL_VAR NAME=delivery> <TMPL_IF NAME=IS_MULTICAST>(<a href='<TMPL_VAR NAME=UNICAST_LINK>'>problems? try unicast vlc link here</a>)</TMPL_IF>
+				</div>
+			</div>
+		</TMPL_LOOP>
+		<div id="map">
+			<img src="img/cam-map.png">
+		</div>
+
+	</div>
+
+	<p>Problems with the non game streams? The easiest way to get hold of us is on IRC (EFNet); one of ViD, Rockj and Sesse should be available if there's too much traffic on #tg to be heard.</p>
+	<p><a href="http://stream.tg<TMPL_VAR NAME="TG">.gathering.org">http://stream.tg<TMPL_VAR NAME="TG">.gathering.org</a></p>
+
+</body>
+</html>
+
+
