@@ -1,44 +1,21 @@
-#!/usr/bin/perl -I /root/tgmanage/
-use warnings;
+#!/usr/bin/perl
 use strict;
-use lib '..';
-BEGIN {
-        require "include/config.pm";
-        eval {
-                require "include/config.local.pm";
-        };
-}
+use warnings;
 use Net::Telnet::Cisco;
 use Net::Ping;
-use Net::IP;
 use Term::ANSIColor;
 use threads;
 use threads::shared;
 use Thread::Queue;
 use Getopt::Long;
+use Net::IP;
+use Net::OpenSSH;
+BEGIN {
+	require "dlink-ng-config.pm";
+}
 
-# Options
-my $cisco_user = "$nms::config::ios_user";		# Username used when logging into the swithces
-my $cisco_pass = "$nms::config::ios_pass";		# Password used when logging into the switches
-my $domain_name = ".infra.$nms::config::tgname.gathering.org";	# DNS-name to append to hostnames
-my $dlink_def_user = "admin";				# Default user for a factory-default D-Link
-my $dlink_def_ip = "10.90.90.90";			# IP for a factory-default D-Link
-my $dlink_def_mask = "255.255.255.0";			# Mask for a factory-default D-Link
-my $dlink_router_ip = "10.90.90.91";			# IP to use on the router/core
-my $dlink_prefix = "30";				# Prefix to use when setting D-Link IP
-my $dhcprelay4_pri = "$nms::config::dhcp_server1";	# Primary ip helper-address / ip dhcp relay address
-my $dhcprelay4_sec = "$nms::config::dhcp_server2";	# Secondary ip helper-address / ip dhcp relay address
-my $dhcprelay6_pri = "";				# Primary ipv6 dhcp relay
-my $dhcprelay6_sec = "";				# Secondary ipv6 dhcp relay
-my $vrf_prefix = "dlink";				# What to prefix the VRF-number (Thread ID) with
-my $max_threads = 20;					# Max threads to use
-my $dlink_host_suffix = "_DGS-3100";			# Suffix for hostname on the D-Link switches (needed by NMS)
-my $log_dir = "dlink-ng/log";				# Path to logfiles
-my $default_coreswos = "ios";				# Default OS on coresw
-my $dlink_lacp_start = '45';				# First port for LACP-group on D-Links
-my $dlink_lacp_end = '48';				# Last port for LACP-group on D-Links
-my $skip_last_port = 1;					# Skip last port -- set up as access port
-my $access_vlan = '3602';				# VLAN to use for skipped port
+# Make sure dlinkconfig.pm loads config (i.e. one config type has been uncommented)
+die("No config type specified. Uncomment the wanted subroutine in the config file.\n") unless ($dlinkng::config::cisco_user);
 
 # Stuff
 my $switchq = Thread::Queue->new(); 	# Queue to put switches in
@@ -47,58 +24,6 @@ my $failed_switches : shared = 0;	# Number of failed switches
 my $total_time : shared = 0;		# Total time spent for all switches
 my %telnet_sessions : shared;		# Number of sessions currently in use
 my $DLINK_TEMPLATE;			# Filehandle used for reading D-Link template
-
-# Custom Portchannel-config
-my $po_config = {
-	ios => [
-		"logging event link-status",
-		#"ip access-group end-user-protection in",
-		#"ip directed-broadcast 2000",
-		#"ipv6 nd prefix default 300 300 no-autoconfig",
-		#"ipv6 nd managed-config-flag",
-		#"ipv6 nd other-config-flag",
-		#"ipv6 dhcp relay destination $dhcprelay6_pri",
-		#"ipv6 dhcp relay destination $dhcprelay6_sec"
-	],
-	nx => [
-		"",
-	],
-};
-
-# Custom last port config
-my $last_port_config = {
-	ios => [
-		"logging event link-status",
-		"switchport mode access",
-		"switchport access vlan $access_vlan",
-		"spanning-tree bpduguard enable",
-	],
-	nx => [
-		"",
-	],
-};
-
-# Define what OS-version a coresw runs
-# NX, XR, XE, etc
-# The regex is matched against $coreswip
-my $os_regex = {
-	nx => 'flexusnexus',
-};
-
-# Configure settings for each OS
-my $os_info = {
-	ios => {
-		max_sessions => 10,
-	},
-	nx => {
-		# define 64 sessions on nxos
-		# nx-os# conf t
-		# nx-os(config)# feature dhcp
-		# nx-os(config)# line vty
-		# nx-os(config-line)# session-limit 64
-		max_sessions => 50,
-	},
-};
 
 # Autoflush
 $| = 1;
@@ -113,7 +38,7 @@ if (@ARGV > 0) {
 	'w|write'		=> \$save_config,		# Write config on Cisco-side
 	'portskip'		=> \$skipped_port_only,		# Configure the skipped port only (Cisco-side)
 	'skipdesc'		=> \$skipped_port_desc_only,	# Configure the skipped port description only (Cisco-side)
-	'noskip'		=> \$no_skip			# Override $skip_last_port
+	'noskip'		=> \$no_skip			# Override $dlinkng::config::skip_last_port
 	)
 }
 
@@ -129,9 +54,9 @@ if ($cisco_config && ($skipped_port_only || $skipped_port_desc_only)){
 	die("\$cisco_config and \$skipped_port_only (or \$skipped_port_desc_only) can't be used together.\n");
 }
 
-# Update $skip_last_port if $no_skip is set
+# Update $dlinkng::config::skip_last_port if $no_skip is set
 if ($no_skip){
-	$skip_last_port = 0;
+	$dlinkng::config::skip_last_port = 0;
 }
 
 # If skipdesc, assume $skipped_port_only
@@ -159,7 +84,7 @@ sub error{
 	return 0;
 }
 
-# Debug from Net::Telnet::Cisco
+# Debug from Net::Telnet::Cisco and similar
 sub debug{
 	my ($switchname, $errmsg) = @_;
 	
@@ -184,19 +109,33 @@ sub abort{
 sub set_coreswos{
 	my $coreswip = shift;
 	
-	my $os = $default_coreswos;
+	my $os = $dlinkng::config::default_coreswos;
 	
-	foreach my $swos ( sort keys %$os_regex ){
-		$os = $swos if ($coreswip =~ m/$os_regex->{$swos}/);
+	foreach my $swos ( sort keys %$dlinkng::config::os_regex ){
+		$os = $swos if ($coreswip =~ m/$dlinkng::config::os_regex->{$swos}/);
 	}
 	
 	return $os;
+}
+
+# Is normal IOS?
+sub is_ios{
+	my $coreswos = shift;
+	return 1 if ($coreswos =~ m/^ios$/i);
+	return 0;
 }
 
 # Is NX-OS?
 sub is_nx{
 	my $coreswos = shift;
 	return 1 if ($coreswos =~ m/^nx$/i);
+	return 0;
+}
+
+# Is IOS-XR?
+sub is_xr{
+	my $coreswos = shift;
+	return 1 if ($coreswos =~ m/^xr$/i);
 	return 0;
 }
 
@@ -207,11 +146,18 @@ sub cisco_ping{
 	
 	if (is_nx($coreswos)){
 		$cmd = "ping $ip count 1 timeout 1";
-		$cmd .= " vrf ${vrf_prefix}${vrf}" if ($vrf && defined($vrf));
+		$cmd .= " vrf ${dlinkng::config::vrf_prefix}${vrf}" if ($vrf && defined($vrf));
+		
+	} elsif (is_xr($coreswos)){
+		# IOS-XR
+		$cmd = "ping";
+		$cmd .= " vrf ${dlinkng::config::vrf_prefix}${vrf}" if ($vrf && defined($vrf));
+		$cmd .= " $ip count 1 timeout 1";
+		
 	} else {
 		# IOS
 		$cmd = "ping";
-		$cmd .= " vrf ${vrf_prefix}${vrf}" if ($vrf && defined($vrf));
+		$cmd .= " vrf ${dlinkng::config::vrf_prefix}${vrf}" if ($vrf && defined($vrf));
 		$cmd .= " $ip repeat 1 timeout 1";
 	}
 	
@@ -263,10 +209,10 @@ sub dlink_login{
 	my ($switch, $ip, $vrf, $telnet_source) = @_;
 
 	my $dlink = Net::Telnet::Cisco->new(
-			Host => $switch->{coreswip} . $domain_name,
+			Host => $switch->{coreswip} . $dlinkng::config::domain_name,
 			Errmode => 'return',
-			output_log => "$log_dir/output-$switch->{coreswip}.log",
-			input_log => "$log_dir/input-$switch->{coreswip}.log",
+			output_log => "$dlinkng::config::log_dir/dlink-output-$switch->{coreswip}-$switch->{switchname}.log",
+			input_log => "$dlinkng::config::log_dir/dlink-input-$switch->{coreswip}-$switch->{switchname}.log",
 			Prompt => '/\S+[#>]/',
 			Timeout => 60
 			);
@@ -277,23 +223,35 @@ sub dlink_login{
 
 	info($switch->{switchname}, "Logging in to coreswitch '$switch->{coreswip}' to telnet to D-Link.");
 	
-	unless ($dlink->login($cisco_user, $cisco_pass)){
+	unless ($dlink->login($dlinkng::config::cisco_user, $dlinkng::config::cisco_pass)){
 		$dlink->close;
 		return error($switch->{switchname}, "Can't log in to coreswitch '$switch->{coreswip}' (to telnet to D-Link).");
 	}
-			
-	$dlink->enable;
-	debug($switch->{switchname}, $dlink->errmsg);
+	
+	# Don't do enable on IOS-XR
+	unless(is_xr($switch->{coreswos})){
+		$dlink->enable;
+		debug($switch->{switchname}, $dlink->errmsg);
+	}
 
 	my $cmd;
 	if (is_nx($switch->{coreswos})){
+		# NX-OS
 		$cmd = "telnet $ip";
-		$cmd .= " vrf ${vrf_prefix}${vrf}" if ($vrf && defined($vrf));
+		$cmd .= " vrf ${dlinkng::config::vrf_prefix}${vrf}" if ($vrf && defined($vrf));
 		$cmd .= " source $telnet_source" if ($telnet_source && defined($telnet_source));
+		
+	} elsif (is_xr($switch->{coreswos})){
+		# IOS-XR
+		$cmd = "telnet ";
+		$cmd .= "vrf ${dlinkng::config::vrf_prefix}${vrf} " if ($vrf && defined($vrf));
+		$cmd .= "$ip";
+		$cmd .= " source-interface $telnet_source" if ($telnet_source && defined($telnet_source));
+
 	} else {
 		# IOS
 		$cmd = "telnet $ip";
-		$cmd .= " /vrf ${vrf_prefix}${vrf}" if ($vrf && defined($vrf));
+		$cmd .= " /vrf ${dlinkng::config::vrf_prefix}${vrf}" if ($vrf && defined($vrf));
 		$cmd .= " /source-interface $telnet_source" if ($telnet_source && defined($telnet_source));
 	}
 	
@@ -305,7 +263,7 @@ sub dlink_login{
 		or return abort($switch->{switchname}, $dlink);
 	
 	info($switch->{switchname}, "Got login prompt, logging in.");
-	telnet_print($switch, $dlink, '', $dlink_def_user, 0)
+	telnet_print($switch, $dlink, $dlinkng::config::dlink_def_user, 0)
 		or return abort($switch->{switchname}, $dlink);
 		
 	info($switch->{switchname}, "Waiting for prompt.");
@@ -313,7 +271,7 @@ sub dlink_login{
 		or return abort($switch->{switchname}, $dlink);
 	
 	# disable CLI paging
-	telnet_print($switch, $dlink, '', "disable clipaging")
+	telnet_print($switch, $dlink, "disable clipaging")
 		or return abort($switch->{switchname}, $dlink);
 
 	info($switch->{switchname}, "Logged in to D-Link");
@@ -327,6 +285,22 @@ sub telnet_cmd{
 	unless ($telnet->cmd($cmd)){
 		error($switch->{switchname}, "Command '$cmd' failed");
 		debug($switch->{switchname}, $telnet->errmsg);
+		
+		if($cmd =~ m/commit/){
+			# If commit on IOS-XR failed, print the reason
+			if(is_xr($switch->{coreswos})){
+				# Redundant check, but whatever
+				my @failed = $telnet->cmd("show configuration failed");
+				
+				if(@failed){
+					foreach my $line (@failed){
+						chomp($line);
+						error($switch->{switchname}, $line);
+					}
+				}
+			}		
+		}
+		
 		return 0;
 	}
 	
@@ -335,7 +309,7 @@ sub telnet_cmd{
 
 # Execute telnet-print
 sub telnet_print{
-	my ($switch, $telnet, $telnet2, $cmd, $waitfor) = @_;
+	my ($switch, $telnet, $cmd, $waitfor) = @_;
 		
 	unless (defined($waitfor)){
 			$waitfor = 1;
@@ -365,38 +339,47 @@ sub no_no_shut{
 	# On some boxes/OSes, the 'shut' command isn't applied right away after
 	# you do a 'shut'.
 	
-	my $tries = 0;
 	my $return = 0;
-	
-	while (1){
-		if($tries >= 5){
-			# max 5 tries
-			last;
-		}
-		
-		sleep 1; # wait a bit
-		
+	if(is_xr($switch->{coreswos})){
+		# don't need to do any checks on XR
 		telnet_cmd($switch, $cisco, "shut")
-			or return abort($switch->{switchname}, $cisco); 
+			or return abort($switch->{switchname}, $cisco);
+			
+		$return = 1;
+	} else {
+		# on all other OS		
+		my $tries = 0;
+	
+		while (1){
+			if($tries >= 5){
+				# max 5 tries
+				last;
+			}
+		
+			sleep 1; # wait a bit
+		
+			telnet_cmd($switch, $cisco, "shut")
+				or return abort($switch->{switchname}, $cisco); 
 
-		# now we need to check that the 'running config' actually reflects this
+			# now we need to check that the 'running config' actually reflects this
 
-		my @shut_info = $cisco->cmd("do sh run int $port | i shutdown");
+			my @shut_info = $cisco->cmd("do sh run int $port | i shutdown");
 		
-		unless(@shut_info){
-			$tries++;
-			next;
-		}
+			unless(@shut_info){
+				$tries++;
+				next;
+			}
 		
-		my $shut = "@shut_info";
-		chomp($shut);
+			my $shut = "@shut_info";
+			chomp($shut);
 		
-		if ($shut =~ m/shutdown/i){
-			$return = 1;
-			last;
-		} else {
-			$tries++;
-			next;
+			if ($shut =~ m/shutdown/i){
+				$return = 1;
+				last;
+			} else {
+				$tries++;
+				next;
+			}
 		}
 	}
 	
@@ -422,19 +405,101 @@ sub reset_interfaces{
 			or return abort($switch->{switchname}, $cisco);
 		no_no_shut($switch, $cisco, $port)
 			or return abort($switch->{switchname}, $cisco);
-		telnet_cmd($switch, $cisco, "no switchport")
-			or return abort($switch->{switchname}, $cisco);
+
+		unless(is_xr($switch->{coreswos})){
+			# only do this if not IOS-XR
+			telnet_cmd($switch, $cisco, "no switchport")
+				or return abort($switch->{switchname}, $cisco);
+		}
 	}
 
 	# Remove portchannel
-	if(is_nx($switch->{coreswos})){
-		# NX-OS
-		telnet_cmd($switch, $cisco, "no int Po$switch->{etherchannel}")
-			or return abort($switch->{switchname}, $cisco);
-	} else {
+	if(is_ios($switch->{coreswos})){
 		# IOS fails on the next command, if the portchannel doesn't exist
 		# Ignore error on this command
 		$cisco->cmd("no int Po$switch->{etherchannel}");
+		
+	} elsif(is_xr($switch->{coreswos})){
+		# Other syntax on XR, called Bundle-Ether
+		telnet_cmd($switch, $cisco, "no int Bundle-Ether$switch->{etherchannel}")
+			or return abort($switch->{switchname}, $cisco);
+			
+	} else {
+		# Other OS, that doesnt fail
+		telnet_cmd($switch, $cisco, "no int Po$switch->{etherchannel}")
+			or return abort($switch->{switchname}, $cisco);
+		
+	}
+	
+	# Commit on XR
+	if(is_xr($switch->{coreswos})){
+		telnet_cmd($switch, $cisco, "commit")
+			or return abort($switch->{switchname}, $cisco);
+	}
+
+	telnet_cmd($switch, $cisco, "end")
+		or return abort($switch->{switchname}, $cisco);
+		
+	return 1;
+}
+
+# Set up single interface
+sub configure_interface{
+	my ($switch, $cisco, $port, $ip, $mask, $vrf) = @_;
+
+	# Configure port
+	telnet_cmd($switch, $cisco, "int $port")
+		or return abort($switch->{switchname}, $cisco);
+		
+	unless(is_xr($switch->{coreswos})){
+		# only do this if not IOS-XR
+		telnet_cmd($switch, $cisco, "no switchport")
+			or return abort($switch->{switchname}, $cisco);
+	}
+	
+	# Only do VRF-config if $vrf is defined
+	if($vrf && defined($vrf)){
+		if(is_nx($switch->{coreswos})){
+			# No error-check on the next command, as NX-OS
+			# spits out "% Deleted all L3 config on interface Ethernet1/45"
+			# making Net::Telnet::Cisco think it's an error
+	
+			$cisco->cmd("vrf member ${dlinkng::config::vrf_prefix}${vrf}");
+
+		} elsif(is_xr($switch->{coreswos})){
+			# IOS-XR
+			telnet_cmd($switch, $cisco, "vrf ${dlinkng::config::vrf_prefix}${vrf}")
+				or return abort($switch->{switchname}, $cisco);
+	
+		} else {
+			# IOS
+			telnet_cmd($switch, $cisco, "ip vrf forwarding ${dlinkng::config::vrf_prefix}${vrf}")
+				or return abort($switch->{switchname}, $cisco);
+		}
+	}
+
+	# Add IP
+	info($switch->{switchname}, "Adding IP-address to interface.");
+
+	if(is_xr($switch->{coreswos})){
+		# IOS-XR
+		telnet_cmd($switch, $cisco, "ipv4 address $ip $mask")
+			or return abort($switch->{switchname}, $cisco);
+		
+	} else {
+		# All other
+		telnet_cmd($switch, $cisco, "ip address $ip $mask")
+			or return abort($switch->{switchname}, $cisco);
+	}
+
+	# 'no shut'-patrol reporting in!
+	telnet_cmd($switch, $cisco, "no shut")
+		or return abort($switch->{switchname}, $cisco);
+		
+	# Commit on XR
+	if(is_xr($switch->{coreswos})){
+		telnet_cmd($switch, $cisco, "commit")
+			or return abort($switch->{switchname}, $cisco);
 	}
 
 	telnet_cmd($switch, $cisco, "end")
@@ -451,8 +516,8 @@ sub push_dlink_template_config{
 	my $dlink = Net::Telnet::Cisco->new(
 			Host => $switch->{ipv4address},
 			Errmode => 'return',
-			output_log => "$log_dir/output-$switch->{ipv4address}.log",
-			input_log => "$log_dir/input-$switch->{ipv4address}.log",
+			output_log => "$dlinkng::config::log_dir/dlink-output-$switch->{coreswip}-$switch->{switchname}.log",
+			input_log => "$dlinkng::config::log_dir/dlink-input-$switch->{coreswip}-$switch->{switchname}.log",
 			Prompt => '/\S+[#>]/',
 			Timeout => 60
 			);
@@ -466,7 +531,7 @@ sub push_dlink_template_config{
 		or return abort($switch->{switchname}, $dlink);
 	
 	info($switch->{switchname}, "Got login prompt, logging in.");
-	telnet_print($switch, $dlink, '', $dlink_def_user, 0)
+	telnet_print($switch, $dlink, $dlinkng::config::dlink_def_user, 0)
 		or return abort($switch->{switchname}, $dlink);
 	
 	info($switch->{switchname}, "Waiting for prompt.");
@@ -474,7 +539,7 @@ sub push_dlink_template_config{
 		or return abort($switch->{switchname}, $dlink);
 	
 	# disable CLI paging
-	telnet_print($switch, $dlink, '', "disable clipaging")
+	telnet_print($switch, $dlink, "disable clipaging")
 		or return abort($switch->{switchname}, $dlink);
 	
 	info($switch->{switchname}, "Logged in to D-Link");
@@ -490,7 +555,7 @@ sub push_dlink_template_config{
 		
 		next if ($line =~ m/^\s*(((#|\!).*)|$)/);	# skip if comment, or blank line
 
-		telnet_print($switch, $dlink, '', $line)
+		telnet_print($switch, $dlink, $line)
 			or return abort($switch->{switchname}, $dlink);
 			
 		sleep 1; # The D-Link's are a bit slow...
@@ -501,11 +566,11 @@ sub push_dlink_template_config{
 	info($switch->{switchname}, "Done applying config from D-Link template file ($dlink_config). Saving...");
 
 	# Save config + logout
-	telnet_print($switch, $dlink, '', "save", 0)
+	telnet_print($switch, $dlink, "save", 0)
 		or return abort($switch->{switchname}, $dlink);
-	telnet_print($switch, $dlink, '', "Y")
+	telnet_print($switch, $dlink, "Y")
 		or return abort($switch->{switchname}, $dlink);
-	telnet_print($switch, $dlink, '', "logout")
+	telnet_print($switch, $dlink, "logout")
 		or return abort($switch->{switchname}, $dlink);
 
 	# Done
@@ -521,7 +586,7 @@ sub setup{
 	
 	# Remove last port if we're skipping it
 	my $skipped_port;
-	if ($skip_last_port){
+	if ($dlinkng::config::skip_last_port){
 		$skipped_port = pop(@{$switch->{ports}});
 	}
 	
@@ -555,28 +620,62 @@ sub setup{
 
 	info($switch->{switchname}, "Connecting to coreswitch '$switch->{coreswip}'.");
 
-	my $cisco = Net::Telnet::Cisco->new(
-			Host => $switch->{coreswip} . $domain_name,
-			Errmode => 'return',
-			output_log => "$log_dir/output-$switch->{coreswip}.log",
-			input_log => "$log_dir/input-$switch->{coreswip}.log",
-			Prompt => '/\S+[#>]/',
-			Timeout => 60
-			);
+	my $cisco;
+	if ($dlinkng::config::use_ssh_cisco){
+		# Use SSH
+		my $ssh = Net::OpenSSH->new(	$dlinkng::config::cisco_user . ':' . 
+						$dlinkng::config::cisco_pass . '@' . 
+						$switch->{coreswip} . $dlinkng::config::domain_name,
+						timeout => 60);
+		
+		if ($ssh->error){
+		    return debug($switch->{switchname}, $ssh->error);
+		}
+
+		my ($pty, $pid) = $ssh->open2pty({stderr_to_stdout => 1})
+		    or return debug($switch->{switchname}, $ssh->error);
+		    
+		$cisco = Net::Telnet::Cisco->new(
+				Fhopen => $pty,
+				Telnetmode => 0,
+				#Cmd_remove_mode => 1,
+				Errmode => 'return',
+				output_log => "$dlinkng::config::log_dir/cisco-output-$switch->{coreswip}-$switch->{switchname}.log",
+				input_log => "$dlinkng::config::log_dir/cisco-input-$switch->{coreswip}-$switch->{switchname}.log",
+				Prompt => '/\S+[#>]/',
+				#Prompt => '/(?m:^\\s?(?:[\\w.\/]+\:)?(?:[\\w.-]+\@)?[\\w.-]+\\s?(?:\(config[^\)]*\))?\\s?[\$#>]\\s?(?:\(enable\))?\\s*$)/',
+		);
+	} else {
+		# Don't use SSH
+		$cisco = Net::Telnet::Cisco->new(
+				Host => $switch->{coreswip} . $dlinkng::config::domain_name,
+				Errmode => 'return',
+				output_log => "$dlinkng::config::log_dir/cisco-output-$switch->{coreswip}-$switch->{switchname}.log",
+				input_log => "$dlinkng::config::log_dir/cisco-input-$switch->{coreswip}-$switch->{switchname}.log",
+				Prompt => '/\S+[#>]/',
+				#Prompt => '/(?m:^\\s?(?:[\\w.\/]+\:)?(?:[\\w.-]+\@)?[\\w.-]+\\s?(?:\(config[^\)]*\))?\\s?[\$#>]\\s?(?:\(enable\))?\\s*$)/',
+				Timeout => 60
+		);
+	}
 
  	unless (defined($cisco)){
 		return error($switch->{switchname}, "Could not connect to '$switch->{coreswip}'.");
 	}
 
-	info($switch->{switchname}, "Logging in to coreswitch '$switch->{coreswip}'.");
+	unless ($dlinkng::config::use_ssh_cisco){
+		info($switch->{switchname}, "Logging in to coreswitch '$switch->{coreswip}'.");
 	
-	unless ($cisco->login($cisco_user, $cisco_pass)){
-		$cisco->close;
-		return error($switch->{switchname}, "Can't log in to '$switch->{coreswip}'.");
+		unless ($cisco->login($dlinkng::config::cisco_user, $dlinkng::config::cisco_pass)){			
+			$cisco->close;
+			return error($switch->{switchname}, "Can't log in to '$switch->{coreswip}'.");
+		}
 	}
 	
-	$cisco->enable;
-	debug($switch->{switchname}, $cisco->errmsg);
+	# Don't do enable on IOS-XR
+	unless(is_xr($switch->{coreswos})){
+		$cisco->enable;
+		debug($switch->{switchname}, $cisco->errmsg);
+	}
 
 	# Disable paging
 	telnet_cmd($switch, $cisco, "terminal length 0")
@@ -591,7 +690,7 @@ sub setup{
 		telnet_cmd($switch, $cisco, "conf t")
 			or return abort($switch->{switchname}, $cisco);
 
-		info($switch->{switchname}, "Enabling VRF (${vrf_prefix}${vrf}). Applying to interface.");
+		info($switch->{switchname}, "Enabling VRF (${dlinkng::config::vrf_prefix}${vrf}). Applying to interface.");
 		if(is_nx($switch->{coreswos})){
 			# Remove previous VRF
 			# No error-check on the next command, as NX-OS
@@ -599,65 +698,44 @@ sub setup{
 			# making Net::Telnet::Cisco think it's an error
 			
 			# Extra overhead to delete, not used
-			#$cisco->cmd("no vrf context ${vrf_prefix}${vrf}");
+			#$cisco->cmd("no vrf context ${dlinkng::config::vrf_prefix}${vrf}");
 			#sleep 10;	# NX-OS seems to need some time to delete a VRF
 		
 			# Create VRF
-			telnet_cmd($switch, $cisco, "vrf context ${vrf_prefix}${vrf}")
+			telnet_cmd($switch, $cisco, "vrf context ${dlinkng::config::vrf_prefix}${vrf}")
 				or return abort($switch->{switchname}, $cisco);
+				
+		} elsif(is_xr($switch->{coreswos})){
+			# IOS-XR
+			telnet_cmd($switch, $cisco, "vrf ${dlinkng::config::vrf_prefix}${vrf}")
+				or return abort($switch->{switchname}, $cisco);
+				
 		} else {
-			# IOS
+			# Default OS
 			# IOS fails on the next command, if the vrf doesn't exist
 			# Ignore error on this command
 			
 			# Extra overhead to delete, not used
-			#$cisco->cmd("no ip vrf ${vrf_prefix}${vrf}");
+			#$cisco->cmd("no ip vrf ${dlinkng::config::vrf_prefix}${vrf}");
 			
 			# Create VRF
-			telnet_cmd($switch, $cisco, "ip vrf ${vrf_prefix}${vrf}")
+			telnet_cmd($switch, $cisco, "ip vrf ${dlinkng::config::vrf_prefix}${vrf}")
 				or return abort($switch->{switchname}, $cisco);
 			telnet_cmd($switch, $cisco, "rd $vrf:$vrf")
 				or return abort($switch->{switchname}, $cisco);
 		}
 	
 		# Configure port #1
-		telnet_cmd($switch, $cisco, "int " . @{$switch->{ports}}[0])
-			or return abort($switch->{switchname}, $cisco);
-		telnet_cmd($switch, $cisco, "no switchport")
-			or return abort($switch->{switchname}, $cisco);
-		
-		if(is_nx($switch->{coreswos})){
-			# No error-check on the next command, as NX-OS
-			# spits out "% Deleted all L3 config on interface Ethernet1/45"
-			# making Net::Telnet::Cisco think it's an error
-		
-			$cisco->cmd("vrf member ${vrf_prefix}${vrf}");
-		} else {
-			# IOS
-			telnet_cmd($switch, $cisco, "ip vrf forwarding ${vrf_prefix}${vrf}")
-				or return abort($switch->{switchname}, $cisco);
-		}
-	
-		# Add temporary D-Link IP
-		info($switch->{switchname}, "Adding IP-address to interface.");
-
-		telnet_cmd($switch, $cisco, "ip address $dlink_router_ip $dlink_def_mask")
-			or return abort($switch->{switchname}, $cisco);
-	
-		# 'no shut'-patrol reporting in!
-		telnet_cmd($switch, $cisco, "no shut")
-			or return abort($switch->{switchname}, $cisco); 
-	
-		telnet_cmd($switch, $cisco, "end")
+		configure_interface($switch, $cisco, @{$switch->{ports}}[0], $dlinkng::config::dlink_router_ip, $dlinkng::config::dlink_def_mask, $vrf)
 			or return abort($switch->{switchname}, $cisco);
 
-		info($switch->{switchname}, "Waiting for D-Link to answer on $dlink_def_ip in VRF ${vrf_prefix}${vrf} on port #1 (" . @{$switch->{ports}}[0] . ").");
+		info($switch->{switchname}, "Waiting for D-Link to answer on $dlinkng::config::dlink_def_ip in VRF ${dlinkng::config::vrf_prefix}${vrf} on port #1 (" . @{$switch->{ports}}[0] . ").");
 	
 		# Use port 1 if ping succeeds
 		my $p_count = 0;
 		my $dlink_port = @{$switch->{ports}}[$p_count];
 		
-		until (cisco_ping($cisco, $dlink_def_ip, 30, $switch->{coreswos}, $vrf)) {
+		until (cisco_ping($cisco, $dlinkng::config::dlink_def_ip, 30, $switch->{coreswos}, $vrf)) {
 			# Did not ping, let's try next port
 			# We do this because port#1 might be damaged/not patched
 			
@@ -691,77 +769,56 @@ sub setup{
 			$dlink_port = @{$switch->{ports}}[$p_count];
 			
 			# Configure new port
-			telnet_cmd($switch, $cisco, "int $dlink_port")
-				or return abort($switch->{switchname}, $cisco);
-			telnet_cmd($switch, $cisco, "no switchport")
+			configure_interface($switch, $cisco, $dlink_port, $dlinkng::config::dlink_router_ip, $dlinkng::config::dlink_def_mask, $vrf)
 				or return abort($switch->{switchname}, $cisco);
 		
-			if(is_nx($switch->{coreswos})){
-				# No error-check on the next command, as NX-OS
-				# spits out "% Deleted all L3 config on interface Ethernet1/45"
-				# making Net::Telnet::Cisco think it's an error
-
-				$cisco->cmd("vrf member ${vrf_prefix}${vrf}");
-			} else {
-				# IOS
-				telnet_cmd($switch, $cisco, "ip vrf forwarding ${vrf_prefix}${vrf}")
-					or return abort($switch->{switchname}, $cisco);
-			}
-			
-			telnet_cmd($switch, $cisco, "ip address $dlink_router_ip $dlink_def_mask")
-				or return abort($switch->{switchname}, $cisco);
-			# 'no shut'-patrol reporting in!
-			telnet_cmd($switch, $cisco, "no shut")
-			 	or return abort($switch->{switchname}, $cisco);
-			telnet_cmd($switch, $cisco, "end")
-				or return abort($switch->{switchname}, $cisco);
-		
-			info($switch->{switchname}, "Waiting for D-Link to answer on $dlink_def_ip in VRF ${vrf_prefix}${vrf} on port #" . ($p_count+1) . " (" . @{$switch->{ports}}[$p_count] . ").");
+			info($switch->{switchname}, "Waiting for D-Link to answer on $dlinkng::config::dlink_def_ip in VRF ${dlinkng::config::vrf_prefix}${vrf} on port #" . ($p_count+1) . " (" . @{$switch->{ports}}[$p_count] . ").");
 		}
 
 		# Telnet to D-Link
 		info($switch->{switchname}, "Starting D-Link config phase 1.");
-		my $dlink = dlink_login($switch, $dlink_def_ip, $vrf)
+		my $dlink = dlink_login($switch, $dlinkng::config::dlink_def_ip, $vrf)
 			or return abort($switch->{switchname}, $cisco);
 
-		info($switch->{switchname}, "Setting hostname to $switch->{switchname}${dlink_host_suffix}");
-		telnet_print($switch, $dlink, $cisco, "config snmp system_name $switch->{switchname}${dlink_host_suffix}")
+		info($switch->{switchname}, "Setting hostname to $switch->{switchname}${dlinkng::config::dlink_host_suffix}");
+		telnet_print($switch, $dlink, "config snmp system_name $switch->{switchname}${dlinkng::config::dlink_host_suffix}")
 			or return abort($switch->{switchname}, $cisco, $dlink);
 		
 		info($switch->{switchname}, "Adding LACP. Enabling STP.");
-		telnet_print($switch, $dlink, $cisco, "create link_aggregation group_id 1 type lacp")
+		telnet_print($switch, $dlink, "create link_aggregation group_id 1 type lacp")
 			or return abort($switch->{switchname}, $cisco, $dlink);
-		telnet_print($switch, $dlink, $cisco, "config link_aggregation group_id 1 ports 1:($dlink_lacp_start-$dlink_lacp_end)")
+		telnet_print($switch, $dlink, "config link_aggregation group_id 1 ports 1:($dlinkng::config::dlink_lacp_start-$dlinkng::config::dlink_lacp_end)")
 			or return abort($switch->{switchname}, $cisco, $dlink);
-		telnet_print($switch, $dlink, $cisco, "enable stp")
+		telnet_print($switch, $dlink, "enable stp")
 			or return abort($switch->{switchname}, $cisco, $dlink);
 	
 		info($switch->{switchname}, "STP enabled, logging in again.");
 		$dlink->close;
 
-		unless (cisco_ping($cisco, $dlink_def_ip, 60, $switch->{coreswos}, $vrf)) {
+		unless (cisco_ping($cisco, $dlinkng::config::dlink_def_ip, 60, $switch->{coreswos}, $vrf)) {
 			reset_interfaces($switch, $cisco)
 				or return abort($switch->{switchname}, $cisco);
 			$cisco->close;
-			return error($switch->{switchname}, "Can't login to $switch->{switchname} on $dlink_def_ip, aborting.");
+			return error($switch->{switchname}, "Can't login to $switch->{switchname} on $dlinkng::config::dlink_def_ip, aborting.");
 		}
 
-		$dlink = dlink_login($switch, $dlink_def_ip, $vrf) or return abort($switch->{switchname}, $cisco);
+		$dlink = dlink_login($switch, $dlinkng::config::dlink_def_ip, $vrf)
+			or return abort($switch->{switchname}, $cisco);
 	
 		info($switch->{switchname}, "Running STP config.");
-		telnet_print($switch, $dlink, $cisco, "config stp version mstp")
+		telnet_print($switch, $dlink, "config stp version mstp")
 			or return abort($switch->{switchname}, $cisco, $dlink);
-		telnet_print($switch, $dlink, $cisco, "config stp priority 61440 instance_id 0")
+		telnet_print($switch, $dlink, "config stp priority 61440 instance_id 0")
 			or return abort($switch->{switchname}, $cisco, $dlink);
-		telnet_print($switch, $dlink, $cisco, "config stp ports 1:(1-44) edge true")
+		telnet_print($switch, $dlink, "config stp ports 1:(1-44) edge true")
 			or return abort($switch->{switchname}, $cisco, $dlink);
-		telnet_print($switch, $dlink, $cisco, "enable lldp")
+		telnet_print($switch, $dlink, "enable lldp")
 			or return abort($switch->{switchname}, $cisco, $dlink);
 	
 		info($switch->{switchname}, "Setting IP address.");
-		telnet_print($switch, $dlink, $cisco, "config ipif System ipaddress $switch->{ipv4address}/$dlink_prefix vlan default")
+		telnet_print($switch, $dlink, "config ipif System ipaddress $switch->{ipv4address}/$dlinkng::config::dlink_prefix vlan default")
 			or return abort($switch->{switchname}, $cisco, $dlink);
-	
+
 		info($switch->{switchname}, "Closing D-Link link.");
 		$dlink->close;
 
@@ -770,18 +827,9 @@ sub setup{
 			or return abort($switch->{switchname}, $cisco);
 		telnet_cmd($switch, $cisco, "default int $dlink_port")
 			or return abort($switch->{switchname}, $cisco);
-		telnet_cmd($switch, $cisco, "int $dlink_port")
+		configure_interface($switch, $cisco, $dlink_port, $switch->{ipv4gateway}, $switch->{netmask})
 			or return abort($switch->{switchname}, $cisco);
-		telnet_cmd($switch, $cisco, "no switchport")
-			or return abort($switch->{switchname}, $cisco);
-		telnet_cmd($switch, $cisco, "ip address $switch->{ipv4gateway} $switch->{netmask}")
-			or return abort($switch->{switchname}, $cisco);
-		# 'no shut'-patrol reporting in!
-		telnet_cmd($switch, $cisco, "no shut")
-			or return abort($switch->{switchname}, $cisco);
-		telnet_cmd($switch, $cisco, "end")
-			or return abort($switch->{switchname}, $cisco);
-
+			
 		# Wait for network convergence
 		info($switch->{switchname}, "Waiting for network to converge.");
 		unless (cisco_ping($cisco, $switch->{ipv4address}, 60, $switch->{coreswos})) {
@@ -796,13 +844,13 @@ sub setup{
 		$dlink = dlink_login($switch, $switch->{ipv4address}, '', $dlink_port) or return abort($switch->{switchname}, $cisco);
 
 		info($switch->{switchname}, "Setting default route on switch. Saving config.");
-		telnet_print($switch, $dlink, $cisco, "create iproute default $switch->{ipv4gateway}")
+		telnet_print($switch, $dlink, "create iproute default $switch->{ipv4gateway}")
 			or return abort($switch->{switchname}, $cisco, $dlink);
-		telnet_print($switch, $dlink, $cisco, "save", 0)
+		telnet_print($switch, $dlink, "save", 0)
 			or return abort($switch->{switchname}, $cisco, $dlink);
-		telnet_print($switch, $dlink, $cisco, "Y")
+		telnet_print($switch, $dlink, "Y")
 			or return abort($switch->{switchname}, $cisco, $dlink);
-		telnet_print($switch, $dlink, $cisco, "logout")
+		telnet_print($switch, $dlink, "logout")
 			or return abort($switch->{switchname}, $cisco, $dlink);
 		
 		info($switch->{switchname}, "Closing D-Link link.");
@@ -820,40 +868,82 @@ sub setup{
 		telnet_cmd($switch, $cisco, "conf t")
 			or return abort($switch->{switchname}, $cisco);
 
-		# this needs to be done on IOS-XE
 		# Portchannel needs to exist before we can assign interfaces to it
-		telnet_cmd($switch, $cisco, "int Po$switch->{etherchannel}")
-			or return abort($switch->{switchname}, $cisco);
-				
+		# This needs to be done on IOS-XE, but we do it on all
+		if(is_xr($switch->{coreswos})){
+			# Other syntax on XR, called Bundle-Ether
+			telnet_cmd($switch, $cisco, "int Bundle-Ether$switch->{etherchannel}")
+				or return abort($switch->{switchname}, $cisco);
+
+		} else {
+			telnet_cmd($switch, $cisco, "int Po$switch->{etherchannel}")
+				or return abort($switch->{switchname}, $cisco);
+
+		}
+		
 		# Rest of the config
 		my $etherchan_desc;
 		foreach my $port (@{$switch->{ports}}){
 			telnet_cmd($switch, $cisco, "int $port")
 				or return abort($switch->{switchname}, $cisco);
-			telnet_cmd($switch, $cisco, "no switchport")
-				or return abort($switch->{switchname}, $cisco);
+
+			unless(is_xr($switch->{coreswos})){
+				# only do this if not IOS-XR
+				telnet_cmd($switch, $cisco, "no switchport")
+					or return abort($switch->{switchname}, $cisco);
+			}
+
 			# 'no shut'-patrol reporting in!
 			telnet_cmd($switch, $cisco, "no shut")
 				or return abort($switch->{switchname}, $cisco);
-			telnet_cmd($switch, $cisco, "desc D-Link $switch->{switchname}; RJ-45; 1G;")
+			telnet_cmd($switch, $cisco, "description D-Link $switch->{switchname}; RJ-45; 1G;")
 				or return abort($switch->{switchname}, $cisco);
-			telnet_cmd($switch, $cisco, "channel-group $switch->{etherchannel} mode passive")
-				or return abort($switch->{switchname}, $cisco);
+		
+			# Assign to Etherchannel
+			if(is_xr($switch->{coreswos})){
+				# Other syntax on XR, called Bundle-Ether
+				telnet_cmd($switch, $cisco, "bundle id $switch->{etherchannel} mode passive")
+					or return abort($switch->{switchname}, $cisco);
+
+			} else {
+				telnet_cmd($switch, $cisco, "channel-group $switch->{etherchannel} mode passive")
+					or return abort($switch->{switchname}, $cisco);
+
+			}
 		
 			# add port to descr
 			$etherchan_desc .= "$port; ";
 		}
 		
-		telnet_cmd($switch, $cisco, "int Po$switch->{etherchannel}")
+		if(is_xr($switch->{coreswos})){
+			# Other syntax on XR, called Bundle-Ether
+			telnet_cmd($switch, $cisco, "int Bundle-Ether$switch->{etherchannel}")
+				or return abort($switch->{switchname}, $cisco);
+
+		} else {
+			telnet_cmd($switch, $cisco, "int Po$switch->{etherchannel}")
+				or return abort($switch->{switchname}, $cisco);
+
+		}
+
+		telnet_cmd($switch, $cisco, "description D-Link $switch->{switchname}; $etherchan_desc")
 			or return abort($switch->{switchname}, $cisco);
-		telnet_cmd($switch, $cisco, "desc D-Link $switch->{switchname}; $etherchan_desc")
-			or return abort($switch->{switchname}, $cisco);
-		telnet_cmd($switch, $cisco, "ip address $switch->{ipv4gateway} $switch->{netmask}")
-			or return abort($switch->{switchname}, $cisco);
-	
-		# ipv6-stuff
+			
+		
+		if(is_xr($switch->{coreswos})){
+			# IOS-XR
+			telnet_cmd($switch, $cisco, "ipv4 address $switch->{ipv4gateway} $switch->{netmask}")
+				or return abort($switch->{switchname}, $cisco);
+
+		} else {
+			# All other
+			telnet_cmd($switch, $cisco, "ip address $switch->{ipv4gateway} $switch->{netmask}")
+				or return abort($switch->{switchname}, $cisco);
+		}	
+
+		# IPv6-stuff
 		unless (is_nx($switch->{coreswos})){
-			# IOS
+			# IOS + IOS-XR
 			telnet_cmd($switch, $cisco, "ipv6 enable")
 				or return abort($switch->{switchname}, $cisco);
 		}
@@ -861,43 +951,80 @@ sub setup{
 		telnet_cmd($switch, $cisco, "ipv6 address $switch->{ipv6address}")
 			or return abort($switch->{switchname}, $cisco);
 	
+		# DHCP-relay/forwarding + MBD/Blazon-forwarding (broadcast)
 		if (is_nx($switch->{coreswos})){
-			telnet_cmd($switch, $cisco, "ip dhcp relay address $dhcprelay4_pri")
+			# NX-OS
+			telnet_cmd($switch, $cisco, "ip dhcp relay address $dlinkng::config::dhcprelay4_pri")
 				or return abort($switch->{switchname}, $cisco);
 		
 			# define secondary if present
-			if (defined($dhcprelay4_sec) && $dhcprelay4_sec){
-				telnet_cmd($switch, $cisco, "ip dhcp relay address $dhcprelay4_sec")
+			if (defined($dlinkng::config::dhcprelay4_sec) && $dlinkng::config::dhcprelay4_sec){
+				telnet_cmd($switch, $cisco, "ip dhcp relay address $dlinkng::config::dhcprelay4_sec")
+					or return abort($switch->{switchname}, $cisco);
+			}
+		} elsif (is_xr($switch->{coreswos})){
+			# IOS-XR
+			telnet_cmd($switch, $cisco, "ipv4 helper-address vrf default $dlinkng::config::dhcprelay4_pri")
+				or return abort($switch->{switchname}, $cisco);
+		
+			# define secondary if present
+			if (defined($dlinkng::config::dhcprelay4_sec) && $dlinkng::config::dhcprelay4_sec){
+				telnet_cmd($switch, $cisco, "ipv4 helper-address vrf default $dlinkng::config::dhcprelay4_sec")
 					or return abort($switch->{switchname}, $cisco);
 			}
 		} else {
 			# IOS
-			telnet_cmd($switch, $cisco, "ip helper-address $dhcprelay4_pri")
+			telnet_cmd($switch, $cisco, "ip helper-address $dlinkng::config::dhcprelay4_pri")
 				or return abort($switch->{switchname}, $cisco);
 		
 			# define secondary if present
-			if (defined($dhcprelay4_sec) && $dhcprelay4_sec){
-				telnet_cmd($switch, $cisco, "ip helper-address $dhcprelay4_sec")
+			if (defined($dlinkng::config::dhcprelay4_sec) && $dlinkng::config::dhcprelay4_sec){
+				telnet_cmd($switch, $cisco, "ip helper-address $dlinkng::config::dhcprelay4_sec")
 					or return abort($switch->{switchname}, $cisco);
 			}
 		}
 	
 		# Custom Portchannel-config
 		# Dynamically applied depending on OS
-		foreach my $cmd (@{$po_config->{$switch->{coreswos}}}){
+		foreach my $cmd (@{$dlinkng::config::po_config->{$switch->{coreswos}}}){
 			telnet_cmd($switch, $cisco, $cmd)
 				or return abort($switch->{switchname}, $cisco);
 		}
-		
+
 		# 'no shut'-patrol reporting in!
 		telnet_cmd($switch, $cisco, "no shut")
 		 	or return abort($switch->{switchname}, $cisco);
+		
+		# Done with interface-config
+		# Apply DHCP-profiling if using IOS-XR
+		if (is_xr($switch->{coreswos})){
+			telnet_cmd($switch, $cisco, "dhcp ipv4")
+				or return abort($switch->{switchname}, $cisco);
+			telnet_cmd($switch, $cisco, "interface Bundle-Ether$switch->{etherchannel} proxy profile $dlinkng::config::dhcp4_proxyprofile")
+				or return abort($switch->{switchname}, $cisco);
+			
+			if(defined($dlinkng::config::dhcp6_proxyprofile) && $dlinkng::config::dhcp6_proxyprofile){
+				# Do DHCPv6 proxy as well
+				
+				telnet_cmd($switch, $cisco, "dhcp ipv6")
+					or return abort($switch->{switchname}, $cisco);
+				telnet_cmd($switch, $cisco, "interface Bundle-Ether$switch->{etherchannel} proxy profile $dlinkng::config::dhcp6_proxyprofile")
+					or return abort($switch->{switchname}, $cisco);
+			}			
+		}
+		
+		# Commit on XR
+		if(is_xr($switch->{coreswos})){
+			telnet_cmd($switch, $cisco, "commit")
+				or return abort($switch->{switchname}, $cisco);
+		}
+	
 		telnet_cmd($switch, $cisco, "end")
 			or return abort($switch->{switchname}, $cisco);
 	}
 	
 	# If we skipped last port at the start, we configure it now
-	if (($skip_last_port && $skipped_port && defined($skipped_port)) || ($skipped_port_only && defined($skipped_port_only))){
+	if (($dlinkng::config::skip_last_port && $skipped_port && defined($skipped_port)) || ($skipped_port_only && defined($skipped_port_only))){
 		if ($skipped_port_desc_only){
 			info($switch->{switchname}, "Configuring skipped port... (description only)");
 		} else {
@@ -913,11 +1040,11 @@ sub setup{
 		
 		telnet_cmd($switch, $cisco, "int $skipped_port")
 			or return abort($switch->{switchname}, $cisco);
-		telnet_cmd($switch, $cisco, "desc AP \@ D-Link $switch->{switchname}; RJ-45; 1G;")
+		telnet_cmd($switch, $cisco, "description AP \@ D-Link $switch->{switchname}; RJ-45; 1G;")
 			or return abort($switch->{switchname}, $cisco);
 		
 		unless ($skipped_port_desc_only){
-			foreach my $cmd (@{$last_port_config->{$switch->{coreswos}}}){
+			foreach my $cmd (@{$dlinkng::config::last_port_config->{$switch->{coreswos}}}){
 				telnet_cmd($switch, $cisco, $cmd)
 					or return abort($switch->{switchname}, $cisco);
 			}
@@ -925,6 +1052,13 @@ sub setup{
 			telnet_cmd($switch, $cisco, "no shut")
 			 	or return abort($switch->{switchname}, $cisco);
 		}
+		
+		# Commit on XR
+		if(is_xr($switch->{coreswos})){
+			telnet_cmd($switch, $cisco, "commit")
+				or return abort($switch->{switchname}, $cisco);
+		}
+		
 		telnet_cmd($switch, $cisco, "end")
 			or return abort($switch->{switchname}, $cisco);
 	}
@@ -940,17 +1074,7 @@ sub setup{
 		info($switch->{switchname}, "Done doing skipped port config. Not checking if anything is online.");
 		$return = 1;
 	} else {
-		unless (pong($switch->{ipv4address}, 15)){
-			if (cisco_ping($cisco, $switch->{ipv4address}, 60, $switch->{coreswos})) {
-				# we can reach from core, but not from other places, lets warn
-				log_it("ERROR", "red", $switch->{switchname}, "Switch $switch->{switchname} reachable only from core/distro.");
-			} else {
-				reset_interfaces($switch, $cisco)
-					or return abort($switch->{switchname}, $cisco);
-				$cisco->close;
-				return error($switch->{switchname}, "Can't ping $switch->{switchname} on $switch->{ipv4address}, aborting.");
-			}
-		} else {
+		if(pong($switch->{ipv4address}, 15)){
 			# pingable, OK
 			log_it("SUCCESS", "green", $switch->{switchname}, "Switch $switch->{switchname} ($switch->{ipv4address}) set up! \\o/");	
 
@@ -961,11 +1085,22 @@ sub setup{
 				info($switch->{switchname}, "Going to push D-Link template config to switch $switch->{switchname} ($switch->{ipv4address})");
 				$return = push_dlink_template_config($switch);
 			}
+		} else {
+			# Not pingable
+			if (cisco_ping($cisco, $switch->{ipv4address}, 60, $switch->{coreswos})) {
+				# we can reach from core, but not from other places, lets warn
+				log_it("ERROR", "red", $switch->{switchname}, "Switch $switch->{switchname} reachable only from core/distro.");
+			} else {
+				reset_interfaces($switch, $cisco)
+					or return abort($switch->{switchname}, $cisco);
+				$cisco->close;
+				return error($switch->{switchname}, "Can't ping $switch->{switchname} on $switch->{ipv4address}, aborting.");
+			}
 		}
 	}
 	
-	if($save_config){
-		# save the cisco-config
+	if($save_config && !is_xr($switch->{coreswos})){
+		# save the cisco-config, but not if IOS-XR
 		info($switch->{switchname}, "Saving config on core-switch ($switch->{coreswip}).");
 		telnet_cmd($switch, $cisco, "write")
 			or return abort($switch->{switchname}, $cisco);
@@ -987,13 +1122,13 @@ sub process_switches {
 			$telnet_sessions{$switch->{coreswip}} = 0 unless $telnet_sessions{$switch->{coreswip}};
 			$telnet_sessions{$switch->{coreswip}} += 2;
 
-			if ($telnet_sessions{$switch->{coreswip}} <= $os_info->{$switch->{coreswos}}{max_sessions}){
+			if ($telnet_sessions{$switch->{coreswip}} <= $dlinkng::config::os_info->{$switch->{coreswos}}{max_sessions}){
 				# lower or equal to max_sessions on current switch
 				# lets move on
 				last;
 			} else {
 				# we would exceed max_sessions on current switch
-				# we wait until there is free sessions
+				# we wait until there are free sessions
 				info($switch->{switchname}, "There are no more free sessions left on '$switch->{coreswip}' ($switch->{coreswos}). Waiting...");
 				$telnet_sessions{$switch->{coreswip}} -= 2;
 				sleep (int(rand(10)) + 10);
@@ -1026,8 +1161,8 @@ sub process_switches {
 
 # Let's start
 my $time_start = time();
-log_it("INFO", "yellow", "dlink-ng", "Starting dlink-ng with $max_threads threads...");
-log_it("INFO", "yellow", "dlink-ng", "Configured to skip last port on all switches.") if $skip_last_port;
+log_it("INFO", "yellow", "dlink-ng", "Starting dlink-ng with $dlinkng::config::max_threads threads...");
+log_it("INFO", "yellow", "dlink-ng", "Configured to skip last port on all switches.") if $dlinkng::config::skip_last_port;
 
 # Let's add all switches to the queue
 while (<STDIN>){
@@ -1042,7 +1177,7 @@ while (<STDIN>){
 	}
 	
 	# define OS of the coresw
-	my $coreswos = set_coreswos($switchname);
+	my $coreswos = set_coreswos($coreswip);
 	
 	# find netmask
 	my $netmask = Net::IP->new($cidr)->mask();
@@ -1071,10 +1206,10 @@ while (<STDIN>){
 }
 
 # Let the threads know when they're done
-$switchq->enqueue("DONE") for (1..$max_threads);
+$switchq->enqueue("DONE") for (1..$dlinkng::config::max_threads);
 
 # Start processing the queue
-threads->create("process_switches") for (1..$max_threads);
+threads->create("process_switches") for (1..$dlinkng::config::max_threads);
 
 # Wait till all threads is done
 sleep 5 while (threads->list(threads::running));
@@ -1094,4 +1229,3 @@ log_it("INFO", "yellow", "dlink-ng", "Finished!");
 log_it("INFO", "yellow", "dlink-ng", "Crunched $total_switches switches in $runtime seconds.");
 log_it("INFO", "yellow", "dlink-ng", "$switches of these were successful, while $failed_switches failed.");
 log_it("INFO", "yellow", "dlink-ng", "Average of $avg seconds per switch.");
-
