@@ -6,7 +6,6 @@ use DBI;
 use POSIX;
 use Time::HiRes;
 use Net::Ping;
-require 'SNMP_Session.pm';
 
 use lib '../include';
 use nms;
@@ -29,14 +28,14 @@ sub poll_loop {
 			my $community = $cores->{$core}{'community'};
 			printf "Polling %s (%s)\n", $core, $ip;
 			eval {
-				my $session = SNMPv2c_Session->open($ip, $community, 161) or die "Couldn't talk to switch";
+				my $session = nms::snmp_open_session($ip, $community);
 				$qaps->execute($cores->{$core}{'switch'});
 				while (my $aps = $qaps->fetchrow_hashref()) {
 					my $sysname = $aps->{'sysname'};
 					my $blade = $aps->{'blade'};
 					my $port = $aps->{'port'};
-					my $oid = BER::encode_oid(1,3,6,1,2,1,105,1,1,1,9,$blade,$port);     # POWER-ETHERNET-MIB...pethPsePortType
-					my $mode = fetch_snmp($session, $oid);
+					my $oid = "1.3.6.1.2.1.105.1.1.1.9.$blade.$port";     # POWER-ETHERNET-MIB...pethPsePortType
+					my $mode = $session->get_request(-varbindlist=>[$oid])->{$oid};
 					$qpoll->execute($mode, $aps->{'switch'});
 					printf "%s (%s:%s/%s): %s\n", $sysname, $core, $blade, $port, $mode;
 				}
@@ -48,22 +47,6 @@ sub poll_loop {
 		}
 		sleep 2;
 	}
-}
-
-# Kokt fra snmpfetch.pl, vi bør nok lage et lib
-sub fetch_snmp {
-        my ($session, $oid) = @_;
-
-        if ($session->get_request_response($oid)) {
-                my ($bindings) = $session->decode_get_response ($session->{pdu_buffer});
-                my $binding;
-                while ($bindings ne '') {
-                        ($binding,$bindings) = &decode_sequence ($bindings);
-                        my ($oid,$value) = &decode_by_template ($binding, "%O%@");
-                        return BER::pretty_print($value);
-                }
-        }
-        die "Couldn't get info from switch";
 }
 
 sub mylog {
