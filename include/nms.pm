@@ -19,11 +19,12 @@ BEGIN {
 }
 
 sub db_connect {
-	my $dbh = DBI->connect("dbi:Pg:" .
-				"dbname=" . $nms::config::db_name .
-				";host=" . $nms::config::db_host,
-				$nms::config::db_username,
-				$nms::config::db_password)
+	my $connstr = "dbi:Pg:dbname=" . $nms::config::db_name;
+	$connstr .= ";host=" . $nms::config::db_host unless (!defined($nms::config::db_host));
+
+	my $dbh = DBI->connect($connstr,
+	                       $nms::config::db_username,
+	                       $nms::config::db_password)
 	        or die "Couldn't connect to database";
 	return $dbh;	
 }
