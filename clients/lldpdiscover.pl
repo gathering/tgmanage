@@ -11,11 +11,14 @@ use nms;
 my $dbh = nms::db_connect();
 $dbh->{AutoCommit} = 0;
 
-# If we are given one switch on the command line, poll that and then exit.
+# If we are given one switch on the command line, add that and then exit.
 my ($cmdline_ip, $cmdline_community) = @ARGV;
 if (defined($cmdline_ip) && defined($cmdline_community)) {
 	eval {
-		discover_lldp_neighbors($dbh, $cmdline_ip, $cmdline_community);
+		my $session = nms::snmp_open_session($cmdline_ip, $cmdline_community);
+		my $sysname = $session->get('sysName.0');
+		my $chassis_id = get_lldp_chassis_id($session);
+		add_switch($dbh, $cmdline_ip, $sysname, $chassis_id, $cmdline_community);
 	};
 	if ($@) {
 		mylog("ERROR: $@ (during poll of $cmdline_ip)");
@@ -33,11 +36,7 @@ while (my $ref = $q->fetchrow_hashref) {
 	my ($switch, $ip, $community) = ($ref->{'switch'}, $ref->{'ip'}, $ref->{'community'});
 	eval {
 		my $session = nms::snmp_open_session($ip, $community);
-
-		# Cisco returns completely bogus values if we use get()
-		# on lldpLocChassisId.0, it seems. Work around it by using getnext().
-		my $response = $session->getnext('lldpLocChassisId');
-		my $chassis_id = nms::convert_mac($response);
+		my $chassis_id = get_lldp_chassis_id($session);
 		die "SNMP error: " . $session->error() if (!defined($chassis_id));
 		$dbh->do('UPDATE switches SET lldp_chassis_id=? WHERE switch=?', undef,
 			$chassis_id, $switch);
@@ -114,22 +113,8 @@ sub discover_lldp_neighbors {
 			next;
 		}
 
-		# Yay, a new switch! Make a new type for it.
 		# We simply guess that the community is the same as ours.
-		my $ports = get_ports($addr, $community);
-		next if (!defined($ports));
-		my $portlist = compress_ports(get_ifindex_for_physical_ports($ports));
-		mylog("Inserting new switch $sysname ($addr, ports $portlist).");
-		my $switchtype = "auto-$sysname-$chassis_id";
-		$dbh->do('INSERT INTO switchtypes (switchtype, ports) VALUES (?, ?)', undef,
-			$switchtype, $portlist);
-		$dbh->do('INSERT INTO switches (ip, sysname, switchtype, community, lldp_chassis_id) VALUES (?, ?, ?, ?, ?)', undef,
-			$addr, $sysname, $switchtype, $community, $chassis_id);
-		for my $port (values %$ports) {
-			$dbh->do('INSERT INTO portnames (switchtype, port, description) VALUES (?, ?, ?)',
-				undef, $switchtype, $port->{'ifIndex'}, $port->{'ifDescr'});
-		}
-		$dbh->commit;
+		add_switch($dbh, $addr, $sysname, $chassis_id, $community);
 	}
 }
 
@@ -195,4 +180,33 @@ sub range_from_to {
 	} else {
 		return "$from-$to";
 	}
+}
+
+sub add_switch {
+	my ($dbh, $addr, $sysname, $chassis_id, $community) = @_;
+
+	# Yay, a new switch! Make a new type for it.
+	my $ports = get_ports($addr, $community);
+	return if (!defined($ports));
+	my $portlist = compress_ports(get_ifindex_for_physical_ports($ports));
+	mylog("Inserting new switch $sysname ($addr, ports $portlist).");
+	my $switchtype = "auto-$sysname-$chassis_id";
+	$dbh->do('INSERT INTO switchtypes (switchtype, ports) VALUES (?, ?)', undef,
+		$switchtype, $portlist);
+	$dbh->do('INSERT INTO switches (ip, sysname, switchtype, community, lldp_chassis_id) VALUES (?, ?, ?, ?, ?)', undef,
+		$addr, $sysname, $switchtype, $community, $chassis_id);
+	for my $port (values %$ports) {
+		$dbh->do('INSERT INTO portnames (switchtype, port, description) VALUES (?, ?, ?)',
+			undef, $switchtype, $port->{'ifIndex'}, $port->{'ifDescr'});
+	}
+	$dbh->commit;
+}
+
+sub get_lldp_chassis_id {
+	my ($session) = @_;
+
+	# Cisco returns completely bogus values if we use get()
+	# on lldpLocChassisId.0, it seems. Work around it by using getnext().
+	my $response = $session->getnext('lldpLocChassisId');
+	return nms::convert_mac($response);
 }
