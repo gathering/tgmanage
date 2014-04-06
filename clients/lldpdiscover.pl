@@ -116,14 +116,19 @@ sub discover_lldp_neighbors {
 
 		# Yay, a new switch! Make a new type for it.
 		# We simply guess that the community is the same as ours.
-		# TODO(sesse): Autopopulate ports from type.
-		# TODO(sesse): Autopopulate port names.
-		mylog("Inserting new switch $sysname ($addr).");
+		my $ports = get_ports($addr, $community);
+		next if (!defined($ports));
+		my $portlist = compress_ports(get_ifindex_for_physical_ports($ports));
+		mylog("Inserting new switch $sysname ($addr, ports $portlist).");
 		my $switchtype = "auto-$sysname-$chassis_id";
 		$dbh->do('INSERT INTO switchtypes (switchtype, ports) VALUES (?, ?)', undef,
-			$switchtype, '');
+			$switchtype, $portlist);
 		$dbh->do('INSERT INTO switches (ip, sysname, switchtype, community, lldp_chassis_id) VALUES (?, ?, ?, ?, ?)', undef,
 			$addr, $sysname, $switchtype, $community, $chassis_id);
+		for my $port (values %$ports) {
+			$dbh->do('INSERT INTO portnames (switchtype, port, description) VALUES (?, ?, ?)',
+				undef, $switchtype, $port->{'ifIndex'}, $port->{'ifDescr'});
+		}
 		$dbh->commit;
 	}
 }
@@ -133,4 +138,61 @@ sub mylog {
 	my $time = POSIX::ctime(time);
 	$time =~ s/\n.*$//;
 	printf STDERR "[%s] %s\n", $time, $msg;
+}
+
+sub get_ports {
+	my ($ip, $community) = @_;
+	my $ret = undef;
+	eval {
+		my $session = nms::snmp_open_session($ip, $community);
+		$ret = $session->gettable('ifTable', columns => [ 'ifType', 'ifDescr' ]);
+	};
+	if ($@) {
+		mylog("Error during SNMP to $ip: $@");
+		return undef;
+	}
+	return $ret;
+}
+
+sub get_ifindex_for_physical_ports {
+	my $ports = shift;
+	my @indices = ();
+	for my $port (values %$ports) {
+		next unless ($port->{'ifType'} eq 'ethernetCsmacd');
+		push @indices, $port->{'ifIndex'};
+	}
+	return @indices;
+}
+
+sub compress_ports {
+	my (@ports) = @_;
+	my $current_range_start = undef;
+	my $last_port = undef;
+
+	my @ranges = ();
+	for my $port (sort { $a <=> $b } (@ports)) {
+		if (!defined($current_range_start)) {
+			# First element.
+			$current_range_start = $last_port = $port;
+			next;
+		}
+		if ($port == $last_port + 1) {
+			# Just extend the current range.
+			++$last_port;
+		} else {
+			push @ranges, range_from_to($current_range_start, $last_port);
+			$current_range_start = $last_port = $port;
+		}
+	}
+	push @ranges, range_from_to($current_range_start, $last_port);
+	return join(',', @ranges);
+}
+
+sub range_from_to {
+	my ($from, $to) = @_;
+	if ($from == $to) {
+		return $from;
+	} else {
+		return "$from-$to";
+	}
 }
