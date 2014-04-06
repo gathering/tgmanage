@@ -35,7 +35,7 @@ sub poll_loop {
 					my $blade = $aps->{'blade'};
 					my $port = $aps->{'port'};
 					my $oid = "1.3.6.1.2.1.105.1.1.1.9.$blade.$port";     # POWER-ETHERNET-MIB...pethPsePortType
-					my $mode = $session->get_request(-varbindlist=>[$oid])->{$oid};
+					my $mode = $session->get($oid);
 					$qpoll->execute($mode, $aps->{'switch'});
 					printf "%s (%s:%s/%s): %s\n", $sysname, $core, $blade, $port, $mode;
 				}

@@ -5,16 +5,10 @@ use Time::HiRes;
 use Net::Telnet;
 use strict;
 use warnings;
-use Net::SNMP;
 
 use lib '../include';
 use nms;
 use threads;
-
-my $in_octets_oid = "1.3.6.1.2.1.31.1.1.1.6";    # interfaces.ifTable.ifEntry.ifHCInOctets
-my $out_octets_oid = "1.3.6.1.2.1.31.1.1.1.10";  # interfaces.ifTable.ifEntry.ifHCOutOctets
-my $in_errors_oid = "1.3.6.1.2.1.2.2.1.14";      # interfaces.ifTable.ifEntry.ifInErrors
-my $out_errors_oid = "1.3.6.1.2.1.2.2.1.20";     # interfaces.ifTable.ifEntry.ifOutErrors
 
 # normal mode: fetch switches from the database
 # instant mode: poll the switches specified on the command line
@@ -35,6 +29,7 @@ sub poll_loop {
 
 	my $dbh = nms::db_connect();
 	$dbh->{AutoCommit} = 0;
+	$dbh->{RaiseError} = 1;
 
 	my $qualification;
 	if ($instant) {
@@ -138,34 +133,25 @@ EOF
 				$ports{$port} = 1;
 			}
 
-			my $in_result = $session->get_table(
-				-maxrepetitions => 200,
-				-baseoid => $in_octets_oid,
+			# ifHCInOctets / ifHCOutOctets are strictly speaking part of ifXTable
+			# and not ifTable, but it seems to work fine nevertheless,
+			# as long as we explicitly ask for them.
+			my $result = $session->gettable('ifTable',
+				noindexes => 1,
+				repeat => 200,
+				columns => [ 'ifHCInOctets', 'ifHCOutOctets', 'ifInErrors', 'ifOutErrors' ],
 			);
-			my $out_result = $session->get_table(
-				-maxrepetitions => 200,
-				-baseoid => $out_octets_oid,
-			);
-			my $ine_result = $session->get_table(
-				-maxrepetitions => 200,
-				-baseoid => $in_errors_oid,
-			);
-			my $oute_result = $session->get_table(
-				-maxrepetitions => 200,
-				-baseoid => $out_errors_oid,
-			);
-			die "SNMP fetch failed: " . $session->error() if (!defined($in_result));
+			die "SNMP fetch failed: " . $session->{'ErrorStr'} if (!defined($result));
 
-			for my $key (keys %$in_result) {
-				(my $port = $key) =~ s/^\Q$in_octets_oid\E\.//;
-				my $in = $in_result->{$in_octets_oid . '.' . $port};
-				my $out = $out_result->{$out_octets_oid . '.' . $port};
-				my $ine = $ine_result->{$in_errors_oid . '.' . $port};
-				my $oute = $oute_result->{$out_errors_oid . '.' . $port};
+			while (my ($key, $value) = each %$result) {
+				my $port = $key;
+				my $in = $value->{'ifHCInOctets'} // -1;  # Does not exist for some weird stack ports.
+				my $out = $value->{'ifHCOutOctets'} // -1;
+				my $ine = $value->{'ifInErrors'};
+				my $oute = $value->{'ifOutErrors'};
 				my $official_port = exists($ports{$port}) ? 1 : 0;
-				$qpoll->execute($switch->{'switch'}, $port, $in, $out, $ine, $oute, $official_port) || die "%s:%s: %s\n", $switch->{'switch'}, $port, $in;
+				$qpoll->execute($switch->{'switch'}, $port, $in, $out, $ine, $oute, $official_port);
 			}
-			$session->close;
 		};
 		if ($@) {
 			mylog("ERROR: $@ (during poll of $ip)");

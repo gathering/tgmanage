@@ -4,7 +4,7 @@ use warnings;
 use DBI;
 use Net::Telnet;
 use Data::Dumper;
-use Net::SNMP;
+use FixedSNMP;
 use FileHandle;
 package nms;
 
@@ -16,6 +16,13 @@ BEGIN {
 	eval {
 		require "config.local.pm";
 	};
+
+	# $SNMP::debugging = 1;
+	SNMP::initMib();
+	SNMP::loadModules('SNMPv2-MIB');
+	SNMP::loadModules('ENTITY-MIB');
+	SNMP::loadModules('IF-MIB');
+	#SNMP::loadModules('LLDP-MIB');
 }
 
 sub db_connect {
@@ -105,34 +112,38 @@ sub switch_disconnect {
 sub snmp_open_session {
 	my ($ip, $community) = @_;
 
-	my $domain = ($ip =~ /:/) ? 'udp6' : 'udp4';
-	my $version;
-	my %options = (
-		-hostname => $ip,
-		-domain => $domain,
-	);
+	my %options = (UseEnums => 1);
+	if ($ip =~ /:/) {
+		$options{'DestHost'} = "udp6:$ip";
+	} else {
+		$options{'DestHost'} = "udp:$ip";
+	}
 
 	if ($community =~ /^snmpv3:(.*)$/) {
 		my ($username, $authprotocol, $authpassword, $privprotocol, $privpassword) = split /\//, $1;
 
-		$options{'-username'} = $username;
-		$options{'-authprotocol'} = $authprotocol;
-		$options{'-authpassword'} = $authpassword;
+		$options{'SecName'} = $username;
+		$options{'SecLevel'} = 'authNoPriv';
+		$options{'AuthProto'} = $authprotocol;
+		$options{'AuthPass'} = $authpassword;
 
 		if (defined($privprotocol) && defined($privpassword)) {
-			$options{'-privprotocol'} = $privprotocol;
-			$options{'-privpassword'} = $privpassword;
+			$options{'SecLevel'} = 'authPriv';
+			$options{'PrivProto'} = $privprotocol;
+			$options{'PrivPass'} = $privpassword;
 		}
 
-		$options{'-version'} = 3;
+		$options{'Version'} = 3;
 	} else {
-		$options{'-version'} = 2;
+		$options{'Version'} = 2;
 	}
 
-	my ($session, $error) = Net::SNMP->session(%options);
-	die "SNMP session failed: " . $error if (!defined($session));
-
-	return $session;
+	my $session = SNMP::Session->new(%options);
+	if (defined($session) && defined($session->getnext('sysDescr'))) {
+		return $session;
+	} else {
+		die 'Could not open SNMP session';
+	}
 }
 
 # Not currently in use; kept around for reference.
