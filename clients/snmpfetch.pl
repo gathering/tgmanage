@@ -1,16 +1,20 @@
 #! /usr/bin/perl
-use BER;
 use DBI;
 use POSIX;
 use Time::HiRes;
 use Net::Telnet;
 use strict;
 use warnings;
-require 'SNMP_Session.pm';
+use Net::SNMP;
 
 use lib '../include';
 use nms;
 use threads;
+
+my $in_octets_oid = "1.3.6.1.2.1.31.1.1.1.6";    # interfaces.ifTable.ifEntry.ifHCInOctets
+my $out_octets_oid = "1.3.6.1.2.1.31.1.1.1.10";  # interfaces.ifTable.ifEntry.ifHCOutOctets
+my $in_errors_oid = "1.3.6.1.2.1.2.2.1.14";      # interfaces.ifTable.ifEntry.ifInErrors
+my $out_errors_oid = "1.3.6.1.2.1.2.2.1.20";     # interfaces.ifTable.ifEntry.ifOutErrors
 
 # normal mode: fetch switches from the database
 # instant mode: poll the switches specified on the command line
@@ -62,7 +66,7 @@ EOF
 		or die "Couldn't prepare qlock";
 	my $qunlock = $dbh->prepare("UPDATE switches SET locked='f', last_updated=now() WHERE switch=?")
 		or die "Couldn't prepare qunlock";
-	my $qpoll = $dbh->prepare("INSERT INTO polls (time, switch, port, bytes_in, bytes_out, errors_in, errors_out) VALUES (timeofday()::timestamp,?,?,?,?,?,?)")
+	my $qpoll = $dbh->prepare("INSERT INTO polls (time, switch, port, bytes_in, bytes_out, errors_in, errors_out, official_port) VALUES (current_timestamp,?,?,?,?,?,?,?)")
 		or die "Couldn't prepare qpoll";
 	my $qtemppoll = $dbh->prepare("INSERT INTO temppoll (time, switch, temp) VALUES (timeofday()::timestamp,?::text::int,?::text::float)")
 		or die "Couldn't prepare qtemppoll";
@@ -127,27 +131,39 @@ EOF
 		my $community = $switch->{'community'};
 		my $start = [Time::HiRes::gettimeofday];
 		eval {
-			my $session;
-			if ($switch->{'wide_counters'}) {
-				$session = SNMPv2c_Session->open($ip, $community, 161)
-					or die "Couldn't talk to switch";
-			} else {
-				$session = SNMP_Session->open($ip, $community, 161)
-					or die "Couldn't talk to switch";
+			my $session = nms::snmp_open_session($ip, $community);
+
+			my %ports = ();
+			for my $port (expand_ports($switch->{'ports'})) {
+				$ports{$port} = 1;
 			}
-			my @ports = expand_ports($switch->{'ports'});
 
-			for my $port (@ports) {
-				my $in = fetch_data($session, $port, 0, $switch->{'wide_counters'});
-				die $switch->{'switch'}.":$port: failed reading in" if !defined $in;
-				my $out = fetch_data($session, $port, 1, $switch->{'wide_counters'});
-				die $switch->{'switch'}.":$port: failed reading out" if !defined $out;
-				my $ine = fetch_errors($session, $port, 0);
-				die $switch->{'switch'}. ":$port: failed reading in-errors" if !defined $ine;
-				my $oute = fetch_errors($session, $port, 1);
-				die $switch->{'switch'}. ":$port: failed reading out-errors" if !defined $oute;
+			my $in_result = $session->get_table(
+				-maxrepetitions => 200,
+				-baseoid => $in_octets_oid,
+			);
+			my $out_result = $session->get_table(
+				-maxrepetitions => 200,
+				-baseoid => $out_octets_oid,
+			);
+			my $ine_result = $session->get_table(
+				-maxrepetitions => 200,
+				-baseoid => $in_errors_oid,
+			);
+			my $oute_result = $session->get_table(
+				-maxrepetitions => 200,
+				-baseoid => $out_errors_oid,
+			);
+			die "SNMP fetch failed: " . $session->error() if (!defined($in_result));
 
-				$qpoll->execute($switch->{'switch'}, $port, $in, $out, $ine, $oute) || die "%s:%s: %s\n", $switch->{'switch'}, $port, $in;
+			for my $key (keys %$in_result) {
+				(my $port = $key) =~ s/^\Q$in_octets_oid\E\.//;
+				my $in = $in_result->{$in_octets_oid . '.' . $port};
+				my $out = $out_result->{$out_octets_oid . '.' . $port};
+				my $ine = $ine_result->{$in_errors_oid . '.' . $port};
+				my $oute = $oute_result->{$out_errors_oid . '.' . $port};
+				my $official_port = exists($ports{$port}) ? 1 : 0;
+				$qpoll->execute($switch->{'switch'}, $port, $in, $out, $ine, $oute, $official_port) || die "%s:%s: %s\n", $switch->{'switch'}, $port, $in;
 			}
 			$session->close;
 		};
@@ -164,54 +180,6 @@ EOF
 			or warn "Couldn't unlock switch";
 		$dbh->commit;
 	}
-}
-
-sub fetch_data {
-	my ($session, $port, $out, $wide_counters) = @_;
-	
-	my $oid;
-	if ($wide_counters) {
-		if ($out) {
-			$oid = BER::encode_oid(1, 3, 6, 1, 2, 1, 31, 1, 1, 1, 10, $port);  # interfaces.ifTable.ifEntry.ifHCOutOctets
-		} else {
-			$oid = BER::encode_oid(1, 3, 6, 1, 2, 1, 31, 1, 1, 1, 6, $port);  # interfaces.ifTable.ifEntry.ifHCInOctets
-		}
-	} else {
-		if ($out) {
-			$oid = BER::encode_oid(1, 3, 6, 1, 2, 1, 2, 2, 1, 16, $port);  # interfaces.ifTable.ifEntry.ifOutOctets
-		} else {
-			$oid = BER::encode_oid(1, 3, 6, 1, 2, 1, 2, 2, 1, 10, $port);  # interfaces.ifTable.ifEntry.ifInOctets
-		}
-	}
-
-	return fetch_snmp($session, $oid);
-}
-sub fetch_errors {
-	my ($session, $port, $out) = @_;
-	
-	my $oid;
-	if ($out) {
-		$oid = BER::encode_oid(1, 3, 6, 1, 2, 1, 2, 2, 1, 20, $port);     # interfaces.ifTable.ifEntry.ifOutErrors
-	} else {
-		$oid = BER::encode_oid(1, 3, 6, 1, 2, 1, 2, 2, 1, 14, $port);     # interfaces.ifTable.ifEntry.ifInErrors
-	}
-
-	return fetch_snmp($session, $oid);
-}
-	
-sub fetch_snmp {
-	my ($session, $oid) = @_;
-
-	if ($session->get_request_response($oid)) {
-		my ($bindings) = $session->decode_get_response ($session->{pdu_buffer});
-		my $binding;
-		while ($bindings ne '') {
-			($binding,$bindings) = &decode_sequence ($bindings);
-			my ($oid,$value) = &decode_by_template ($binding, "%O%@");
-			return BER::pretty_print($value);
-		}
-	}
-	die "Couldn't get info from switch";
 }
 
 sub expand_ports {

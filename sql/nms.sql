@@ -430,7 +430,8 @@ CREATE TABLE polls (
     bytes_in bigint NOT NULL,
     bytes_out bigint NOT NULL,
     errors_in bigint NOT NULL,
-    errors_out bigint NOT NULL
+    errors_out bigint NOT NULL,
+    official_port boolean NOT NULL DEFAULT false
 );
 ALTER TABLE ONLY polls ALTER COLUMN "time" SET STATISTICS 100;
 
