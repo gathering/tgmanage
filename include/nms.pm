@@ -18,11 +18,15 @@ BEGIN {
 	};
 
 	# $SNMP::debugging = 1;
+
+	# sudo mkdir /usr/share/mibs/site
+	# cd /usr/share/mibs/site
+	# wget -O- ftp://ftp.cisco.com/pub/mibs/v2/v2.tar.gz | sudo tar --strip-components=3 -zxvvf -
 	SNMP::initMib();
 	SNMP::loadModules('SNMPv2-MIB');
 	SNMP::loadModules('ENTITY-MIB');
 	SNMP::loadModules('IF-MIB');
-	#SNMP::loadModules('LLDP-MIB');
+	SNMP::loadModules('LLDP-MIB');
 }
 
 sub db_connect {
@@ -167,6 +171,46 @@ sub fetch_multi_snmp {
 	}
 
 	return \%results;
+}
+
+# A few utilities to convert from SNMP binary address format to human-readable.
+
+sub convert_mac {
+	return join(':', map { sprintf "%02x", $_ } unpack('C*', shift));
+}
+
+sub convert_ipv4 {
+	return join('.', map { sprintf "%d", $_ } unpack('C*', shift));
+}
+
+sub convert_ipv6 {
+	return join(':', map { sprintf "%x", $_ } unpack('n*', shift));
+}
+
+sub convert_addr {
+	my ($data, $type) = @_;
+	if ($type == 1) {
+		return convert_ipv4($data);
+	} elsif ($type == 2) {
+		return convert_ipv6($data);
+	} else {
+		die "Unknown address type $type";
+	}
+}
+
+# Convert raw binary SNMP data to list of bits.
+sub convert_bytelist {
+	return split //, unpack("B*", shift);
+}
+
+sub convert_lldp_caps {
+	my ($caps_data, $data) = @_;
+
+        my @caps = convert_bytelist($caps_data);
+        my @caps_names = qw(other repeater bridge ap router telephone docsis stationonly);
+        for (my $i = 0; $i < scalar @caps && $i < scalar @caps_names; ++$i) {
+		$data->{'cap_enabled_' . $caps_names[$i]} = $caps[$i];
+        }
 }
 
 1;

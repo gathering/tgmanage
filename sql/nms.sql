@@ -545,7 +545,8 @@ CREATE TABLE switches (
     locked boolean DEFAULT false NOT NULL,
     priority integer DEFAULT 0 NOT NULL,
     poll_frequency interval DEFAULT '00:01:00'::interval NOT NULL,
-    community character varying DEFAULT 'public'::character varying NOT NULL
+    community character varying DEFAULT 'public'::character varying NOT NULL,
+    lldp_chassis_id character varying
 );
 
 
