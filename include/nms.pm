@@ -4,9 +4,9 @@ use warnings;
 use DBI;
 use Net::Telnet;
 use Data::Dumper;
+use Net::SNMP;
 use FileHandle;
 package nms;
-
 
 use base 'Exporter';
 our @EXPORT = qw(switch_disconnect switch_connect switch_exec switch_timeout db_connect);
@@ -99,6 +99,39 @@ sub switch_timeout {
 sub switch_disconnect {
 	my ($conn) = @_;
 	$conn->close;
+}
+
+sub snmp_open_session {
+	my ($ip, $community) = @_;
+
+	my $domain = ($ip =~ /:/) ? 'udp6' : 'udp4';
+	my $version;
+	my %options = (
+		-hostname => $ip,
+		-domain => $domain,
+	);
+
+	if ($community =~ /^snmpv3:(.*)$/) {
+		my ($username, $authprotocol, $authpassword, $privprotocol, $privpassword) = split /\//, $1;
+
+		$options{'-username'} = $username;
+		$options{'-authprotocol'} = $authprotocol;
+		$options{'-authpassword'} = $authpassword;
+
+		if (defined($privprotocol) && defined($privpassword)) {
+			$options{'-privprotocol'} = $privprotocol;
+			$options{'-privpassword'} = $privpassword;
+		}
+
+		$options{'-version'} = 3;
+	} else {
+		$options{'-version'} = 2;
+	}
+
+	my ($session, $error) = Net::SNMP->session(%options);
+	die "SNMP session failed: " . $error if (!defined($session));
+
+	return $session;
 }
 
 1;
