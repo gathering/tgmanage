@@ -199,6 +199,14 @@ sub add_switch {
 		$dbh->do('INSERT INTO portnames (switchtype, port, description) VALUES (?, ?, ?)',
 			undef, $switchtype, $port->{'ifIndex'}, $port->{'ifDescr'});
 	}
+
+	# Entirely random placement. Annoying? Fix it yourself.
+	my $x = int(rand 1200);
+	my $y = int(rand 650);
+	my $box = sprintf "((%d,%d),(%d,%d))", $x, $y, $x+40, $y+40;
+	$dbh->do("INSERT INTO placements (switch,placement) VALUES (CURRVAL('switches_switch_seq'), ?)",
+		undef, $box);
+
 	$dbh->commit;
 }
 
