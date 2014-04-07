@@ -606,6 +606,10 @@ CREATE TABLE uplinks (
 
 ALTER TABLE public.uplinks OWNER TO nms;
 
+create table ping ( switch integer not null, updated timestamptz not null default current_timestamp, latency_ms float );
+create index updated_index on ping ( updated );
+alter table public.ping owner to nms;
+
 --
 -- Data for Name: ap_poll; Type: TABLE DATA; Schema: public; Owner: nms
 --
