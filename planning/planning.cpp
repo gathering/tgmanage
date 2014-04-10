@@ -126,11 +126,11 @@ struct VerticalGap {
 	unsigned after_row_num;
 	unsigned extra_cost;
 };
-// 3.5m, 4m, 5m, 4m gaps (1.1m, 1.6m, 2.6m, 1.6m extra).
+// 3, 4m, 4m, 4m gaps (0.6m, 1.6m, 1.6m, 1.6m extra).
 vector<VerticalGap> vertical_gaps = {
-	{ 5, 11 },
+	{ 5, 6 },
 	{ 13, 16 },
-	{ 21, 26 },
+	{ 21, 16 },
 	{ 30, 16 },
 };
 
