@@ -396,8 +396,7 @@ void Planner::find_mincost_maxflow(Graph *g)
 	int num_paths = 0;
 	for ( ;; ) {
 		// Reset Dijkstra state.
-		for (unsigned i = 0; i < g->all_nodes.size(); ++i) {
-			Node *n = g->all_nodes[i];
+		for (Node *n : g->all_nodes) {
 			n->cost_from_source = _INF;
 			n->seen = false;
 			n->prev_edge = NULL;
@@ -406,8 +405,7 @@ void Planner::find_mincost_maxflow(Graph *g)
 
 		for ( ;; ) {
 			Node *cheapest_unseen_node = NULL;
-			for (unsigned i = 0; i < g->all_nodes.size(); ++i) {
-				Node *n = g->all_nodes[i];
+			for (Node *n : g->all_nodes) {
 				if (n->seen || n->cost_from_source >= _INF) {
 					continue;
 				}
@@ -427,8 +425,7 @@ void Planner::find_mincost_maxflow(Graph *g)
 			cheapest_unseen_node->seen = true;
 
 			// Relax outgoing edges from this node.
-			for (unsigned i = 0; i < cheapest_unseen_node->edges.size(); ++i) {
-				Edge *e = cheapest_unseen_node->edges[i];
+			for (Edge *e : cheapest_unseen_node->edges) {
 				if (e->flow + 1 > e->capacity || e->reverse->flow - 1 > e->reverse->capacity) {
 					// Not feasible.
 					continue;
@@ -466,16 +463,10 @@ end:
 int find_distro(const Graph &g, int switch_index)
 {
 	for (unsigned j = 0; j < NUM_DISTRO; ++j) {
-		Edge *flow_edge = NULL;
-		for (unsigned k = 0; k < g.distro_nodes[j].edges.size(); ++k) {
-			Edge *e = g.distro_nodes[j].edges[k];
-			if (e->to == &g.switch_nodes[switch_index]) {
-				flow_edge = e;
-				break;
+		for (Edge *e : g.distro_nodes[j].edges) {
+			if (e->to == &g.switch_nodes[switch_index] && e->flow > 0) {
+				return j;
 			}
-		}
-		if (flow_edge != NULL && flow_edge->flow > 0) {
-			return j;
 		}
 	}
 	return -1;
