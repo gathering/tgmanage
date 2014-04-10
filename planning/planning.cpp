@@ -463,6 +463,25 @@ end:
 	logprintf("Augmented using %d paths.\n", num_paths);
 }
 
+// Figure out which distro this switch was connected to.
+int find_distro(const Graph &g, int switch_index)
+{
+	for (unsigned j = 0; j < NUM_DISTRO; ++j) {
+		Edge *flow_edge = NULL;
+		for (unsigned k = 0; k < g.distro_nodes[j].edges.size(); ++k) {
+			Edge *e = g.distro_nodes[j].edges[k];
+			if (e->to == &g.switch_nodes[switch_index]) {
+				flow_edge = e;
+				break;
+			}
+		}
+		if (flow_edge != NULL && flow_edge->flow > 0) {
+			return j;
+		}
+	}
+	return -1;
+}
+
 int Planner::do_work(int distro_placements[NUM_DISTRO])
 {
 	memcpy(this->distro_placements, distro_placements, sizeof(distro_placements[0]) * NUM_DISTRO);
@@ -489,23 +508,7 @@ int Planner::do_work(int distro_placements[NUM_DISTRO])
 	in_addr_t subnet_address = inet_addr(FIRST_SUBNET_ADDRESS);
 #endif
 	for (unsigned i = 0; i < switches.size(); ++i) {
-		// Figure out which distro this switch was connected to.
-		int distro = -1;
-		for (unsigned j = 0; j < NUM_DISTRO; ++j) {
-			Edge *flow_edge = NULL;
-			for (unsigned k = 0; k < g.distro_nodes[j].edges.size(); ++k) {
-				Edge *e = g.distro_nodes[j].edges[k];
-				if (e->to == &g.switch_nodes[i]) {
-					flow_edge = e;
-					break;
-				}
-			}
-			if (flow_edge != NULL && flow_edge->flow > 0) {
-				distro = j;
-				break;
-			}
-		}
-
+		int distro = find_distro(g, i);
 		if (i == 0 || switches[i].row != switches[i - 1].row) {
 			if (last_row == 5 || last_row == 13 || last_row == 21 || last_row == 29) {
 				logprintf("\n");
