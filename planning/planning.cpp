@@ -24,6 +24,7 @@
 #include <string>
 
 #define NUM_DISTRO 6
+#define NUM_ROWS 41
 #define SWITCHES_PER_ROW 4
 #define PORTS_PER_DISTRO 38
 
@@ -280,7 +281,7 @@ string port_name(unsigned distro, unsigned portnum)
 void Planner::init_switches()
 {
 	switches.clear();
-	for (unsigned i = 1; i <= 41; ++i) {
+	for (unsigned i = 1; i <= NUM_ROWS; ++i) {
 		// Game area.
 		if (i >= 1 && i <= 5) {
 			switches.push_back(Switch(i, 2));
@@ -310,13 +311,13 @@ void Planner::init_switches()
 		}
 
 		// Sector 1.
-		if (i >= 31 && i <= 40) {
+		if (i >= 31 && i <= 41) {
 			switches.push_back(Switch(i, 0));
 			switches.push_back(Switch(i, 1));
 		}
 
 		// Sector 2.
-		if (i >= 31 && i <= 38) {
+		if (i >= 31 && i <= 39) {
 			switches.push_back(Switch(i, 2));
 			switches.push_back(Switch(i, 3));
 		}
@@ -495,71 +496,91 @@ int Planner::do_work(int distro_placements[NUM_DISTRO])
 	construct_graph(switches, &g);
 	find_mincost_maxflow(&g);
 
+	for (unsigned row = 1; row <= NUM_ROWS; ++row) {
+		// Figure out distro markers.
+		char distro_marker_left[16] = " ";
+		char distro_marker_right[16] = " ";
+		for (int d = 0; d < NUM_DISTRO; ++d) {
+			if (int(row) == distro_placements[d]) {
+				sprintf(distro_marker_left, "[%u;1m*", d + 32);
+			}
+			if (int(row) == -distro_placements[d]) {
+				sprintf(distro_marker_right, "[%u;1m*", d + 32);
+			}
+		}
+
+		// See what switches we can find on this row.
+		int switch_indexes[SWITCHES_PER_ROW];
+		for (unsigned num = 0; num < SWITCHES_PER_ROW; ++num) {
+			switch_indexes[num] = -1;
+		}
+		for (unsigned i = 0; i < switches.size(); ++i) {
+			if (switches[i].row == row) {
+				switch_indexes[switches[i].num] = i;
+			}
+		}
+
+		// Print row header.
+		logprintf("[31;22m%2u (%2u-%2u)    ", row, row * 2 - 1, row * 2 + 0);
+
+		for (unsigned num = 0; num < SWITCHES_PER_ROW; ++num) {
+			if (switch_indexes[num] == -1) {
+				logprintf("%16s", "");
+			} else {
+				int i = switch_indexes[num];
+				int distro = find_distro(g, i);
+				if (distro == -1) {
+					logprintf("[%u;22m- ", distro + 32);
+				} else {
+					int this_distance = find_distance(switches[i], distro);
+					Inventory this_inv = find_inventory(switches[i], distro);
+					total_cost += find_cost(switches[i], distro);
+					logprintf("[%u;22m%u ", distro + 32, distro);
+#if TRUNCATE_METRIC
+					logprintf("(%-5s) (%3.1f)", this_inv.to_string().c_str(), this_distance / 10.0, distro_marker_left, distro_marker_right);
+#else
+					logprintf("(%3.1f)", this_distance / 10.0, distro_marker_left, distro_marker_right);
+#endif
+				}
+			}
+
+			if (num == 1) {
+				logprintf("%s %s", distro_marker_left, distro_marker_right);
+			} else {
+				logprintf("   ");
+			}
+		}
+		logprintf("\n");
+
+		// See if we just crossed a cap.
+		for (const VerticalGap& gap : vertical_gaps) {
+			if (row == gap.after_row_num) {
+				logprintf("\n");
+			}
+		}
+	}
+	logprintf("[%u;22m\n", 37);
+
 #if OUTPUT_FILES
 	FILE *patchlist = fopen("patchlist.txt", "w");
 	FILE *switchlist = fopen("switches.txt", "w");
-#endif
-	int last_row = 0, last_num = -1;
-#if OUTPUT_FILES
 	in_addr_t subnet_address = inet_addr(FIRST_SUBNET_ADDRESS);
-#endif
 	for (unsigned i = 0; i < switches.size(); ++i) {
 		int distro = find_distro(g, i);
-		if (i == 0 || switches[i].row != switches[i - 1].row) {
-			// New line. See if we just crossed a cap.
-			for (const VerticalGap& gap : vertical_gaps) {
-				if (last_row == int(gap.after_row_num)) {
-					logprintf("\n");
-				}
-			}
-			logprintf("\n[31;22m%2u (%2u-%2u)    ", switches[i].row, switches[i].row * 2 - 1, switches[i].row * 2 + 0);
-			last_num = -1;
+		if (distro == -1) {
+			continue;
 		}
-		for (unsigned j = last_num; j + 1 < switches[i].num; ++j) {
-			logprintf("%19s", "");
-		}
-
-		char distro_marker_left[16] = " ";
-		char distro_marker_right[16] = " ";
-		if (switches[i].num == 1) {
-			for (int d = 0; d < NUM_DISTRO; ++d) {
-				if (int(switches[i].row) == distro_placements[d]) {
-					sprintf(distro_marker_left, "[%u;1m*", d + 32);
-				}
-				if (int(switches[i].row) == -distro_placements[d]) {
-					sprintf(distro_marker_right, "[%u;1m*", d + 32);
-				}
-			}
-		}
-
 		int this_distance;
 		Inventory this_inv;
-		if (distro == -1) {
-			this_distance = _INF;
-			this_inv.num_10m = _INF;
-			logprintf("[%u;22m- ", distro + 32);
-		} else {
-			this_distance = find_distance(switches[i], distro);
-			this_inv = find_inventory(switches[i], distro);
-			total_cost += find_cost(switches[i], distro);
-			logprintf("[%u;22m%u ", distro + 32, distro);
-		}
-	
-#if TRUNCATE_METRIC
-		logprintf("(%-5s) (%3.1f)%s %s", this_inv.to_string().c_str(), this_distance / 10.0, distro_marker_left, distro_marker_right);
-#else
-		logprintf("(%3.1f)%s %s", this_distance / 10.0, distro_marker_left, distro_marker_right);
-#endif
+		this_distance = find_distance(switches[i], distro);
+		this_inv = find_inventory(switches[i], distro);
+		total_cost += find_cost(switches[i], distro);
 		total_slack += find_slack(this_inv, this_distance);
 		total_inv += this_inv;
 
-		last_row = switches[i].row;
-		last_num = switches[i].num;
-			
-#if OUTPUT_FILES
 		int port_num = num_ports_used[distro]++;
 		fprintf(patchlist, "e%u-%u %s %s %s %s %s\n",
-			last_row * 2 - 1, last_num + 1,
+			switches[i].row * 2 - 1, switches[i].num + 1,
 			distro_name(distro).c_str(),
 			port_name(distro, port_num).c_str(),
 			port_name(distro, port_num + 48).c_str(),
@@ -569,16 +590,12 @@ int Planner::do_work(int distro_placements[NUM_DISTRO])
 		in_addr subnet_addr4;
 		subnet_addr4.s_addr = subnet_address;
 		fprintf(switchlist, "%s %u e%u-%u x.x.x.x\n",
-			inet_ntoa(subnet_addr4), SUBNET_SIZE, last_row * 2 - 1, last_num + 1);
+			inet_ntoa(subnet_addr4), SUBNET_SIZE, switches[i].row * 2 - 1, switches[i].num + 1);
 		subnet_address = htonl(ntohl(subnet_address) + (1ULL << (32 - SUBNET_SIZE)));
-#endif
 	}
-#if OUTPUT_FILES
 	fclose(patchlist);
 	fclose(switchlist);
 #endif
-	logprintf("\n");
-	logprintf("[%u;22m\n", 37);
 
 #if TRUNCATE_METRIC
 	logprintf("\n");
