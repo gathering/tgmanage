@@ -141,8 +141,8 @@ unsigned Planner::find_distance(Switch from_where, unsigned distro)
 {
 	const int dp = abs(distro_placements[distro]);
 
-	// 3.7m from row to row (2.5m gap + 1.2m boards).
-	unsigned base_cost = 37 * abs(from_where.row - dp) +
+	// 3.6m from row to row (2.4m gap + 1.2m boards).
+	unsigned base_cost = 36 * abs(from_where.row - dp) +
 		horiz_cost[from_where.num];
 
 	if ((distro_placements[distro] >= 0) == (from_where.num >= 2)) {
@@ -150,15 +150,15 @@ unsigned Planner::find_distance(Switch from_where, unsigned distro)
 		base_cost += 50;
 	}
 	
-	// 4m, 5m, 4m gaps (1.5m, 2.5m, 1.5m extra).
+	// 3.5m, 4m, 5m, 4m gaps (1.1m, 1.6m, 2.6m, 1.6m extra).
 	if ((from_where.row <= 5) == (dp >= 6))
-		base_cost += 15;
+		base_cost += 11;
 	if ((from_where.row <= 13) == (dp >= 14))
-		base_cost += 15;
+		base_cost += 16;
 	if ((from_where.row <= 21) == (dp >= 22))
-		base_cost += 25;
-	if ((from_where.row <= 29) == (dp >= 30))
-		base_cost += 15;
+		base_cost += 26;
+	if ((from_where.row <= 30) == (dp >= 31))
+		base_cost += 16;
 
 	// Add 5m slack.
 	return base_cost + 50;
@@ -265,13 +265,43 @@ std::string port_name(unsigned distro, unsigned portnum)
 void Planner::init_switches()
 {
 	switches.clear();
-	for (unsigned i = 1; i <= 39; ++i) {
-		if (!(i >= 1 && i <= 5)) {
+	for (unsigned i = 1; i <= 41; ++i) {
+		// Game area.
+		if (i >= 1 && i <= 5) {
+			switches.push_back(Switch(i, 2));
+			switches.push_back(Switch(i, 3));
+		}
+
+		// Sectors 7 and 8.
+		if (i >= 6 && i <= 13) {
+			switches.push_back(Switch(i, 0));
+			switches.push_back(Switch(i, 1));
+			switches.push_back(Switch(i, 2));
+			switches.push_back(Switch(i, 3));
+		}
+
+		// Sector 5.
+		if (i >= 14 && i <= 21) {
 			switches.push_back(Switch(i, 0));
 			switches.push_back(Switch(i, 1));
 		}
-		if (!(i >= 14 && i <= 21) &&
-		    !(i >= 39)) {
+
+		// Sectors 3 and 4.
+		if (i >= 22 && i <= 30) {
+			switches.push_back(Switch(i, 0));
+			switches.push_back(Switch(i, 1));
+			switches.push_back(Switch(i, 2));
+			switches.push_back(Switch(i, 3));
+		}
+
+		// Sector 1.
+		if (i >= 31 && i <= 40) {
+			switches.push_back(Switch(i, 0));
+			switches.push_back(Switch(i, 1));
+		}
+
+		// Sector 2.
+		if (i >= 31 && i <= 38) {
 			switches.push_back(Switch(i, 2));
 			switches.push_back(Switch(i, 3));
 		}
@@ -461,7 +491,7 @@ end:
 		}
 
 		if (i == 0 || switches[i].row != switches[i - 1].row) {
-			if (last_row == 13 || last_row == 21 || last_row == 29) {
+			if (last_row == 5 || last_row == 13 || last_row == 21 || last_row == 29) {
 				logprintf("\n");
 			}
 			logprintf("\n[31;22m%2u (%2u-%2u)    ", switches[i].row, switches[i].row * 2 - 1, switches[i].row * 2 + 0);
