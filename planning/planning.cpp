@@ -382,7 +382,7 @@ int Planner::do_work(int distro_placements[NUM_DISTRO])
 		}
 		source_node.cost_from_source = 0;
 
-		for (unsigned i = 0; i < switches.size(); ++i) {
+		for ( ;; ) {
 			Node *cheapest_unseen_node = NULL;
 			for (unsigned i = 0; i < all_nodes.size(); ++i) {
 				Node *n = all_nodes[i];
@@ -402,10 +402,9 @@ int Planner::do_work(int distro_placements[NUM_DISTRO])
 				// Yay, we found a path to the sink.
 				break;
 			}
-
 			cheapest_unseen_node->seen = true;
 
-			// See if any of the edges out from this are feasible.
+			// Relax outgoing edges from this node.
 			for (unsigned i = 0; i < cheapest_unseen_node->edges.size(); ++i) {
 				Edge *e = cheapest_unseen_node->edges[i];
 				if (e->flow + 1 > e->capacity || e->reverse->flow - 1 > e->reverse->capacity) {
@@ -438,7 +437,7 @@ int Planner::do_work(int distro_placements[NUM_DISTRO])
 	}
 
 end:
-	logprintf("Augmented using %d paths.\n", num_paths, (unsigned)switches.size());
+	logprintf("Augmented using %d paths.\n", num_paths);
 	int last_row = 0, last_num = -1;
 #if OUTPUT_FILES
 	in_addr_t subnet_address = inet_addr(FIRST_SUBNET_ADDRESS);
