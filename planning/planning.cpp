@@ -110,18 +110,28 @@ struct Node {
 	bool seen;
 	Edge *prev_edge;
 };
-
-
-const unsigned horiz_cost[SWITCHES_PER_ROW] = {
-	216, 72, 72, 216  // Gap costs are added separately.
-};
-
 struct Graph {
 	Node source_node, sink_node;
 	Node distro_nodes[NUM_DISTRO];
 	vector<Node> switch_nodes;
 	vector<Edge> edges;
 	vector<Node*> all_nodes;
+};
+
+const unsigned horiz_cost[SWITCHES_PER_ROW] = {
+	216, 72, 72, 216  // Gap costs are added separately.
+};
+
+struct VerticalGap {
+	unsigned after_row_num;
+	unsigned extra_cost;
+};
+// 3.5m, 4m, 5m, 4m gaps (1.1m, 1.6m, 2.6m, 1.6m extra).
+vector<VerticalGap> vertical_gaps = {
+	{ 5, 11 },
+	{ 13, 16 },
+	{ 21, 26 },
+	{ 30, 16 },
 };
 
 class Planner {
@@ -148,26 +158,22 @@ class Planner {
 
 unsigned Planner::find_distance(Switch from_where, unsigned distro)
 {
-	const int dp = std::abs(distro_placements[distro]);
+	const unsigned dp = std::abs(distro_placements[distro]);
 
 	// 3.6m from row to row (2.4m gap + 1.2m boards).
-	unsigned base_cost = 36 * abs(int(from_where.row) - dp) +
+	unsigned base_cost = 36 * abs(int(from_where.row) - int(dp)) +
 		horiz_cost[from_where.num];
 
 	if ((distro_placements[distro] >= 0) == (from_where.num >= 2)) {
 		// 5.0m horizontal gap.
 		base_cost += 50;
 	}
-	
-	// 3.5m, 4m, 5m, 4m gaps (1.1m, 1.6m, 2.6m, 1.6m extra).
-	if ((from_where.row <= 5) == (dp >= 6))
-		base_cost += 11;
-	if ((from_where.row <= 13) == (dp >= 14))
-		base_cost += 16;
-	if ((from_where.row <= 21) == (dp >= 22))
-		base_cost += 26;
-	if ((from_where.row <= 30) == (dp >= 31))
-		base_cost += 16;
+
+	for (const VerticalGap& gap : vertical_gaps) {
+		if ((from_where.row <= gap.after_row_num) == (dp > gap.after_row_num)) {
+			base_cost += gap.extra_cost;
+		}
+	}
 
 	// Add 5m slack.
 	return base_cost + 50;
@@ -500,8 +506,11 @@ int Planner::do_work(int distro_placements[NUM_DISTRO])
 	for (unsigned i = 0; i < switches.size(); ++i) {
 		int distro = find_distro(g, i);
 		if (i == 0 || switches[i].row != switches[i - 1].row) {
-			if (last_row == 5 || last_row == 13 || last_row == 21 || last_row == 29) {
-				logprintf("\n");
+			// New line. See if we just crossed a cap.
+			for (const VerticalGap& gap : vertical_gaps) {
+				if (last_row == int(gap.after_row_num)) {
+					logprintf("\n");
+				}
 			}
 			logprintf("\n[31;22m%2u (%2u-%2u)    ", switches[i].row, switches[i].row * 2 - 1, switches[i].row * 2 + 0);
 			last_num = -1;
