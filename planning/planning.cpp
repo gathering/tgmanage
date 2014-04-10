@@ -23,7 +23,7 @@
 #include <map>
 #include <string>
 
-#define NUM_DISTRO 5
+#define NUM_DISTRO 6
 #define SWITCHES_PER_ROW 4
 #define PORTS_PER_DISTRO 38
 
