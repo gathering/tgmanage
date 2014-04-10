@@ -494,8 +494,8 @@ void Planner::print_switch(const Graph &g, int i)
 	}
 
 	int this_distance = find_distance(switches[i], distro);
-	Inventory this_inv = find_inventory(switches[i], distro);
 #if TRUNCATE_METRIC
+	Inventory this_inv = find_inventory(switches[i], distro);
 	logprintf("(%-5s) (%3.1f)", this_inv.to_string().c_str(), this_distance / 10.0);
 #else
 	logprintf("(%3.1f)", this_distance / 10.0);
