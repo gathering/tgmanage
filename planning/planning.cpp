@@ -21,10 +21,7 @@
 
 #include <vector>
 #include <map>
-#include <algorithm>
 #include <string>
-#include <utility>
-#include <queue>
 
 #define NUM_DISTRO 5
 #define SWITCHES_PER_ROW 4
@@ -38,6 +35,8 @@
 #define SUBNET_SIZE 26
 
 #define _INF 99999
+
+using namespace std;
 
 struct Switch {
 	unsigned row, num;
@@ -58,13 +57,13 @@ struct Inventory {
 		return *this;
 	}
 
-	std::string to_string() const
+	string to_string() const
 	{
 		if (num_10m >= _INF) {
 			return "XXXXX";
 		}
 
-		std::string ret;
+		string ret;
 		Inventory copy = *this;
 		while (copy.num_50m-- > 0) {
 			if (!ret.empty()) {
@@ -101,7 +100,7 @@ struct Edge {
 	int cost;
 };
 struct Node {
-	std::vector<Edge *> edges;
+	vector<Edge *> edges;
 
 	// For debugging.
 	char name[16];
@@ -120,17 +119,17 @@ const unsigned horiz_cost[SWITCHES_PER_ROW] = {
 struct Graph {
 	Node source_node, sink_node;
 	Node distro_nodes[NUM_DISTRO];
-	std::vector<Node> switch_nodes;
-	std::vector<Edge> edges;
-	std::vector<Node*> all_nodes;
+	vector<Node> switch_nodes;
+	vector<Edge> edges;
+	vector<Node*> all_nodes;
 };
 
 class Planner {
  private:
 	int distro_placements[NUM_DISTRO];
-	std::vector<Switch> switches;
-	std::map<unsigned, unsigned> num_ports_used;
-	std::string *log_buf;
+	vector<Switch> switches;
+	map<unsigned, unsigned> num_ports_used;
+	string *log_buf;
 
 	unsigned find_distance(Switch from_where, unsigned distro);
 	unsigned find_slack(Inventory inventory, unsigned distance);
@@ -138,21 +137,21 @@ class Planner {
 	Inventory find_inventory(Switch from_where, unsigned distro);
 	void logprintf(const char *str, ...);
 	void init_switches();
-	void construct_graph(const std::vector<Switch> &switches, Graph *g);
+	void construct_graph(const vector<Switch> &switches, Graph *g);
 	void find_mincost_maxflow(Graph *g);
 
  public:
 	Planner() : log_buf(NULL) {}
-	void set_log_buf(std::string *log_buf) { this->log_buf = log_buf; }
+	void set_log_buf(string *log_buf) { this->log_buf = log_buf; }
 	int do_work(int distro_placements[NUM_DISTRO]);
 };
 
 unsigned Planner::find_distance(Switch from_where, unsigned distro)
 {
-	const int dp = abs(distro_placements[distro]);
+	const int dp = std::abs(distro_placements[distro]);
 
 	// 3.6m from row to row (2.4m gap + 1.2m boards).
-	unsigned base_cost = 36 * abs(from_where.row - dp) +
+	unsigned base_cost = 36 * abs(int(from_where.row) - dp) +
 		horiz_cost[from_where.num];
 
 	if ((distro_placements[distro] >= 0) == (from_where.num >= 2)) {
@@ -257,14 +256,14 @@ void Planner::logprintf(const char *fmt, ...)
 	log_buf->append(buf);
 }
 
-std::string distro_name(unsigned distro)
+string distro_name(unsigned distro)
 {
 	char buf[16];
 	sprintf(buf, "distro%d", distro + 1);
 	return buf;
 }
 
-std::string port_name(unsigned distro, unsigned portnum)
+string port_name(unsigned distro, unsigned portnum)
 {
 	char buf[16];
 	int distros[] = { 1, 2, 5, 6 };
@@ -318,7 +317,7 @@ void Planner::init_switches()
 	}
 }
 
-void add_edge(Node *from, Node *to, int capacity, int cost, std::vector<Edge> *edges)
+void add_edge(Node *from, Node *to, int capacity, int cost, vector<Edge> *edges)
 {
 	assert(edges->size() + 2 <= edges->capacity());
 	edges->resize(edges->size() + 2);
@@ -341,7 +340,7 @@ void add_edge(Node *from, Node *to, int capacity, int cost, std::vector<Edge> *e
 	to->edges.push_back(e2);
 }
 
-void Planner::construct_graph(const std::vector<Switch> &switches, Graph *g)
+void Planner::construct_graph(const vector<Switch> &switches, Graph *g)
 {
 	// Min-cost max-flow in a graph that looks something like this
 	// (ie., all distros connect to all access switches):
@@ -617,7 +616,7 @@ int main(int argc, char **argv)
 		distro_placements[i] = atoi(argv[i + 1]);
 	}
 
-	std::string log;
+	string log;
 	Planner p;
 	log.clear();
 	p.set_log_buf(&log);
