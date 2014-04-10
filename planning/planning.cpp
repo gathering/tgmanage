@@ -150,6 +150,7 @@ class Planner {
 	void init_switches();
 	void construct_graph(const vector<Switch> &switches, Graph *g);
 	void find_mincost_maxflow(Graph *g);
+	void print_switch(const Graph &g, int i);
 
  public:
 	Planner() : log_buf(NULL) {}
@@ -479,6 +480,28 @@ int find_distro(const Graph &g, int switch_index)
 	return -1;
 }
 
+void Planner::print_switch(const Graph &g, int i)
+{
+	if (i == -1) {
+		logprintf("%16s", "");
+		return;
+	}
+	int distro = find_distro(g, i);
+	if (distro == -1) {
+		logprintf("[%u;22m- ", distro + 32);
+	} else {
+		logprintf("[%u;22m%u ", distro + 32, distro);
+	}
+
+	int this_distance = find_distance(switches[i], distro);
+	Inventory this_inv = find_inventory(switches[i], distro);
+#if TRUNCATE_METRIC
+	logprintf("(%-5s) (%3.1f)", this_inv.to_string().c_str(), this_distance / 10.0);
+#else
+	logprintf("(%3.1f)", this_distance / 10.0);
+#endif
+}
+
 int Planner::do_work(int distro_placements[NUM_DISTRO])
 {
 	memcpy(this->distro_placements, distro_placements, sizeof(distro_placements[0]) * NUM_DISTRO);
@@ -524,25 +547,7 @@ int Planner::do_work(int distro_placements[NUM_DISTRO])
 		logprintf("[31;22m%2u (%2u-%2u)    ", row, row * 2 - 1, row * 2 + 0);
 
 		for (unsigned num = 0; num < SWITCHES_PER_ROW; ++num) {
-			if (switch_indexes[num] == -1) {
-				logprintf("%16s", "");
-			} else {
-				int i = switch_indexes[num];
-				int distro = find_distro(g, i);
-				if (distro == -1) {
-					logprintf("[%u;22m- ", distro + 32);
-				} else {
-					int this_distance = find_distance(switches[i], distro);
-					Inventory this_inv = find_inventory(switches[i], distro);
-					total_cost += find_cost(switches[i], distro);
-					logprintf("[%u;22m%u ", distro + 32, distro);
-#if TRUNCATE_METRIC
-					logprintf("(%-5s) (%3.1f)", this_inv.to_string().c_str(), this_distance / 10.0, distro_marker_left, distro_marker_right);
-#else
-					logprintf("(%3.1f)", this_distance / 10.0, distro_marker_left, distro_marker_right);
-#endif
-				}
-			}
+			print_switch(g, switch_indexes[num]);
 
 			if (num == 1) {
 				logprintf("%s %s", distro_marker_left, distro_marker_right);
@@ -570,10 +575,8 @@ int Planner::do_work(int distro_placements[NUM_DISTRO])
 		if (distro == -1) {
 			continue;
 		}
-		int this_distance;
-		Inventory this_inv;
-		this_distance = find_distance(switches[i], distro);
-		this_inv = find_inventory(switches[i], distro);
+		int this_distance = find_distance(switches[i], distro);
+		Inventory this_inv = find_inventory(switches[i], distro);
 		total_cost += find_cost(switches[i], distro);
 		total_slack += find_slack(this_inv, this_distance);
 		total_inv += this_inv;
