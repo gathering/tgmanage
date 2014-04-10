@@ -46,7 +46,7 @@ struct Switch {
 };
 
 struct Inventory {
-	Inventory() : num_10m(0), num_30m(0), num_50m(0), extensions(0), horiz_gap_crossings(0) {}
+	Inventory() : num_10m(0), num_30m(0), num_50m(0), extensions(0), horiz_gap_crossings(0), vert_chasm_crossings(0) {}
 
 	Inventory& operator+= (const Inventory& other)
 	{
@@ -55,6 +55,7 @@ struct Inventory {
 		this->num_50m += other.num_50m;
 		this->extensions += other.extensions;
 		this->horiz_gap_crossings += other.horiz_gap_crossings;
+		this->vert_chasm_crossings += other.vert_chasm_crossings;
 		return *this;
 	}
 
@@ -88,7 +89,7 @@ struct Inventory {
 	}
 
 	unsigned num_10m, num_30m, num_50m;
-	unsigned extensions, horiz_gap_crossings;
+	unsigned extensions, horiz_gap_crossings, vert_chasm_crossings;
 };
 
 // Data structures for flow algorithm.
@@ -218,6 +219,11 @@ Inventory Planner::find_inventory(Switch from_where, unsigned distro)
 		inv.horiz_gap_crossings = 1;
 	}
 
+	// The gap between Game and Sector 8 is unsurmountable.
+	if ((abs(distro_placements[distro]) <= 5) == (from_where.row >= 6)) {
+		inv.vert_chasm_crossings = 1;
+	}
+
 	return inv;
 }
 
@@ -245,6 +251,9 @@ unsigned Planner::find_cost(Switch from_where, unsigned distro)
 	} else {
 		cost += HORIZ_GAP_COST * inv.horiz_gap_crossings;
 	}
+
+	// Also, the gap between Game and Sector 8 is unsurmountable.
+	cost += _INF * inv.vert_chasm_crossings;
 
 	return cost;
 }
