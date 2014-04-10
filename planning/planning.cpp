@@ -117,6 +117,14 @@ const unsigned horiz_cost[SWITCHES_PER_ROW] = {
 	216, 72, 72, 216  // Gap costs are added separately.
 };
 
+struct Graph {
+	Node source_node, sink_node;
+	Node distro_nodes[NUM_DISTRO];
+	std::vector<Node> switch_nodes;
+	std::vector<Edge> edges;
+	std::vector<Node*> all_nodes;
+};
+
 class Planner {
  private:
 	int distro_placements[NUM_DISTRO];
@@ -130,6 +138,8 @@ class Planner {
 	Inventory find_inventory(Switch from_where, unsigned distro);
 	void logprintf(const char *str, ...);
 	void init_switches();
+	void construct_graph(const std::vector<Switch> &switches, Graph *g);
+	void find_mincost_maxflow(Graph *g);
 
  public:
 	Planner() : log_buf(NULL) {}
@@ -330,24 +340,9 @@ void add_edge(Node *from, Node *to, int capacity, int cost, std::vector<Edge> *e
 	e2->reverse = e1;
 	to->edges.push_back(e2);
 }
-		
-int Planner::do_work(int distro_placements[NUM_DISTRO])
+
+void Planner::construct_graph(const std::vector<Switch> &switches, Graph *g)
 {
-	memcpy(this->distro_placements, distro_placements, sizeof(distro_placements[0]) * NUM_DISTRO);
-
-	num_ports_used.clear();
-
-#if OUTPUT_FILES
-	FILE *patchlist = fopen("patchlist.txt", "w");
-	FILE *switchlist = fopen("switches.txt", "w");
-#endif
-	Inventory total_inv;
-	unsigned total_cost = 0, total_slack = 0;
-
-	init_switches();
-
-	logprintf("Finding optimal layout for %u switches\n", switches.size());
-
 	// Min-cost max-flow in a graph that looks something like this
 	// (ie., all distros connect to all access switches):
 	//
@@ -360,15 +355,11 @@ int Planner::do_work(int distro_placements[NUM_DISTRO])
 	// Capacity from source to distro is 48 (or whatever), cost is 0.
 	// Capacity from distro to access is 1, cost is cable length + penalties.
 	// Capacity from access to sink is 1, cost is 0.
-	Node source_node, sink_node;
-	Node distro_nodes[NUM_DISTRO];
-	std::vector<Node> switch_nodes;
-	std::vector<Edge> edges;
-	switch_nodes.resize(switches.size());
-	edges.reserve(switches.size() * NUM_DISTRO * 2 + 16);
+	g->switch_nodes.resize(switches.size());
+	g->edges.reserve(switches.size() * NUM_DISTRO * 2 + 16);
 
 	for (unsigned i = 0; i < NUM_DISTRO; ++i) {
-		add_edge(&source_node, &distro_nodes[i], PORTS_PER_DISTRO, 0, &edges);
+		add_edge(&g->source_node, &g->distro_nodes[i], PORTS_PER_DISTRO, 0, &g->edges);
 	}
 	for (unsigned i = 0; i < NUM_DISTRO; ++i) {
 		for (unsigned j = 0; j < switches.size(); ++j) {
@@ -376,46 +367,48 @@ int Planner::do_work(int distro_placements[NUM_DISTRO])
 			if (cost >= _INF) {
 				continue;
 			}
-			add_edge(&distro_nodes[i], &switch_nodes[j], 1, cost, &edges);
+			add_edge(&g->distro_nodes[i], &g->switch_nodes[j], 1, cost, &g->edges);
 		}
 	}
 	for (unsigned i = 0; i < switches.size(); ++i) {
-		add_edge(&switch_nodes[i], &sink_node, 1, 0, &edges);
+		add_edge(&g->switch_nodes[i], &g->sink_node, 1, 0, &g->edges);
 	}
 	
-	std::vector<Node*> all_nodes;
-	all_nodes.push_back(&source_node);
-	strcpy(source_node.name, "source");
+	g->all_nodes.push_back(&g->source_node);
+	strcpy(g->source_node.name, "source");
 
-	all_nodes.push_back(&sink_node);
-	strcpy(sink_node.name, "sink");
+	g->all_nodes.push_back(&g->sink_node);
+	strcpy(g->sink_node.name, "sink");
 
 	for (unsigned i = 0; i < NUM_DISTRO; ++i) {
-		all_nodes.push_back(&distro_nodes[i]);
-		sprintf(distro_nodes[i].name, "distro%d", i);
+		g->all_nodes.push_back(&g->distro_nodes[i]);
+		sprintf(g->distro_nodes[i].name, "distro%d", i);
 	}
 	for (unsigned i = 0; i < switches.size(); ++i) {
-		all_nodes.push_back(&switch_nodes[i]);
-		sprintf(switch_nodes[i].name, "switch%d", i);
+		g->all_nodes.push_back(&g->switch_nodes[i]);
+		sprintf(g->switch_nodes[i].name, "switch%d", i);
 	}
+}
 
+void Planner::find_mincost_maxflow(Graph *g)
+{
 	// We use the successive shortest path algorithm, using a primitive Dijkstra
 	// (not heap-based, so O(VE)) for search.
 	int num_paths = 0;
 	for ( ;; ) {
 		// Reset Dijkstra state.
-		for (unsigned i = 0; i < all_nodes.size(); ++i) {
-			Node *n = all_nodes[i];
+		for (unsigned i = 0; i < g->all_nodes.size(); ++i) {
+			Node *n = g->all_nodes[i];
 			n->cost_from_source = _INF;
 			n->seen = false;
 			n->prev_edge = NULL;
 		}
-		source_node.cost_from_source = 0;
+		g->source_node.cost_from_source = 0;
 
 		for ( ;; ) {
 			Node *cheapest_unseen_node = NULL;
-			for (unsigned i = 0; i < all_nodes.size(); ++i) {
-				Node *n = all_nodes[i];
+			for (unsigned i = 0; i < g->all_nodes.size(); ++i) {
+				Node *n = g->all_nodes[i];
 				if (n->seen || n->cost_from_source >= _INF) {
 					continue;
 				}
@@ -428,7 +421,7 @@ int Planner::do_work(int distro_placements[NUM_DISTRO])
 				// Oops, no usable path.
 				goto end;
 			}
-			if (cheapest_unseen_node == &sink_node) {
+			if (cheapest_unseen_node == &g->sink_node) {
 				// Yay, we found a path to the sink.
 				break;
 			}
@@ -452,7 +445,7 @@ int Planner::do_work(int distro_placements[NUM_DISTRO])
 		}
 
 		// Increase flow along the path, moving backwards towards the source.
-		Node *n = &sink_node;
+		Node *n = &g->sink_node;
 		for ( ;; ) {
 			if (n->prev_edge == NULL) {
 				break;
@@ -468,6 +461,29 @@ int Planner::do_work(int distro_placements[NUM_DISTRO])
 
 end:
 	logprintf("Augmented using %d paths.\n", num_paths);
+}
+
+int Planner::do_work(int distro_placements[NUM_DISTRO])
+{
+	memcpy(this->distro_placements, distro_placements, sizeof(distro_placements[0]) * NUM_DISTRO);
+
+	num_ports_used.clear();
+
+	Inventory total_inv;
+	unsigned total_cost = 0, total_slack = 0;
+
+	init_switches();
+
+	logprintf("Finding optimal layout for %u switches\n", switches.size());
+
+	Graph g;
+	construct_graph(switches, &g);
+	find_mincost_maxflow(&g);
+
+#if OUTPUT_FILES
+	FILE *patchlist = fopen("patchlist.txt", "w");
+	FILE *switchlist = fopen("switches.txt", "w");
+#endif
 	int last_row = 0, last_num = -1;
 #if OUTPUT_FILES
 	in_addr_t subnet_address = inet_addr(FIRST_SUBNET_ADDRESS);
@@ -477,9 +493,9 @@ end:
 		int distro = -1;
 		for (unsigned j = 0; j < NUM_DISTRO; ++j) {
 			Edge *flow_edge = NULL;
-			for (unsigned k = 0; k < distro_nodes[j].edges.size(); ++k) {
-				Edge *e = distro_nodes[j].edges[k];
-				if (e->to == &switch_nodes[i]) {
+			for (unsigned k = 0; k < g.distro_nodes[j].edges.size(); ++k) {
+				Edge *e = g.distro_nodes[j].edges[k];
+				if (e->to == &g.switch_nodes[i]) {
 					flow_edge = e;
 					break;
 				}
@@ -534,7 +550,7 @@ end:
 #endif
 		total_slack += find_slack(this_inv, this_distance);
 		total_inv += this_inv;
-				
+
 		last_row = switches[i].row;
 		last_num = switches[i].num;
 			
@@ -585,7 +601,7 @@ end:
 	logprintf("Total slack: %.1fm (%.2f%%)\n", total_slack / 10.0, 100.0 * double(total_slack) / double(total_cable));
 
 	for (int i = 0; i < NUM_DISTRO; ++i) {
-		Edge *e = source_node.edges[i];
+		Edge *e = g.source_node.edges[i];
 		logprintf("Remaining ports on distro %d: %d\n", i + 1, e->capacity - e->flow);
 	}
 	return total_cost;
