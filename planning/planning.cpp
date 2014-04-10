@@ -143,10 +143,10 @@ class Planner {
 	map<unsigned, unsigned> num_ports_used;
 	string *log_buf;
 
-	unsigned find_distance(Switch from_where, unsigned distro);
+	unsigned find_distance(Switch from_where, int distro);
 	unsigned find_slack(Inventory inventory, unsigned distance);
-	unsigned find_cost(Switch from_where, unsigned distro);
-	Inventory find_inventory(Switch from_where, unsigned distro);
+	unsigned find_cost(Switch from_where, int distro);
+	Inventory find_inventory(Switch from_where, int distro);
 	void logprintf(const char *str, ...);
 	void init_switches();
 	void construct_graph(const vector<Switch> &switches, Graph *g);
@@ -159,8 +159,9 @@ class Planner {
 	int do_work(int distro_placements[NUM_DISTRO]);
 };
 
-unsigned Planner::find_distance(Switch from_where, unsigned distro)
+unsigned Planner::find_distance(Switch from_where, int distro)
 {
+	assert(distro != -1);
 	const unsigned dp = std::abs(distro_placements[distro]);
 
 	// 3.6m from row to row (2.4m gap + 1.2m boards).
@@ -182,10 +183,11 @@ unsigned Planner::find_distance(Switch from_where, unsigned distro)
 	return base_cost + 50;
 }
 	
-Inventory Planner::find_inventory(Switch from_where, unsigned distro)
+Inventory Planner::find_inventory(Switch from_where, int distro)
 {
-	unsigned distance = find_distance(from_where, distro);
+	assert(distro != -1);
 
+	unsigned distance = find_distance(from_where, distro);
 	Inventory inv;
 	if (distance <= 100) {
 		inv.num_10m = 1;
@@ -232,7 +234,7 @@ unsigned Planner::find_slack(Inventory inventory, unsigned distance)
 	return 100 * inventory.num_10m + 300 * inventory.num_30m + 500 * inventory.num_50m - distance;
 }
 
-unsigned Planner::find_cost(Switch from_where, unsigned distro)
+unsigned Planner::find_cost(Switch from_where, int distro)
 {
 	Inventory inv = find_inventory(from_where, distro);
 	unsigned cost;
@@ -498,17 +500,23 @@ void Planner::print_switch(const Graph &g, int i)
 	int distro = find_distro(g, i);
 	if (distro == -1) {
 		logprintf("[%u;22m- ", distro + 32);
+#if TRUNCATE_METRIC
+		logprintf("(XXXXX) (XXXX)");
+#else
+		logprintf("(XXXX)");
+#endif
 	} else {
 		logprintf("[%u;22m%u ", distro + 32, distro);
+
+		int this_distance = find_distance(switches[i], distro);
+#if TRUNCATE_METRIC
+		Inventory this_inv = find_inventory(switches[i], distro);
+		logprintf("(%-5s) (%3.1f)", this_inv.to_string().c_str(), this_distance / 10.0);
+#else
+		logprintf("(%3.1f)", this_distance / 10.0);
+#endif
 	}
 
-	int this_distance = find_distance(switches[i], distro);
-#if TRUNCATE_METRIC
-	Inventory this_inv = find_inventory(switches[i], distro);
-	logprintf("(%-5s) (%3.1f)", this_inv.to_string().c_str(), this_distance / 10.0);
-#else
-	logprintf("(%3.1f)", this_distance / 10.0);
-#endif
 }
 
 int Planner::do_work(int distro_placements[NUM_DISTRO])
@@ -575,6 +583,19 @@ int Planner::do_work(int distro_placements[NUM_DISTRO])
 	}
 	logprintf("[%u;22m\n", 37);
 
+	for (unsigned i = 0; i < switches.size(); ++i) {
+		int distro = find_distro(g, i);
+		if (distro == -1) {
+			total_cost += _INF;
+			continue;
+		}
+		int this_distance = find_distance(switches[i], distro);
+		Inventory this_inv = find_inventory(switches[i], distro);
+		total_cost += find_cost(switches[i], distro);
+		total_slack += find_slack(this_inv, this_distance);
+		total_inv += this_inv;
+	}
+
 #if OUTPUT_FILES
 	FILE *patchlist = fopen("patchlist.txt", "w");
 	FILE *switchlist = fopen("switches.txt", "w");
@@ -584,11 +605,6 @@ int Planner::do_work(int distro_placements[NUM_DISTRO])
 		if (distro == -1) {
 			continue;
 		}
-		int this_distance = find_distance(switches[i], distro);
-		Inventory this_inv = find_inventory(switches[i], distro);
-		total_cost += find_cost(switches[i], distro);
-		total_slack += find_slack(this_inv, this_distance);
-		total_inv += this_inv;
 
 		int port_num = num_ports_used[distro]++;
 		fprintf(patchlist, "e%u-%u %s %s %s %s %s\n",
@@ -638,9 +654,39 @@ int Planner::do_work(int distro_placements[NUM_DISTRO])
 	return total_cost;
 }
 
+void plan_recursively(int distro_placements[NUM_DISTRO], int distro_num, int min_placement, int max_placement, int *best_cost)
+{
+	if (distro_num == NUM_DISTRO) {
+		string log;
+		Planner p;
+		log.clear();
+		p.set_log_buf(&log);
+
+		int cost = p.do_work(distro_placements);
+		if (cost >= *best_cost) {
+			return;
+		}
+		*best_cost = cost;
+		for (unsigned i = 0; i < NUM_DISTRO; ++i) {
+			printf("%d ", distro_placements[i]);
+		}
+		printf("= %d\n", cost);
+		printf("%s\n", log.c_str());
+		return;
+	}
+
+	for (int i = min_placement; i <= max_placement; ++i) {
+		distro_placements[distro_num] = i;
+		plan_recursively(distro_placements, distro_num + 1, i + 1, max_placement, best_cost);
+		distro_placements[distro_num] = -i;
+		plan_recursively(distro_placements, distro_num + 1, i + 1, max_placement, best_cost);
+	}
+}
+
 int main(int argc, char **argv)
 {
 	int distro_placements[NUM_DISTRO];
+#if 0
 	for (int i = 0; i < NUM_DISTRO; ++i) {
 		distro_placements[i] = atoi(argv[i + 1]);
 	}
@@ -652,4 +698,9 @@ int main(int argc, char **argv)
 	(void)p.do_work(distro_placements);
 	printf("%s\n", log.c_str());
 	return 0;
+#else
+	int best_cost = _INF * 1000;
+	plan_recursively(distro_placements, 0, 1, NUM_ROWS, &best_cost);
+	return 0;
+#endif
 }
