@@ -2,8 +2,8 @@
 // About three times as fast as the old DP+heuristics-based solution
 // (<2ms for planning TG), and can deal with less regular cost metrics.
 //
-// Given D distro switches and N access switches, complexity is approx. O(dn³)
-// (runs n iterations, each iteration is O(VE), V is O(n), E is O(dn))).
+// Given D distro switches and N access switches, complexity is approx. O(n²(log d+log n))
+// (runs n iterations, each iteration is O(Vlog E), V is O(n), E is O(dn))).
 //
 // g++ -std=gnu++11 -Wall -g -O3 -fopenmp -DOUTPUT_FILES=1 -o planning planning.cpp && ./planning -3 -6 11 22 -26 35
 
@@ -23,6 +23,7 @@
 #include <vector>
 #include <map>
 #include <string>
+#include <queue>
 
 #define NUM_DISTRO 6
 #define NUM_ROWS 41
@@ -429,8 +430,8 @@ void Planner::construct_graph(const vector<Switch> &switches, Graph *g)
 
 void Planner::find_mincost_maxflow(Graph *g)
 {
-	// We use the successive shortest path algorithm, using a primitive Dijkstra
-	// (not heap-based, so O(VE)) for search.
+	// We use the successive shortest path algorithm, using a simple
+	// heap-based Dijkstra (O(Vlog E)) for search.
 	int num_paths = 0;
 	for ( ;; ) {
 		// Reset Dijkstra state.
@@ -441,41 +442,43 @@ void Planner::find_mincost_maxflow(Graph *g)
 		}
 		g->source_node.cost_from_source = 0;
 
-		for ( ;; ) {
-			Node *cheapest_unseen_node = NULL;
-			for (Node *n : g->all_nodes) {
-				if (n->seen || n->cost_from_source >= _INF) {
-					continue;
-				}
-				if (cheapest_unseen_node == NULL ||
-				    n->cost_from_source < cheapest_unseen_node->cost_from_source) {
-					cheapest_unseen_node = n;
-				}
+		priority_queue<pair<int, Node*>> q;
+		q.push(make_pair(0, &g->source_node));
+
+		while (!q.empty()) {
+			Node *u = q.top().second;
+			q.pop();
+			if (u->seen) {
+				continue;
 			}
-			if (cheapest_unseen_node == NULL) {
-				// Oops, no usable path.
-				goto end;
-			}
-			if (cheapest_unseen_node == &g->sink_node) {
+			u->seen = true;
+			if (u == &g->sink_node) {
 				// Yay, we found a path to the sink.
 				break;
 			}
-			cheapest_unseen_node->seen = true;
 
 			// Relax outgoing edges from this node.
-			for (Edge *e : cheapest_unseen_node->edges) {
+			for (Edge *e : u->edges) {
+				Node *v = e->to;
+				if (v->seen) {
+					continue;
+				}
 				if (e->flow + 1 > e->capacity || e->reverse->flow - 1 > e->reverse->capacity) {
 					// Not feasible.
 					continue;
 				}
-				if (e->to->cost_from_source <= cheapest_unseen_node->cost_from_source + e->cost) {
+				if (v->cost_from_source <= u->cost_from_source + e->cost) {
 					// Already seen through a better path.
 					continue;
 				}
-				e->to->seen = false;
-				e->to->prev_edge = e;
-				e->to->cost_from_source = cheapest_unseen_node->cost_from_source + e->cost;
+				v->prev_edge = e;
+				v->cost_from_source = u->cost_from_source + e->cost;
+				q.push(make_pair(-v->cost_from_source, v));
 			}
+		}
+		if (q.empty()) {
+			// Oops, no usable path.
+			goto end;
 		}
 
 		// Increase flow along the path, moving backwards towards the source.
