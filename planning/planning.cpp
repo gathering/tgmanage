@@ -121,6 +121,11 @@ struct Graph {
 	vector<Edge> edges;
 	vector<Node*> all_nodes;
 };
+struct CompareByCost {
+	bool operator() (const Node *a, const Node *b) const {
+		return a->cost_from_source > b->cost_from_source;
+	}
+};
 
 const unsigned horiz_cost[SWITCHES_PER_ROW] = {
 	216, 72, 72, 216  // Gap costs are added separately.
@@ -442,11 +447,11 @@ void Planner::find_mincost_maxflow(Graph *g)
 		}
 		g->source_node.cost_from_source = 0;
 
-		priority_queue<pair<int, Node*>> q;
-		q.push(make_pair(0, &g->source_node));
+		priority_queue<Node *, vector<Node *>, CompareByCost> q;
+		q.push(&g->source_node);
 
 		while (!q.empty()) {
-			Node *u = q.top().second;
+			Node *u = q.top();
 			q.pop();
 			if (u->seen) {
 				continue;
@@ -473,7 +478,7 @@ void Planner::find_mincost_maxflow(Graph *g)
 				}
 				v->prev_edge = e;
 				v->cost_from_source = u->cost_from_source + e->cost;
-				q.push(make_pair(-v->cost_from_source, v));
+				q.push(v);
 			}
 		}
 		if (q.empty()) {
