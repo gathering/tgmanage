@@ -5,7 +5,7 @@
 // Given D distro switches and N access switches, complexity is approx. O(dn³)
 // (runs n iterations, each iteration is O(VE), V is O(n), E is O(dn))).
 //
-// g++ -std=gnu++11 -Wall -g -O2 -DOUTPUT_FILES=1 -o planning planning.cpp && ./planning -3 -6 11 22 -26 35
+// g++ -std=gnu++11 -Wall -g -O3 -fopenmp -DOUTPUT_FILES=1 -o planning planning.cpp && ./planning -3 -6 11 22 -26 35
 
 #include <stdio.h>
 #include <math.h>
@@ -19,6 +19,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
+#include <atomic>
 #include <vector>
 #include <map>
 #include <string>
@@ -672,7 +673,7 @@ int Planner::do_work(int distro_placements[NUM_DISTRO])
 	return total_cost;
 }
 
-void plan_recursively(int distro_placements[NUM_DISTRO], int distro_num, int min_placement, int max_placement, int *best_cost)
+void plan_recursively(int distro_placements[NUM_DISTRO], int distro_num, int min_placement, int max_placement, atomic<int> *best_cost)
 {
 	if (distro_num == NUM_DISTRO) {
 		string log;
@@ -681,10 +682,15 @@ void plan_recursively(int distro_placements[NUM_DISTRO], int distro_num, int min
 		p.set_log_buf(&log);
 
 		int cost = p.do_work(distro_placements);
-		if (cost >= *best_cost) {
+try_again:
+		int old_best_cost = best_cost->load();
+		if (cost >= old_best_cost) {
 			return;
 		}
-		*best_cost = cost;
+		if (!best_cost->compare_exchange_weak(old_best_cost, cost)) {
+			// Someone else changed the value in the meantime.
+			goto try_again;
+		}
 		for (unsigned i = 0; i < NUM_DISTRO; ++i) {
 			printf("%d ", distro_placements[i]);
 		}
@@ -717,9 +723,38 @@ int main(int argc, char **argv)
 	printf("%s\n", log.c_str());
 	return 0;
 #else
-	int best_cost = _INF * 1000;
+	atomic<int> best_cost(_INF * 1000);
 	distro_placements[0] = -3;  // obvious
-	plan_recursively(distro_placements, 1, 6, NUM_ROWS, &best_cost);
+
+	constexpr int min_placement = 6;
+	constexpr int max_placement = NUM_ROWS;
+
+	// Boring single-threaded version
+	// plan_recursively(distro_placements, 1, min_placement, max_placement, &best_cost);
+
+	#pragma omp parallel for schedule(dynamic,1) collapse(2)
+	for (int i = min_placement; i <= max_placement; ++i) {
+		for (int j = min_placement; j <= max_placement; ++j) {
+			if (j <= i) continue;
+
+			int new_distro_placements[NUM_DISTRO];
+			memcpy(new_distro_placements, distro_placements, sizeof(distro_placements));
+
+			new_distro_placements[1] = i;
+
+			new_distro_placements[2] = j;
+			plan_recursively(new_distro_placements, 3, j + 1, max_placement, &best_cost);
+			new_distro_placements[2] = -j;
+			plan_recursively(new_distro_placements, 3, j + 1, max_placement, &best_cost);
+
+			new_distro_placements[1] = -i;
+			new_distro_placements[2] = j;
+			plan_recursively(new_distro_placements, 3, j + 1, max_placement, &best_cost);
+			new_distro_placements[2] = -j;
+			plan_recursively(new_distro_placements, 3, j + 1, max_placement, &best_cost);
+		}
+	}
+
 	return 0;
 #endif
 }
