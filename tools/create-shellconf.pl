@@ -19,7 +19,7 @@ my $pri_hostname     = $nms::config::pri_hostname;
 my $pri_ptr   = $nms::config::pri_ptr;
 my $pri_v6    = $nms::config::pri_v6;
 
-my $sec_a     = $nms::config::sec_a;
+my $sec_hostname     = $nms::config::sec_hostname;
 my $sec_ptr   = $nms::config::sec_ptr;
 my $sec_v6    = $nms::config::sec_v6;
 
@@ -39,7 +39,7 @@ print CFG "#\n";
 print CFG "# Do you need new common/configuration variables?\n";
 print CFG "# Add/update include/config.local.pm and tools/create-shellconf.pl\n\n";
 print CFG "PRIMARY=\"$pri_hostname.$tgname.gathering.org\"\n";
-print CFG "SECONDARY=\"$sec_a.$tgname.gathering.org\"\n";
+print CFG "SECONDARY=\"$sec_hostname.$tgname.gathering.org\"\n";
 print CFG "TGNAME=\"$tgname\"\n\n";
 print CFG "PRI_PTR=\"$pri_ptr\"\n";
 print CFG "SEC_PTR=\"$sec_ptr\"\n\n";

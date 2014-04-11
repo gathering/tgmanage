@@ -34,7 +34,7 @@ our $pri_hostname     = "winix";
 our $pri_ptr   = "151.216.126.2";
 our $pri_v6    = "2a02:ed02:126::2";
 our $pri_net   = "151.216.126.0/24";
-our $sec_a     = "tress90";
+our $sec_hostname     = "tress90";
 our $sec_ptr   = "151.216.125.2";
 our $sec_v6    = "2a02:ed02:125::2";
 

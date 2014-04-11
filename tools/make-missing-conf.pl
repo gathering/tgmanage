@@ -47,7 +47,7 @@ my $pri_hostname     = $nms::config::pri_hostname;
 my $pri_ptr   = $nms::config::pri_ptr;
 my $pri_v6    = $nms::config::pri_v6;
 
-my $sec_a     = $nms::config::sec_a;
+my $sec_hostname     = $nms::config::sec_hostname;
 my $sec_ptr   = $nms::config::sec_ptr;
 my $sec_v6    = $nms::config::sec_v6;
 
@@ -147,7 +147,7 @@ while ( <STDIN> )
                         3600 ) ; minimum and default TTL
 
 		IN	NS	$pri_hostname.$tgname.gathering.org.
-		IN	NS	$sec_a.$tgname.gathering.org.
+		IN	NS	$sec_hostname.$tgname.gathering.org.
 \$ORIGIN $name.$tgname.gathering.org.
 EOF
 		close ZFILE;
