@@ -144,9 +144,9 @@ class Planner {
 	string *log_buf;
 
 	unsigned find_distance(Switch from_where, int distro);
-	unsigned find_slack(Inventory inventory, unsigned distance);
 	unsigned find_cost(Switch from_where, int distro);
 	Inventory find_inventory(Switch from_where, int distro);
+	unsigned find_slack(Inventory inventory, unsigned distance);
 	void logprintf(const char *str, ...);
 	void init_switches();
 	void construct_graph(const vector<Switch> &switches, Graph *g);
@@ -164,13 +164,22 @@ unsigned Planner::find_distance(Switch from_where, int distro)
 	assert(distro != -1);
 	const unsigned dp = std::abs(distro_placements[distro]);
 
-	// 3.6m from row to row (2.4m gap + 1.2m boards).
-	unsigned base_cost = 36 * abs(int(from_where.row) - int(dp)) +
-		horiz_cost[from_where.num];
+	unsigned base_cost = horiz_cost[from_where.num];
 
 	if ((distro_placements[distro] >= 0) == (from_where.num >= 2)) {
-		// 5.0m horizontal gap.
+		int bridge_row = distro_placements[NUM_DISTRO - 1];
+
+		// Go to the bridge...
+		base_cost += 36 * abs(int(from_where.row) - bridge_row);
+
+		// Cross it (5.0m horizontal gap)...
 		base_cost += 50;
+
+		// ...and away from the bridge again.
+		base_cost += 36 * abs(int(dp) - bridge_row);
+	} else {
+		// 3.6m from row to row (2.4m gap + 1.2m boards).
+		base_cost += 36 * abs(int(from_where.row) - int(dp));
 	}
 
 	for (const VerticalGap& gap : vertical_gaps) {
@@ -226,6 +235,12 @@ Inventory Planner::find_inventory(Switch from_where, int distro)
 		inv.vert_chasm_crossings = 1;
 	}
 
+	// So is the gap over the scene.
+	if ((abs(distro_placements[distro]) <= 13) == (from_where.row >= 14) &&
+	    from_where.num >= 2 && distro_placements[distro] < 0) {
+		inv.vert_chasm_crossings = 1;
+	}
+
 	return inv;
 }
 
@@ -247,12 +262,15 @@ unsigned Planner::find_cost(Switch from_where, int distro)
 	// cost = ((distance + 90) / 100) * 100;
 #endif
 
+#if 0
 	// We really, really do not want to cross the gap on the north side.
+	// (now handled in bridge cost)
 	if (from_where.row <= 30) {
 		cost += _INF * inv.horiz_gap_crossings;
 	} else {
 		cost += HORIZ_GAP_COST * inv.horiz_gap_crossings;
 	}
+#endif
 
 	// Also, the gap between Game and Sector 8 is unsurmountable.
 	cost += _INF * inv.vert_chasm_crossings;
