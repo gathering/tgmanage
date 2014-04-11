@@ -690,11 +690,7 @@ int Planner::do_work(int distro_placements[NUM_DISTRO])
 void plan_recursively(int distro_placements[NUM_DISTRO], int distro_num, int min_placement, int max_placement, atomic<int> *best_cost)
 {
 	if (distro_num == NUM_DISTRO) {
-		string log;
 		Planner p;
-		log.clear();
-		p.set_log_buf(&log);
-
 		int cost = p.do_work(distro_placements);
 try_again:
 		int old_best_cost = best_cost->load();
@@ -709,7 +705,13 @@ try_again:
 			printf("%d ", distro_placements[i]);
 		}
 		printf("= %d\n", cost);
+
+		// Do it once more, but this time with logging enabled.
+		string log;
+		p.set_log_buf(&log);
+		p.do_work(distro_placements);
 		printf("%s\n", log.c_str());
+
 		return;
 	}
 
