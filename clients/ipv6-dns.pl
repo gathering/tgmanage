@@ -17,7 +17,7 @@ BEGIN {
 my $dbh = nms::db_connect() or die "Can't connect to database";
 my $res = Net::DNS::Resolver->new;
 
-$res->nameservers("$nms::config::pri_a.$nms::config::tgname.gathering.org");
+$res->nameservers("$nms::config::pri_hostname.$nms::config::tgname.gathering.org");
 
 my $kname = 'DHCP_UPDATER';
 

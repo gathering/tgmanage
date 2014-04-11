@@ -36,7 +36,7 @@ if ( -f $named_file )
 
 my $tgname    = $nms::config::tgname;
 
-my $pri_a     = $nms::config::pri_a;
+my $pri_hostname     = $nms::config::pri_hostname;
 my $pri_ptr   = $nms::config::pri_ptr;
 my $pri_v6    = $nms::config::pri_v6;
 

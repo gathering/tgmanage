@@ -15,7 +15,7 @@ my $shellconf_file = "include/tgmanage.cfg.sh";
 
 my $tgname    = $nms::config::tgname;
 
-my $pri_a     = $nms::config::pri_a;
+my $pri_hostname     = $nms::config::pri_hostname;
 my $pri_ptr   = $nms::config::pri_ptr;
 my $pri_v6    = $nms::config::pri_v6;
 
@@ -38,7 +38,7 @@ print CFG "# using data from nms::config.\n";
 print CFG "#\n";
 print CFG "# Do you need new common/configuration variables?\n";
 print CFG "# Add/update include/config.local.pm and tools/create-shellconf.pl\n\n";
-print CFG "PRIMARY=\"$pri_a.$tgname.gathering.org\"\n";
+print CFG "PRIMARY=\"$pri_hostname.$tgname.gathering.org\"\n";
 print CFG "SECONDARY=\"$sec_a.$tgname.gathering.org\"\n";
 print CFG "TGNAME=\"$tgname\"\n\n";
 print CFG "PRI_PTR=\"$pri_ptr\"\n";

@@ -30,7 +30,7 @@ our $dlink1g_passwd = '<removed>';
 
 our $tgname    = "tg13";
 
-our $pri_a     = "winix";
+our $pri_hostname     = "winix";
 our $pri_ptr   = "151.216.126.2";
 our $pri_v6    = "2a02:ed02:126::2";
 our $pri_net   = "151.216.126.0/24";
