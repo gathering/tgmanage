@@ -153,7 +153,7 @@ class Planner {
 	void init_switches();
 	void construct_graph(const vector<Switch> &switches, Graph *g);
 	void find_mincost_maxflow(Graph *g);
-	void print_switch(const Graph &g, int i);
+	void print_switch(const Graph &g, int i, int distro);
 
  public:
 	Planner() : log_buf(NULL) {}
@@ -500,26 +500,30 @@ end:
 	logprintf("Augmented using %d paths.\n", num_paths);
 }
 
-// Figure out which distro this switch was connected to.
-int find_distro(const Graph &g, int switch_index)
+// Figure out which distro each switch was connected to.
+map<int, int> find_switch_distro_map(const Graph &g)
 {
-	for (unsigned j = 0; j < NUM_DISTRO; ++j) {
-		for (Edge *e : g.distro_nodes[j].edges) {
-			if (e->to == &g.switch_nodes[switch_index] && e->flow > 0) {
-				return j;
+	map<int, int> ret;
+	for (unsigned distro_num = 0; distro_num < NUM_DISTRO; ++distro_num) {
+		for (Edge *e : g.distro_nodes[distro_num].edges) {
+			if (e->flow <= 0) {
+				continue;
+			}
+			if (e->to >= &g.switch_nodes[0] && e->to < &g.switch_nodes[g.switch_nodes.size()]) {
+				int switch_index = (e->to - &g.switch_nodes[0]);
+				ret.insert(make_pair(switch_index, distro_num));
 			}
 		}
 	}
-	return -1;
+	return ret;
 }
 
-void Planner::print_switch(const Graph &g, int i)
+void Planner::print_switch(const Graph &g, int i, int distro)
 {
 	if (i == -1) {
 		logprintf("%16s", "");
 		return;
 	}
-	int distro = find_distro(g, i);
 	if (distro == -1) {
 		logprintf("[%u;22m- ", distro + 32);
 #if TRUNCATE_METRIC
@@ -557,6 +561,7 @@ int Planner::do_work(int distro_placements[NUM_DISTRO])
 	Graph g;
 	construct_graph(switches, &g);
 	find_mincost_maxflow(&g);
+	map<int, int> switches_to_distros = find_switch_distro_map(g);
 
 	for (unsigned row = 1; row <= NUM_ROWS; ++row) {
 		// Figure out distro markers.
@@ -586,7 +591,12 @@ int Planner::do_work(int distro_placements[NUM_DISTRO])
 		logprintf("[31;22m%2u (%2u-%2u)    ", row, row * 2 - 1, row * 2 + 0);
 
 		for (unsigned num = 0; num < SWITCHES_PER_ROW; ++num) {
-			print_switch(g, switch_indexes[num]);
+			const auto distro_it = switches_to_distros.find(switch_indexes[num]);
+			if (distro_it == switches_to_distros.end()) {
+				print_switch(g, switch_indexes[num], -1);
+			} else {
+				print_switch(g, switch_indexes[num], distro_it->second);
+			}
 
 			if (num == 1) {
 				logprintf("%s %s", distro_marker_left, distro_marker_right);
@@ -606,11 +616,12 @@ int Planner::do_work(int distro_placements[NUM_DISTRO])
 	logprintf("[%u;22m\n", 37);
 
 	for (unsigned i = 0; i < switches.size(); ++i) {
-		int distro = find_distro(g, i);
-		if (distro == -1) {
+		const auto distro_it = switches_to_distros.find(i);
+		if (distro_it == switches_to_distros.end()) {
 			total_cost += _INF;
 			continue;
 		}
+		int distro = distro_it->second;
 		int this_distance = find_distance(switches[i], distro);
 		Inventory this_inv = find_inventory(switches[i], distro);
 		total_cost += find_cost(switches[i], distro);
@@ -623,11 +634,11 @@ int Planner::do_work(int distro_placements[NUM_DISTRO])
 	FILE *switchlist = fopen("switches.txt", "w");
 	in_addr_t subnet_address = inet_addr(FIRST_SUBNET_ADDRESS);
 	for (unsigned i = 0; i < switches.size(); ++i) {
-		int distro = find_distro(g, i);
-		if (distro == -1) {
+		const auto distro_it = switches_to_distros.find(i);
+		if (distro_it == switches_to_distros.end()) {
 			continue;
 		}
-
+		int distro = distro_it->second;
 		int port_num = num_ports_used[distro]++;
 		fprintf(patchlist, "e%u-%u %s %s %s %s %s\n",
 			switches[i].row * 2 - 1, switches[i].num + 1,
