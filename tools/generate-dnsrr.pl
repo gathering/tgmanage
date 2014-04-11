@@ -65,7 +65,7 @@ if ($nsupdate || $reverse){
 
 $domain = "." . $domain if defined($domain);
 
-print "server $nms::config::pri_ptr\n" if ($nsupdate || $reverse);
+print "server $nms::config::pri_v4\n" if ($nsupdate || $reverse);
 
 while (<STDIN>) {
 	next if /^(#|\s+$)/;	# skip if comment, or blank line

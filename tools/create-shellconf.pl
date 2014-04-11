@@ -15,12 +15,12 @@ my $shellconf_file = "include/tgmanage.cfg.sh";
 
 my $tgname    = $nms::config::tgname;
 
-my $pri_a     = $nms::config::pri_a;
-my $pri_ptr   = $nms::config::pri_ptr;
+my $pri_hostname     = $nms::config::pri_hostname;
+my $pri_v4   = $nms::config::pri_v4;
 my $pri_v6    = $nms::config::pri_v6;
 
-my $sec_a     = $nms::config::sec_a;
-my $sec_ptr   = $nms::config::sec_ptr;
+my $sec_hostname     = $nms::config::sec_hostname;
+my $sec_v4   = $nms::config::sec_v4;
 my $sec_v6    = $nms::config::sec_v6;
 
 my $ddns_key  = $nms::config::ddns_key;
@@ -38,11 +38,11 @@ print CFG "# using data from nms::config.\n";
 print CFG "#\n";
 print CFG "# Do you need new common/configuration variables?\n";
 print CFG "# Add/update include/config.local.pm and tools/create-shellconf.pl\n\n";
-print CFG "PRIMARY=\"$pri_a.$tgname.gathering.org\"\n";
-print CFG "SECONDARY=\"$sec_a.$tgname.gathering.org\"\n";
+print CFG "PRIMARY=\"$pri_hostname.$tgname.gathering.org\"\n";
+print CFG "SECONDARY=\"$sec_hostname.$tgname.gathering.org\"\n";
 print CFG "TGNAME=\"$tgname\"\n\n";
-print CFG "PRI_PTR=\"$pri_ptr\"\n";
-print CFG "SEC_PTR=\"$sec_ptr\"\n\n";
+print CFG "PRI_V4=\"$pri_v4\"\n";
+print CFG "SEC_V4=\"$sec_v4\"\n\n";
 print CFG "DDNS_KEY=\"$ddns_key\"\n\n";
 print CFG "BASEV4=\"$base_ipv4net\"\n";
 print CFG "PREFIXV4=\"$base_ipv4prefix\"\n";

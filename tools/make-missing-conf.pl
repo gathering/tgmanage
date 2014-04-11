@@ -43,12 +43,12 @@ my $bind_conf_slave  = $bind_base . "conf-slave/";
 
 my $tgname    = $nms::config::tgname;
 
-my $pri_a     = $nms::config::pri_a;
-my $pri_ptr   = $nms::config::pri_ptr;
+my $pri_hostname     = $nms::config::pri_hostname;
+my $pri_v4   = $nms::config::pri_v4;
 my $pri_v6    = $nms::config::pri_v6;
 
-my $sec_a     = $nms::config::sec_a;
-my $sec_ptr   = $nms::config::sec_ptr;
+my $sec_hostname     = $nms::config::sec_hostname;
+my $sec_v4   = $nms::config::sec_v4;
 my $sec_v6    = $nms::config::sec_v6;
 
 my $ext_xfer  = $nms::config::ext_xfer;
@@ -139,15 +139,15 @@ while ( <STDIN> )
 		print ZFILE << "EOF";
 ; Base reverse zones are updated from dhcpd -- DO NOT TOUCH!
 \$TTL 3600
-@	IN	SOA	$pri_a.$tgname.gathering.org.	abuse.gathering.org. (
+@	IN	SOA	$pri_hostname.$tgname.gathering.org.	abuse.gathering.org. (
                         $serial   ; serial
                         3600 ; refresh
                         1800 ; retry
                         608400 ; expire
                         3600 ) ; minimum and default TTL
 
-		IN	NS	$pri_a.$tgname.gathering.org.
-		IN	NS	$sec_a.$tgname.gathering.org.
+		IN	NS	$pri_hostname.$tgname.gathering.org.
+		IN	NS	$sec_hostname.$tgname.gathering.org.
 \$ORIGIN $name.$tgname.gathering.org.
 EOF
 		close ZFILE;
