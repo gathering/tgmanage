@@ -418,19 +418,25 @@ void Planner::construct_graph(const vector<Switch> &switches, Graph *g)
 	}
 	
 	g->all_nodes.push_back(&g->source_node);
-	strcpy(g->source_node.name, "source");
-
 	g->all_nodes.push_back(&g->sink_node);
-	strcpy(g->sink_node.name, "sink");
 
 	for (unsigned i = 0; i < NUM_DISTRO; ++i) {
 		g->all_nodes.push_back(&g->distro_nodes[i]);
-		sprintf(g->distro_nodes[i].name, "distro%d", i);
 	}
 	for (unsigned i = 0; i < switches.size(); ++i) {
 		g->all_nodes.push_back(&g->switch_nodes[i]);
+	}
+
+#if 0
+	strcpy(g->source_node.name, "source");
+	strcpy(g->sink_node.name, "sink");
+	for (unsigned i = 0; i < NUM_DISTRO; ++i) {
+		sprintf(g->distro_nodes[i].name, "distro%d", i);
+	}
+	for (unsigned i = 0; i < switches.size(); ++i) {
 		sprintf(g->switch_nodes[i].name, "switch%d", i);
 	}
+#endif
 }
 
 void Planner::find_mincost_maxflow(Graph *g)
