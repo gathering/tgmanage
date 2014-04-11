@@ -700,7 +700,8 @@ int main(int argc, char **argv)
 	return 0;
 #else
 	int best_cost = _INF * 1000;
-	plan_recursively(distro_placements, 0, 1, NUM_ROWS, &best_cost);
+	distro_placements[0] = -3;  // obvious
+	plan_recursively(distro_placements, 1, 6, NUM_ROWS, &best_cost);
 	return 0;
 #endif
 }
