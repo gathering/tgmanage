@@ -682,7 +682,7 @@ int Planner::do_work(int distro_placements[NUM_DISTRO])
 
 	for (int i = 0; i < NUM_DISTRO; ++i) {
 		Edge *e = g.source_node.edges[i];
-		logprintf("Remaining ports on distro %d: %d\n", i + 1, e->capacity - e->flow);
+		logprintf("Remaining ports on distro %d: %d\n", i, e->capacity - e->flow);
 	}
 	return total_cost;
 }
