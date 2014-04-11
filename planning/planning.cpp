@@ -549,8 +549,6 @@ int Planner::do_work(int distro_placements[NUM_DISTRO])
 {
 	memcpy(this->distro_placements, distro_placements, sizeof(distro_placements[0]) * NUM_DISTRO);
 
-	num_ports_used.clear();
-
 	Inventory total_inv;
 	unsigned total_cost = 0, total_slack = 0;
 
@@ -639,6 +637,7 @@ int Planner::do_work(int distro_placements[NUM_DISTRO])
 	FILE *patchlist = fopen("patchlist.txt", "w");
 	FILE *switchlist = fopen("switches.txt", "w");
 	in_addr_t subnet_address = inet_addr(FIRST_SUBNET_ADDRESS);
+	num_ports_used.clear();
 	for (unsigned i = 0; i < switches.size(); ++i) {
 		const auto distro_it = switches_to_distros.find(i);
 		if (distro_it == switches_to_distros.end()) {
