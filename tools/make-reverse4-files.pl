@@ -45,7 +45,7 @@ my $pri_v4   = $nms::config::pri_v4;
 my $pri_v6    = $nms::config::pri_v6;
 
 my $sec_hostname     = $nms::config::sec_hostname;
-my $sec_ptr   = $nms::config::sec_ptr;
+my $sec_v4   = $nms::config::sec_v4;
 my $sec_v6    = $nms::config::sec_v6;
 
 my $ext_xfer  = $nms::config::ext_xfer;
@@ -70,7 +70,7 @@ my ( $p_oct, $s_oct, $t_oct ) = ( $1, $2, $3 );
 
 $pri_v4 =~ m/^(\d+)\.(\d+)\.(\d+)\.(\d+).*/;
 my ( $pp_oct, $ps_oct, $pt_oct, $pf_oct) = ( $1, $2, $3, $4 );
-$sec_ptr =~ m/^(\d+)\.(\d+)\.(\d+)\.(\d+).*/;
+$sec_v4 =~ m/^(\d+)\.(\d+)\.(\d+)\.(\d+).*/;
 my ( $sp_oct, $ss_oct, $st_oct, $sf_oct) = ( $1, $2, $3, $4 );
 
 if ( $role eq "master" )
@@ -106,7 +106,7 @@ while (1)
 		print NFILE "    type master;\n";
 		print NFILE "    allow-update { key DHCP_UPDATER; };\n";
 		print NFILE "    notify yes;\n";
-		print NFILE "    allow-transfer { $sec_ptr; $ext_xfer; $noc_nett; $noc_nett_v6; };\n";
+		print NFILE "    allow-transfer { $sec_v4; $ext_xfer; $noc_nett; $noc_nett_v6; };\n";
 		print NFILE "    file \"reverse/". $rev_zone .".zone\";\n";
 		print NFILE "};\n\n";
 

@@ -48,7 +48,7 @@ my $pri_v4   = $nms::config::pri_v4;
 my $pri_v6    = $nms::config::pri_v6;
 
 my $sec_hostname     = $nms::config::sec_hostname;
-my $sec_ptr   = $nms::config::sec_ptr;
+my $sec_v4   = $nms::config::sec_v4;
 my $sec_v6    = $nms::config::sec_v6;
 
 my $ext_xfer  = $nms::config::ext_xfer;
