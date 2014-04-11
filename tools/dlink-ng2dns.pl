@@ -19,7 +19,7 @@ if (@ARGV > 0) {
         )
 }
 
-print "server $nms::config::pri_ptr\n";
+print "server $nms::config::pri_v4\n";
 
 while (<STDIN>)
 {

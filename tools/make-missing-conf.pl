@@ -44,7 +44,7 @@ my $bind_conf_slave  = $bind_base . "conf-slave/";
 my $tgname    = $nms::config::tgname;
 
 my $pri_hostname     = $nms::config::pri_hostname;
-my $pri_ptr   = $nms::config::pri_ptr;
+my $pri_v4   = $nms::config::pri_v4;
 my $pri_v6    = $nms::config::pri_v6;
 
 my $sec_hostname     = $nms::config::sec_hostname;

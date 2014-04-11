@@ -41,7 +41,7 @@ my $bind_sec_revzones_file = $bind_base . "named.slave-reverse4.conf";
 my $tgname    = $nms::config::tgname;
 
 my $pri_hostname     = $nms::config::pri_hostname;
-my $pri_ptr   = $nms::config::pri_ptr;
+my $pri_v4   = $nms::config::pri_v4;
 my $pri_v6    = $nms::config::pri_v6;
 
 my $sec_hostname     = $nms::config::sec_hostname;
@@ -68,7 +68,7 @@ my $base_ipv4 = new Net::IP( $base_ipv4net . "/" . $base_ipv4prefix );
 $base_ipv4net =~ m/^(\d+)\.(\d+)\.(\d+)\..*/;
 my ( $p_oct, $s_oct, $t_oct ) = ( $1, $2, $3 );
 
-$pri_ptr =~ m/^(\d+)\.(\d+)\.(\d+)\.(\d+).*/;
+$pri_v4 =~ m/^(\d+)\.(\d+)\.(\d+)\.(\d+).*/;
 my ( $pp_oct, $ps_oct, $pt_oct, $pf_oct) = ( $1, $2, $3, $4 );
 $sec_ptr =~ m/^(\d+)\.(\d+)\.(\d+)\.(\d+).*/;
 my ( $sp_oct, $ss_oct, $st_oct, $sf_oct) = ( $1, $2, $3, $4 );

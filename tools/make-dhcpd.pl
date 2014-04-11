@@ -21,7 +21,7 @@ my $dhcp_pxeconf =  $dhcpd_base . "pxe-boot.conf";
 my $dhcp_ciscoapconf =  $dhcpd_base . "ciscowlc.conf";
 
 my $tgname    = $nms::config::tgname;
-my $pri_ptr   = $nms::config::pri_ptr;
+my $pri_v4   = $nms::config::pri_v4;
 my $pri_net   = $nms::config::pri_net;
 my $sec_ptr   = $nms::config::sec_ptr;
 my $pxe_server = $nms::config::pxe_server;
@@ -47,7 +47,7 @@ if ( not -f $dhcpd_conf )
 #
 # log-facility local7;
 option domain-name "$tgname.gathering.org";
-option domain-name-servers $pri_ptr, $sec_ptr;
+option domain-name-servers $pri_v4, $sec_ptr;
 default-lease-time 3600;
 max-lease-time 7200;
 authoritative;

@@ -16,7 +16,7 @@ $base .= "/" if not $base =~ m/\/$/ and not $base eq "";
 
 my $tgname    = $nms::config::tgname;
 my $pri_hostname     = $nms::config::pri_hostname;
-my $pri_ptr   = $nms::config::pri_ptr;
+my $pri_v4   = $nms::config::pri_v4;
 my $pri_v6    = $nms::config::pri_v6;
 my $sec_hostname     = $nms::config::sec_hostname;
 my $sec_ptr   = $nms::config::sec_ptr;
@@ -48,11 +48,11 @@ if ( not -f  $zonefile )
 		IN	NS	ns1.$tgname.gathering.org.
 		IN	NS	ns2.$tgname.gathering.org.
 
-ns1		IN	A	$pri_ptr
+ns1		IN	A	$pri_v4
 ns1		IN	AAAA	$pri_v6
 ns2		IN	A	$sec_ptr
 ns2		IN	AAAA	$sec_v6
-$pri_hostname		IN	A	$pri_ptr
+$pri_hostname		IN	A	$pri_v4
 $pri_hostname		IN	AAAA	$pri_v6
 $sec_hostname		IN	A	$sec_ptr
 $sec_hostname		IN	AAAA	$sec_v6
