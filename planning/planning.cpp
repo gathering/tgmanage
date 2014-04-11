@@ -563,6 +563,26 @@ int Planner::do_work(int distro_placements[NUM_DISTRO])
 	find_mincost_maxflow(&g);
 	map<int, int> switches_to_distros = find_switch_distro_map(g);
 
+	for (unsigned i = 0; i < switches.size(); ++i) {
+		const auto distro_it = switches_to_distros.find(i);
+		if (distro_it == switches_to_distros.end()) {
+			total_cost += _INF;
+			continue;
+		}
+		int distro = distro_it->second;
+		total_cost += find_cost(switches[i], distro);
+		int this_distance = find_distance(switches[i], distro);
+		Inventory this_inv = find_inventory(switches[i], distro);
+		total_slack += find_slack(this_inv, this_distance);
+		total_inv += this_inv;
+	}
+
+#if !OUTPUT_FILES
+	if (log_buf == NULL) {
+		return total_cost;
+	}
+#endif
+
 	for (unsigned row = 1; row <= NUM_ROWS; ++row) {
 		// Figure out distro markers.
 		char distro_marker_left[16] = " ";
@@ -614,20 +634,6 @@ int Planner::do_work(int distro_placements[NUM_DISTRO])
 		}
 	}
 	logprintf("[%u;22m\n", 37);
-
-	for (unsigned i = 0; i < switches.size(); ++i) {
-		const auto distro_it = switches_to_distros.find(i);
-		if (distro_it == switches_to_distros.end()) {
-			total_cost += _INF;
-			continue;
-		}
-		int distro = distro_it->second;
-		int this_distance = find_distance(switches[i], distro);
-		Inventory this_inv = find_inventory(switches[i], distro);
-		total_cost += find_cost(switches[i], distro);
-		total_slack += find_slack(this_inv, this_distance);
-		total_inv += this_inv;
-	}
 
 #if OUTPUT_FILES
 	FILE *patchlist = fopen("patchlist.txt", "w");
