@@ -145,10 +145,10 @@ EOF
 
 			while (my ($key, $value) = each %$result) {
 				my $port = $key;
-				my $in = $value->{'ifHCInOctets'} // -1;  # Does not exist for some weird stack ports.
+				my $in = $value->{'ifHCInOctets'} // -1;
 				my $out = $value->{'ifHCOutOctets'} // -1;
-				my $ine = $value->{'ifInErrors'};
-				my $oute = $value->{'ifOutErrors'};
+				my $ine = $value->{'ifInErrors'} // -1;
+				my $oute = $value->{'ifOutErrors'} // -1;
 				my $official_port = exists($ports{$port}) ? 1 : 0;
 				$qpoll->execute($switch->{'switch'}, $port, $in, $out, $ine, $oute, $official_port);
 			}
