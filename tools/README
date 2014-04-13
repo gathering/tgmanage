@@ -42,6 +42,8 @@ Edit 'include/config.local.pm' and update for this year's TG.  Use
 'tools/create-shellconf.pl' to extract configuration from the perl module to
 create/update the 'include/tgmanage.cfg.sh' configuration script.
 
+Run 'tools/create-hostsfile.sh' to make sure the bootstrap-box can use
+hostnames to reach the pri/sec DNS even before DNS is set up.
 
 The tools make extensive use of key-based SSH logins, to make this work
 seamlessly, run 'tools/init-sshkeys.sh' to create an RSA priv/pub keypair, and
