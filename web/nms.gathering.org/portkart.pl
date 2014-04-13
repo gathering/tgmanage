@@ -9,7 +9,7 @@ my $cgi = CGI->new;
 my $dbh = nms::db_connect();
 
 GD::Image->trueColor(1);
-$img = GD::Image->new('bg07.png');
+$img = GD::Image->new('tg14-salkart.png');
 
 my $blk = $img->colorResolve(0, 0, 0);
 

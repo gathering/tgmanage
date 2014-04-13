@@ -15,7 +15,7 @@ my $maxtimeout = $greentimeout*9;
 my $dbh = nms::db_connect();
 
 GD::Image->trueColor(1);
-my $img = GD::Image->new('bg07.png');
+my $img = GD::Image->new('tg14-salkart.png');
 
 my $blk = $img->colorResolve(0, 0, 0);
 
