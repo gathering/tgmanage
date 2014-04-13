@@ -49,13 +49,13 @@ while (my $ref = $q->fetchrow_hashref) {
 }
 
 # Now ask all switches for their LLDP neighbor table.
-$q = $dbh->prepare("SELECT ip, community FROM switches WHERE lldp_chassis_id IS NOT NULL AND ip <> '127.0.0.1'");
+$q = $dbh->prepare("SELECT ip, sysname, community FROM switches WHERE lldp_chassis_id IS NOT NULL AND ip <> '127.0.0.1'");
 $q->execute;
 
 while (my $ref = $q->fetchrow_hashref) {
-	my ($ip, $community) = ($ref->{'ip'}, $ref->{'community'});
+	my ($ip, $sysname, $community) = ($ref->{'ip'}, $ref->{'sysname'}, $ref->{'community'});
 	eval {
-		discover_lldp_neighbors($dbh, $ip, $community);
+		discover_lldp_neighbors($dbh, $ip, $sysname, $community);
 	};
 	if ($@) {
 		mylog("ERROR: $@ (during poll of $ip)");
@@ -66,7 +66,7 @@ while (my $ref = $q->fetchrow_hashref) {
 $dbh->disconnect;
 
 sub discover_lldp_neighbors {
-	my ($dbh, $ip, $community) = @_;
+	my ($dbh, $ip, $local_sysname, $community) = @_;
 	my $qexist = $dbh->prepare('SELECT COUNT(*) AS cnt FROM switches WHERE lldp_chassis_id=?');
 
 	my $session = nms::snmp_open_session($ip, $community);
@@ -83,6 +83,8 @@ sub discover_lldp_neighbors {
 
 		my $exists = $dbh->selectrow_hashref($qexist, undef, $chassis_id)->{'cnt'};
 		next if ($exists);
+
+		print "Found $local_sysname -> $sysname ($chassis_id)\n";
 
 		# Pull in the management address table lazily.
 		$addrtable = $session->gettable("lldpRemManAddrTable") if (!defined($addrtable));
@@ -126,14 +128,14 @@ sub mylog {
 }
 
 sub get_ports {
-	my ($ip, $community) = @_;
+	my ($ip, $sysname, $community) = @_;
 	my $ret = undef;
 	eval {
 		my $session = nms::snmp_open_session($ip, $community);
 		$ret = $session->gettable('ifTable', columns => [ 'ifType', 'ifDescr' ]);
 	};
 	if ($@) {
-		mylog("Error during SNMP to $ip: $@");
+		mylog("Error during SNMP to $ip ($sysname): $@");
 		return undef;
 	}
 	return $ret;
@@ -186,7 +188,7 @@ sub add_switch {
 	my ($dbh, $addr, $sysname, $chassis_id, $community) = @_;
 
 	# Yay, a new switch! Make a new type for it.
-	my $ports = get_ports($addr, $community);
+	my $ports = get_ports($addr, $sysname, $community);
 	return if (!defined($ports));
 	my $portlist = compress_ports(get_ifindex_for_physical_ports($ports));
 	mylog("Inserting new switch $sysname ($addr, ports $portlist).");
