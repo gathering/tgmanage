@@ -572,7 +572,7 @@ ALTER TABLE public.switches_switch_seq OWNER TO nms;
 
 CREATE TABLE switchtypes (
     switchtype character varying NOT NULL,
-    ports character varying NOT NULL,
+    ports character varying NOT NULL
 );
 
 
