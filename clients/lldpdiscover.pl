@@ -100,7 +100,9 @@ sub discover_lldp_neighbors {
 			if ($addrtype == 1) {
 				push @v4addrs, nms::convert_ipv4($addr);
 			} elsif ($addrtype == 2) {
-				push @v6addrs, nms::convert_ipv6($addr);
+				my $v6addr = nms::convert_ipv6($addr);
+				next if $v6addr =~ /^fe80:/;  # Ignore link-local.
+				push @v6addrs, $v6addr;
 			} else {
 				die "Unknown address type $addr";
 			}
