@@ -79,7 +79,10 @@ sub discover_lldp_neighbors {
 		# Do not try to poll servers.
 		my %caps = ();
 		nms::convert_lldp_caps($value->{'lldpRemSysCapEnabled'}, \%caps);
-		next if (!$caps{'cap_enabled_bridge'} && !$caps{'cap_enabled_ap'} && !$caps{'cap_enabled_router'});
+		next if (!$caps{'cap_enabled_bridge'} && !$caps{'cap_enabled_router'});
+		next if ($caps{'cap_enabled_ap'});
+
+		next if $sysname =~ /nocnexus/;
 
 		my $exists = $dbh->selectrow_hashref($qexist, undef, $chassis_id)->{'cnt'};
 		next if ($exists);
