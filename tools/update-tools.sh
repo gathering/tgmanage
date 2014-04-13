@@ -19,3 +19,5 @@ scp -r include root@${PRIMARY}:tgmanage/
 scp -r include root@${SECONDARY}:tgmanage/
 scp -r clients root@${PRIMARY}:tgmanage/
 scp -r clients root@${SECONDARY}:tgmanage/
+
+scp -r pxe root@${SECONDARY}:tgmanage/
