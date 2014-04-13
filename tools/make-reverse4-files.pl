@@ -117,25 +117,25 @@ while (1)
 		print ZFILE <<"EOF";
 ; Base reverse zones are updated from dhcpd -- DO NOT TOUCH!
 \$TTL 3600
-@	IN	SOA	ns1.$tgname.gathering.org.	abuse.gathering.org. (
+@	IN	SOA	$pri_hostname.$tgname.gathering.org.	abuse.gathering.org. (
                         $serial   ; serial
                         3600 ; refresh
                         1800 ; retry
                         608400 ; expire
                         3600 ) ; minimum and default TTL
 
-		IN	NS	ns1.$tgname.gathering.org.
-		IN	NS	ns2.$tgname.gathering.org.
+		IN	NS	$pri_hostname.$tgname.gathering.org.
+		IN	NS	$sec_hostname.$tgname.gathering.org.
 
 \$ORIGIN $rev_zone.
 EOF
 		if ( ($pt_oct == $t_oct) && ($ps_oct == $s_oct) )
 		{
-			print ZFILE $pf_oct . "		IN	PTR	ns1.$tgname.gathering.org.\n";
+			print ZFILE $pf_oct . "		IN	PTR	$pri_hostname.$tgname.gathering.org.\n";
 		}
 		if ( ($st_oct == $t_oct) && ($ss_oct == $s_oct) )
 		{
-			print ZFILE $sf_oct . "		IN	PTR	ns2.$tgname.gathering.org.\n";
+			print ZFILE $sf_oct . "		IN	PTR	$sec_hostname.$tgname.gathering.org.\n";
 		}
 	}
 	else
