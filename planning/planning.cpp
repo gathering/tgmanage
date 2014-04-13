@@ -2,8 +2,8 @@
 // About three times as fast as the old DP+heuristics-based solution
 // (<2ms for planning TG), and can deal with less regular cost metrics.
 //
-// Given D distro switches and N access switches, complexity is approx. O(n²(log d+log n))
-// (runs n iterations, each iteration is O(Vlog E), V is O(n), E is O(dn))).
+// Given D distro switches and N access switches, complexity is approx. O(dn³)
+// (runs n iterations, each iteration is O(VE), V is O(n), E is O(dn))).
 //
 // g++ -std=gnu++11 -Wall -g -O3 -fopenmp -DOUTPUT_FILES=1 -o planning planning.cpp && ./planning -3 -6 11 22 -26 35
 
@@ -109,9 +109,9 @@ struct Node {
 	// For debugging.
 	char name[16];
 
-	// Used in Dijkstra search.
+	// Used in shortest-path search.
 	int cost_from_source;
-	bool seen;
+	bool active;
 	Edge *prev_edge;
 };
 struct Graph {
@@ -442,54 +442,50 @@ void Planner::construct_graph(const vector<Switch> &switches, Graph *g)
 void Planner::find_mincost_maxflow(Graph *g)
 {
 	// We use the successive shortest path algorithm, using a simple
-	// heap-based Dijkstra (O(Vlog E)) for search.
+	// Ford-Fulkerson (O(VE)) search.
 	int num_paths = 0;
 	for ( ;; ) {
-		// Reset Dijkstra state.
+		// Reset search state.
 		for (Node *n : g->all_nodes) {
 			n->cost_from_source = _INF;
-			n->seen = false;
+			n->active = false;
 			n->prev_edge = NULL;
 		}
 		g->source_node.cost_from_source = 0;
+		g->source_node.active = true;
 
-		priority_queue<Node *, vector<Node *>, CompareByCost> q;
-		q.push(&g->source_node);
-
-		while (!q.empty()) {
-			Node *u = q.top();
-			q.pop();
-			if (u->seen) {
-				continue;
-			}
-			u->seen = true;
-			if (u == &g->sink_node) {
-				// Yay, we found a path to the sink.
-				break;
-			}
-
-			// Relax outgoing edges from this node.
-			for (Edge *e : u->edges) {
-				Node *v = e->to;
-				if (v->seen) {
+		bool relaxed_any = false;
+		do {
+			relaxed_any = false;
+			for (Node *u : g->all_nodes) {
+				if (!u->active) {
 					continue;
 				}
-				if (e->flow + 1 > e->capacity || e->reverse->flow - 1 > e->reverse->capacity) {
-					// Not feasible.
-					continue;
+				u->active = false;
+
+				// Relax outgoing edges from this node.
+				for (Edge *e : u->edges) {
+					Node *v = e->to;
+					if (e->flow + 1 > e->capacity ||
+					    e->reverse->flow - 1 > e->reverse->capacity) {
+						// Not feasible.
+						continue;
+					}
+					if (v->cost_from_source <= u->cost_from_source + e->cost) {
+						// Already seen through a better path.
+						continue;
+					}
+					v->prev_edge = e;
+					v->cost_from_source = u->cost_from_source + e->cost;
+					v->active = true;
+					relaxed_any = true;
 				}
-				if (v->cost_from_source <= u->cost_from_source + e->cost) {
-					// Already seen through a better path.
-					continue;
-				}
-				v->prev_edge = e;
-				v->cost_from_source = u->cost_from_source + e->cost;
-				q.push(v);
 			}
-		}
-		if (q.empty()) {
+		} while (relaxed_any);
+
+		if (g->sink_node.cost_from_source >= _INF) {
 			// Oops, no usable path.
-			goto end;
+			break;
 		}
 
 		// Increase flow along the path, moving backwards towards the source.
@@ -507,7 +503,6 @@ void Planner::find_mincost_maxflow(Graph *g)
 		++num_paths;
 	}
 
-end:
 	logprintf("Augmented using %d paths.\n", num_paths);
 }
 
