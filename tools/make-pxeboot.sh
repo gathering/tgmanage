@@ -1,8 +1,8 @@
 #!/bin/bash
 #
-# TODO: This tool assumes that the bootstrap box
-# is used as the PXE server. This should be updated
-# to use the configuration information in config.local.pm ...
+# This tool is to be executed by make-base-requires.sh
+# From tg14 we assume that TFTP server/PXE-boot server
+# is the Secondary/SMTP/TFTP box.
 
 apt-get install tftpd-hpa
 apt-get install nfs-kernel-server

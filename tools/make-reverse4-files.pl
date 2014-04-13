@@ -61,8 +61,6 @@ my $noc_nett_v6 = $nms::config::noc_nett_v6;
 
 my $ddns_to = $nms::config::ddns_to;
 
-my $pxe_server = $nms::config::ddns_to;
-
 my $base_ipv4 = new Net::IP( $base_ipv4net . "/" . $base_ipv4prefix );
 
 $base_ipv4net =~ m/^(\d+)\.(\d+)\.(\d+)\..*/;

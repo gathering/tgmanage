@@ -66,8 +66,11 @@ our $base_ipv6net = "2a02:ed02:";
 our $base_ipv6prefix = 32;
 our $ipv6zone = "2.0.d.e.2.0.a.2.ip6.arpa";
 
-our $pxe_server = "151.216.125.3";
 our $ciscowlc_a = "151.216.127.15";
+
+# Change from tg14: PXE-server is set to Secondary/SMTP/TFTP box,
+# and the toolchain assumes this fact. Variable kept for clarity:
+our $pxe_server = $sec_v4;
 
 
 # static_switches is supposed to be legacy, and should be safe to remove.
