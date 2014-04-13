@@ -7,12 +7,12 @@ package nms::config;
 # Make a duplicate of this file, and save as 'config.local.pm'
 
 our $db_name = "nms";
-our $db_host = "flexus.tg13.gathering.org";
+our $db_host = "frank.tg14.gathering.org";
 our $db_username = "nms";
 our $db_password = "<removed>";
 
-our $dhcp_server1 = "151.216.126.2";
-our $dhcp_server2 = "151.216.125.17"; # Cisco ISE profiling
+our $dhcp_server1 = "151.216.254.2";
+our $dhcp_server2 = "151.216.253.17"; # Cisco ISE profiling
 
 our $ios_user = "nms";
 our $ios_pass = "<removed>";
@@ -28,15 +28,15 @@ our $dlink1g_passwd = '<removed>';
 # our $telegw_ip = "12.34.56.78";
 # our @telegw_wanlinks = ("gig1/1", "gig1/2");
 
-our $tgname    = "tg13";
+our $tgname    = "tg14";
 
-our $pri_hostname     = "winix";
-our $pri_v4   = "151.216.126.2";
-our $pri_v6    = "2a02:ed02:126::2";
-our $pri_net   = "151.216.126.0/24";
-our $sec_hostname     = "tress90";
-our $sec_v4   = "151.216.125.2";
-our $sec_v6    = "2a02:ed02:125::2";
+our $pri_hostname     = "brad";
+our $pri_v4   = "151.216.254.2";
+our $pri_v6    = "2a02:ed02:254::2";
+our $pri_net   = "151.216.254.0/24";
+our $sec_hostname     = "janet";
+our $sec_v4   = "151.216.253.2";
+our $sec_v6    = "2a02:ed02:253::2";
 
 # for RIPE to get reverse zones via DNS AXFR
 our $ext_xfer  = "193.0.0.0/22";
@@ -48,53 +48,42 @@ our $ddns_key = "<removed>";
 our $ddns_to  = "127.0.0.1";
 
 # Used by make-named.pl
-our $noc_nett  = "151.216.124.0/24";
-our $noc_nett_v6 = "2a02:ed02:124::/64";
+our $noc_nett  = "151.216.252.0/24";
+our $noc_nett_v6 = "2a02:ed02:252::/64";
 
-# Ikke i bruk i '11 til revers-soner.
-# Ikke i bruk i '12 heller
-# På tide å fjerne dette i '13?
-# Ikke brukt i '13 heller
-# På tide å fjerne dette i '14????????? :-D :-P
-#our $root_arpa = "22.89.in-addr.arpa";
-#our $ipv6nett = "2001:8c0:9840::/48";
-
-our $base_ipv4net = "151.216.0.0";
+our $base_ipv4net = "151.216.128.0";
 our $base_ipv4prefix = 17;
 
 our $base_ipv6net = "2a02:ed02:";
 our $base_ipv6prefix = 32;
 our $ipv6zone = "2.0.d.e.2.0.a.2.ip6.arpa";
 
-our $ciscowlc_a = "151.216.127.15";
+our $ciscowlc_a = "151.216.253.21";
 
 # Change from tg14: PXE-server is set to Secondary/SMTP/TFTP box,
 # and the toolchain assumes this fact. Variable kept for clarity:
 our $pxe_server = $sec_v4;
 
-
-# static_switches is supposed to be legacy, and should be safe to remove.
-#130, 144, 145, 196, 197, 198, 199, 200, 203, 201, 206, 208, 209, 211, 213,
-#our @static_switches = (
-#	130,144,145,190,200,201,203,206,208,209,210,211,213,215,216,217,218,219,220,221,223,250,252
-#        );
-#our @static_nets = (
-#                  0, 212, 254, 255
-#        );
-
 # Used by ipv6-stats, but never got updated for tg11-ip's. Commenting.
 # The following is the list of routing netboxes (core, dist, tele, a.s.o)
 our @distrobox_ips = (
-	'151.216.127.17', # distro0
-	'151.216.127.18', # distro1
-	'151.216.127.19', # distro2
-	'151.216.127.20', # distro3
-	'151.216.127.21', # distro4
-	'151.216.127.9',  # crewgw
-	'151.216.127.11', # gamegw
-	'151.216.124.1',  # nocgw
-	'151.216.127.6',  # logistikkgw
-	'151.216.127.5',  # wtfgw
+	'151.216.255.1',  # telegw
+	'151.216.255.2',  # nocgw
+	'151.216.255.3',  # camgw
+	'151.216.255.4',  # stageboh
+	'151.216.255.5',  # wtfgw
+	'151.216.255.6',  # logistikkgw
+	'151.216.255.7',  # crewgw
+	'151.216.255.8',  # gamegw
+	'151.216.255.9',  # resepsjongw
+	'151.216.255.10', # sponsorgw
+	'151.216.255.11', # eldregw
+	'151.216.255.17', # distro0
+	'151.216.255.18', # distro1
+	'151.216.255.19', # distro2
+	'151.216.255.20', # distro3
+	'151.216.255.21', # distro4
+	'151.216.255.22', # slutgw
 );
 
 # Forwarding zones.
