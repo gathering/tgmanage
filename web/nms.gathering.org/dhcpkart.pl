@@ -4,7 +4,9 @@ use GD;
 use DBI;
 use lib '../../include';
 use nms;
+use File::Basename;
 my $cgi = CGI->new;
+my $cwd = dirname($0);
 
 #my $greentimeout = 7200;
 my $greentimeout = 15*60;
@@ -13,7 +15,7 @@ my $maxtimeout = $greentimeout*9;
 my $dbh = nms::db_connect();
 
 GD::Image->trueColor(1);
-my $map = 'tg14-salkart.png';
+my $map = "$cwd/tg14-salkart.png";
 die "$map does not exist" unless -e $map;
 $img = GD::Image->new($map);
 
