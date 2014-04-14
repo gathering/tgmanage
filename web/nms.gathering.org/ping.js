@@ -87,5 +87,44 @@ function create_switch(switchnum, sysname, x, y, width, height) {
 	var text = document.createTextNode(sysname);
 	s.appendChild(text);
 
+	//var attr = document.createAttribute("data-switchnum", switchnum);
+	s.setAttribute("data-switchnum", switchnum);
+
 	document.body.appendChild(s);
+}
+
+var dragging_switch = null;
+var delta_x = null, delta_y = null;
+
+document.onmousedown = function(e) {
+	var switchnum = e.target.getAttribute("data-switchnum");
+	if (switchnum === null) {
+		return;
+	}
+	dragging_switch = switchnum;
+	delta_x = parseInt(e.target.style.left.replace("px", "")) - e.clientX;
+	delta_y = parseInt(e.target.style.top.replace("px", "")) - e.clientY;
+}
+
+document.onmousemove = function(e) {
+	if (dragging_switch === null) {
+		return;
+	}
+	switches[dragging_switch].style.left = (e.clientX + delta_x) + 'px';
+	switches[dragging_switch].style.top = (e.clientY + delta_y) + 'px';
+}
+
+document.onmouseup = function(e) {
+	if (dragging_switch === null) {
+		return;
+	}
+	var x = e.clientX + delta_x;
+	var y = e.clientY + delta_y;
+
+	var request = new XMLHttpRequest();
+	request.open('POST', '/change-switch-pos.pl', true);
+	request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
+	request.send("switch=" + dragging_switch + "&x=" + x + "&y=" + y);
+
+	dragging_switch = null;
 }

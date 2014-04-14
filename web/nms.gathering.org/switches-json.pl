@@ -14,12 +14,12 @@ $q->execute();
 
 my %json = ();
 while (my $ref = $q->fetchrow_hashref()) {
-	$ref->{'placement'} =~ /\((\d+),(\d+)\),\((\d+),(\d+)\)/;
+	$ref->{'placement'} =~ /\((-?\d+),(-?\d+)\),\((-?\d+),(-?\d+)\)/;
 	my ($x1, $y1, $x2, $y2) = ($1, $2, $3, $4);
 	$json{$ref->{'switch'}} = {
 		sysname => $ref->{'sysname'},
 		x => $x2,
-		y => $y1,
+		y => $y2,
 		width => $x1 - $x2,
 		height => $y1 - $y2
 	};
