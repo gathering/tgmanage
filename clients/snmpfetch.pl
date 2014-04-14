@@ -17,7 +17,11 @@ if (defined($ARGV[0])) {
 } else {
 	my $threads = 50;
 	for (1..$threads) {
-		threads->create(\&poll_loop);
+		if (fork() == 0) {
+			# child
+			poll_loop();
+			exit;
+		}
 	}
 	poll_loop();	
 }
