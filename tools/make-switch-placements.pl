@@ -49,33 +49,25 @@ while (<STDIN>) {
 		#$yy -= 28 if $name eq "e79-1";
 		$yy -= 15 if $name eq "e81-1";
 		#$yy -= 56 if $name eq "e83-1";
-	} elsif ($name =~ /^creative(\d+)$/) {
-		my $s = $1;
-		if ($s < 3) {
-			if ($s == 1) {
-				$x = 1190;
-				$y = 278;
-			} else {
-				$x = 1180;
-				$y = 230;
-			}
-			$xx = $x+35;
-			$yy = $y+19;
-			$yy += 6;
-		} else {
-			$x = 1056;
-			$y = 296 - 22 * ($s-3);
-			if ($s <= 4) {
-				$xx = $x+100;
-			} elsif ($s <= 7) {
-				$xx = $x+70;
-			} elsif ($s <= 8) {
-				$xx = $x+55;
-			} else {
-				$xx = $x+35;
-			}
-			$yy = $y+19;
-			$yy -= 5 if $s == 3;
+	} elsif ($name =~ /^creative(\d+)-(\d+)$/) {
+		my ($s, $n) = ($1, $2);
+		$x = 973 + 52 * $n;
+		$y = int(160 + 22.2 * $s);
+		$xx = $x + 52;
+		$yy = $y + 14;
+
+		if ($s == 2 && $n == 1) {
+			$xx += 20;
+		}
+	} elsif ($name =~ /^crew(\d+)-(\d+)$/) {
+		my ($s, $n) = ($1, $2);
+		$x = 1023 + 45 * $n;
+		$y = int(329 + 20.5 * $s);
+		$xx = $x + 45;
+		$yy = $y + 14;
+
+		if ($s == 1 && $n == 1) {
+			$xx += 25;
 		}
 	} else {
 		die "Unknown switch: $name";
