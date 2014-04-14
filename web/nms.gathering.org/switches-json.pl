@@ -9,7 +9,7 @@ my $cgi = CGI->new;
 
 my $dbh = nms::db_connect();
 
-my $q = $dbh->prepare('select switch,sysname,placement from switches natural join placements');
+my $q = $dbh->prepare('select switch,sysname,placement,zorder from switches natural join placements');
 $q->execute();
 
 my %json = ();
@@ -23,7 +23,8 @@ while (my $ref = $q->fetchrow_hashref()) {
 		x => $x2,
 		y => $y2,
 		width => $x1 - $x2,
-		height => $y1 - $y2
+		height => $y1 - $y2,
+		zorder => $ref->{'zorder'}
 	};
 }
 print $cgi->header(-type=>'text/json; charset=utf-8');

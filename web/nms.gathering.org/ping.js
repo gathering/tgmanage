@@ -40,6 +40,7 @@ function draw_switches(json) {
 	  	              s['sysname'],
 		              parseInt(s['x']),
 			      parseInt(s['y']),
+			      parseInt(s['zorder']),
 		              parseInt(s['width']),
 		              parseInt(s['height']));
 	}
@@ -69,7 +70,7 @@ function really_update_ping(json) {
 	}
 }
 
-function create_switch(switchnum, sysname, x, y, width, height) {
+function create_switch(switchnum, sysname, x, y, zorder, width, height) {
 	var s = document.createElement("div");
 	var map = document.getElementById('map');
 	var top_offset = map.getBoundingClientRect().top;
@@ -83,6 +84,7 @@ function create_switch(switchnum, sysname, x, y, width, height) {
 	s.style.backgroundColor = '#0000ff';
 	s.style.border = '1px solid black';
 	s.style.padding = "0";
+	s.style.zIndex = zorder + 100;
 	switches[switchnum] = s;
 
 	var span = document.createElement("div");
