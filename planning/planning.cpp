@@ -661,7 +661,7 @@ int Planner::do_work(int distro_placements[NUM_DISTRO])
 
 		in_addr subnet_addr4;
 		subnet_addr4.s_addr = subnet_address;
-		fprintf(switchlist, "%s %u e%u-%u x.x.x.x\n",
+		fprintf(switchlist, "%s %u e%u-%u\n",
 			inet_ntoa(subnet_addr4), SUBNET_SIZE, switches[i].row * 2 - 1, switches[i].num + 1);
 		subnet_address = htonl(ntohl(subnet_address) + (1ULL << (32 - SUBNET_SIZE)));
 	}
