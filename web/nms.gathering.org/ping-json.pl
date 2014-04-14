@@ -1,6 +1,5 @@
 #! /usr/bin/perl
 use CGI;
-use GD;
 use DBI;
 use JSON::XS;
 use lib '../../include';
