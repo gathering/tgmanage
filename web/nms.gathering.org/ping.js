@@ -82,12 +82,18 @@ function create_switch(switchnum, sysname, x, y, width, height) {
 	s.style.height = height + 'px';
 	s.style.backgroundColor = '#0000ff';
 	s.style.border = '1px solid black';
+	s.style.padding = "0";
 	switches[switchnum] = s;
 
-	var text = document.createTextNode(sysname);
-	s.appendChild(text);
+	var span = document.createElement("div");
+	span.className = "switchname";
+	span.style.border = "0";
+	span.style.padding = "0";
+	s.appendChild(span);
 
-	//var attr = document.createAttribute("data-switchnum", switchnum);
+	var text = document.createTextNode(sysname);
+	span.appendChild(text);
+
 	s.setAttribute("data-switchnum", switchnum);
 
 	document.body.appendChild(s);
@@ -118,8 +124,8 @@ document.onmouseup = function(e) {
 	if (dragging_switch === null) {
 		return;
 	}
-	var x = e.clientX + delta_x;
-	var y = e.clientY + delta_y;
+	var x = e.clientX + delta_x - map.getBoundingClientRect().top;
+	var y = e.clientY + delta_y - map.getBoundingClientRect().left;
 
 	var request = new XMLHttpRequest();
 	request.open('POST', '/change-switch-pos.pl', true);
