@@ -14,11 +14,11 @@
 # sponsorGW         151.216.127.14     2a02:ed02:FFFF::14                     
 # KomplettGW        151.216.127.15     2a02:ed02:FFFF::15                      
 # eldregw           151.216.127.16     2a02:ed02:FFFF::16                   
- distro0           151.216.127.17     2a02:ed02:FFFF::17                   
- distro1           151.216.127.18     2a02:ed02:FFFF::18                   
- distro2           151.216.127.19     2a02:ed02:FFFF::19                   
- distro3           151.216.127.20     2a02:ed02:FFFF::20                   
- distro4           151.216.127.21     2a02:ed02:FFFF::21                   
+# distro0           151.216.127.17     2a02:ed02:FFFF::17                   
+# distro1           151.216.127.18     2a02:ed02:FFFF::18                   
+# distro2           151.216.127.19     2a02:ed02:FFFF::19                   
+# distro3           151.216.127.20     2a02:ed02:FFFF::20                   
+# distro4           151.216.127.21     2a02:ed02:FFFF::21                   
 
 # telegw -- BLIX SINE
 #telegw-po1 185.12.59.2 2a02:ed01::2
