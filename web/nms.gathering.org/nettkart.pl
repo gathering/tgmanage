@@ -4,8 +4,12 @@ use GD;
 use Image::Magick;
 use DBI;
 use lib '../../include';
+use strict;
+use warnings;
 use nms;
+use File::Basename;
 my $cgi = CGI->new;
+my $cwd = dirname($0);
 
 # Sekrit night-mode
 my $night = defined($cgi->param('night'));
@@ -13,9 +17,9 @@ my $night = defined($cgi->param('night'));
 my $dbh = nms::db_connect();
 
 GD::Image->trueColor(1);
-my ($img, $text_img);
 
-my $img = GD::Image->new('tg14-salkart.png');
+my $text_img;
+our $img = GD::Image->new($cwd.'/tg14-salkart.png');
 if ($night) {
 	my ($width, $height) = ($img->width, $img->height); 
 
@@ -28,10 +32,9 @@ if ($night) {
 	$text_img = GD::Image->new($width, $height, 1);
 	$text_img->alphaBlending(0);
 	$text_img->saveAlpha(1);
-	my $blank = $text_img->colorAllocateAlpha(0, 0, 0, 127);
+	$blank = $text_img->colorAllocateAlpha(0, 0, 0, 127);
 	$text_img->filledRectangle(0, 0, $text_img->width - 1, $text_img->height - 1, $blank);
 } else {
-	$img = GD::Image->new('tg14-salkart.png');
 	$text_img = $img;
 }
 
@@ -113,7 +116,7 @@ if ($night) {
 	$magick->Gamma(gamma=>1.90);
 
 	my $m2 = Image::Magick->new;
-	$m2->Read('tg14-salkart.png');
+	$m2->Read($cwd.'/tg14-salkart.png');
 	$m2->Negate();
 	$m2->Composite(image=>$magick, compose=>'Atop');
 
