@@ -105,7 +105,7 @@ BEGIN
         num_entries := 0;
         last_poll.switch := -1;
 
-        FOR poll IN select * from polls where time >= now() - '15 minutes'::interval and time < now() order by switch,port,time LOOP
+        FOR poll IN select * from polls where time >= now() - '15 minutes'::interval and time < now() and official_port order by switch,port,time LOOP
                 IF poll.switch <> last_poll.switch OR poll.port <> last_poll.port THEN
                         IF num_entries >= 2 THEN
                                 timediff := EXTRACT(epoch from last_poll.time - first_poll.time);
