@@ -23,32 +23,32 @@ while (<STDIN>) {
 		$name =~ /e(\d+)-(\d+)/;
 		my ($e, $s) = ($1, $2);
 
-		$x = int(220 + (($e-1)/2) * 21.5);
+		$x = int(205 + (($e-1)/2) * 20.2);
 		$y = undef;
 
-		$x += 10 if ($e >= 11);
-		$x += 10 if ($e >= 27);
-		$x += 10 if ($e >= 43);
-		$x += 10 if ($e >= 59);
+		$x += 8 if ($e >= 11);
+		$x += 6 if ($e >= 27);
+		$x += 12 if ($e >= 43);
+		$x += 7 if ($e >= 60);
 
 		if ($s > 2) {
-			$y = 310 - 84 * ($s-2);
+			$y = 328 - 84 * ($s-2);
 		} else {
-			$y = 507 - 84 * ($s);
+			$y = 519 - 84 * ($s);
 		}
 
 		$xx = $x + 14;
 		$yy = $y + 84;
 
 		# Justeringer
-		$y += 42 if $name eq "e1-4";
-		$y += 28 if $name eq "e3-4";
-		$y += 14 if $name eq "e5-4";
+		$y += 45 if $name eq "e1-4";
+		$y += 20 if $name eq "e3-4";
+		$y += 15 if $name eq "e5-4";
 
-		$yy -= 14 if $name eq "e77-1";
-		$yy -= 28 if $name eq "e79-1";
-		$yy -= 42 if $name eq "e81-1";
-		$yy -= 56 if $name eq "e83-1";
+		#$yy -= 14 if $name eq "e77-1";
+		#$yy -= 28 if $name eq "e79-1";
+		$yy -= 15 if $name eq "e81-1";
+		#$yy -= 56 if $name eq "e83-1";
 	} elsif ($name =~ /^creative(\d+)$/) {
 		my $s = $1;
 		if ($s < 3) {
