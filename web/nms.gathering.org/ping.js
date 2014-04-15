@@ -89,6 +89,9 @@ function create_switch(switchnum, sysname, x, y, zorder, width, height) {
 
 	var span = document.createElement("div");
 	span.className = "switchname";
+	if (width < 1.5 * height) {
+		span.className = "switchname rot";
+	}
 	span.style.border = "0";
 	span.style.padding = "0";
 	s.appendChild(span);
