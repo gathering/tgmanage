@@ -52,11 +52,14 @@ while (<STDIN>) {
 	} elsif ($name =~ /^creative(\d+)-(\d+)$/) {
 		my ($s, $n) = ($1, $2);
 		$x = 973 + 52 * $n;
-		$y = int(160 + 22.2 * $s);
+		$y = int(138 + 22.2 * $s);
 		$xx = $x + 52;
 		$yy = $y + 14;
 
 		if ($s == 2 && $n == 1) {
+			$xx += 10;
+		}
+		if ($s == 3 && $n == 1) {
 			$xx += 20;
 		}
 	} elsif ($name =~ /^crew(\d+)-(\d+)$/) {
