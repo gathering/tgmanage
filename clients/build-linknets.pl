@@ -85,6 +85,7 @@ while (my ($sysname, $ip) = each %loopbacks) {
 
 # Now go through each linknet candidate, and see if we can find any
 # direct LLDP neighbors.
+my $qexist = $dbh->prepare('SELECT COUNT(*) AS cnt FROM linknets WHERE switch1=? AND switch2=?');
 $dbh->do('DELETE FROM linknets');
 while (my ($cidr, $devices) = each %map) {
 	for (my $i = 0; $i < scalar @$devices; ++$i) {
@@ -94,10 +95,15 @@ while (my ($cidr, $devices) = each %map) {
 			next if $device_a->[0] eq $device_b->[0];
 			next unless exists($lldpneigh{$device_a->[0]}{$device_b->[0]});
 
+			my $switch_a = $switch_id{$device_a->[0]};
+			my $switch_b = $switch_id{$device_b->[0]};
+			my $ref = $dbh->selectrow_hashref($qexist, undef, $switch_a, $switch_b);
+			next if ($ref->{'cnt'} != 0);
+
 			$dbh->do('INSERT INTO linknets (switch1, addr1, switch2, addr2) VALUES (?,?,?,?)',
 				undef,
-				$switch_id{$device_a->[0]}, $device_a->[1],
-				$switch_id{$device_b->[0]}, $device_b->[1]);
+				$switch_a, $device_a->[1],
+				$switch_b, $device_b->[1]);
 		}
 	}
 }

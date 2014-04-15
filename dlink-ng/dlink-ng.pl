@@ -1,4 +1,17 @@
 #!/usr/bin/perl
+#
+# USAGE:
+# 
+# On all switches;
+#       dlink-ng/make-dlink-config.pl switches.txt patchlist.txt | dlink-ng/dlink-ng.pl
+# 
+# On a specific switch;
+#       dlink-ng/make-dlink-config.pl switches.txt patchlist.txt | dlink-ng/dlink-ng.pl -s e11-1
+#
+# On multiple switches;
+#       dlink-ng/make-dlink-config.pl switches.txt patchlist.txt | grep -E "11-1|11-2|13-1|13-2" | dlink-ng/dlink-ng.pl
+#
+#
 use strict;
 use warnings;
 use Net::Telnet::Cisco;
@@ -11,7 +24,9 @@ use Getopt::Long;
 use Net::IP;
 use Net::OpenSSH;
 BEGIN {
-	require "dlink-ng-config.pm";
+        use File::Basename;
+        my $dlink_dir = dirname(__FILE__);
+        require "$dlink_dir/dlink-ng-config.pm";
 }
 
 # Make sure dlinkconfig.pm loads config (i.e. one config type has been uncommented)
