@@ -1,4 +1,5 @@
 var switches = [];
+var linknets = [];
 var last_dataset = [];
 get_switches();
 get_ping();
@@ -33,9 +34,16 @@ function draw_switches(json) {
 		document.body.removeChild(switches[switchnum]);
 	}
 	switches = [];
+	var lines = document.getElementById("lines");
+	for (var linknetnum in linknets) {
+		lines.removeChild(linknets[linknetnum][0]);
+		lines.removeChild(linknets[linknetnum][1]);
+		lines.removeChild(linknets[linknetnum][2]);
+	}
+	linknets = [];
 	
-	for (var switchnum in json) {
-		var s = json[switchnum];
+	for (var switchnum in json['switches']) {
+		var s = json['switches'][switchnum];
 		create_switch(switchnum,
 	  	              s['sysname'],
 		              parseInt(s['x']),
@@ -44,8 +52,56 @@ function draw_switches(json) {
 		              parseInt(s['width']),
 		              parseInt(s['height']));
 	}
+
+	for (var i = 0; i < json['linknets'].length; ++i) {
+		var linknet = json['linknets'][i];
+		create_linknet(linknet['linknet'], linknet['switch1'], linknet['switch2']);
+	}
+
 	setTimeout(get_switches, 60000);
 	really_update_ping(last_dataset);
+}
+
+function create_linknet(linknetnum, switch1, switch2) {
+	var s1 = switches[switch1];
+	var s2 = switches[switch2];
+
+	var s1x = parseInt(s1.style.left.replace("px", "")) + 0.5 * parseInt(s1.style.width.replace("px", ""));
+	var s1y = parseInt(s1.style.top.replace("px", "")) + 0.5 * parseInt(s1.style.height.replace("px", ""));
+	var s2x = parseInt(s2.style.left.replace("px", "")) + 0.5 * parseInt(s2.style.width.replace("px", ""));
+	var s2y = parseInt(s2.style.top.replace("px", "")) + 0.5 * parseInt(s2.style.width.replace("px", ""));
+
+	var midx = 0.5 * (s1x + s2x);
+	var midy = 0.5 * (s1y + s2y);
+
+	var outline = document.createElementNS("http://www.w3.org/2000/svg", "line");
+	outline.setAttribute("x1", s1x);
+	outline.setAttribute("y1", s1y);
+	outline.setAttribute("x2", s2x);
+	outline.setAttribute("y2", s2y);
+	outline.style.stroke = "rgb(0, 0, 0)";
+	outline.style.strokeWidth = 4;
+	document.getElementById("lines").appendChild(outline);
+
+	var line1 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+	line1.setAttribute("x1", s1x);
+	line1.setAttribute("y1", s1y);
+	line1.setAttribute("x2", midx);
+	line1.setAttribute("y2", midy);
+	line1.style.stroke = "rgb(0, 0, 255)";
+	line1.style.strokeWidth = 3;
+	document.getElementById("lines").appendChild(line1);
+
+	var line2 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+	line2.setAttribute("x1", midx);
+	line2.setAttribute("y1", midy);
+	line2.setAttribute("x2", s2x);
+	line2.setAttribute("y2", s2y);
+	line2.style.stroke = "rgb(0, 0, 255)";
+	line2.style.strokeWidth = 3;
+	document.getElementById("lines").appendChild(line2);
+
+	linknets[linknetnum] = [ line1, line2, outline ];
 }
 
 function update_ping(json) {
@@ -54,18 +110,30 @@ function update_ping(json) {
 	setTimeout(get_ping, 1000);
 }
 
-function really_update_ping(json) {
-	for (var switchnum in switches) {
-		if (json[switchnum] === null || json[switchnum] === undefined) {
-			switches[switchnum].style.backgroundColor = '#0000ff';
-		} else {
-			// 10ms is max
-			var l = json[switchnum] / 10.0;
-			if (l >= 1.0) { l = 1.0; }
-			l = Math.pow(l, 1.0/2.2);
-			l = Math.round(l * 255.0);
+function rgb_from_latency(latency_ms) {
+	if (latency_ms === null || latency_ms === undefined) {
+		return '#0000ff';
+	}
 
-			switches[switchnum].style.backgroundColor = 'rgb(' + l + ', 255, 0)';
+	// 10ms is max
+	var l = latency_ms / 10.0;
+	if (l >= 1.0) { l = 1.0; }
+	l = Math.pow(l, 1.0/2.2);
+	l = Math.round(l * 255.0);
+
+	return 'rgb(' + l + ', 255, 0)';
+}
+
+function really_update_ping(json) {
+	if (json['switches']) {
+		for (var switchnum in switches) {
+			switches[switchnum].style.backgroundColor = rgb_from_latency(json['switches'][switchnum]);
+		}
+	}
+	if (json['linknets']) {
+		for (var linknetnum in linknets) {
+			linknets[linknetnum][0].style.stroke = rgb_from_latency(json['linknets'][linknetnum][0]);
+			linknets[linknetnum][1].style.stroke = rgb_from_latency(json['linknets'][linknetnum][1]);
 		}
 	}
 }
