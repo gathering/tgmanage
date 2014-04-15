@@ -29,7 +29,7 @@ if (defined($cmdline_ip) && defined($cmdline_community)) {
 }
 
 # First, find all machines that lack an LLDP chassis ID.
-my $q = $dbh->prepare("SELECT switch, ip, community FROM switches WHERE lldp_chassis_id IS NULL AND ip <> '127.0.0.1'");
+my $q = $dbh->prepare("SELECT switch, ip, community FROM switches WHERE lldp_chassis_id IS NULL AND ip <> '127.0.0.1' AND switchtype <> 'dlink3100'");
 $q->execute;
 
 while (my $ref = $q->fetchrow_hashref) {
@@ -49,7 +49,7 @@ while (my $ref = $q->fetchrow_hashref) {
 }
 
 # Now ask all switches for their LLDP neighbor table.
-$q = $dbh->prepare("SELECT ip, sysname, community FROM switches WHERE lldp_chassis_id IS NOT NULL AND ip <> '127.0.0.1'");
+$q = $dbh->prepare("SELECT ip, sysname, community FROM switches WHERE lldp_chassis_id IS NOT NULL AND ip <> '127.0.0.1' AND switchtype <> 'dlink3100'");
 $q->execute;
 
 while (my $ref = $q->fetchrow_hashref) {
@@ -84,6 +84,9 @@ sub discover_lldp_neighbors {
 		next if ($caps{'cap_enabled_telephone'});
 
 		next if $sysname =~ /nocnexus/;
+
+		my $sysdesc = $value->{'lldpRemSysDesc'};
+		next if $sysdesc =~ /\b(C1530|C3600|C3700)\b/;
 
 		my $exists = $dbh->selectrow_hashref($qexist, undef, $chassis_id)->{'cnt'};
 		next if ($exists);
