@@ -593,6 +593,13 @@ create table ping ( switch integer not null, updated timestamptz not null defaul
 create index updated_index on ping ( updated );
 alter table public.ping owner to nms;
 
+create table linknets ( linknet serial not null, switch1 integer not null, addr1 inet not null, switch2 integer not null, addr2 inet not null );
+alter table public.linknets owner to nms;
+
+create table linknet_ping ( linknet integer not null, updated timestamptz not null default current_timestamp, latency1_ms float, latency2_ms float );
+create index updated_index2 on linknet_ping ( updated );
+alter table public.linknet_ping owner to nms;
+
 --
 -- Data for Name: ap_poll; Type: TABLE DATA; Schema: public; Owner: nms
 --
