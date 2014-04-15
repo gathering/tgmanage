@@ -37,10 +37,6 @@ while (<PATCH>) {
 	my $netmask = $switches{$switchname}{netmask};
 	my ($o1, $o2, $o3, $o4) = split(/\./, $network);
 	
-	# TG13-fiks
-	# Distroene ble kalt 1-5, men planning-forvirring førte til renaming 0-4
-	$coregw =~ s/^(distro)([0-9])$/$1 . ($2-1)/e;
-	
 	# portchannel per distro
 	$portchannels{$coregw} = $portchannel_start unless ($portchannels{$coregw} && defined($portchannels{$coregw}));
 	
