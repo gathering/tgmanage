@@ -1,10 +1,10 @@
 #!/usr/bin/perl
 use warnings;
 use strict;
+use 5.010;
 use CGI;
 use DBI;
 use Data::Dumper;
-use Switch;
 use lib '../../include';
 use nms;
 
@@ -164,8 +164,8 @@ EOF
 print "<br />\n";
 
 my @switches = ();
-switch ($cgi->param('rangetype')) {
-	case 'all' {
+given ($cgi->param('rangetype')) {
+	when ('all') {
 		print "Sender `".$cgi->param('cmd')."` til alle switchene<br />";
 		@switches = ();
 		$all_switches->execute();
@@ -173,20 +173,20 @@ switch ($cgi->param('rangetype')) {
 			push @switches, $ref->{'sysname'};
 		}
 	}
-	case 'switch' {
+	when ('switch') {
 #		print "Sender `".$cgi->param('cmd')."` til switchene `"
 #		      .$cgi->param('range')."`.<br />";
 		$_ = $cgi->param('range');
 		@switches = parse_range($_);
 	}
-	case 'regexp' {
+	when ('regexp') {
 		@switches = ();
 		$all_switches->execute();
 		while (my $ref = $all_switches->fetchrow_hashref) {
 			push @switches, $ref->{'sysname'} if $ref->{'sysname'} =~ $cgi->param('regexp');
 		}
 	}
-	case 'row' {
+	when ('row') {
 #		print "Sender `".$cgi->param('cmd')."` til radene `"
 #		      .$cgi->param('range')."`.<br />";
 #		print "This function does not work yet.";
@@ -195,7 +195,7 @@ switch ($cgi->param('rangetype')) {
 #		@switches = ();
 		print "<font color=\"red\">Slått av!</font>\n";
 	}
-}
+};
 
 my $gid;
 if (@switches > 0) {
