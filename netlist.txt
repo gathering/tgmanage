@@ -3,6 +3,8 @@
 151.216.227.0 25 fugleberget1
 151.216.227.128 25 fugleberget2
 151.216.229.0 24 gayme
+151.216.232.0 25 resepsjon
+151.216.232.128 25 lavvo
 151.216.234.0 24 clientcam
 151.216.235.0 24 highlights
 151.216.244.0 26 apenett01
