@@ -3,7 +3,6 @@ use DBI;
 use POSIX;
 use Time::HiRes;
 use Net::Oping;
-use Data::Dumper;
 use strict;
 use warnings;
 
