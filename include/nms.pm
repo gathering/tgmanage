@@ -139,6 +139,7 @@ sub snmp_open_session {
 
 		$options{'Version'} = 3;
 	} else {
+		$options{'Community'} = $community;
 		$options{'Version'} = 2;
 	}
 
