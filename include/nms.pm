@@ -57,7 +57,7 @@ sub switch_connect($) {
 					Dump_Log => $dumplog,
 					Input_Log => $inputlog,
 					Errmode => 'return',
-					Prompt => '/DGS-3100# (?!\x1b\[K)/');
+					Prompt => '/[\S\-\_]+[#>]/');
 	my $ret = $conn->open(	Host => $ip);
 	if (!$ret || $ret != 1) {
 		return (undef);
@@ -84,6 +84,8 @@ sub switch_connect($) {
 sub switch_exec {
 	my ($cmd, $conn, $print) = @_;
 
+	sleep 1; # don't overload the D-Link
+
 	# Send the command and get data from switch
 	my @data;
 	if (defined($print)) {
@@ -91,16 +93,9 @@ sub switch_exec {
 		return;
 	} else {
 		@data = $conn->cmd($cmd);
-		print $conn->errmsg, "\n";
+		print "ERROR: " . $conn->errmsg . "\n" if $conn->errmsg;
 	}
 	return @data;
-#	my @lines = ();
-#	foreach my $line (@data) {
-#		# Remove escape-7 sequence
-##		$line =~ s/\x1b\x37//g;
-#		push (@lines, $line);
-#	}
-#	return @lines;
 }
 				
 sub switch_timeout {
