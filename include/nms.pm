@@ -27,6 +27,8 @@ BEGIN {
 	SNMP::loadModules('ENTITY-MIB');
 	SNMP::loadModules('IF-MIB');
 	SNMP::loadModules('LLDP-MIB');
+	SNMP::loadModules('IP-MIB');
+	SNMP::loadModules('IP-FORWARD-MIB');
 }
 
 sub db_connect {

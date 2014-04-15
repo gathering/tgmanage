@@ -347,34 +347,17 @@ CREATE TABLE dhcp (
 
 ALTER TABLE public.dhcp OWNER TO nms;
 
---
--- Name: ipv4; Type: TABLE; Schema: public; Owner: nms; Tablespace: 
+-- Name: seen_mac; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
 --
 
-CREATE TABLE ipv4 (
+CREATE TABLE seen_mac (
     mac macaddr NOT NULL,
     address inet NOT NULL,
-    "time" timestamp without time zone NOT NULL,
-    age integer
+    seen timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
-ALTER TABLE public.ipv4 OWNER TO nms;
-
---
--- Name: ipv6; Type: TABLE; Schema: public; Owner: nms; Tablespace: 
---
-
-CREATE TABLE ipv6 (
-    mac macaddr NOT NULL,
-    address inet NOT NULL,
-    "time" timestamp with time zone NOT NULL,
-    age integer,
-    vlan text
-);
-
-
-ALTER TABLE public.ipv6 OWNER TO nms;
+ALTER TABLE public.seen_mac OWNER TO nms;
 
 --
 -- Name: mbd_log; Type: TABLE; Schema: public; Owner: nms; Tablespace: 

@@ -8,10 +8,10 @@ use strict;
 use warnings;
 
 BEGIN {
-        require "../include/config.pm";
-        eval {
-                require "../include/config.local.pm";
-        };
+require "../include/config.pm";
+	eval {
+		require "../include/config.local.pm";
+	};
 }
 
 my $dbh = nms::db_connect() or die "Can't connect to database";
@@ -44,7 +44,12 @@ print "Running automagic IPv6 DNS updates\n";
 while (1) {
 	
 	# Fetch visible IPv6 addresses from the last three minutes
-	my $q = $dbh->prepare("SELECT DISTINCT ON (ipv6.mac) ipv6.address AS v6, ipv6.mac, ipv4.address AS v4, ipv6.time - ipv6.age*'1 second'::interval FROM ipv6 LEFT JOIN ipv4 ON ipv4.mac = ipv6.mac WHERE ipv6.time > NOW()-'3 min'::interval ORDER BY ipv6.mac, ipv6.time DESC, mac")
+	#my $q = $dbh->prepare("SELECT DISTINCT ON (ipv6.mac) ipv6.address AS v6, ipv6.mac, ipv4.address AS v4, ipv6.time - ipv6.age*'1 second'::interval FROM ipv6 LEFT JOIN ipv4 ON ipv4.mac = ipv6.mac WHERE ipv6.time > NOW()-'3 min'::interval ORDER BY ipv6.mac, ipv6.time DESC, mac")
+	my $q = $dbh->prepare(
+"SELECT DISTINCT ON (v6) v6, ipv6.mac, ipv6.seen, v4
+FROM (SELECT DISTINCT ON (address) address AS v6, mac, seen FROM seen_mac WHERE family(address) = 6 AND seen > CURRENT_TIMESTAMP - '3 min'::interval) ipv6
+LEFT JOIN (SELECT DISTINCT ON (address) address AS v4, mac, seen FROM seen_mac WHERE family(address) = 4 AND seen > CURRENT_TIMESTAMP - '3 min'::interval) ipv4 ON ipv4.mac = ipv6.mac
+ORDER BY v6, ipv6.seen DESC, mac")
 		or die "Can't prepare query";
 	$q->execute() or die "Can't execute query";
 	
@@ -104,7 +109,7 @@ while (1) {
 	# try to delete everything. FIXME: Query the zone file and diff against the
 	# database, to avoid running as many NS-updates as tuples in the result set.
 	
-	$q = $dbh->prepare("SELECT DISTINCT address AS v6 FROM ipv6 WHERE time < NOW() - '4 hours'::interval AND time > NOW() - '4 hours 30 minutes'::interval")
+	$q = $dbh->prepare("SELECT DISTINCT address AS v6 FROM seen_mac WHERE seen BETWEEN CURRENT_TIMESTAMP - '4 hours'::interval AND CURRENT_TIMESTAMP - '4 hours 30 minutes'::interval")
 		or die "Can't prepare query";
 	$q->execute() or die "Can't execute query";
 	
