@@ -303,7 +303,7 @@ void Planner::logprintf(const char *fmt, ...)
 string distro_name(unsigned distro)
 {
 	char buf[16];
-	sprintf(buf, "distro%d", distro + 1);
+	sprintf(buf, "distro%dgw", distro + 1);
 	return buf;
 }
 
