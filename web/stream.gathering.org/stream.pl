@@ -35,7 +35,7 @@ my $url = "";
 my $port_del = "";
 my $port_str = "";
 my $extinf = "";
-my $flash_appendix = "";
+my $url_path = "";
 
 my $clip = $client->remote_addr();
 
@@ -49,14 +49,10 @@ if (exists($streams{$stream})) {
 		$extinf .= "Multicasted";
 		$url = $streams{$stream}->{multicast_ip};
 	} else {
-		$port_del = 30;
+		#$port_del = 80;
 		$extinf .= "Unicasted";
-		$url = $base_url;
-		
-		if ($streams{$stream}->{is_flash}) {
-			$port_del = 50;
-			$flash_appendix = "/stream.flv";
-		}
+                $url = $base_url;
+		$url_path = $streams{$stream}->{url};
 	}
 
 	$port_del = $streams{$stream}->{preport} if (defined($streams{$stream}->{preport}));
@@ -78,7 +74,11 @@ if(defined $interlaced && $interlaced == 1) {
 	print "#EXTVLCOPT:deinterlace=1\n";
 	print "#EXTVLCOPT:deinterlace-mode=linear\n";
 }
-print "$url:$port_del$port_str$flash_appendix\n";
+if ($port_str == 80) {
+  print "$url$url_path\n";
+} else {
+  print "$url:$port_del$port_str$url_path\n";
+}
 
 sub error($) {
 	my $message = shift;
