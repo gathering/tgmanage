@@ -6,6 +6,8 @@
 151.216.226.0 24 presse
 151.216.227.0 25 fugleberget1
 151.216.227.128 25 fugleberget2
+151.216.228.0 26 kompett
+151.216.228.64 26 kompott
 151.216.229.0 24 gayme
 151.216.230.0 24 info-dask
 151.216.232.0 25 resepsjon
