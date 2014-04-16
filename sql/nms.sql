@@ -522,6 +522,7 @@ ALTER TABLE public.stemppoll_sequence OWNER TO nms;
 CREATE TABLE switches (
     switch integer DEFAULT nextval(('"switches_switch_seq"'::text)::regclass) NOT NULL,
     ip inet NOT NULL,
+    secondary_ip inet,
     sysname character varying NOT NULL,
     switchtype character varying NOT NULL,
     last_updated timestamp with time zone,
