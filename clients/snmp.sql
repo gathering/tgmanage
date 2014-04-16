@@ -6,6 +6,7 @@ create table switchtypes (
 create table switches (
 	switch serial not null primary key,
 	ip inet not null,
+	secondary_ip inet,
 	sysname varchar not null,
 	switchtype varchar not null references switchtypes,
 	last_updated timestamp,
