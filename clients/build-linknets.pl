@@ -96,8 +96,8 @@ while (my ($sysname, $ip) = each %loopbacks) {
 	$dbh->do('UPDATE switches SET ip=? WHERE sysname=?',
 		undef, $ip, $sysname);
 }
-while (my ($sysname, $ipv6) = each %loopbacks) {
-	$dbh->do('UPDATE switches SET second_ip=? WHERE sysname=?',
+while (my ($sysname, $ipv6) = each %loop_ipv6) {
+	$dbh->do('UPDATE switches SET secondary_ip=? WHERE sysname=?',
 		undef, $ipv6, $sysname);
 }
 
