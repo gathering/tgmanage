@@ -41,7 +41,7 @@ sub poll_loop {
 	} else {
 		$qualification = <<"EOF";
   (last_updated IS NULL OR now() - last_updated > poll_frequency)
-  AND (locked='f' OR now() - last_updated > '15 minutes'::interval)
+  AND (locked='f' OR now() - last_updated > '5 minutes'::interval)
   AND ip is not null
 EOF
 	}
