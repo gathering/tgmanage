@@ -87,6 +87,7 @@ while (my $ref = $q->fetchrow_hashref()) {
 	
 	my $sysname = $ref->{'sysname'};
 	$sysname =~ s/-sekrit//;
+	$sysname =~ s/\..*$//;
 	
 	$ref->{'placement'} =~ /\((\d+),(\d+)\),\((\d+),(\d+)\)/;
 	$img->filledRectangle($3,$4,$1,$2,$clr);
