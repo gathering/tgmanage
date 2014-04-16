@@ -594,6 +594,10 @@ create table ping ( switch integer not null, updated timestamptz not null defaul
 create index updated_index on ping ( updated );
 alter table public.ping owner to nms;
 
+create table ping_secondary_ip ( switch integer not null, updated timestamptz not null default current_timestamp, latency_ms float );
+create index updated_index3 on ping_secondary_ip ( updated );
+alter table public.ping_secondary_ip owner to nms;
+
 create table linknets ( linknet serial not null, switch1 integer not null, addr1 inet not null, switch2 integer not null, addr2 inet not null );
 alter table public.linknets owner to nms;
 

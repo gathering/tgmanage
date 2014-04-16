@@ -110,6 +110,15 @@ function update_ping(json) {
 	setTimeout(get_ping, 1000);
 }
 
+function gradient_from_latency(latency_ms, latency_secondary_ms) {
+	if (latency_secondary_ms === undefined) {
+		return rgb_from_latency(latency_ms);
+	}
+	return '-webkit-gradient(linear, left top, left bottom, ' +
+		'from(' + rgb_from_latency(latency_ms) + '), ' +
+		'to(' + rgb_from_latency(latency_secondary_ms) + '))';
+}
+
 function rgb_from_latency(latency_ms) {
 	if (latency_ms === null || latency_ms === undefined) {
 		return '#0000ff';
@@ -127,8 +136,14 @@ function rgb_from_latency(latency_ms) {
 function really_update_ping(json) {
 	if (json['switches']) {
 		for (var switchnum in switches) {
-			switches[switchnum].style.backgroundColor = rgb_from_latency(json['switches'][switchnum]);
-		}
+			if (json['switches'][switchnum]) {
+				switches[switchnum].style.background =
+					gradient_from_latency(json['switches'][switchnum]['latency'],
+							 json['switches'][switchnum]['latency_secondary']);
+			} else {
+				switches[switchnum].style.background = '#0000ff';
+			}
+		}		
 	}
 	if (json['linknets']) {
 		for (var linknetnum in linknets) {
