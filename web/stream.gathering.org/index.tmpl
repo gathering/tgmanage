@@ -1,12 +1,19 @@
 <html>
 <head>
 	<title>The Gathering <TMPL_VAR NAME=TG_FULL> Streams</title>
-	<link rel="stylesheet" type="text/css" href="singularity.css" media="all">
+	<link rel="stylesheet" type="text/css" href="style.css" media="all">
+	<script type="text/javascript" src="jwplayer.js"></script> 
 </head>
 <body>
 	<div id="innhold">
 		<TMPL_UNLESS NAME=NOHEADER>
 			<h1>The Gathering <TMPL_VAR NAME=TG_FULL> Streams</h1>
+			<embed type="application/x-shockwave-flash" src="player.swf"
+				width="800" height="450" style="undefined" id="mplf" name="mplf" quality="high"
+				allowfullscreen="true" allowscriptaccess="always" wmode="opaque"
+				stretching="exactfit"
+				flashvars="stretching=exactfit&amp;file=http://cubemap.tg14.gathering.org/event.flv&amp;autostart=true"></embed>
+			<p>&nbsp;</p>
 		</TMPL_UNLESS>
 		
 		<TMPL_LOOP NAME="STREAMS">
@@ -20,10 +27,6 @@
 				</div>
 			</div>
 		</TMPL_LOOP>
-		<div id="map">
-			<img src="img/cam-map.png">
-		</div>
-
 	</div>
 
 	<p>Problems with the non game streams? The easiest way to get hold of us is on IRC (EFNet); one of ViD, Rockj and Sesse should be available if there's too much traffic on #tg to be heard.</p>

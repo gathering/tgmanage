@@ -79,7 +79,7 @@ blockquote p::before {
     content: "\201D";
     font-size: 150px;
     font-style: normal;
-    color: #00aaad;
+    color: #b20f15;
 }
 blockquote p {
     display: block;
@@ -109,7 +109,7 @@ ul li:before {
     left: -17px;
     width: 15px;
     text-align: right;
-    color: #00aaad;
+    color: #b20f15;
     font-size: 13px;
     line-height: 21px;
 }
@@ -130,14 +130,14 @@ ol > li:before {
     left: -30px;
     width: 23px;
     text-align: right;
-    color: #00aaad;
+    color: #b20f15;
     font-size: 12px;
     line-height: 22px;
 }
 dl dt			{ font-weight: bold; }
 dd				{ margin: 0 0 0 20px; }
 
-a 				{ color: #00aaad; text-decoration: none; }
+a 				{ color: #b20f15; text-decoration: none; }
 a:hover 		{ color: #c3027b; }
 code, pre {
     padding: 0 3px 2px;
@@ -152,7 +152,7 @@ code, pre {
 }
 code {
     padding: 3px 4px;
-    color: #00aaad;
+    color: #b20f15;
 }
 pre {
     display: block;
@@ -333,7 +333,7 @@ h2.size100 { font-size: 100px; }
     position: relative; 
     top: -2px;
     margin: 0 5px 0 3px; 
-    color: #00aaad;
+    color: #b20f15;
 }
 .breadcrumbs {
     font-size: 12px;
@@ -360,7 +360,7 @@ h2.size100 { font-size: 100px; }
     position: relative; 
     top: -2px;
     margin: 0 5px 0 5px; 
-    color: #00aaad;
+    color: #b20f15;
 }
 .phototext {
     margin-top: 5px;
@@ -433,7 +433,7 @@ div.category-news h2 a {
 /* HTML & BODY
 ------------------------------------------------------ */
 body {
-    background: url('/tg13/files/content/design/images/background.jpg') no-repeat;
+    //background: url('/tg13/files/content/design/images/background.jpg') no-repeat;
     background-position: top center;
 }
 
@@ -731,7 +731,7 @@ li.menu-game a, li.menu-game span, li.menu-game + menu.sub-menu a, li.menu-game 
     color: #fba51e;
 }
 li.menu-tickets a, li.menu-tickets span, li.menu-tickets + menu.sub-menu a, li.menu-tickets + menu.submenu span {
-    color: #00aaad;
+    color: #b20f15;
 }
 li.menu-guide a, li.menu-guide span, li.menu-guide + menu.sub-menu a, li.menu-guide + menu.submenu span {
     color: #034ea2;
