@@ -17,11 +17,7 @@ if (defined($ARGV[0])) {
 } else {
 	my $threads = 50;
 	for (1..$threads) {
-		if (fork() == 0) {
-			# child
-			poll_loop();
-			exit;
-		}
+		threads->create(\&poll_loop);
 	}
 	poll_loop();	
 }
@@ -65,7 +61,7 @@ EOF
 		or die "Couldn't prepare qlock";
 	my $qunlock = $dbh->prepare("UPDATE switches SET locked='f', last_updated=now() WHERE switch=?")
 		or die "Couldn't prepare qunlock";
-	my $qpoll = $dbh->prepare("INSERT INTO polls (time, switch, port, bytes_in, bytes_out, errors_in, errors_out, official_port) VALUES (current_timestamp,?,?,?,?,?,?,?)")
+	my $qpoll = $dbh->prepare("INSERT INTO polls (time, switch, port, bytes_in, bytes_out, errors_in, errors_out) VALUES (timeofday()::timestamp,?,?,?,?,?,?)")
 		or die "Couldn't prepare qpoll";
 	my $qtemppoll = $dbh->prepare("INSERT INTO temppoll (time, switch, temp) VALUES (timeofday()::timestamp,?::text::int,?::text::float)")
 		or die "Couldn't prepare qtemppoll";
@@ -131,30 +127,19 @@ EOF
 		my $start = [Time::HiRes::gettimeofday];
 		eval {
 			my $session = nms::snmp_open_session($ip, $community);
+			my @ports = expand_ports($switch->{'ports'});
 
-			my %ports = ();
-			for my $port (expand_ports($switch->{'ports'})) {
-				$ports{$port} = 1;
-			}
+			for my $port (@ports) {
+				my $in = $session->get("ifHCInOctets.$port");
+				die $switch->{'switch'}.":$port: failed reading in" if !defined $in;
+				my $out = $session->get("ifHCOutOctets.$port");
+				die $switch->{'switch'}.":$port: failed reading out" if !defined $out;
+				my $ine = $session->get("ifInErrors.$port");
+				die $switch->{'switch'}. ":$port: failed reading in-errors" if !defined $ine;
+				my $oute = $session->get("ifOutErrors.$port");
+				die $switch->{'switch'}. ":$port: failed reading out-errors" if !defined $oute;
 
-			# ifHCInOctets / ifHCOutOctets are strictly speaking part of ifXTable
-			# and not ifTable, but it seems to work fine nevertheless,
-			# as long as we explicitly ask for them.
-			my $result = $session->gettable('ifTable',
-				noindexes => 1,
-				repeat => 200,
-				columns => [ 'ifHCInOctets', 'ifHCOutOctets', 'ifInErrors', 'ifOutErrors' ],
-			);
-			die "SNMP fetch failed: " . $session->{'ErrorStr'} if (!defined($result));
-
-			while (my ($key, $value) = each %$result) {
-				my $port = $key;
-				my $in = $value->{'ifHCInOctets'} // -1;
-				my $out = $value->{'ifHCOutOctets'} // -1;
-				my $ine = $value->{'ifInErrors'} // -1;
-				my $oute = $value->{'ifOutErrors'} // -1;
-				my $official_port = exists($ports{$port}) ? 1 : 0;
-				$qpoll->execute($switch->{'switch'}, $port, $in, $out, $ine, $oute, $official_port);
+				$qpoll->execute($switch->{'switch'}, $port, $in, $out, $ine, $oute) || die "%s:%s: %s\n", $switch->{'switch'}, $port, $in;
 			}
 		};
 		if ($@) {
