@@ -16,6 +16,7 @@ $coregws->execute;
 
 my %switch_id = ();   # sysname -> switch database ID
 my %loopbacks = ();   # sysname -> primary address
+my %loop_ipv6 = ();   # sysname -> primary address
 my %map = ();         # CIDR -> (sysname,ip)*
 my %lldpneigh = ();   # sysname -> sysname -> 1
 
@@ -35,6 +36,7 @@ while (my $ref = $coregws->fetchrow_hashref) {
 	my $ifs = $snmp->gettable('ifTable');
 	my $addrs = $snmp->gettable('ipAddrTable');
 	my $lldp = $snmp->gettable('lldpRemTable');
+        my $ipaddresstable = $snmp->gettable('ipAddressTable');
 
 	# Find all direct routes we have, and that we also have an address in.
 	# These are our linknet candidates.
@@ -63,6 +65,18 @@ while (my $ref = $coregws->fetchrow_hashref) {
 		last;
 	}
 
+        my %loopbacks_ipv6_this_switch = ();
+        for my $addr (values %$ipaddresstable) {
+                next if not  $addr->{'ipAddressAddrType'} == 2; # Only IPv6 addresses please.
+                my $ifdescr = $ifs->{$addr->{'ipAddressIfIndex'}}->{'ifDescr'};
+                next unless $ifdescr =~ /^Loop/;
+                $loopbacks_ipv6_this_switch{$ifdescr} = nms::convert_ipv6( $addr->{'ipAddressAddr'} );
+        }
+        for my $if (sort keys %loopbacks_ipv6_this_switch) {
+                $loop_ipv6{$sysname} = $loopbacks_ipv6_this_switch{$if};
+                last;
+        }
+
 	# Find all LLDP neighbors.
 	for my $neigh (values %$lldp) {
 		$lldpneigh{$sysname}{$neigh->{'lldpRemSysName'}} = 1;
@@ -81,6 +95,12 @@ $dbh->{RaiseError} = 1;
 while (my ($sysname, $ip) = each %loopbacks) {
 	$dbh->do('UPDATE switches SET ip=? WHERE sysname=?',
 		undef, $ip, $sysname);
+}
+
+# Update the switches we have loopback addresses fora
+while (my ($sysname, $ipv6) = each %loopbacks) {
+	$dbh->do('UPDATE switches SET ipv6=? WHERE sysname=?',
+		undef, $ipv6, $sysname);
 }
 
 # Now go through each linknet candidate, and see if we can find any
