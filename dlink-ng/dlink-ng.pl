@@ -1,17 +1,4 @@
 #!/usr/bin/perl
-#
-# USAGE:
-# 
-# On all switches;
-#       dlink-ng/make-dlink-config.pl switches.txt patchlist.txt | dlink-ng/dlink-ng.pl
-# 
-# On a specific switch;
-#       dlink-ng/make-dlink-config.pl switches.txt patchlist.txt | dlink-ng/dlink-ng.pl -s e11-1
-#
-# On multiple switches;
-#       dlink-ng/make-dlink-config.pl switches.txt patchlist.txt | grep -E "11-1|11-2|13-1|13-2" | dlink-ng/dlink-ng.pl
-#
-#
 use strict;
 use warnings;
 use Net::Telnet::Cisco;
@@ -44,16 +31,14 @@ my $DLINK_TEMPLATE;			# Filehandle used for reading D-Link template
 $| = 1;
 
 # Get options
-my ($cisco_config, $single_switch, $dlink_config, $save_config, $skipped_port_only, $skipped_port_desc_only, $no_skip);
+my ($cisco_config, $single_switch, $dlink_config, $last_port_config, $last_port_desc);
 if (@ARGV > 0) {
 	GetOptions(
 	'c|cisco|ciscoconfig'	=> \$cisco_config,		# Configure on the Cisco-side only (Portchannel, interfaces, etc)
 	's|switch=s'		=> \$single_switch,		# Configure a single switch
 	'd|dlink|dlinkconfig=s'	=> \$dlink_config,		# Push D-Link-template-config to D-Link (not used @ TG)
-	'w|write'		=> \$save_config,		# Write config on Cisco-side
-	'portskip'		=> \$skipped_port_only,		# Configure the skipped port only (Cisco-side)
-	'skipdesc'		=> \$skipped_port_desc_only,	# Configure the skipped port description only (Cisco-side)
-	'noskip'		=> \$no_skip			# Override $dlinkng::config::skip_last_port
+	'lastport'		=> \$last_port_config,		# Configure the last port only (Cisco-side)
+	'lastportdesc'		=> \$last_port_desc,		# Configure the description on the last port (Cisco-side)
 	)
 }
 
@@ -64,19 +49,21 @@ if ($dlink_config){
 	}
 }
 
-# Exit if $cisco_config and $skipped_port_only or $skipped_port_desc_only is set
-if ($cisco_config && ($skipped_port_only || $skipped_port_desc_only)){
-	die("\$cisco_config and \$skipped_port_only (or \$skipped_port_desc_only) can't be used together.\n");
+# Exit if $cisco_config and $last_port_config or $last_port_desc is set
+if ($cisco_config && ($last_port_config || $last_port_desc)){
+	die("\$cisco_config and \$last_port_config (or \$last_port_desc) can't be used together.\n");
 }
 
-# Update $dlinkng::config::skip_last_port if $no_skip is set
-if ($no_skip){
-	$dlinkng::config::skip_last_port = 0;
+# If $last_port_desc, assume $last_port_config
+if ($last_port_desc){
+	$last_port_config = 1;
 }
 
-# If skipdesc, assume $skipped_port_only
-if ($skipped_port_desc_only){
-	$skipped_port_only = 1;
+# Exit if we give $last_port_config or $last_port_desc parameters, but $configure_last_port is not set
+if ($last_port_config || $last_port_desc){
+	unless($dlinkng::config::configure_last_port){
+		die("\$configure_last_port not set, but expected due to either \$last_port_config or \$last_port_desc.\n");
+	}
 }
 
 # Print stuff
@@ -600,20 +587,23 @@ sub setup{
 	my $vrf = threads->tid();	# use thread ID as VRF-number
 	
 	# Remove last port if we're skipping it
-	my $skipped_port;
-	if ($dlinkng::config::skip_last_port){
-		$skipped_port = pop(@{$switch->{ports}});
+	my $last_port;
+	if ($dlinkng::config::configure_last_port){
+		# assume we want to skip a port, so we check against regex
+		if($switch->{switchname} =~ m/$dlinkng::config::last_port_regex/){
+			$last_port = pop(@{$switch->{ports}});
+		}
 	}
 	
-	if($skipped_port_only){
-		info($switch->{switchname}, "Configuring skipped port only.");
+	if($last_port_config){
+		info($switch->{switchname}, "Configuring last port only.");
 	}
 	
 	if($cisco_config){
 		info($switch->{switchname}, "Configuring things on the Cisco-side only.");
 	}
 	
-	unless($cisco_config || $skipped_port_only){
+	unless($cisco_config || $last_port_config){
 		info($switch->{switchname}, "Starting configuration of $switch->{switchname} ($switch->{ipv4address}).");
 		info($switch->{switchname}, "Trying to ping $switch->{ipv4address}.");
 	
@@ -696,7 +686,7 @@ sub setup{
 	telnet_cmd($switch, $cisco, "terminal length 0")
 		or return abort($switch->{switchname}, $cisco);
 	
-	unless($cisco_config || $skipped_port_only){
+	unless($cisco_config || $last_port_config){
 		# Prepare ports
 		reset_interfaces($switch, $cisco)
 			or return abort($switch->{switchname}, $cisco);
@@ -872,7 +862,7 @@ sub setup{
 		$dlink->close;
 	}
 	
-	unless($skipped_port_only){
+	unless($last_port_config){
 		# Configure final IOS stuff
 		info($switch->{switchname}, "Final IOS config phase. Setting up all interfaces + Port-Channel.");
 
@@ -913,6 +903,12 @@ sub setup{
 				or return abort($switch->{switchname}, $cisco);
 			telnet_cmd($switch, $cisco, "description D-Link $switch->{switchname}; RJ-45; 1G;")
 				or return abort($switch->{switchname}, $cisco);
+				
+			# disable CDP if specified
+			unless($dlinkng::config::cdp_enable){
+				telnet_cmd($switch, $cisco, "no cdp enable")
+					or return abort($switch->{switchname}, $cisco);
+			}	
 		
 			# Assign to Etherchannel
 			if(is_xr($switch->{coreswos})){
@@ -1039,26 +1035,26 @@ sub setup{
 	}
 	
 	# If we skipped last port at the start, we configure it now
-	if (($dlinkng::config::skip_last_port && $skipped_port && defined($skipped_port)) || ($skipped_port_only && defined($skipped_port_only))){
-		if ($skipped_port_desc_only){
-			info($switch->{switchname}, "Configuring skipped port... (description only)");
+	if ($dlinkng::config::configure_last_port && $last_port){
+		if ($last_port_desc){
+			info($switch->{switchname}, "Configuring last port... (description only)");
 		} else {
-			info($switch->{switchname}, "Configuring skipped port...");
+			info($switch->{switchname}, "Configuring last port...");
 		}
 		
 		telnet_cmd($switch, $cisco, "conf t")
 			or return abort($switch->{switchname}, $cisco);
-		unless ($skipped_port_desc_only){
-			telnet_cmd($switch, $cisco, "default int $skipped_port")
+		unless ($last_port_desc){
+			telnet_cmd($switch, $cisco, "default int $last_port")
 				or return abort($switch->{switchname}, $cisco);
 		}
 		
-		telnet_cmd($switch, $cisco, "int $skipped_port")
+		telnet_cmd($switch, $cisco, "int $last_port")
 			or return abort($switch->{switchname}, $cisco);
 		telnet_cmd($switch, $cisco, "description AP \@ D-Link $switch->{switchname}; RJ-45; 1G;")
 			or return abort($switch->{switchname}, $cisco);
 		
-		unless ($skipped_port_desc_only){
+		unless ($last_port_desc){
 			foreach my $cmd (@{$dlinkng::config::last_port_config->{$switch->{coreswos}}}){
 				telnet_cmd($switch, $cisco, $cmd)
 					or return abort($switch->{switchname}, $cisco);
@@ -1085,7 +1081,7 @@ sub setup{
 
 	# Check if all is OK, but not if configuring skipped port only
 	my $return = 0;
-	if ($skipped_port_only){
+	if ($last_port_config){
 		info($switch->{switchname}, "Done doing skipped port config. Not checking if anything is online.");
 		$return = 1;
 	} else {
@@ -1114,7 +1110,7 @@ sub setup{
 		}
 	}
 	
-	if($save_config && !is_xr($switch->{coreswos})){
+	if($dlinkng::config::save_config && !is_xr($switch->{coreswos})){
 		# save the cisco-config, but not if IOS-XR
 		info($switch->{switchname}, "Saving config on core-switch ($switch->{coreswip}).");
 		telnet_cmd($switch, $cisco, "write")
@@ -1177,7 +1173,7 @@ sub process_switches {
 # Let's start
 my $time_start = time();
 log_it("INFO", "yellow", "dlink-ng", "Starting dlink-ng with $dlinkng::config::max_threads threads...");
-log_it("INFO", "yellow", "dlink-ng", "Configured to skip last port on all switches.") if $dlinkng::config::skip_last_port;
+log_it("INFO", "yellow", "dlink-ng", "Configured to skip last port on all switches.") if $dlinkng::config::configure_last_port;
 
 # Let's add all switches to the queue
 while (<STDIN>){

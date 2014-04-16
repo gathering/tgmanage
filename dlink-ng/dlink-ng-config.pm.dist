@@ -1,6 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
+no warnings 'closure'; # remove "Variable $foo will not stay shared" :-D
 package dlinkng::config;
 
 # Common config
@@ -18,10 +19,13 @@ our $dlink_host_suffix = "_DGS-3100";		# Suffix for hostname on the D-Link switc
 our $default_coreswos = "ios";			# Default OS on coresw
 our $dlink_lacp_start = '45';			# First port for LACP-group on D-Links
 our $dlink_lacp_end = '48';			# Last port for LACP-group on D-Links
-our $skip_last_port = 0;			# Skip last port -- set up as access port
-our $use_ssh_cisco = 1;				# Use SSH towards Cisco-boxes
+our $configure_last_port = 0;			# Configure last port differently than the rest
+our $last_port_regex = '^e([1-8][1-9]|[2-8][0-9])-';	# Regex to use in combination with $configure_last_port
+our $use_ssh_cisco = 0;				# Use SSH towards Cisco-boxes
 our $use_ssh_dlink = 0;				# Use SSH towards D-Link switches
-our $access_vlan = '3602';			# VLAN to use for skipped port
+our $cdp_enable = 0;				# Enable or disable CDP on each port
+our $save_config = 1;				# Save configuration to Cisco switch			
+our $access_vlan = '3602';			# VLAN to use for last port
 
 # Specific config -- just declare empty
 our $cisco_user = "";				# Username used when logging into the swithces
@@ -40,14 +44,12 @@ sub set_variables{
 	# Custom Portchannel-config
 	$po_config = {
 		ios => [
+			"ip directed-broadcast 2699",
+			"ip pim sparse-mode",
+			"ip pim bsr-border",
 			"logging event link-status",
-			#"ip access-group end-user-protection in",
-			#"ip directed-broadcast 2000",
-			#"ipv6 nd prefix default 300 300 no-autoconfig",
-			#"ipv6 nd managed-config-flag",
-			#"ipv6 nd other-config-flag",
-			#"ipv6 dhcp relay destination $dhcprelay6_pri",
-			#"ipv6 dhcp relay destination $dhcprelay6_sec"
+			"ipv6 nd other-config-flag",
+			"ipv6 dhcp server sexdhcp",
 		],
 		nx => [
 			"",
@@ -116,7 +118,7 @@ sub load_bylan_config{
 		$bylan_dir = "$FindBin::Bin"; # Assume working-folder is the path where this script resides
 	}
 	use lib $bylan_dir;
-	use bylan;
+	eval "use bylan";
 	use Getopt::Long;
 	
 	# Load config
@@ -138,9 +140,10 @@ sub load_bylan_config{
 
 # Load TG related configuration
 sub load_tg_config{
-	my $tg_dir = '/root/tgmanage';
+	my $tg_dir;
 	BEGIN {
-	        require "$tg_dir/include/config.pm";
+		$tg_dir = '/root/tgmanage';
+		require "$tg_dir/include/config.pm";
 	        eval {
 	                require "$tg_dir/include/config.local.pm";
 	        };

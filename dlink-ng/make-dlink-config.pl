@@ -38,7 +38,12 @@ while (<PATCH>) {
 	my ($o1, $o2, $o3, $o4) = split(/\./, $network);
 	
 	# portchannel per distro
-	$portchannels{$coregw} = $portchannel_start unless ($portchannels{$coregw} && defined($portchannels{$coregw}));
+	if($coregw =~ m/distro0/){
+		# TG14-fix for distro0
+		$portchannels{$coregw} = 15 unless ($portchannels{$coregw} && defined($portchannels{$coregw}));	
+	} else {
+		$portchannels{$coregw} = $portchannel_start unless ($portchannels{$coregw} && defined($portchannels{$coregw}));
+	}
 	
 	if ($o4 eq "0") {
                 $letter = "a";
