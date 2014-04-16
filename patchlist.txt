@@ -132,3 +132,4 @@ e79-1 distro5 Gi1/34 Gi2/34 Gi5/34 Gi6/34
 e79-2 distro5 Gi1/35 Gi2/35 Gi5/35 Gi6/35
 e81-1 distro5 Gi1/36 Gi2/36 Gi5/36 Gi6/36
 e81-2 distro5 Gi1/37 Gi2/37 Gi5/37 Gi6/37
+komplett distro0 Gi1/31 Gi1/32 Gi1/33
