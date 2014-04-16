@@ -17,7 +17,11 @@ if (defined($ARGV[0])) {
 } else {
 	my $threads = 50;
 	for (1..$threads) {
-		threads->create(\&poll_loop);
+		if (fork() == 0) {
+			# child
+			poll_loop();
+			exit;
+		}
 	}
 	poll_loop();	
 }
@@ -61,7 +65,7 @@ EOF
 		or die "Couldn't prepare qlock";
 	my $qunlock = $dbh->prepare("UPDATE switches SET locked='f', last_updated=now() WHERE switch=?")
 		or die "Couldn't prepare qunlock";
-	my $qpoll = $dbh->prepare("INSERT INTO polls (time, switch, port, bytes_in, bytes_out, errors_in, errors_out) VALUES (timeofday()::timestamp,?,?,?,?,?,?)")
+	my $qpoll = $dbh->prepare("INSERT INTO polls (time, switch, port, bytes_in, bytes_out, errors_in, errors_out, official_port) VALUES (timeofday()::timestamp,?,?,?,?,?,?,true)")
 		or die "Couldn't prepare qpoll";
 	my $qtemppoll = $dbh->prepare("INSERT INTO temppoll (time, switch, temp) VALUES (timeofday()::timestamp,?::text::int,?::text::float)")
 		or die "Couldn't prepare qtemppoll";
@@ -131,13 +135,19 @@ EOF
 
 			for my $port (@ports) {
 				my $in = $session->get("ifHCInOctets.$port");
-				die $switch->{'switch'}.":$port: failed reading in" if !defined $in;
+				if (!defined($in) || $in !~ /^\d+$/) {
+					warn $switch->{'sysname'}.":$port: failed reading in";
+					next;
+				}
 				my $out = $session->get("ifHCOutOctets.$port");
-				die $switch->{'switch'}.":$port: failed reading out" if !defined $out;
+				if (!defined($out) || $out !~ /^\d+$/) {
+					warn $switch->{'sysname'}.":$port: failed reading in";
+					next;
+				}
 				my $ine = $session->get("ifInErrors.$port");
-				die $switch->{'switch'}. ":$port: failed reading in-errors" if !defined $ine;
+				$ine = -1 if (!defined($ine) || $ine !~ /^\d+$/);
 				my $oute = $session->get("ifOutErrors.$port");
-				die $switch->{'switch'}. ":$port: failed reading out-errors" if !defined $oute;
+				$oute = -1 if (!defined($oute) || $oute !~ /^\d+$/);
 
 				$qpoll->execute($switch->{'switch'}, $port, $in, $out, $ine, $oute) || die "%s:%s: %s\n", $switch->{'switch'}, $port, $in;
 			}
