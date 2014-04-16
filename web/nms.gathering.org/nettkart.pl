@@ -99,7 +99,7 @@ while (my $ref = $q->fetchrow_hashref()) {
 	my $max_textlen = ($x2-$x1) > ($y2-$y1) ? $x2-$x1 : $y2-$y1;
 	while (length($sysname) * 6 > $max_textlen) {
 		# Try to abbreviate sysname if it is too long for the box
-		$sysname =~ s/^(.*)[a-z]~?([0-9]+)$/$1~$2/ or last;
+		$sysname =~ s/^(.*)[a-z]~?([0-9-]+)$/$1~$2/ or last;
 	}
 	if (($x2-$x1) > ($y2-$y1)) {
 		$text_img->string(gdSmallFont,$x1+2,$y1,$sysname,$blk);
