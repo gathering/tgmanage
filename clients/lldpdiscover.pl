@@ -28,6 +28,14 @@ if (defined($cmdline_ip) && defined($cmdline_community)) {
 	exit;
 }
 
+# Find all candidate SNMP communities.
+my $snmpq = $dbh->prepare("SELECT DISTINCT community FROM switches");
+$snmpq->execute;
+my @communities = ();
+while (my $ref = $snmpq->fetchrow_hashref) {
+	push @communities, $ref->{'community'};
+}
+
 # First, find all machines that lack an LLDP chassis ID.
 my $q = $dbh->prepare("SELECT switch, ip, community FROM switches WHERE lldp_chassis_id IS NULL AND ip <> '127.0.0.1' AND switchtype <> 'dlink3100'");
 $q->execute;
@@ -125,7 +133,7 @@ sub discover_lldp_neighbors {
 		}
 
 		# We simply guess that the community is the same as ours.
-		add_switch($dbh, $addr, $sysname, $chassis_id, $community);
+		add_switch($dbh, $addr, $sysname, $chassis_id, @communities);
 	}
 }
 
@@ -194,10 +202,16 @@ sub range_from_to {
 }
 
 sub add_switch {
-	my ($dbh, $addr, $sysname, $chassis_id, $community) = @_;
+	my ($dbh, $addr, $sysname, $chassis_id, @communities) = @_;
 
 	# Yay, a new switch! Make a new type for it.
-	my $ports = get_ports($addr, $sysname, $community);
+	my $ports;
+	my $community;
+	for my $cand_community (@communities) {
+		$community = $cand_community;
+		$ports = get_ports($addr, $sysname, $community);
+		last if (defined($ports));
+	}
 	return if (!defined($ports));
 	my $portlist = compress_ports(get_ifindex_for_physical_ports($ports));
 	mylog("Inserting new switch $sysname ($addr, ports $portlist).");
