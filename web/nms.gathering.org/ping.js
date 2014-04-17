@@ -196,35 +196,37 @@ function create_switch(switchnum, sysname, x, y, zorder, width, height) {
 var dragging_switch = null;
 var delta_x = null, delta_y = null;
 
-document.onmousedown = function(e) {
-	var switchnum = e.target.getAttribute("data-switchnum");
-	if (switchnum === null) {
-		return;
+if (can_edit) {
+	document.onmousedown = function(e) {
+		var switchnum = e.target.getAttribute("data-switchnum");
+		if (switchnum === null) {
+			return;
+		}
+		dragging_switch = switchnum;
+		delta_x = parseInt(e.target.style.left.replace("px", "")) - e.clientX;
+		delta_y = parseInt(e.target.style.top.replace("px", "")) - e.clientY;
 	}
-	dragging_switch = switchnum;
-	delta_x = parseInt(e.target.style.left.replace("px", "")) - e.clientX;
-	delta_y = parseInt(e.target.style.top.replace("px", "")) - e.clientY;
-}
 
-document.onmousemove = function(e) {
-	if (dragging_switch === null) {
-		return;
+	document.onmousemove = function(e) {
+		if (dragging_switch === null) {
+			return;
+		}
+		switches[dragging_switch].style.left = (e.clientX + delta_x) + 'px';
+		switches[dragging_switch].style.top = (e.clientY + delta_y) + 'px';
 	}
-	switches[dragging_switch].style.left = (e.clientX + delta_x) + 'px';
-	switches[dragging_switch].style.top = (e.clientY + delta_y) + 'px';
-}
 
-document.onmouseup = function(e) {
-	if (dragging_switch === null) {
-		return;
+	document.onmouseup = function(e) {
+		if (dragging_switch === null) {
+			return;
+		}
+		var x = e.clientX + delta_x - map.getBoundingClientRect().top;
+		var y = e.clientY + delta_y - map.getBoundingClientRect().left;
+
+		var request = new XMLHttpRequest();
+		request.open('POST', '/change-switch-pos.pl', true);
+		request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
+		request.send("switch=" + dragging_switch + "&x=" + x + "&y=" + y);
+
+		dragging_switch = null;
 	}
-	var x = e.clientX + delta_x - map.getBoundingClientRect().top;
-	var y = e.clientY + delta_y - map.getBoundingClientRect().left;
-
-	var request = new XMLHttpRequest();
-	request.open('POST', '/change-switch-pos.pl', true);
-	request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
-	request.send("switch=" + dragging_switch + "&x=" + x + "&y=" + y);
-
-	dragging_switch = null;
 }
