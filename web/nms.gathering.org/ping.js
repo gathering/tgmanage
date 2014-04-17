@@ -116,9 +116,9 @@ function gradient_from_latency(latency_ms, latency_secondary_ms) {
 	if (latency_secondary_ms === undefined) {
 		return rgb_from_latency(latency_ms);
 	}
-	return '-webkit-gradient(linear, left top, left bottom, ' +
-		'from(' + rgb_from_latency(latency_ms) + '), ' +
-		'to(' + rgb_from_latency(latency_secondary_ms) + '))';
+	return 'linear-gradient(to bottom right, ' +
+		rgb_from_latency(latency_ms) + ', ' +
+		rgb_from_latency(latency_secondary_ms) + ')';
 }
 
 function rgb_from_latency(latency_ms) {
