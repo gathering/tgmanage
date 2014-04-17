@@ -91,76 +91,30 @@ ALTER FUNCTION public.add_new_element(sample_state, sample) OWNER TO postgres;
 -- Name: get_current_datarate(); Type: FUNCTION; Schema: public; Owner: nms
 --
 
-CREATE FUNCTION get_current_datarate() RETURNS SETOF datarate
-    LANGUAGE plpgsql
+CREATE OR REPLACE FUNCTION get_current_datarate() RETURNS SETOF datarate
+    LANGUAGE sql
     AS $$
-DECLARE
-        num_entries INTEGER;
-        poll polls;
-        first_poll polls;
-        last_poll polls;
-        timediff float;
-        ret datarate;
-BEGIN
-        num_entries := 0;
-        last_poll.switch := -1;
-
-        FOR poll IN select * from polls where time >= now() - '15 minutes'::interval and time < now() and official_port order by switch,port,time LOOP
-                IF poll.switch <> last_poll.switch OR poll.port <> last_poll.port THEN
-                        IF num_entries >= 2 THEN
-                                timediff := EXTRACT(epoch from last_poll.time - first_poll.time);
-                                ret.switch := last_poll.switch;
-                                ret.port := last_poll.port;
-
-                                IF last_poll.bytes_in >= first_poll.bytes_in AND last_poll.bytes_out >= first_poll.bytes_out THEN
-                                        ret.bytes_in := (last_poll.bytes_in - first_poll.bytes_in) / timediff;
-                                        ret.bytes_out := (last_poll.bytes_out - first_poll.bytes_out) / timediff;
-					ret.last_poll_time := last_poll.time;
-                                        return next ret; 
-                                END IF;
-                        END IF;
-                        num_entries := 0;
-                ELSE
-                        -- reset if we have wraparound
-                        IF last_poll.bytes_in < first_poll.bytes_in OR
-                           last_poll.bytes_out < first_poll.bytes_out THEN
-                                num_entries := 0;
-                        END IF;
-                END IF;
-
-                num_entries := num_entries + 1;
-                IF num_entries = 1 THEN
-                        first_poll.switch := poll.switch;
-                        first_poll.port := poll.port;
-                        first_poll.time := poll.time;
-                        first_poll.bytes_in := poll.bytes_in;
-                        first_poll.bytes_out := poll.bytes_out;
-                END IF;
-
-                last_poll.switch := poll.switch;
-                last_poll.port := poll.port;
-                last_poll.time := poll.time;
-                last_poll.bytes_in := poll.bytes_in;
-                last_poll.bytes_out := poll.bytes_out;
-        END LOOP;
-
-        -- last
-        IF num_entries >= 2 THEN
-                timediff := EXTRACT(epoch from last_poll.time - first_poll.time);
-                ret.switch := last_poll.switch;
-                ret.port := last_poll.port;
-
-                IF last_poll.bytes_in >= first_poll.bytes_in AND
-                   last_poll.bytes_out >= first_poll.bytes_out THEN
-                        ret.bytes_in := (last_poll.bytes_in - first_poll.bytes_in) / timediff;
-                        ret.bytes_out := (last_poll.bytes_out - first_poll.bytes_out) / timediff;
-			ret.last_poll_time := last_poll.time;
-                        return next ret; 
-                END IF;
-        END IF;
-
-        RETURN;
-END;
+      SELECT switch,port,
+      (bytes_out[1] - bytes_out[2]) / EXTRACT(EPOCH FROM (time[1] - time[2])) AS bytes_out,
+      (bytes_in[1] - bytes_in[2]) / EXTRACT(EPOCH FROM (time[1] - time[2])) AS bytes_in,
+      time[1] AS last_poll_time
+      FROM (
+        SELECT switch,port,
+        ARRAY_AGG(time) AS time,
+        ARRAY_AGG(bytes_in) AS bytes_in,
+        ARRAY_AGG(bytes_out) AS bytes_out
+        FROM (
+           SELECT *,rank() OVER (PARTITION BY switch,port ORDER BY time DESC) AS poll_num
+           FROM polls WHERE time BETWEEN (now() - interval '5 minutes') AND now()
+           AND official_port
+        ) t1
+        WHERE poll_num <= 2
+        GROUP BY switch,port
+      ) t2
+      WHERE
+        time[2] IS NOT NULL
+        AND bytes_out[1] >= bytes_out[2]
+        AND bytes_in[1] >= bytes_in[2];
 $$;
 
 
