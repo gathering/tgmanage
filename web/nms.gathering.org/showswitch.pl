@@ -7,7 +7,9 @@ use strict;
 use warnings;
 use lib '../../include';
 use nms;
+use File::Basename;
 my $cgi = CGI->new;
+my $cwd = dirname($0);
 my $switch = $cgi->param('id');
 my $width = $cgi->param('width');
 my $height = $cgi->param('height');
@@ -17,7 +19,7 @@ my $resthtml = "";
 $width = 500 unless (defined($width));
 $height = 250 unless (defined($height));
 
-require './mygraph.pl';
+require "$cwd/mygraph.pl";
 
 my $start = [Time::HiRes::gettimeofday];
 my $dbh = nms::db_connect();
@@ -72,8 +74,8 @@ while (my $ref = $q->fetchrow_hashref()) {
 				plotseries($graph, \@x, \@y1, 255, 0, 0, $min_x, $max_y);
 				plotseries($graph, \@x, \@y2, 0, 0, 255, $min_x, $max_y);
 
-				open GRAPH, ">img/$filename"
-					or die "img/$filename: $!";
+				open GRAPH, ">$cwd/img/$filename"
+					or die "$cwd/img/$filename: $!";
 				print GRAPH $graph->png;
 				close GRAPH;
 				exit;
@@ -183,7 +185,7 @@ if ($pid == 0) {
 	plotseries($graph, \@x, \@y1, 255, 0, 0, $min_x, $max_y);
 	plotseries($graph, \@x, \@y2, 0, 0, 255, $min_x, $max_y);
 
-	open GRAPH, ">img/$filename"
+	open GRAPH, ">$cwd/img/$filename"
 	or die "img/$filename: $!";
 	print GRAPH $graph->png;
 	close GRAPH;
@@ -201,10 +203,9 @@ plotseries($graph, \@totx, \@toty1, 255, 0, 0, $min_x, $max_ty);
 plotseries($graph, \@totx, \@toty2, 0, 0, 255, $min_x, $max_ty);
 
 $filename = "$switch-$width-$height.png";
-open GRAPH, ">img/$filename" or die "img/$filename: $!";
+open GRAPH, ">$cwd/img/$filename" or die "img/$filename: $!";
 print GRAPH $graph->png;
 close GRAPH;
-
 
 # Wait for all the other graphs to be done
 while (waitpid(-1, 0) != -1) {
