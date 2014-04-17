@@ -119,7 +119,17 @@ sub poll_loop {
 
 		my $community = $switch->{'community'};
 		my $start = [Time::HiRes::gettimeofday];
-		my $session = nms::snmp_open_session($ip, $community, 1);
+		my $session;
+		eval {
+			$session = nms::snmp_open_session($ip, $community, 1);
+		};
+		if ($@) {
+			warn "Couldn't open session (even an async one!) to $ip: $!";
+			$qunlock->execute($switch->{'switch'})
+				or die "Couldn't unlock switch";
+			$dbh->commit;
+			next;
+		};
 		my @ports = expand_ports($switch->{'ports'});
 
 		my $switch_status = {
