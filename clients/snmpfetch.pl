@@ -22,7 +22,7 @@ my $instant = defined($ARGV[0]);
 
 my $qualification;
 if ($instant) {
-	$qualification = "sysname=?";
+	$qualification = "sysname LIKE ?";
 } else {
 	$qualification = <<"EOF";
 (last_updated IS NULL OR now() - last_updated > poll_frequency)
@@ -68,7 +68,7 @@ sub poll_loop {
 		if ($instant) {
 			$sysname = shift @ARGV;
 			return if (!defined($sysname));
-			$qswitch->execute($sysname)
+			$qswitch->execute('%'.$sysname.'%')
 				or die "Couldn't get switch";
 		} else {
 			# Find a switch to grab
