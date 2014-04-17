@@ -179,8 +179,6 @@ sub callback {
 
 	my ($in, $out, $ine, $oute) = (undef, undef, undef, undef);
 
-	printf "port %d: %s\n", $port, $vars;
-
 	for my $var (@$vars) {
 		if ($port != $var->[1]) {
 			die "Response for unknown OID $var->[0].$var->[1] (expected port $port)";
