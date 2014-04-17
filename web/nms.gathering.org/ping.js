@@ -22,11 +22,11 @@ function json_request(url, func, repeat_ms) {
 }
 
 function get_switches() {
-	json_request('/switches-json.pl', draw_switches, 1000);
+	json_request(switches_url, draw_switches, 1000);
 }
 
 function get_ping() {
-	json_request('/ping-json.pl', update_ping, 1000);
+	json_request(ping_url, update_ping, 1000);
 }
 
 function draw_switches(json) {
@@ -53,9 +53,11 @@ function draw_switches(json) {
 		              parseInt(s['height']));
 	}
 
-	for (var i = 0; i < json['linknets'].length; ++i) {
-		var linknet = json['linknets'][i];
-		create_linknet(linknet['linknet'], linknet['switch1'], linknet['switch2']);
+	if (draw_linknets) {
+		for (var i = 0; i < json['linknets'].length; ++i) {
+			var linknet = json['linknets'][i];
+			create_linknet(linknet['linknet'], linknet['switch1'], linknet['switch2']);
+		}
 	}
 
 	setTimeout(get_switches, 60000);
@@ -137,9 +139,13 @@ function really_update_ping(json) {
 	if (json['switches']) {
 		for (var switchnum in switches) {
 			if (json['switches'][switchnum]) {
-				switches[switchnum].style.background =
-					gradient_from_latency(json['switches'][switchnum]['latency'],
-							 json['switches'][switchnum]['latency_secondary']);
+				if (json['switches'][switchnum]['color']) {
+					switches[switchnum].style.background = json['switches'][switchnum]['color'];
+				} else {
+					switches[switchnum].style.background =
+						gradient_from_latency(json['switches'][switchnum]['latency'],
+								 json['switches'][switchnum]['latency_secondary']);
+				}
 			} else {
 				switches[switchnum].style.background = '#0000ff';
 			}
