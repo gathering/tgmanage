@@ -38,9 +38,9 @@ while (<STDIN>)
 	my $text_info = $distro . " - " . join(' + ', @ports) . ", po" . $ponum . ", gwaddr " . $gwaddr;
 
 	# A-record to the switch
-	print "prereq nxdomain " . $sw_fqdn . "\n" unless $delete;
-	print "update add " . $sw_fqdn . " \t 3600 IN A \t " . $ipaddr . "\n" unless $delete;
-	print "update delete " . $sw_fqdn . " \t IN A\n" if $delete;
+	print "prereq nxdomain sw." . $fqdn . "\n" unless $delete;
+	print "update add sw." . $fqdn . " \t 3600 IN A \t " . $ipaddr . "\n" unless $delete;
+	print "update delete sw." . $fqdn . " \t IN A\n" if $delete;
 	print "send\n";
 
 	# PTR to the switch
@@ -50,9 +50,9 @@ while (<STDIN>)
 	print "send\n";
 
 	# TXT-record with details
-	print "update delete " . $sw_fqdn . " IN TXT\n" unless $delete;
-	print "update add " . $sw_fqdn . " \t 3600 IN TXT \t \"" . $text_info . "\"\n" unless $delete;
-	print "update delete " . $sw_fqdn . " \t IN TXT\n" if $delete;
+	print "update delete sw." . $fqdn . " IN TXT\n" unless $delete;
+	print "update add sw." . $fqdn . " \t 3600 IN TXT \t \"" . $text_info . "\"\n" unless $delete;
+	print "update delete sw." . $fqdn . " \t IN TXT\n" if $delete;
 	print "send\n";
 
 	# A and AAAA-record to the gateway/router
