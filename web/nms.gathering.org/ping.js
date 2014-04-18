@@ -128,11 +128,18 @@ function rgb_from_latency(latency_ms) {
 
 	// 10ms is max
 	var l = latency_ms / 10.0;
-	if (l >= 1.0) { l = 1.0; }
-	l = Math.pow(l, 1.0/2.2);
-	l = Math.round(l * 255.0);
-
-	return 'rgb(' + l + ', 255, 0)';
+	if (l >= 2.0) {
+		return 'rgb(255, 0, 0)';
+	} else if (l >= 1.0) {
+		l = 2.0 - l;
+		l = Math.pow(l, 1.0/2.2);
+		l = Math.round(l * 255.0);
+		return 'rgb(255, ' + l + ', 0)';
+	} else {
+		l = Math.pow(l, 1.0/2.2);
+		l = Math.round(l * 255.0);
+		return 'rgb(' + l + ', 255, 0)';
+	}
 }
 
 function really_update_ping(json) {
