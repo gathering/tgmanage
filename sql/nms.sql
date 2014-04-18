@@ -113,6 +113,8 @@ CREATE OR REPLACE FUNCTION get_current_datarate() RETURNS SETOF datarate
       ) t2
       WHERE
         time[2] IS NOT NULL
+        AND bytes_in[1] >= 0 AND bytes_out[1] >= 0
+        AND bytes_in[2] >= 0 AND bytes_out[2] >= 0
         AND bytes_out[1] >= bytes_out[2]
         AND bytes_in[1] >= bytes_in[2];
 $$;
