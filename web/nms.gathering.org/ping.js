@@ -116,7 +116,7 @@ function gradient_from_latency(latency_ms, latency_secondary_ms) {
 	if (latency_secondary_ms === undefined) {
 		return rgb_from_latency(latency_ms);
 	}
-	return 'linear-gradient(to bottom right, ' +
+	return 'linear-gradient(' +
 		rgb_from_latency(latency_ms) + ', ' +
 		rgb_from_latency(latency_secondary_ms) + ')';
 }
