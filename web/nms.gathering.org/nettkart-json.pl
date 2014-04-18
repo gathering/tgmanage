@@ -11,7 +11,14 @@ use Digest::MD5;
 
 my $cgi = CGI->new;
 my $secret = $cgi->param('secret');
+my $secret2 = $cgi->param('secret2');
 my $noise = $cgi->param('noise') // 0;
+my $fade_time = 0.0;
+if (defined($secret2)) {
+	my $phase = $cgi->param('phase');
+	my $period = $cgi->param('period');
+	$fade_time = sin((time - $phase) * 2.0 * 3.14159265358 / $period) * 0.5 + 0.5;
+}
 my $dbh = nms::db_connect();
 
 my %json = ();
@@ -36,8 +43,9 @@ while (my $ref = $q->fetchrow_hashref()) {
 		if ($traffic >= $min) {
 			$intensity = log($traffic / $min) / log(10);
 
-			my $fudge = oct('0x'.substr(Digest::MD5::md5_hex($cgi->{'sysname'} . $cgi->param('secret')), 0, 8));
-			$intensity += $fudge * $noise;
+			my $fudge1 = oct('0x'.substr(Digest::MD5::md5_hex($cgi->{'sysname'} . $cgi->param('secret')), 0, 8));
+			my $fudge2 = oct('0x'.substr(Digest::MD5::md5_hex($cgi->{'sysname'} . $cgi->param('secret2')), 0, 8));
+			$intensity += ($fudge1 + ($fudge2 - $fudge1) * $fade_time) * $noise;
 
 			$intensity = 4.0 if ($intensity > 4.0);
 		}
