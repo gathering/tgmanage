@@ -5,6 +5,10 @@ use lib 'include';
 use nms;
 use Data::Dumper::Simple;
 
+# By the looks of this code, the in/out values are from the perspective of the
+# switch. However, something gets flipped somewhere which makes it from the
+# perspective of the client. I have no idea why. Have fun!
+
 my $dbh = nms::db_connect();
 $dbh->{AutoCommit} = 0;
 
