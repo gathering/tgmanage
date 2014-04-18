@@ -45,7 +45,7 @@ while (<STDIN>)
 
 	# PTR to the switch
 	print "prereq nxdomain " . $ip->reverse_ip() . "\n" unless $delete;
-	print "update add " . $ip->reverse_ip() . " \t 3600 IN PTR \t " . $sw_fqdn . "\n" unless $delete;
+	print "update add " . $ip->reverse_ip() . " \t 3600 IN PTR \t sw." . $fqdn . "\n" unless $delete;
 	print "update delete " . $ip->reverse_ip() . " \t IN PTR\n" if $delete;
 	print "send\n";
 
