@@ -79,7 +79,7 @@ while (my $ref = $coregws->fetchrow_hashref) {
 
 	# Find all LLDP neighbors.
 	for my $neigh (values %$lldp) {
-		$lldpneigh{$sysname}{$neigh->{'lldpRemSysName'}} = 1;
+		$lldpneigh{lc($sysname)}{lc($neigh->{'lldpRemSysName'})} = 1;
 	}
 }
 
@@ -104,14 +104,14 @@ while (my ($sysname, $ipv6) = each %loop_ipv6) {
 # Now go through each linknet candidate, and see if we can find any
 # direct LLDP neighbors.
 my $qexist = $dbh->prepare('SELECT COUNT(*) AS cnt FROM linknets WHERE switch1=? AND switch2=?');
-$dbh->do('DELETE FROM linknets');
+#$dbh->do('DELETE FROM linknets');
 while (my ($cidr, $devices) = each %map) {
 	for (my $i = 0; $i < scalar @$devices; ++$i) {
 		my $device_a = $devices->[$i];
 		for (my $j = $i + 1; $j < scalar @$devices; ++$j) {
 			my $device_b = $devices->[$j];
 			next if $device_a->[0] eq $device_b->[0];
-			next unless exists($lldpneigh{$device_a->[0]}{$device_b->[0]});
+			next unless exists($lldpneigh{lc($device_a->[0])}{lc($device_b->[0])});
 
 			my $switch_a = $switch_id{$device_a->[0]};
 			my $switch_b = $switch_id{$device_b->[0]};
