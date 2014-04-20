@@ -1,0 +1,175 @@
+hostname ModerneGW
+!
+ip vrf nathacks
+!
+ip vrf origin
+ rd 50:50
+!
+interface Port-channel1.1285
+ encapsulation dot1Q 1285
+ ip vrf forwarding origin
+ ip address 151.216.128.6 255.255.255.254
+ ip nat outside
+ ip virtual-reassembly
+!
+interface Port-channel1.1287
+ encapsulation dot1Q 1287
+ ip vrf forwarding nathacks
+ ip address 151.216.128.200 255.255.255.254
+ ip nat inside
+ ip virtual-reassembly
+!
+interface Port-channel1.1288
+ encapsulation dot1Q 1288
+ ip vrf forwarding nathacks
+ ip address 151.216.128.202 255.255.255.254
+ ip nat outside
+ ip virtual-reassembly
+!
+interface Tunnel10
+ ip vrf forwarding origin
+ ip address 151.216.128.11 255.255.255.254
+ ip nat inside
+ ip virtual-reassembly
+ tunnel source 151.216.255.24
+ tunnel destination 151.216.255.1
+!
+ip nat pool modernebasseng 185.12.58.1 185.12.58.127 netmask 255.255.255.128
+ip nat pool modernebasseng2 185.12.58.1 185.12.58.127 netmask 255.255.255.128 type rotary
+ip nat pool modernebasseng5 185.12.58.1 185.12.58.127 netmask 255.255.255.128 type rotary
+ip nat pool modernebasseng10 185.12.58.1 185.12.58.1 netmask 255.255.255.128
+ip nat pool modernebasseng11 185.12.58.2 185.12.58.2 netmask 255.255.255.128
+ip nat pool modernebasseng12 185.12.58.3 185.12.58.3 netmask 255.255.255.128
+ip nat pool modernebasseng13 185.12.58.4 185.12.58.4 netmask 255.255.255.128
+ip nat pool modernebasseng14 185.12.58.5 185.12.58.5 netmask 255.255.255.128
+ip nat pool modernebasseng15 185.12.58.6 185.12.58.6 netmask 255.255.255.128
+ip nat pool modernebasseng16 185.12.58.7 185.12.58.7 netmask 255.255.255.128
+ip nat pool modernebasseng17 185.12.58.8 185.12.58.8 netmask 255.255.255.128
+ip nat pool modernebasseng18 185.12.58.9 185.12.58.9 netmask 255.255.255.128
+ip nat pool modernebasseng19 185.12.58.10 185.12.58.10 netmask 255.255.255.128
+ip nat pool modernebasseng20 185.12.58.11 185.12.58.11 netmask 255.255.255.128
+ip nat pool modernebasseng21 185.12.58.12 185.12.58.12 netmask 255.255.255.128
+ip nat pool modernebasseng22 185.12.58.13 185.12.58.13 netmask 255.255.255.128
+ip nat pool modernebasseng23 185.12.58.14 185.12.58.14 netmask 255.255.255.128
+ip nat pool modernebasseng24 185.12.58.15 185.12.58.15 netmask 255.255.255.128
+ip nat pool modernebasseng25 185.12.58.16 185.12.58.16 netmask 255.255.255.128
+ip nat pool modernebasseng26 185.12.58.17 185.12.58.17 netmask 255.255.255.128
+ip nat pool modernebasseng27 185.12.58.18 185.12.58.18 netmask 255.255.255.128
+ip nat pool modernebasseng28 185.12.58.19 185.12.58.19 netmask 255.255.255.128
+ip nat pool modernebasseng29 185.12.58.20 185.12.58.20 netmask 255.255.255.128
+ip nat pool modernebasseng30 185.12.58.21 185.12.58.21 netmask 255.255.255.128
+ip nat pool modernebasseng31 185.12.58.22 185.12.58.22 netmask 255.255.255.128
+ip nat pool modernebasseng32 185.12.58.23 185.12.58.23 netmask 255.255.255.128
+ip nat pool modernebasseng33 185.12.58.24 185.12.58.24 netmask 255.255.255.128
+ip nat pool modernebasseng34 185.12.58.25 185.12.58.25 netmask 255.255.255.128
+ip nat pool modernebasseng35 185.12.58.26 185.12.58.26 netmask 255.255.255.128
+ip nat pool modernebasseng36 185.12.58.27 185.12.58.27 netmask 255.255.255.128
+ip nat pool modernebasseng37 185.12.58.28 185.12.58.28 netmask 255.255.255.128
+ip nat pool modernebasseng38 185.12.58.29 185.12.58.29 netmask 255.255.255.128
+ip nat pool modernebasseng39 185.12.58.30 185.12.58.30 netmask 255.255.255.128
+ip nat pool modernebasseng40 185.12.58.31 185.12.58.31 netmask 255.255.255.128
+ip nat pool modernebasseng41 185.12.58.32 185.12.58.32 netmask 255.255.255.128
+ip nat pool modernebasseng42 185.12.58.33 185.12.58.33 netmask 255.255.255.128
+ip nat pool modernebasseng43 185.12.58.34 185.12.58.34 netmask 255.255.255.128
+ip nat pool modernebasseng44 185.12.58.35 185.12.58.35 netmask 255.255.255.128
+ip nat pool modernebasseng45 185.12.58.36 185.12.58.36 netmask 255.255.255.128
+ip nat pool modernebasseng46 185.12.58.37 185.12.58.37 netmask 255.255.255.128
+ip nat pool modernebasseng47 185.12.58.38 185.12.58.38 netmask 255.255.255.128
+ip nat pool modernebasseng48 185.12.58.39 185.12.58.39 netmask 255.255.255.128
+ip nat pool modernebasseng49 185.12.58.40 185.12.58.40 netmask 255.255.255.128
+ip nat pool modernebasseng50 185.12.58.41 185.12.58.41 netmask 255.255.255.128
+ip nat pool modernebasseng51 185.12.58.42 185.12.58.42 netmask 255.255.255.128
+ip nat pool modernebasseng52 185.12.58.43 185.12.58.43 netmask 255.255.255.128
+ip nat pool modernebasseng53 185.12.58.44 185.12.58.44 netmask 255.255.255.128
+ip nat pool modernebasseng54 185.12.58.45 185.12.58.45 netmask 255.255.255.128
+ip nat pool modernebasseng55 185.12.58.46 185.12.58.46 netmask 255.255.255.128
+ip nat pool modernebasseng56 185.12.58.47 185.12.58.47 netmask 255.255.255.128
+ip nat pool modernebasseng57 185.12.58.48 185.12.58.48 netmask 255.255.255.128
+ip nat pool modernebasseng58 185.12.58.49 185.12.58.49 netmask 255.255.255.128
+ip nat pool modernebasseng59 185.12.58.50 185.12.58.50 netmask 255.255.255.128
+ip nat pool modernebasseng60 185.12.58.51 185.12.58.51 netmask 255.255.255.128
+ip nat pool modernebasseng61 185.12.58.52 185.12.58.52 netmask 255.255.255.128
+ip nat pool modernebasseng62 185.12.58.53 185.12.58.53 netmask 255.255.255.128
+ip nat pool modernebasseng63 185.12.58.54 185.12.58.54 netmask 255.255.255.128
+ip nat pool modernebasseng64 185.12.58.55 185.12.58.55 netmask 255.255.255.128
+ip nat pool modernebasseng65 185.12.58.56 185.12.58.56 netmask 255.255.255.128
+ip nat pool modernebasseng66 185.12.58.57 185.12.58.57 netmask 255.255.255.128
+ip nat pool modernebasseng67 185.12.58.58 185.12.58.58 netmask 255.255.255.128
+ip nat pool modernebasseng68 185.12.58.59 185.12.58.59 netmask 255.255.255.128
+ip nat pool modernebasseng69 185.12.58.60 185.12.58.60 netmask 255.255.255.128
+ip nat pool modernebasseng70 185.12.58.61 185.12.58.61 netmask 255.255.255.128
+ip nat pool modernebasseng71 185.12.58.62 185.12.58.62 netmask 255.255.255.128
+ip nat pool modernebasseng72 185.12.58.63 185.12.58.63 netmask 255.255.255.128
+ip nat pool modernebasseng73 185.12.58.64 185.12.58.64 netmask 255.255.255.128
+ip nat pool modernebasseng74 185.12.58.65 185.12.58.65 netmask 255.255.255.128
+ip nat pool modernebasseng75 185.12.58.66 185.12.58.66 netmask 255.255.255.128
+ip nat pool modernebasseng76 185.12.58.67 185.12.58.67 netmask 255.255.255.128
+ip nat pool modernebasseng77 185.12.58.68 185.12.58.68 netmask 255.255.255.128
+ip nat pool modernebasseng78 185.12.58.69 185.12.58.69 netmask 255.255.255.128
+ip nat pool modernebasseng79 185.12.58.70 185.12.58.70 netmask 255.255.255.128
+ip nat pool modernebasseng80 185.12.58.71 185.12.58.71 netmask 255.255.255.128
+ip nat pool modernebasseng81 185.12.58.72 185.12.58.72 netmask 255.255.255.128
+ip nat pool modernebasseng82 185.12.58.73 185.12.58.73 netmask 255.255.255.128
+ip nat pool modernebasseng83 185.12.58.74 185.12.58.74 netmask 255.255.255.128
+ip nat pool modernebasseng84 185.12.58.75 185.12.58.75 netmask 255.255.255.128
+ip nat pool modernebasseng85 185.12.58.76 185.12.58.76 netmask 255.255.255.128
+ip nat pool modernebasseng86 185.12.58.77 185.12.58.77 netmask 255.255.255.128
+ip nat pool modernebasseng87 185.12.58.78 185.12.58.78 netmask 255.255.255.128
+ip nat pool modernebasseng88 185.12.58.79 185.12.58.79 netmask 255.255.255.128
+ip nat pool modernebasseng89 185.12.58.80 185.12.58.80 netmask 255.255.255.128
+ip nat pool modernebasseng90 185.12.58.81 185.12.58.81 netmask 255.255.255.128
+ip nat pool modernebasseng91 185.12.58.82 185.12.58.82 netmask 255.255.255.128
+ip nat pool modernebasseng92 185.12.58.83 185.12.58.83 netmask 255.255.255.128
+ip nat pool modernebasseng93 185.12.58.84 185.12.58.84 netmask 255.255.255.128
+ip nat pool modernebasseng94 185.12.58.85 185.12.58.85 netmask 255.255.255.128
+ip nat pool modernebasseng95 185.12.58.86 185.12.58.86 netmask 255.255.255.128
+ip nat pool modernebasseng96 185.12.58.87 185.12.58.87 netmask 255.255.255.128
+ip nat pool modernebasseng97 185.12.58.88 185.12.58.88 netmask 255.255.255.128
+ip nat pool modernebasseng98 185.12.58.89 185.12.58.89 netmask 255.255.255.128
+ip nat pool modernebasseng99 185.12.58.90 185.12.58.90 netmask 255.255.255.128
+ip nat pool modernebasseng100 185.12.58.91 185.12.58.91 netmask 255.255.255.128
+ip nat pool modernebasseng101 185.12.58.92 185.12.58.92 netmask 255.255.255.128
+ip nat pool modernebasseng102 185.12.58.93 185.12.58.93 netmask 255.255.255.128
+ip nat pool modernebasseng103 185.12.58.94 185.12.58.94 netmask 255.255.255.128
+ip nat pool modernebasseng104 185.12.58.95 185.12.58.95 netmask 255.255.255.128
+ip nat pool modernebasseng105 185.12.58.96 185.12.58.96 netmask 255.255.255.128
+ip nat pool modernebasseng106 185.12.58.97 185.12.58.97 netmask 255.255.255.128
+ip nat pool modernebasseng107 185.12.58.98 185.12.58.98 netmask 255.255.255.128
+ip nat pool modernebasseng108 185.12.58.99 185.12.58.99 netmask 255.255.255.128
+ip nat pool modernebasseng109 185.12.58.100 185.12.58.100 netmask 255.255.255.128
+ip nat pool modernebasseng110 185.12.58.101 185.12.58.101 netmask 255.255.255.128
+ip nat pool modernebasseng111 185.12.58.102 185.12.58.102 netmask 255.255.255.128
+ip nat pool modernebasseng112 185.12.58.103 185.12.58.103 netmask 255.255.255.128
+ip nat pool modernebasseng113 185.12.58.104 185.12.58.104 netmask 255.255.255.128
+ip nat pool modernebasseng114 185.12.58.105 185.12.58.105 netmask 255.255.255.128
+ip nat pool modernebasseng115 185.12.58.106 185.12.58.106 netmask 255.255.255.128
+ip nat pool modernebasseng116 185.12.58.107 185.12.58.107 netmask 255.255.255.128
+ip nat pool modernebasseng117 185.12.58.108 185.12.58.108 netmask 255.255.255.128
+ip nat pool modernebasseng118 185.12.58.109 185.12.58.109 netmask 255.255.255.128
+ip nat pool modernebasseng119 185.12.58.110 185.12.58.110 netmask 255.255.255.128
+ip nat pool modernebasseng120 185.12.58.111 185.12.58.111 netmask 255.255.255.128
+ip nat pool modernebasseng121 185.12.58.112 185.12.58.112 netmask 255.255.255.128
+ip nat pool modernebasseng122 185.12.58.113 185.12.58.113 netmask 255.255.255.128
+ip nat pool modernebasseng123 185.12.58.114 185.12.58.114 netmask 255.255.255.128
+ip nat pool modernebasseng124 185.12.58.115 185.12.58.115 netmask 255.255.255.128
+ip nat pool modernebasseng125 185.12.58.116 185.12.58.116 netmask 255.255.255.128
+ip nat pool modernebasseng126 185.12.58.117 185.12.58.117 netmask 255.255.255.128
+ip nat pool modernebasseng127 185.12.58.118 185.12.58.118 netmask 255.255.255.128
+ip nat pool modernebasseng128 185.12.58.119 185.12.58.119 netmask 255.255.255.128
+ip nat pool modernebasseng129 185.12.58.120 185.12.58.120 netmask 255.255.255.128
+ip nat pool modernebasseng130 185.12.58.121 185.12.58.121 netmask 255.255.255.128
+ip nat pool modernebasseng131 185.12.58.122 185.12.58.122 netmask 255.255.255.128
+ip nat pool modernebasseng132 185.12.58.123 185.12.58.123 netmask 255.255.255.128
+ip nat pool modernebasseng133 185.12.58.124 185.12.58.124 netmask 255.255.255.128
+ip nat pool modernebasseng134 185.12.58.125 185.12.58.125 netmask 255.255.255.128
+ip nat pool modernebasseng135 185.12.58.126 185.12.58.126 netmask 255.255.255.128
+ip nat pool modernebasseng136 185.12.58.127 185.12.58.127 netmask 255.255.255.128
+ip nat inside source list alle pool 
+ip nat inside source list alle pool 
+ip nat inside source list alle pool modernebasseng vrf origin overload
+ip nat outside source static 151.216.253.200 151.216.253.28 vrf nathacks add-route
+!
+ip route 0.0.0.0 0.0.0.0 151.216.128.233
+ip route 195.159.252.75 255.255.255.255 151.216.128.15
+ip route vrf origin 0.0.0.0 0.0.0.0 151.216.128.7
+!

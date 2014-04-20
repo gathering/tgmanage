@@ -1,0 +1,58 @@
+hostname telegw
+!
+interface Port-channel20
+ ip address 151.216.128.81 255.255.255.254
+ ip pim sparse-mode
+ ip policy route-map origin-nat
+ ipv6 unnumbered Loopback0
+ ipv6 enable
+ ipv6 eigrp 58366
+!
+Current configuration : 173 bytes
+!
+interface Tunnel10
+ description Modernegw
+ ip address 151.216.128.10 255.255.255.254
+ no ip redirects
+ tunnel source 151.216.255.1
+ tunnel destination 151.216.255.24
+!
+ip access-list extended origin
+ deny   ip 151.216.128.0 0.0.127.255 host 23.23.110.81
+ deny   ip 151.216.128.0 0.0.127.255 host 23.23.110.58
+ deny   ip 151.216.128.0 0.0.127.255 host 54.225.125.247
+ remark ORIGIN
+ permit ip 151.216.128.0 0.0.127.255 23.15.8.0 0.0.0.255
+ permit ip 151.216.128.0 0.0.127.255 23.21.0.0 0.0.255.255
+ permit ip 151.216.128.0 0.0.127.255 23.23.0.0 0.0.255.255
+ permit ip 151.216.128.0 0.0.127.255 23.32.241.0 0.0.0.255
+ permit ip 151.216.128.0 0.0.127.255 23.46.0.0 0.0.255.255
+ permit ip 151.216.128.0 0.0.127.255 50.16.0.0 0.0.255.255
+ permit ip 151.216.128.0 0.0.127.255 50.17.0.0 0.0.255.255
+ permit ip 151.216.128.0 0.0.127.255 54.225.0.0 0.0.255.255
+ permit ip 151.216.128.0 0.0.127.255 81.21.146.0 0.0.0.255
+ permit ip 151.216.128.0 0.0.127.255 107.20.244.0 0.0.0.255
+ permit ip 151.216.128.0 0.0.127.255 120.29.145.0 0.0.0.255
+ permit ip 151.216.128.0 0.0.127.255 124.40.32.0 0.0.0.255
+ permit ip 151.216.128.0 0.0.127.255 125.56.200.0 0.0.0.255
+ permit ip 151.216.128.0 0.0.127.255 164.177.139.0 0.0.0.255
+ permit ip 151.216.128.0 0.0.127.255 184.73.0.0 0.0.255.255
+ permit ip 151.216.128.0 0.0.127.255 204.236.239.0 0.0.0.255
+!
+ip prefix-list Origin-nat-drit-prefix seq 5 permit 185.12.58.0/24
+!
+route-map origin-nat permit 10
+ match ip address origin
+ set ip next-hop 151.216.128.11
+!
+route-map Origin-nat-crap permit 10
+ match ip address prefix-list Origin-nat-drit-prefix
+!
+route-map Origin-nat-crap deny 20
+!
+route-map origin-nat-test permit 10
+ match ip address origin-test
+ set ip next-hop 151.216.128.11
+!
+route-map origin-nat-test deny 20
+!
