@@ -1,25 +1,21 @@
 <html>
+  <head>
+    <title>Ping? Pong!</title>
+  </head>
   <body>
-    <style>
-.switchname {
-	position: absolute;
-	font-family: sans-serif;
-	font-size: small;
-	white-space: nowrap;
-}
-.rot {
-	-webkit-transform: rotate(-90deg);
-	-webkit-transform-origin: 0% 0%;
-	transform: rotate(-90deg);
-	transform-origin: 0% 0%;
-	bottom: -14px;
-}
-</style>
+    <link rel="stylesheet" href="/ping.css">
     <p id="playground">
       <svg id="lines" width="1280" height="736" style="position: absolute; top: 0; left: 0; z-index: 1">
       </svg>
       <img src="tg14-salkart.png" alt="" id="map" />
     </p>
+    <script>
+      // These are used by ping.js, below.
+      var switches_url = "/switches-json.pl";
+      var ping_url = "/ping-json.pl";
+      var draw_linknets = true;
+      var can_edit = false;
+    </script>
     <script type="text/javascript" src="ping.js"></script>
   </body>
 </html>

@@ -111,7 +111,9 @@ sub switch_disconnect {
 }
 
 sub snmp_open_session {
-	my ($ip, $community) = @_;
+	my ($ip, $community, $async) = @_;
+
+	$async //= 0;
 
 	my %options = (UseEnums => 1);
 	if ($ip =~ /:/) {
@@ -141,10 +143,10 @@ sub snmp_open_session {
 	}
 
 	my $session = SNMP::Session->new(%options);
-	if (defined($session) && defined($session->getnext('sysDescr'))) {
+	if (defined($session) && ($async || defined($session->getnext('sysDescr')))) {
 		return $session;
 	} else {
-		die 'Could not open SNMP session';
+		die 'Could not open SNMP session to ' . $ip;
 	}
 }
 

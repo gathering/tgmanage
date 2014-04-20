@@ -19,9 +19,7 @@ BEGIN {
 }
 # Tweak and check
 my $password = '';
-my $timeout = 15;
 my $delaytime = 30;
-my $poll_frequency = 60;
 
 my $dbh = db_connect();
 $dbh->{AutoCommit} = 0;
@@ -68,44 +66,6 @@ my $sresult = $dbh->prepare("UPDATE squeue SET updated = now(), result = ?,
 my $sdelay = $dbh->prepare("UPDATE squeue SET delay = now() + delaytime, updated=now(), result = ? WHERE sysname = ?")
 	or die "Unable to prepae sdelay";
 
-## Send a command to switch and return the data recvied from the switch
-#sub switch_exec($$) {
-#	my ($cmd, $conn) = @_;
-#
-#	# Send the command and get data from switch
-#	my @data = $conn->cmd($cmd);
-#	my @lines = ();
-#	foreach my $line (@data) {
-#		# Remove escape-7 sequence
-#		$line =~ s/\x1b\x37//g;
-#		push (@lines, $line);
-#	}
-#
-#	return @data;
-#}
-#
-#sub switch_connect($) {
-#	my ($ip) = @_;
-#
-#	my $conn = new Net::Telnet(	Timeout => $timeout,
-#					Dump_Log => '/tmp/dumplog-queue',
-#					Errmode => 'return',
-#					Prompt => '/DGS-3100\#/i');
-#	my $ret = $conn->open(	Host => $ip);
-#	if (!$ret || $ret != 1) {
-#		return (undef);
-#	}
-#	# XXX: Just send the password as text, I did not figure out how to
-#	# handle authentication with only password through $conn->login().
-#	#$conn->login(»·Prompt => '/password[: ]*$/i',
-#	#		Name => $password,
-#	#		Password => $password);
-#	$conn->cmd($password);
-#	# Get rid of banner
-#	$conn->get;
-#	return ($conn);
-#}
-#
 sub mylog {
 	my $msg = shift;
 	my $time = POSIX::ctime(time);
