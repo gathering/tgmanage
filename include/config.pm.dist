@@ -4,25 +4,26 @@ use warnings;
 use DBI;
 package nms::config;
 
-# Make a duplicate of this file, and save as 'config.local.pm'
-
 our $db_name = "nms";
 our $db_host = "frank.tg14.gathering.org";
 our $db_username = "nms";
 our $db_password = "<removed>";
 
 our $dhcp_server1 = "151.216.254.2";
-our $dhcp_server2 = "151.216.253.17"; # Cisco ISE profiling
+our $dhcp_server2 = "151.216.253.19"; # Cisco ISE profiling
 
-our $ios_user = "nms";
+our $ios_user = "dlinkng"; # used by dlink-ng +++
 our $ios_pass = "<removed>";
 
 # Tech:Net sets up at least a read-community for SNMP for use
 # with dlink1g, nms and sosuch. This is the one:
 our $snmp_community = "<removed>";
 
-our $dlink1g_user = 'dlinkng';
+our $dlink1g_user = 'dlinkng'; # used by nms.pm to connect to D-Link-switches
 our $dlink1g_passwd = '<removed>';
+
+# Telnet-timeout for smanagrun
+our $telnet_timeout = 30;
 
 # No longer in use as of '12 ?
 # our $telegw_ip = "12.34.56.78";

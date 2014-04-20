@@ -1,3 +1,7 @@
+
+Patches from pre TG14. None of these patches were in use under TG14.
+
+
 Includes various patch(es) we had to use.
 
 > dhcpd-never-broadcast.diff

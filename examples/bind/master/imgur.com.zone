@@ -1,0 +1,27 @@
+$TTL 60
+@	IN	SOA	brad.tg14.gathering.org.	abuse.gathering.org. (
+			2014041605; serial
+			3600 ; refresh 
+			1800 ; retry
+			608400 ; expire
+			3600 ) ; minimum and default TTL
+
+		IN	NS	brad.tg14.gathering.org.
+		IN	NS	janet.tg14.gathering.org.
+
+		IN	A	103.31.7.35
+		IN	A	103.31.7.184
+		IN	A	103.31.6.33
+		IN	A	103.31.6.34
+www		IN	A	103.31.7.35
+		IN	A	103.31.7.184
+		IN	A	103.31.6.33
+		IN	A	103.31.6.34
+s		IN	A	103.31.7.35
+		IN	A	103.31.7.184
+		IN	A	103.31.6.33
+		IN	A	103.31.6.34
+i		IN	A	103.31.7.35
+		IN	A	103.31.7.184
+		IN	A	103.31.6.33
+		IN	A	103.31.6.34
