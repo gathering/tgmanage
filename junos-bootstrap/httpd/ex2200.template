@@ -1,0 +1,73 @@
+system {
+    host-name $hostname;
+    root-authentication {
+        encrypted-password "$1$oQTnGCDI$UZpSpT5z7uHhFvniCzY5w/"; ## SECRET-DATA
+    }
+}
+chassis {
+    aggregated-devices {
+        ethernet {
+            device-count 1;
+        }
+    }
+}
+interfaces {
+    ge-0/0/0 {
+        description ae0;
+        ether-options {
+            802.3ad ae0;
+        }
+    }
+    ge-0/0/1 {                          
+        description ae0;
+        ether-options {
+            802.3ad ae0;
+        }
+    }
+    ge-0/0/2 {
+        description ae0;
+        ether-options {
+            802.3ad ae0;
+        }
+    }
+    ae0 {
+        description "Aggregation towards $distro_name $distro_phy_port";
+        aggregated-ether-options {      
+            minimum-links 2;
+            lacp {
+                active;
+            }
+        }
+        unit 0 {
+            family ethernet-switching {
+                port-mode trunk;
+                vlan {
+                    members [ deltagere mgmt ];
+                }
+            }
+        }
+    }                                 
+    vlan {
+        unit $mgmt_vlan {
+            description "Management L3 interface";
+            family inet {
+                address $mgmt_addr/$mgmt_cidr;
+            }
+        }
+    }
+}
+vlans {
+    deltagere {
+        vlan-id 200;
+    }
+    mgmt {
+        vlan-id $mgmt_vlan;
+        l3-interface vlan.$mgmt_vlan;
+    }
+}
+
+routing-options {
+    static {
+        route 0.0.0.0/0 next-hop $mgmt_gw;
+    }
+}
