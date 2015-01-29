@@ -21,7 +21,7 @@ def main():
 	    ),
 	    http = dict(
 		    host = 'localhost',
-		    port = 9000
+		    port = 80
 	    )
     )
     
