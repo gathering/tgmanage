@@ -1,0 +1,14 @@
+j@lappie:~/git/tgmanage$ sudo python2 junos-bootstrap/dhcpd/server_dhcp.py -a 10.0.100.2
+DHCP Discover
+ --> Relay: 0.0.0.0
+ --> Client MAC: b8:27:eb:9a:52:0f
+ --> processing DHCP options
+     --> option: 53 (length: 1) (next option starting on chunk 3)
+     --> option: 60 (length: 60) (next option starting on chunk 65)
+     --> option: 82 (length: 34) (next option starting on chunk 101)
+     --> processing hook for option 82
+         --> suboption 1 found - value: " distro-test:ge-0/0/0.0:bootstrap"
+     --> finished processing options
+ --> crafting response
+Leased: 10.0.100.100
+
