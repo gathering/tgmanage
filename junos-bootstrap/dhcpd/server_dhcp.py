@@ -1,20 +1,45 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# server_dhcp.py by Jonas "j" Lindstad for The Gathering tech:server 2015
-# Used to configure the Juniper EX2200 edge switches with Zero Touch Protocol
-# License: GPLv2
-# Based on the work of psychomario - https://github.com/psychomario
+'''
+server_dhcp.py by Jonas "j" Lindstad for The Gathering tech:server 2015
+
+Used to configure the Juniper EX2200 edge switches with Zero Touch Protocol
+License: GPLv2
+
+Based on the work of psychomario - https://github.com/psychomario
+'''
 
 import socket, binascii, time, IN, sys
 from module_craft_option import craft_option
-# from sys import exit
-# from optparse import OptionParser
 
 if not hasattr(IN,"SO_BINDTODEVICE"):
 	IN.SO_BINDTODEVICE = 25  #http://stackoverflow.com/a/8437870/541038
 
 options_raw = {} # TODO - not a nice way to do things
+
+class lease_db(object):
+    table = {
+        'x': {
+            'ip': '10.0.0.100',
+            'config': 'x_config.cfg'
+        },
+        'y': {
+            'ip': '10.0.0.101',
+            'config': 'y_config.cfg'
+        }
+    }
+    
+    def __init__(self, identifier):
+        self.identifier = identifier
+        
+    def get_ip(self):
+        if self.identifier in self.table:
+            return self.table[self.identifier]['ip']
+        else:
+            print('identifier not found')
+            return False
+    
 
 # Length of DHCP fields in octets, and their placement in packet.
 # Ref: http://4.bp.blogspot.com/-IyYoFjAC4l8/UXuo16a3sII/AAAAAAAAAXQ/b6BojbYXoXg/s1600/DHCPTitle.JPG
@@ -139,12 +164,14 @@ def reqparse(message):
         print('DHCP packet forwarded by relay %s' % hex_ip_to_str(messagesplit[10]))
     else:
         print('DHCP packet not forwarded - direct request')
-        
+    
+    print(b'DHCP XID/Transaction ID:' + messagesplit[4])
+    
     if messagesplit[15][:6] == b'350101': # option 53 (should allways be the first option in DISCOVER/REQUEST) - identifies DHCP packet type - discover/request/offer/ack++
         print('\n\nDHCP DISCOVER - client MAC %s' % format_hex_mac(messagesplit[11]))
         print(' --> crafting DHCP OFFER response')
         
-        lease = getlease(messagesplit[11].decode()) # Decodes MAC address
+        # lease = getlease(messagesplit[11].decode()) # Decodes MAC address
 
         # DHCP OFFER details - Options
         data = b'\x02' # Message type - boot reply
@@ -155,7 +182,7 @@ def reqparse(message):
         data += b'\x00\x01' # seconds elapsed - 1 second
         data += b'\x80\x00' # BOOTP flags - broadcast (unicast: 0x0000)
         data += b'\x00'*4 # Client IP address
-        data += socket.inet_aton(lease) # New IP to client
+        data += socket.inet_aton(lease_db('x').get_ip()) # New IP to client
         data += socket.inet_aton(address) # Next server IP addres - self
         data += binascii.unhexlify(messagesplit[10]) # Relay agent IP - DHCP forwarder
         data += binascii.unhexlify(messagesplit[11]) # Client MAC
@@ -177,7 +204,7 @@ def reqparse(message):
         data += b'\x00\x01' # seconds elapsed - 1 second
         data += b'\x80\x00' # BOOTP flags - broadcast (unicast: 0x0000)
         data += b'\x00'*4 # Client IP address
-        data += binascii.unhexlify(messagesplit[8]) # New IP to client
+        data += socket.inet_aton(lease_db('x').get_ip()) # New IP to client <<<<<<<<<<<<<<<<<<<<<<<< ALL THE FUCKINGS IN THE WORLD
         data += socket.inet_aton(address) # Next server IP addres - self
         data += binascii.unhexlify(messagesplit[10]) # Relay agent IP - DHCP forwarder
         data += binascii.unhexlify(messagesplit[11]) # Client MAC
@@ -197,11 +224,11 @@ def reqparse(message):
     data += craft_option(1).ip(netmask) # Option 1 - Subnet mask
     
     # Set option 3 - default gateway. Only applicable if messagesplit[10] (DHCP forwarder (GIADDR)) is set
-    if messagesplit[10] is not b'00000000':
-        data += craft_option(3).bytes(messagesplit[10]) # Option 3 - Default gateway (set to DHCP forwarders IP)
-    else:
+    if messagesplit[10] == b'00000000':
         data += craft_option(3).bytes(socket.inet_aton(address)) # Option 3 - Default gateway (set to DHCP servers IP)
-
+    else:
+        data += craft_option(3).bytes(messagesplit[10]) # Option 3 - Default gateway (set to DHCP forwarders IP)
+    
     data += craft_option(43).raw_hex(binascii.unhexlify(option43['value'])) # Option 43 - ZTP
     data += craft_option(150).bytes(socket.inet_aton(address)) # Option 150 - TFTP Server
     # data += '\x03\x04' + option82_raw # Option 82 - with suboptions
@@ -234,7 +261,6 @@ def getlease(hwaddr): #return the lease of mac address, or create if doesn't exi
 
 if __name__ == "__main__":
     interface = b'eth0'
-    port = 67
     address = '10.0.100.2'
     offerfrom = '10.0.0.100'
     offerto = '10.0.0.150'
@@ -272,7 +298,7 @@ if __name__ == "__main__":
                     reply_to = addressf[0]
                 data=reqparse(message) # Parse the DHCP request
                 if data:
-                    print(' -- > replying to %s' % reply_to)
+                    print(' --> replying to %s' % reply_to)
                     # print(b'replying with UDP payload: ' + data)
                     s.sendto(data, ('<broadcast>', 68)) # Sends reply
                 release() # update releases table
