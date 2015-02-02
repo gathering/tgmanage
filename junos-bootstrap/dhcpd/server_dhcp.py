@@ -10,6 +10,17 @@ License: GPLv2
 Based on the work of psychomario - https://github.com/psychomario
 '''
 
+
+'''
+TODO
+
+ * only process if option 82 and GIADDR != '00000000' is set in discover/request
+ * try/catch around each incomming packet - prevents DHCP-server from crashing if it receives a malformed packet
+ * lease_db
+    * Postgres as backend
+    * Identifier as dict, which maps to Postgres row names. e.g. lease_db({'distro': 'a', 'port': 'b'}).get_dict()
+'''
+
 import socket, binascii, time, IN, sys
 from module_craft_option import craft_option
 
@@ -37,7 +48,21 @@ class lease_db(object):
         if self.identifier in self.table:
             return self.table[self.identifier]['ip']
         else:
-            print('identifier not found')
+            print('identifier (%s) not found' % self.identifier)
+            return False
+            
+    def get_config(self):
+        if self.identifier in self.table:
+            return self.table[self.identifier]['config']
+        else:
+            print('identifier (%s) not found' % self.identifier)
+            return False
+            
+    def get_dict(self):
+        if self.identifier in self.table:
+            return self.table[self.identifier]
+        else:
+            print('identifier (%s) not found' % self.identifier)
             return False
     
 
@@ -151,15 +176,15 @@ def reqparse(message):
     hexmessage=binascii.hexlify(message)
     messagesplit=[binascii.hexlify(x) for x in slicendice(message,dhcpfields)]
     
-    # hard coded option 43 - for testing purposes
-    option43 = {
-        'length': hex(30),
-        'value': '01162f746731352d656467652f746573742e636f6e666967030468747470'
-    }
-    
     # Test parsing
-    options = parse_options(b'3501013c3c4a756e697065722d6578323230302d632d3132742d3267000000000000000000000000000000000000000000000000000000000000000000000000005222012064697374726f2d746573743a67652d302f302f302e303a626f6f747374726170ff')
-
+    # options = parse_options(b'3501013c3c4a756e697065722d6578323230302d632d3132742d3267000000000000000000000000000000000000000000000000000000000000000000000000005222012064697374726f2d746573743a67652d302f302f302e303a626f6f747374726170ff')
+    options = parse_options(messagesplit[15])
+    
+    if 82 in options: # contains option 82 - was forwarded by a DHCP relay
+        print('DHCP packet contains option 82 -> should be processed')
+    else:
+        print('DHCP packet does not contain option 82 -> should be dropped')
+    
     if int(messagesplit[10]) is not 0:
         print('DHCP packet forwarded by relay %s' % hex_ip_to_str(messagesplit[10]))
     else:
@@ -228,9 +253,8 @@ def reqparse(message):
         data += craft_option(3).bytes(socket.inet_aton(address)) # Option 3 - Default gateway (set to DHCP servers IP)
     else:
         data += craft_option(3).bytes(messagesplit[10]) # Option 3 - Default gateway (set to DHCP forwarders IP)
-    
-    data += craft_option(43).raw_hex(binascii.unhexlify(option43['value'])) # Option 43 - ZTP
     data += craft_option(150).bytes(socket.inet_aton(address)) # Option 150 - TFTP Server
+    data += craft_option(43).bytes(craft_option(1).string(lease_db('x').get_config()) + craft_option(3).string('http')) # Option 43 - ZTP
     # data += '\x03\x04' + option82_raw # Option 82 - with suboptions
     data += b'\xff'
         
