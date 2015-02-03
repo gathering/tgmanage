@@ -1,0 +1,26 @@
+j@lappie:~/git/tgmanage$ sudo python3 junos-bootstrap/dhcpd/server_dhcp.py
+starting main loop
+DHCP broadcast
+ --> processing DHCP options
+     --> option: 53: DHCP Discover (will not be used in reply)
+     --> option: 60: b'Juniper-ex2200-c-12t-2g\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+     --> processing suboption hook for option 82
+         --> suboption 1 found - value: "distro-test:ge-0/0/0.0:bootstrap"
+     --> finished processing suboption 82
+ --> finished processing options
+ --> DHCP packet contains option 82 -> should be processed
+ --> DHCP packet not forwarded - direct request
+ --> Found match in DB with distro_name:distro-test distro_phy_port:ge-0/0/0
+
+
+DHCP REQUEST - client MAC b'b8':b'27':b'eb':b'9a':b'52':b'0f'
+ --> crafting DHCP ACK response
+     --> Option 54 (DHCP server identifier): 10.0.100.2
+     --> Option 51 (Lease time): ???
+     --> Option 51 (Subnet mask): 255.255.255.0
+     --> Option 3 (Default gateway): 10.0.100.2
+     --> Option 43 (Vendor-specific option):
+         --> Suboption 1: /tg15-edge/e-00-0-test
+         --> Suboption 3: http
+ --> replying to <broadcast>
+
