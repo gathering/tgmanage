@@ -17,59 +17,18 @@ TODO
 
  * only process if option 82 and GIADDR != '00000000' is set in discover/request
  * try/catch around each incomming packet - prevents DHCP-server from crashing if it receives a malformed packet
- OK * lease_db
- OK    * Postgres as backend
- OK    * Identifier as dict, which maps to Postgres row names. e.g. lease_db({'distro': 'a', 'port': 'b'}).get_dict()
  
 '''
 
 import socket, binascii, time, IN
-from module_craft_option import craft_option
-from module_lease import lease
+from module_craft_option import craft_option # Module that crafts DHCP options
+from module_lease import lease # Module that fetches data from DB and provides data for the lease
     
 if not hasattr(IN,"SO_BINDTODEVICE"):
 	IN.SO_BINDTODEVICE = 25  #http://stackoverflow.com/a/8437870/541038
 
 options_raw = {} # TODO - not a nice way to do things
-option_82_dataset = False
 option_82_1 = ''
-
-class lease_db(object):
-    table = {
-        'x': {
-            'ip': '10.0.0.100',
-            'config': 'x_config.cfg'
-        },
-        'y': {
-            'ip': '10.0.0.101',
-            'config': 'y_config.cfg'
-        }
-    }
-    
-    def __init__(self, identifier):
-        self.identifier = identifier
-        
-    def get_ip(self):
-        if self.identifier in self.table:
-            return self.table[self.identifier]['ip']
-        else:
-            print('identifier (%s) not found' % self.identifier)
-            return False
-            
-    def get_config(self):
-        if self.identifier in self.table:
-            return self.table[self.identifier]['config']
-        else:
-            print('identifier (%s) not found' % self.identifier)
-            return False
-            
-    def get_dict(self):
-        if self.identifier in self.table:
-            return self.table[self.identifier]
-        else:
-            print('identifier (%s) not found' % self.identifier)
-            return False
-    
 
 # Length of DHCP fields in octets, and their placement in packet.
 # Ref: http://4.bp.blogspot.com/-IyYoFjAC4l8/UXuo16a3sII/AAAAAAAAAXQ/b6BojbYXoXg/s1600/DHCPTitle.JPG
@@ -111,6 +70,10 @@ def hex_ip_to_str(hex_ip):
 # formats a MAC address in the format "b827eb9a520f" to "b8:27:eb:9a:52:0f"
 def format_hex_mac(hex_mac):
     return ':'.join(str(x) for x in chunk_hex(hex_mac))
+
+# Formats a 6 byte MAC to a readable string (b'5e\x21\x00r3' => '35:65:21:00:72:33')
+def six_byte_mac_to_str(mac):
+    return ':'.join('%02x' % byte for byte in mac)
 
 # Parses DHCP options - raw = hex options
 def parse_options(raw):
@@ -166,8 +129,6 @@ def parse_suboptions(option, raw):
     
     if option is 82: # Option 82 - custom shit: Setting global variable to list
         global option_82_1
-        # global option_82_dataset
-        # option_82_dataset = []
         
     while True:
         length = int(chunked[pointer+1], 16) # option length in bytes
@@ -215,7 +176,6 @@ def reqparse(message):
     
     # Testing - do DB lookup based on option 82
     if len(option_82_1) > 0:
-        # print(option_82_1)
         (distro, phy, vlan) = option_82_1.split(':')
         
         # lease.debug = True
@@ -224,10 +184,8 @@ def reqparse(message):
             print(' --> Found match in DB with distro_name:' + distro + ' distro_phy_port:' + phy.split('.')[0])
     
     if messagesplit[15][:6] == b'350101': # option 53 (should allways be the first option in DISCOVER/REQUEST) - identifies DHCP packet type - discover/request/offer/ack++
-        print('\n\nDHCP DISCOVER - client MAC %s' % format_hex_mac(messagesplit[11]))
+        print('\n\nDHCP DISCOVER - client MAC %s' % six_byte_mac_to_str(messagesplit[11]))
         print(' --> crafting DHCP OFFER response')
-        
-        # lease = getlease(messagesplit[11].decode()) # Decodes MAC address
 
         # DHCP OFFER details - Options
         data = b'\x02' # Message type - boot reply
@@ -249,7 +207,7 @@ def reqparse(message):
         data += craft_option(53).raw_hex(b'\x02') # Option 53 - DHCP OFFER
 
     elif messagesplit[15][:6] == b'350103':
-        print('\n\nDHCP REQUEST - client MAC %s' % format_hex_mac(messagesplit[11]))
+        print('\n\nDHCP REQUEST - client MAC %s' % four_byte_mac_to_str(messagesplit[11]))
         print(' --> crafting DHCP ACK response')
         
         data = b'\x02' # Message type - boot reply
@@ -298,55 +256,24 @@ def reqparse(message):
         
     return data
 
-def release(): #release a lease after timelimit has expired
-    for lease in leases:
-       if not lease[1]:
-          if time.time()+leasetime == leasetime:
-              continue
-          if lease[-1] > time.time()+leasetime:
-             print("Released" + lease[0])
-             lease[1]=False
-             lease[2]='000000000000'
-             lease[3]=0
-
-def getlease(hwaddr): #return the lease of mac address, or create if doesn't exist
-   global leases
-   for lease in leases:
-      if hwaddr == lease[2]:
-         return lease[0]
-   for lease in leases:
-      if not lease[1]:
-         lease[1]=True
-         lease[2]=hwaddr
-         lease[3]=time.time()
-         return lease[0]
-
 if __name__ == "__main__":
     interface = b'eth0'
     address = '10.0.100.2'
-    offerfrom = '10.0.0.100'
-    offerto = '10.0.0.150'
     broadcast = '10.0.0.255'
     netmask = '255.255.255.0'
     tftp = address
-    dns = '8.8.8.8'
     gateway = address
     leasetime=86400 #int
 
-    leases=[] # leases database
-    #next line creates the (blank) leases table. This probably isn't necessary.
-    # for ip in ['.'.join(elements_in_address[0:3])+'.'+str(x) for x in range(int(offerfrom[offerfrom.rfind('.')+1:]),int(offerto[offerto.rfind('.')+1:])+1)]:
-    for octet in range(50):
-        leases.append(['10.0.0.' + str(octet), False, '000000000000', 0])
-    #     leases.append([ip,False,'000000000000',0])
-    
+    # Setting up the server, and how it will communicate    
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # IPv4 UDP socket
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
     s.setsockopt(socket.SOL_SOCKET, 25, interface)
     s.bind(('', 67))
 
-    print('starting main loop')
+    # Starting the whole loop
+    print('Starting main loop')
     while 1: #main loop
         try:
             message, addressf = s.recvfrom(8192)
@@ -363,6 +290,5 @@ if __name__ == "__main__":
                     print(' --> replying to %s' % reply_to)
                     # print(b'replying with UDP payload: ' + data)
                     s.sendto(data, ('<broadcast>', 68)) # Sends reply
-                release() # update releases table
         except KeyboardInterrupt:
             exit()
