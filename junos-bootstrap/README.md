@@ -11,6 +11,10 @@ Launch the tooles for junos-bootstrap from tgmanage directory.
 
 ## HTTPD
     j@lappie:~/git/tgmanage$ sudo python3 junos-bootstrap/httpd/server_http.py
+    
+    Example: <a href="httpd/terminal.log">httpd/terminal.log</a>
 
 ## DHCPD
     j@lappie:~/git/tgmanage$ sudo python3 junos-bootstrap/dhcpd/server_dhcp.py
+    
+    Example: <a href="dhcpd/terminal.log">dhcpd/terminal.log</a>
