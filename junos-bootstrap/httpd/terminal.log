@@ -1,4 +1,4 @@
-j@lappie:~/dhcp-tech82$ python3 server_http.py
+j@lappie:~/git/tgmanage$ sudo python3 junos-bootstrap/httpd/server_http.py
 
 Switches in DB during server_http.py startup:
  --> e-00-0-test, connected to distro-test port ge-0/0/0
@@ -6,29 +6,31 @@ Switches in DB during server_http.py startup:
  --> e-00-2-test, connected to distro-test port ge-0/0/6
  --> e-60-0-test, connected to distro-test port ge-0/0/9
 
-[Wed Jan 28 00:38:18 2015] Server Starts - localhost:9000
-[Wed Jan 28 00:38:42 2015] Incoming request: source:127.0.0.1 path:/tg15-edge/e-00-0-test 
- --> hostname "e-00-0-test" accepted, fetching info from DB
- --> DB response ok, populating template
- --> sending response to client
- --> success - 1442 bytes sent to client
-[Wed Jan 28 00:38:50 2015] Incoming request: source:127.0.0.1 path:/tg15-edge/e-00-1-test 
- --> hostname "e-00-1-test" accepted, fetching info from DB
- --> DB response ok, populating template
- --> sending response to client
- --> success - 1442 bytes sent to client
-[Wed Jan 28 00:38:59 2015] Incoming request: source:127.0.0.1 path:/tg15-edge/e-00-5-test 
- --> hostname "e-00-5-test" accepted, fetching info from DB
- --> No hits in DB for hostname "e-00-5-test", cannot continue
- --> error - template could not be populated
-[Wed Jan 28 00:39:27 2015] Incoming request: source:127.0.0.1 path:/tg15-edge/e-60-0-test 
- --> hostname "e-60-0-test" accepted, fetching info from DB
- --> DB response ok, populating template
- --> sending response to client
- --> success - 1442 bytes sent to client
+[Wed Feb 11 03:02:15 2015] Server Starts - 10.0.30.131:8080
+[10.0.10.6] [Wed Feb 11 03:02:28 2015] Incoming HTTP GET request: source:10.0.10.6 path:/files/jinstall-ex-2200-12.3R6.6-domestic-signed.tgz 
+[10.0.10.6] --> File request for "jinstall-ex-2200-12.3R6.6-domestic-signed.tgz" in "junos-bootstrap/httpd/files/"
+[10.0.10.6] --> File found
+[10.0.10.6]     --> File transfer started
+[10.0.10.6]     --> File transfer completed
+[10.0.10.6] [Wed Feb 11 03:03:32 2015] Incoming HTTP GET request: source:10.0.10.6 path:/files/nonexisting_filename 
+[10.0.10.6] --> File request for "nonexisting_filename" in "junos-bootstrap/httpd/files/"
+[10.0.10.6] --> File request rejected due to nonexisting file
+[10.0.10.6] [Wed Feb 11 03:03:47 2015] Incoming HTTP GET request: source:10.0.10.6 path:/files/jinstall-ex-2200-14.1X53-D15.2-domestic-signed.tgz 
+[10.0.10.6] --> File request for "jinstall-ex-2200-14.1X53-D15.2-domestic-signed.tgz" in "junos-bootstrap/httpd/files/"
+[10.0.10.6] --> File found
+[10.0.10.6]     --> File transfer started
+[10.0.10.6]     --> File transfer completed
+[10.0.10.6] [Wed Feb 11 03:08:18 2015] Incoming HTTP GET request: source:10.0.10.6 path:/tg15-edge/e-60-0-test 
+[10.0.10.6] --> Hostname "e-60-0-test" accepted, fetching info from DB
+[10.0.10.6] --> Template successfully populated
+[10.0.10.6] --> Sending response to client
+[10.0.10.6] --> Success - 1442 bytes sent to client
+[10.0.10.6] [Wed Feb 11 03:08:18 2015] Incoming HTTP GET request: source:10.0.10.6 path:/favicon.ico 
+[10.0.10.6] --> rejected due to bad path
+[10.0.10.6] [Wed Feb 11 03:08:18 2015] Incoming HTTP GET request: source:10.0.10.6 path:/favicon.ico 
+[10.0.10.6] --> rejected due to bad path
 ^C
 
-[Wed Jan 28 00:39:34 2015] HTTP Server stopped
+[Wed Feb 11 03:09:06 2015] HTTP Server stopped
 
-j@lappie:~/dhcp-tech82$ 
 

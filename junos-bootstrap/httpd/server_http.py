@@ -7,6 +7,7 @@ import time
 import psycopg2
 import psycopg2.extras
 import sys
+import os
 
 def main():
     #
@@ -20,8 +21,9 @@ def main():
 		    host = 'localhost'
 	    ),
 	    http = dict(
-		    host = 'localhost',
-		    port = 80
+		    # host = 'localhost',
+		    host = '10.0.30.131',
+		    port = 8080
 	    )
     )
     
@@ -48,13 +50,12 @@ def main():
         sys.exit(1)
 
     def template_get(model):
-        return open(model + '.template').read()
+        return open('junos-bootstrap/httpd/' + model + '.template').read()
         
     def template_parse(template_src, hostname):
         cur.execute("SELECT * FROM switches WHERE hostname = '%s'" % hostname)
         if(cur.rowcount == 1):
             row = cur.fetchall()[0]
-            print(' --> DB response ok, populating template')
             d={
                 'hostname': row['hostname'],
                 'distro_name': row['distro_name'],
@@ -66,30 +67,61 @@ def main():
             }
             return Template(template_src).safe_substitute(d)
         else:
-            print(' --> No hits in DB for hostname "%s", cannot continue' % hostname)
             return False
 
     class httpd(BaseHTTPRequestHandler):
         def do_GET(self):
-            print('[%s] Incoming request: source:%s path:%s ' % (time.asctime(), self.client_address[0], self.path))
+            print('[%s] [%s] Incoming HTTP GET URI:%s ' % (self.client_address[0], time.asctime(), self.path))
+            
+            # Client asks for the config file
             if '/tg15-edge/' in self.path:
                 hostname = self.path.split('/tg15-edge/')[1]
                 if len(hostname) > 0:
-                    print(' --> hostname "%s" accepted, fetching info from DB' % hostname)
+                    print('[%s] --> Hostname "%s" accepted, fetching info from DB' % (self.client_address[0], hostname))
                     template_parsed = template_parse(template_get('ex2200'), hostname)
                     if template_parsed:
-                        print(' --> sending response to client')
+                        print('[%s] --> Template successfully populated' % self.client_address[0])
+                        print('[%s] --> Sending response to client' % self.client_address[0])
                         self.send_response(200)
                         self.send_header("Content-type", "text/plain")
                         self.end_headers()
                         self.wfile.write(bytes(template_parsed, "utf-8"))
-                        print(' --> success - %s bytes sent to client' % len(template_parsed))
+                        print('[%s] --> Success - %s bytes sent to client' % (self.client_address[0], len(template_parsed)))
                     else:
-                        print(' --> error - template could not be populated')
+                        print('[%s] --> Error - template could not be populated' % self.client_address[0])
                 else:
-                    print(' --> rejected due to missing hostname')
+                    print('[%s] --> Rejected due to missing hostname' % self.client_address[0])
+                    
+            # Client asks for a file download - most likely a JunOS file
+            elif '/files/' in self.path:
+                # It seems that "http.server" escapes nastiness from the URL - ("/files/../../../root_file" => "/files/root_file")
+                requested_file = self.path.split('/files/')[1]
+                files_dir = 'junos-bootstrap/httpd/files/'
+                print('[%s] --> File request for "%s" in "%s"' % (self.client_address[0], requested_file, files_dir))
+                if os.path.isfile(files_dir + requested_file):
+                    print('[%s] --> File found' % self.client_address[0])
+                    try:
+                        f = open(files_dir + requested_file)
+                        self.send_response(200)
+                        self.send_header('Content-type', 'application/x-gzip') # correct content type for tar.gz
+                        self.end_headers()
+                        print('[%s]     --> File transfer started' % self.client_address[0])
+                        f = open(files_dir + requested_file, 'rb')
+                        self.wfile.write(f.read())
+                        f.close()
+                        print('[%s]     --> File transfer completed' % self.client_address[0])
+                        return
+                    except IOError:
+                        self.send_error(404,'File Not Found: %s' % self.path)
+                        print('[%s] --> ERROR 404 - File not found' % self.client_address[0])
+                        pass
+                    except:
+                        print('[%s] --> Generic error during file reading' % self.client_address[0])
+                        pass
+                else:
+                    print('[%s] --> File request rejected due to nonexisting file' % self.client_address[0])
             else:
-                print(' --> rejected due to bad path')
+                print('[%s] --> rejected due to bad path' % self.client_address[0])
         # silence stderr from BaseHTTPRequestHandler
         # source: http://stackoverflow.com/questions/3389305/how-to-silent-quiet-httpserver-and-basichttprequesthandlers-stderr-output
         def log_message(self, format, *args):
