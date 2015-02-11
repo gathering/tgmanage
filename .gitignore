@@ -15,3 +15,6 @@ include/tgmanage.cfg.sh
 planning/planning
 web/.htpasswd
 web/.htpasswd.munin
+
+# Exclude JunOS images
+junos-bootstrap/httpd/files/*
