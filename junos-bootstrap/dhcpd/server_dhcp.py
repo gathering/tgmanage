@@ -19,35 +19,18 @@ TODO
  
 '''
 
-import socket, binascii, time, IN
+import socket, binascii, IN
 from module_craft_option import craft_option # Module that crafts DHCP options
 from module_lease import lease # Module that fetches data from DB and provides data for the lease
     
 if not hasattr(IN,"SO_BINDTODEVICE"):
 	IN.SO_BINDTODEVICE = 25  #http://stackoverflow.com/a/8437870/541038
 
+# Global options - not a pretty hack
 options_raw = {} # TODO - not a nice way to do things
 option_82_1 = ''
 client = ''
 
-# Length of DHCP fields in octets, and their placement in packet.
-# Ref: http://4.bp.blogspot.com/-IyYoFjAC4l8/UXuo16a3sII/AAAAAAAAAXQ/b6BojbYXoXg/s1600/DHCPTitle.JPG
-# 0  OP - 1
-# 1  HTYPE - 1
-# 2  HLEN - 1
-# 3  HOPS - 1
-# 4  XID - 4
-# 5  SECS - 2
-# 6  FLAGS - 2
-# 7  CIADDR - 4
-# 8  YIADDR - 4
-# 9  SIADDR - 4
-# 10 GIADDR - 4
-# 11 CHADDR - 6
-# 12 MAGIC COOKIE - 10
-# 13 PADDING - 192 octets of 0's
-# 14 MAGIC COOKIE - 4
-# 15 OPTIONS - variable length
 
 #############
 # FUNCTIONS #
@@ -79,6 +62,13 @@ def six_byte_mac_to_str(mac):
 def prettyprint_hex_as_str(hex):
     return ':'.join('%02x' % byte for byte in binascii.unhexlify(hex))
 
+# CIDR notation to subnet string ('25' => '255.255.255.128')
+def cidr_to_subnet(cidr):
+    mask = [0, 0, 0, 0]
+    for i in range(cidr):
+        mask[i/8] = mask[i/8] + (1 << (7 - i % 8))
+    return '.'.join(str(x) for x in mask)
+
 # Parses DHCP options - raw = hex options
 def parse_options(raw):
     print('[%s] --> processing DHCP options' % client)
@@ -91,7 +81,7 @@ def parse_options(raw):
     options_raw = {} # incomming request's options
     special_options = [53, 82]
 
-    while True:
+    while True: # Loop over the DHCP options
         option = int(chunked[pointer], 16) # option ID (0 => 255)
         code = int(chunked[pointer], 16) # option code (0 => 255) # New int for options' ID with correct name. Replaces $option
         
@@ -106,6 +96,7 @@ def parse_options(raw):
                 option82_raw = option_payload
                 options[option] = parse_suboptions(option, option_payload)
             elif option is 53:
+                options[option] = option_payload
                 # options[option] = 1 # Not adding DHCP DISCOVER to the options list, becouse it will not be used further on
                 if int(chunked[pointer+2], 16) is 1:
                     print('[%s]     --> option: %s: %s' % (client, option, 'DHCP Discover (will not be used in reply)'))
@@ -114,7 +105,7 @@ def parse_options(raw):
 
         else:
             options[option] = asciivalue
-            # TODO: Formating....
+            # TODO: Formating.... Also crap code
             try:
                 if len(asciivalue) > 30:
                     print('[%s]     --> option: %s: %s' % (client, option, asciivalue[:26] + ' [...]'))
@@ -126,11 +117,10 @@ def parse_options(raw):
                 else:
                     print('[%s]     --> option: %s: %s' % (client, option, prettyprint_hex_as_str(option_payload)))
                 pass
-            
 
         pointer = pointer + length + 2 # place pointer at the next options' option ID/code field
         
-        if int(chunked[pointer], 16) is 255: # end of DHCP options - allways last field
+        if int(chunked[pointer], 16) is 255: # end of DHCP options - should allways last field
             print('[%s] --> Finished processing options' % client)
             break
     return options
@@ -177,16 +167,12 @@ def reqparse(message):
     #
     # Logical checks to decide to whether respond or reject
     #
-    
-    # DHCP request has been forwarded by DHCP relay
-    if int(messagesplit[10]) is 0:
+    if int(hex_ip_to_str(messagesplit[10]).replace('.', '')) is 0: # DHCP request has been forwarded by DHCP relay - A bit haxxy..
         print('[%s] Rejecting to process DHCP packet - not forwarded by DHCP relay' % client)
         return False
     
     # Process DHCP options
-    # Test data from EX2200 first boot up
-    options = parse_options(b'3501013c3c4a756e697065722d6578323230302d632d3132742d3267000000000000000000000000000000000000000000000000000000000000000000000000005222012064697374726f2d746573743a67652d302f302f302e303a626f6f747374726170ff')
-    # options = parse_options(messagesplit[15])
+    options = parse_options(messagesplit[15])
         
     # Option 82 is set in the packet
     if 82 not in options:
@@ -194,14 +180,14 @@ def reqparse(message):
         return False
 
     # Check DHCP request type
-    if messagesplit[15][:6] == b'350101':
+    if options[53] == b'01':
         mode = 'dhcp_discover'
         print('[%s] --> DHCP packet type: DHCP DISCOVER' % client)
-    elif messagesplit[15][:6] == b'350103':
+    elif options[53] == b'03':
         mode = 'dhcp_request'
         print('[%s] --> DHCP packet type: DHCP REQUEST' % client)
     else:
-        print('[%s] Rejecting to process DHCP packet - option 53 not first in DHCP request' % client)
+        print('[%s] Rejecting to continue process DHCP packet - option 53 missing' % client) # Small sanity check
         return False
     
     #
@@ -223,31 +209,32 @@ def reqparse(message):
         else:
             print('[%s]     --> Data not found, switch does not exists in DB' % client)
             return False
+    else:
+        print('[%s] Rejecting to continue to process DHCP packet - option 82.1 is empty' % client)
     
     if mode == 'dhcp_discover':
-        print('[%s] --> crafting DHCP OFFER response' % client)
+        print('[%s] --> Crafting DHCP OFFER response' % client)
         
     if mode == 'dhcp_request':
-        print('[%s] --> crafting DHCP ACK response' % client)
+        print('[%s] --> Crafting DHCP ACK response' % client)
         
         
     print('[%s]     --> XID/Transaction ID: %s' % (client, prettyprint_hex_as_str(messagesplit[4])))
     print('[%s]     --> Client IP: %s' % (client, lease_details['mgmt_addr']))
-    print('[%s]     --> Next server IP: %s' % (client, address))
-    print('[%s]     --> DHCP forwarder IP: %s' % (client, hex_ip_to_str(messagesplit[10])))
+    print('[%s]     --> DHCP forwarder IP: %s' % (client, lease_details['mgmt_gw']))
     print('[%s]     --> Client MAC: %s' % (client, client))
     
     data = b'\x02' # Message type - boot reply
     data += b'\x01' # Hardware type - ethernet
     data += b'\x06' # Hardware address length - 6 octets for MAC
-    data += b'\x00' # Hops
+    data += b'\x01' # Hops
     data += binascii.unhexlify(messagesplit[4]) # XID / Transaction ID
-    data += b'\x00\x01' # seconds elapsed - 1 second
+    data += b'\x00\x00' # seconds elapsed - 1 second
     data += b'\x80\x00' # BOOTP flags - broadcast (unicast: 0x0000)
     data += b'\x00'*4 # Client IP address
     data += socket.inet_aton(lease_details['mgmt_addr']) # New IP to client
-    data += socket.inet_aton(address) # Next server IP address
-    data += binascii.unhexlify(messagesplit[10]) # Relay agent IP - DHCP forwarder
+    data += socket.inet_aton(dhcp_server_address) # Next server IP address
+    data += binascii.unhexlify(lease_details['mgmt_gw']) # Relay agent IP - DHCP forwarder
     data += binascii.unhexlify(messagesplit[11]) # Client MAC
     data += b'\x00'*202 # Client hardware address padding (10) + Server hostname (64) + Boot file name (128)
     data += b'\x63\x82\x53\x63' # Magic cookie
@@ -256,51 +243,46 @@ def reqparse(message):
     # Craft DHCP options
     #
     print('[%s] --> Completed DHCP header structure, building DHCP options' % client)
+    
     if mode == 'dhcp_discover':
-        print('[%s]     --> Option 53: DHCP OFFER (2)' % client)
+        print('[%s]     --> Option 53  (DHCP OFFER): 2' % client)
         data += craft_option(53).raw_hex(b'\x02') # Option 53 - DHCP OFFER
 
     if mode == 'dhcp_request':
-        print('[%s]     --> Option 53: DHCP ACK (5)' % client)
+        print('[%s]     --> Option 53  (DHCP ACK): 5' % client)
         data += craft_option(53).raw_hex(b'\x05') # Option 53 - DHCP ACK
     
-    data += craft_option(54).bytes(socket.inet_aton(address)) # Option 54 - DHCP server identifier
-    print('[%s]     --> Option 54 (DHCP server identifier): %s' % (client, address))
+    data += craft_option(54).bytes(socket.inet_aton(dhcp_server_address)) # Option 54 - DHCP server identifier
+    print('[%s]     --> Option 54  (DHCP server identifier): %s' % (client, dhcp_server_address))
     
-    data += craft_option(51).raw_hex(b'\x00\x00\xff\x00') # Option 51 - Lease time left padded with "0"
-    print('[%s]     --> Option 51 (Lease time): %s' % (client, '65536'))
+    data += craft_option(51).raw_hex(b'\x00\x00\xa8\xc0') # Option 51 - Lease time left padded with "0"
+    print('[%s]     --> Option 51  (Lease time): %s' % (client, '43200 (12 hours)'))
     
-    data += craft_option(1).ip(netmask) # Option 1 - Subnet mask
-    print('[%s]     --> Option 1 (subnet mask): %s' % (client, netmask))
+    data += craft_option(1).ip(cidr_to_subnet(lease_details['mgmt_addr'])) # Option 1 - Subnet mask
+    print('[%s]     --> Option 1   (subnet mask): %s' % (client, cidr_to_subnet(lease_details['mgmt_addr'])))
     
-    data += craft_option(3).bytes(messagesplit[10]) # Option 3 - Default gateway (set to DHCP forwarders IP)
-    print('[%s]     --> Option 3 (default gateway): %s' % (client, address)) # TODO - FIX BASED ON CIDR IN DB
+    data += craft_option(3).ip(lease_details['mgmt_gw']) # Option 3 - Default gateway (set to DHCP forwarders IP)
+    print('[%s]     --> Option 3   (default gateway): %s' % (client, lease_details['mgmt_gw'])) # TODO - FIX BASED ON CIDR IN DB
     
-    data += craft_option(150).bytes(socket.inet_aton(address)) # Option 150 - TFTP Server. Used as target for the Zero Touch Protocol
-    print('[%s]     --> Option 150 (Cisco proprietary TFTP server(s)): %s' % (client, address)) # TODO - FIX BASED ON CIDR IN DB
+    data += craft_option(150).bytes(socket.inet_aton(dhcp_server_address)) # Option 150 - TFTP Server. Used as target for the Zero Touch Protocol. Not necessarily TFTP protocol used.
+    print('[%s]     --> Option 150 (Cisco proprietary TFTP server(s)): %s' % (client, dhcp_server_address)) # TODO - FIX BASED ON CIDR IN DB
     
     # http://www.juniper.net/documentation/en_US/junos13.2/topics/concept/software-image-and-configuration-automatic-provisioning-understanding.html
-    data += craft_option(43).bytes(craft_option(0).string('/junos/' + junos_file) + craft_option(1).string('/tg15-edge/' + lease_details['hostname']) + craft_option(3).string('http')) # Option 43 - ZTP
-    print('[%s]     --> Option 43 (Vendor-specific option):' % client)
-    print('[%s]         --> Suboption 0: %s' % (client, '/junos/' + junos_file))
+    data += craft_option(43).bytes(craft_option(0).string(target_junos_file) + craft_option(1).string('/tg15-edge/' + lease_details['hostname']) + craft_option(3).string('http')) # Option 43 - ZTP
+    print('[%s]     --> Option 43  (Vendor-specific option):' % client)
+    print('[%s]         --> Suboption 0: %s' % (client, target_junos_file))
     print('[%s]         --> Suboption 1: %s' % (client, '/tg15-edge/' + lease_details['hostname']))
     print('[%s]         --> Suboption 3: %s' % (client, 'http'))
-    
-    # data += '\x03\x04' + option82_raw # Option 82 - with suboptions
-    
+
     data += b'\xff'
     return data
 
 if __name__ == "__main__":
     interface = b'eth0'
-    address = '10.0.100.2'
-    broadcast = '10.0.0.255'
-    netmask = '255.255.255.0'
-    tftp = address
-    gateway = address
-    leasetime = 86400 #int
-    junos_file = 'jinstall-ex-2200-12.3R6.6-domestic-signed.tgz'
-
+    dhcp_server_address = '10.0.100.2'
+    # target_junos_file = '/files/jinstall-ex-2200-14.1X53-D15.2-domestic-signed.tgz'
+    target_junos_file = '/files/jinstall-ex-2200-12.3R6.6-domestic-signed.tgz'
+    
     # Setting up the server, and how it will communicate    
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # IPv4 UDP socket
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -320,11 +302,14 @@ if __name__ == "__main__":
                     reply_to = '<broadcast>'
                 else:
                     print('[%s] DHCP unicast - DHCP forwarding' % client)
-                    reply_to = addressf[0]
+                    # reply_to = addressf[0]
+                    reply_to = '10.0.0.1'
                 data=reqparse(message) # Parse the DHCP request
                 if data:
                     print('[%s] --> replying to %s' % (client, reply_to))
                     # print(b'replying with UDP payload: ' + data)
-                    s.sendto(data, ('<broadcast>', 68)) # Sends reply
+                    # s.sendto(data, (reply_to, 68)) # Sends reply
+                    s.sendto(data, (reply_to, 67)) # Sends reply
+                    print('')
         except KeyboardInterrupt:
             exit()
