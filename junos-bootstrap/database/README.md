@@ -2,6 +2,7 @@
 
 PostgreSQL
 
+**Tables**
 ```
 bootstrap-> \dt
            List of relations
@@ -11,6 +12,7 @@ bootstrap-> \dt
 ```
 
 
+**Table structure**
 ```
 bootstrap=> \d switches
                                       Table "public.switches"
@@ -31,7 +33,44 @@ Indexes:
     "switches_pkey" PRIMARY KEY, btree (id)
 ```
 
-## Detailed description of table fields:
+
+**Sample content in DB**
+```
+bootstrap=> select * from switches;
+ id |  hostname   |   distro_name   | distro_phy_port | mgmt_addr  | mgmt_cidr |  mgmt_gw   | mgmt_vlan | last_config_fetch | current_mac | model 
+----+-------------+-----------------+-----------------+------------+-----------+------------+-----------+-------------------+-------------+-------
+  1 | e-00-0-test | distro-test     | ge-0/0/0        | 10.0.200.2 |        24 | 10.0.200.1 |       300 |                   |             | 
+  2 | e-00-1-test | distro-test     | ge-0/0/3        | 10.0.200.3 |        24 | 10.0.200.1 |       300 |                   |             | 
+  3 | e-00-2-test | distro-test     | ge-0/0/6        | 10.0.200.4 |        24 | 10.0.200.1 |       300 |                   |             | 
+  4 | e-60-0-test | distro-test     | ge-0/0/9        | 10.0.200.5 |        24 | 10.0.200.1 |       300 |                   |             | 
+  5 | e-01-1      | distro-test-new | ge-0/0/0        | 10.0.0.31  |        24 | 10.0.0.1   |       300 |                   |             | 
+  6 | e-01-2      | distro-test-new | ge-0/0/3        | 10.0.0.32  |        24 | 10.0.0.1   |       300 |                   |             | 
+(6 rows)
+```
+
+
+**Connect to DB from CLI**
+```
+j@lappie:~/git/tgmanage$ psql -U bootstrap -d bootstrap -W
+Password for user bootstrap: 
+psql (9.3.5)
+Type "help" for help.
+
+bootstrap=> 
+```
+
+
+**Sample procedure to insert content to DB**
+```
+bootstrap=> insert into switches (hostname, distro_name, distro_phy_port, mgmt_addr, mgmt_cidr, mgmt_gw, mgmt_vlan) values 
+bootstrap-> ('e-01-1', 'distro-test-new', 'ge-0/0/0', '10.0.0.31', '24', '10.0.0.1', '300'),
+bootstrap-> ('e-01-2', 'distro-test-new', 'ge-0/0/3', '10.0.0.32', '24', '10.0.0.1', '300');
+INSERT 0 2
+```
+
+
+
+## Detailed description of table "switches" fields:
 * id: autoincreasing integer used to identify the database row
 * hostname: the unique edge switchs hostname - example: edge01
 * distro_name: the distro switch hostname - example: distro01

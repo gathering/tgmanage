@@ -22,8 +22,9 @@ def main():
 	    ),
 	    http = dict(
 		    # host = 'localhost',
-		    host = '10.0.30.131',
-		    port = 8080
+		    # host = '10.0.30.131',
+		    host = '10.0.100.2',
+		    port = 80
 	    )
     )
     
@@ -121,7 +122,7 @@ def main():
                 else:
                     print('[%s] --> File request rejected due to nonexisting file' % self.client_address[0])
             else:
-                print('[%s] --> rejected due to bad path' % self.client_address[0])
+                print('[%s] --> rejected due to bad URI' % self.client_address[0])
         # silence stderr from BaseHTTPRequestHandler
         # source: http://stackoverflow.com/questions/3389305/how-to-silent-quiet-httpserver-and-basichttprequesthandlers-stderr-output
         def log_message(self, format, *args):
