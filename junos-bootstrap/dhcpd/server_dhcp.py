@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 '''
-server_dhcp.py by Jonas "j" Lindstad for The Gathering tech:server 2015
+server_dhcp.py by Jonas "j" Lindstad for The Gathering tech:server
 
 Used to configure the Juniper EX2200 edge switches with Zero Touch Protocol
 License: GPLv2
@@ -21,10 +21,9 @@ TODO
 
 import socket, binascii, IN
 from module_craft_option import craft_option # Module that crafts DHCP options
-from module_lease import lease # Module that fetches data from DB and provides data for the lease
-    
-if not hasattr(IN,"SO_BINDTODEVICE"):
-	IN.SO_BINDTODEVICE = 25  #http://stackoverflow.com/a/8437870/541038
+# from module_lease import lease # Module that fetches data from DB and provides data for the lease
+from module_lease import lease2 as lease # Module that fetches data from DB and provides data for the lease
+
 
 # Global options - not a pretty hack
 options_raw = {} # TODO - not a nice way to do things
@@ -203,8 +202,15 @@ def reqparse(message):
         (distro, phy, vlan) = option_82_1.split(':')
         print('[%s]     --> Query details: distro_name:%s, distro_phy_port:%s' % (client, distro, phy.split('.')[0]))
         
-        if lease({'distro_name': distro, 'distro_phy_port': phy.split('.')[0]}).get_dict() is not False:
-            lease_details = lease({'distro_name': distro, 'distro_phy_port': phy[:-2]}).get_dict()
+        lease_identifiers = {'distro_name': distro, 'distro_phy_port': phy.split('.')[0]}
+        if lease(lease_identifiers).get('hostname') is not False:
+            l={
+                'hostname': lease(lease_identifiers).get('hostname'),
+                'mgmt_addr': lease(lease_identifiers).get('mgmt_addr'),
+                'mgmt_gw': lease(lease_identifiers).get('mgmt_gw')
+            }
+        
+            # lease_details = lease({'distro_name': distro, 'distro_phy_port': phy[:-2]}).get_dict()
             print('[%s]     --> Data found, switch exists in DB - ready to craft response' % client)
         else:
             print('[%s]     --> Data not found, switch does not exists in DB' % client)
@@ -220,8 +226,10 @@ def reqparse(message):
         
         
     print('[%s]     --> XID/Transaction ID: %s' % (client, prettyprint_hex_as_str(messagesplit[4])))
-    print('[%s]     --> Client IP: %s' % (client, lease_details['mgmt_addr']))
-    print('[%s]     --> DHCP forwarder IP: %s' % (client, lease_details['mgmt_gw']))
+    # print('[%s]     --> Client IP: %s' % (client, lease_details['mgmt_addr']))
+    print('[%s]     --> Client IP: %s' % (client, l['mgmt_addr']))
+    # print('[%s]     --> DHCP forwarder IP: %s' % (client, lease_details['mgmt_gw']))
+    print('[%s]     --> DHCP forwarder IP: %s' % (client, l['mgmt_gw']))
     print('[%s]     --> Client MAC: %s' % (client, client))
     
     data = b'\x02' # Message type - boot reply
@@ -232,9 +240,11 @@ def reqparse(message):
     data += b'\x00\x00' # seconds elapsed - 1 second
     data += b'\x80\x00' # BOOTP flags - broadcast (unicast: 0x0000)
     data += b'\x00'*4 # Client IP address
-    data += socket.inet_aton(lease_details['mgmt_addr']) # New IP to client
+    # data += socket.inet_aton(lease_details['mgmt_addr']) # New IP to client
+    data += socket.inet_aton(l['mgmt_addr']) # New IP to client
     data += socket.inet_aton(dhcp_server_address) # Next server IP address
-    data += binascii.unhexlify(lease_details['mgmt_gw']) # Relay agent IP - DHCP forwarder
+    # data += binascii.unhexlify(lease_details['mgmt_gw']) # Relay agent IP - DHCP forwarder
+    data += binascii.unhexlify(l['mgmt_gw']) # Relay agent IP - DHCP forwarder
     data += binascii.unhexlify(messagesplit[11]) # Client MAC
     data += b'\x00'*202 # Client hardware address padding (10) + Server hostname (64) + Boot file name (128)
     data += b'\x63\x82\x53\x63' # Magic cookie
@@ -258,23 +268,33 @@ def reqparse(message):
     data += craft_option(51).raw_hex(b'\x00\x00\xa8\xc0') # Option 51 - Lease time left padded with "0"
     print('[%s]     --> Option 51  (Lease time): %s' % (client, '43200 (12 hours)'))
     
-    data += craft_option(1).ip(cidr_to_subnet(lease_details['mgmt_addr'])) # Option 1 - Subnet mask
-    print('[%s]     --> Option 1   (subnet mask): %s' % (client, cidr_to_subnet(lease_details['mgmt_addr'])))
+    # data += craft_option(1).ip(cidr_to_subnet(lease_details['mgmt_addr'])) # Option 1 - Subnet mask
+    data += craft_option(1).ip(cidr_to_subnet(l['mgmt_addr'])) # Option 1 - Subnet mask
+    # print('[%s]     --> Option 1   (subnet mask): %s' % (client, cidr_to_subnet(lease_details['mgmt_addr'])))
+    print('[%s]     --> Option 1   (subnet mask): %s' % (client, cidr_to_subnet(l['mgmt_addr'])))
     
-    data += craft_option(3).ip(lease_details['mgmt_gw']) # Option 3 - Default gateway (set to DHCP forwarders IP)
-    print('[%s]     --> Option 3   (default gateway): %s' % (client, lease_details['mgmt_gw'])) # TODO - FIX BASED ON CIDR IN DB
+    # data += craft_option(3).ip(lease_details['mgmt_gw']) # Option 3 - Default gateway (set to DHCP forwarders IP)
+    data += craft_option(3).ip(l['mgmt_gw']) # Option 3 - Default gateway (set to DHCP forwarders IP)
+    
+    # print('[%s]     --> Option 3   (default gateway): %s' % (client, lease_details['mgmt_gw']))
+    print('[%s]     --> Option 3   (default gateway): %s' % (client, l['mgmt_gw']))
     
     data += craft_option(150).bytes(socket.inet_aton(dhcp_server_address)) # Option 150 - TFTP Server. Used as target for the Zero Touch Protocol. Not necessarily TFTP protocol used.
-    print('[%s]     --> Option 150 (Cisco proprietary TFTP server(s)): %s' % (client, dhcp_server_address)) # TODO - FIX BASED ON CIDR IN DB
+    print('[%s]     --> Option 150 (Cisco proprietary TFTP server(s)): %s' % (client, dhcp_server_address))
     
     # http://www.juniper.net/documentation/en_US/junos13.2/topics/concept/software-image-and-configuration-automatic-provisioning-understanding.html
-    data += craft_option(43).bytes(craft_option(0).string(target_junos_file) + craft_option(1).string('/tg15-edge/' + lease_details['hostname']) + craft_option(3).string('http')) # Option 43 - ZTP
+    # data += craft_option(43).bytes(craft_option(0).string(target_junos_file) + craft_option(1).string('/tg-edge/' + lease_details['hostname']) + craft_option(3).string('http')) # Option 43 - ZTP
+    data += craft_option(43).bytes(craft_option(0).string(target_junos_file) + craft_option(1).string('/tg-edge/' + l['hostname']) + craft_option(3).string('http')) # Option 43 - ZTP
     print('[%s]     --> Option 43  (Vendor-specific option):' % client)
     print('[%s]         --> Suboption 0: %s' % (client, target_junos_file))
-    print('[%s]         --> Suboption 1: %s' % (client, '/tg15-edge/' + lease_details['hostname']))
+    # print('[%s]         --> Suboption 1: %s' % (client, '/tg-edge/' + lease_details['hostname']))
+    print('[%s]         --> Suboption 1: %s' % (client, '/tg-edge/' + l['hostname']))
     print('[%s]         --> Suboption 3: %s' % (client, 'http'))
 
     data += b'\xff'
+    
+    lease(lease_identifiers).set('current_mac', client) # updates MAC in DB
+    
     return data
 
 if __name__ == "__main__":
@@ -298,7 +318,7 @@ if __name__ == "__main__":
             # print(message)
             if message.startswith(b'\x01'): # UDP payload is DHCP request (discover, request, release)
                 if addressf[0] == '0.0.0.0':
-                    print('[%s] DHCP broadcast' % client)
+                    print('[%s] DHCP broadcast - unsupported' % client)
                     reply_to = '<broadcast>'
                 else:
                     print('[%s] DHCP unicast - DHCP forwarding' % client)
@@ -307,8 +327,6 @@ if __name__ == "__main__":
                 data=reqparse(message) # Parse the DHCP request
                 if data:
                     print('[%s] --> replying to %s' % (client, reply_to))
-                    # print(b'replying with UDP payload: ' + data)
-                    # s.sendto(data, (reply_to, 68)) # Sends reply
                     s.sendto(data, (reply_to, 67)) # Sends reply
                     print('')
         except KeyboardInterrupt:
