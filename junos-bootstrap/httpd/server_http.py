@@ -13,20 +13,20 @@ def main():
     #
     # Settings
     #
-    settings = dict(
-	    db = dict(
-		    user = 'bootstrap',
-		    password = 'asdf',
-		    dbname = 'bootstrap',
-		    host = 'localhost'
-	    ),
-	    http = dict(
+    settings = {
+	    'db': {
+		    'user': 'bootstrap',
+		    'password': 'asdf',
+		    'dbname': 'bootstrap',
+		    'host': 'localhost'
+	    },
+	    'http': {
 		    # host = 'localhost',
-		    # host = '10.0.30.131',
-		    host = '10.0.100.2',
-		    port = 80
-	    )
-    )
+		    'host': '10.0.30.131',
+		    # 'host': '10.0.100.2',
+		    'port': 80
+	    }
+    }
     
     #
     # Connect to DB
@@ -34,7 +34,6 @@ def main():
     try:
         connect_params = ("dbname='%s' user='%s' host='%s' password='%s'" % (settings['db']['dbname'], settings['db']['user'], settings['db']['host'], settings['db']['password']))
         conn = psycopg2.connect(connect_params)
-        # cur = conn.cursor()
         cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         cur.execute("""SELECT * from switches""")
         rows = cur.fetchall()
@@ -66,6 +65,8 @@ def main():
                 'mgmt_gw': row['mgmt_gw'],
                 'mgmt_vlan': row['mgmt_vlan']
             }
+            cur.execute("UPDATE switches SET last_config_fetch = '%s' WHERE hostname = '%s'" % (str(time.time()).split('.')[0], hostname)) # updated DB with last config fetch
+            conn.commit()
             return Template(template_src).safe_substitute(d)
         else:
             return False
@@ -75,8 +76,8 @@ def main():
             print('[%s] [%s] Incoming HTTP GET URI:%s ' % (self.client_address[0], time.asctime(), self.path))
             
             # Client asks for the config file
-            if '/tg15-edge/' in self.path:
-                hostname = self.path.split('/tg15-edge/')[1]
+            if '/tg-edge/' in self.path:
+                hostname = self.path.split('/tg-edge/')[1]
                 if len(hostname) > 0:
                     print('[%s] --> Hostname "%s" accepted, fetching info from DB' % (self.client_address[0], hostname))
                     template_parsed = template_parse(template_get('ex2200'), hostname)
@@ -89,7 +90,7 @@ def main():
                         self.wfile.write(bytes(template_parsed, "utf-8"))
                         print('[%s] --> Success - %s bytes sent to client' % (self.client_address[0], len(template_parsed)))
                     else:
-                        print('[%s] --> Error - template could not be populated' % self.client_address[0])
+                        print('[%s] --> Error - could not find hostname "%s" in DB' % (self.client_address[0], hostname))
                 else:
                     print('[%s] --> Rejected due to missing hostname' % self.client_address[0])
                     
