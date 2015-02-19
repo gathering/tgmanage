@@ -35,11 +35,11 @@ def main():
         connect_params = ("dbname='%s' user='%s' host='%s' password='%s'" % (settings['db']['dbname'], settings['db']['user'], settings['db']['host'], settings['db']['password']))
         conn = psycopg2.connect(connect_params)
         cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        cur.execute("""SELECT * from switches""")
-        rows = cur.fetchall()
-        print ("\nSwitches in DB during server_http.py startup:")
-        for row in rows:
-            print (" --> %s, connected to %s port %s" % (row['hostname'], row['distro_name'], row['distro_phy_port']))
+        # cur.execute("""SELECT * from switches""")
+        # rows = cur.fetchall()
+        # print ("\nSwitches in DB during server_http.py startup:")
+        # for row in rows:
+        #     print (" --> %s, connected to %s port %s" % (row['hostname'], row['distro_name'], row['distro_phy_port']))
 	
     except (psycopg2.DatabaseError, psycopg2.OperationalError) as e:
 	    print ('Error: %s' % e)
