@@ -21,9 +21,7 @@ def main():
 		    'host': 'localhost'
 	    },
 	    'http': {
-		    # host = 'localhost',
-		    'host': '10.0.30.131',
-		    # 'host': '10.0.100.2',
+		    'host': '0.0.0.0',
 		    'port': 80
 	    }
     }
