@@ -64,8 +64,8 @@ def prettyprint_hex_as_str(hex):
 # CIDR notation to subnet string ('25' => '255.255.255.128')
 def cidr_to_subnet(cidr):
     mask = [0, 0, 0, 0]
-    for i in range(cidr):
-        mask[i/8] = mask[i/8] + (1 << (7 - i % 8))
+    for i in range(int(cidr)):
+        mask[i//8] = mask[i//8] + (1 << (7 - i % 8))
     return '.'.join(str(x) for x in mask)
 
 # Parses DHCP options - raw = hex options
@@ -207,7 +207,8 @@ def reqparse(message):
             l={
                 'hostname': lease(lease_identifiers).get('hostname'),
                 'mgmt_addr': lease(lease_identifiers).get('mgmt_addr'),
-                'mgmt_gw': lease(lease_identifiers).get('mgmt_gw')
+                'mgmt_gw': lease(lease_identifiers).get('mgmt_gw'),
+                'mgmt_cidr': lease(lease_identifiers).get('mgmt_cidr')
             }
         
             # lease_details = lease({'distro_name': distro, 'distro_phy_port': phy[:-2]}).get_dict()
@@ -224,11 +225,8 @@ def reqparse(message):
     if mode == 'dhcp_request':
         print('[%s] --> Crafting DHCP ACK response' % client)
         
-        
     print('[%s]     --> XID/Transaction ID: %s' % (client, prettyprint_hex_as_str(messagesplit[4])))
-    # print('[%s]     --> Client IP: %s' % (client, lease_details['mgmt_addr']))
     print('[%s]     --> Client IP: %s' % (client, l['mgmt_addr']))
-    # print('[%s]     --> DHCP forwarder IP: %s' % (client, lease_details['mgmt_gw']))
     print('[%s]     --> DHCP forwarder IP: %s' % (client, l['mgmt_gw']))
     print('[%s]     --> Client MAC: %s' % (client, client))
     
@@ -240,11 +238,9 @@ def reqparse(message):
     data += b'\x00\x00' # seconds elapsed - 1 second
     data += b'\x80\x00' # BOOTP flags - broadcast (unicast: 0x0000)
     data += b'\x00'*4 # Client IP address
-    # data += socket.inet_aton(lease_details['mgmt_addr']) # New IP to client
     data += socket.inet_aton(l['mgmt_addr']) # New IP to client
     data += socket.inet_aton(dhcp_server_address) # Next server IP address
-    # data += binascii.unhexlify(lease_details['mgmt_gw']) # Relay agent IP - DHCP forwarder
-    data += binascii.unhexlify(l['mgmt_gw']) # Relay agent IP - DHCP forwarder
+    data += socket.inet_aton(l['mgmt_gw']) # Relay agent IP - DHCP forwarder
     data += binascii.unhexlify(messagesplit[11]) # Client MAC
     data += b'\x00'*202 # Client hardware address padding (10) + Server hostname (64) + Boot file name (128)
     data += b'\x63\x82\x53\x63' # Magic cookie
@@ -268,26 +264,19 @@ def reqparse(message):
     data += craft_option(51).raw_hex(b'\x00\x00\xa8\xc0') # Option 51 - Lease time left padded with "0"
     print('[%s]     --> Option 51  (Lease time): %s' % (client, '43200 (12 hours)'))
     
-    # data += craft_option(1).ip(cidr_to_subnet(lease_details['mgmt_addr'])) # Option 1 - Subnet mask
-    data += craft_option(1).ip(cidr_to_subnet(l['mgmt_addr'])) # Option 1 - Subnet mask
-    # print('[%s]     --> Option 1   (subnet mask): %s' % (client, cidr_to_subnet(lease_details['mgmt_addr'])))
-    print('[%s]     --> Option 1   (subnet mask): %s' % (client, cidr_to_subnet(l['mgmt_addr'])))
+    data += craft_option(1).ip(cidr_to_subnet(l['mgmt_cidr'])) # Option 1 - Subnet mask
+    print('[%s]     --> Option 1   (subnet mask): %s' % (client, cidr_to_subnet(l['mgmt_cidr'])))
     
-    # data += craft_option(3).ip(lease_details['mgmt_gw']) # Option 3 - Default gateway (set to DHCP forwarders IP)
     data += craft_option(3).ip(l['mgmt_gw']) # Option 3 - Default gateway (set to DHCP forwarders IP)
-    
-    # print('[%s]     --> Option 3   (default gateway): %s' % (client, lease_details['mgmt_gw']))
     print('[%s]     --> Option 3   (default gateway): %s' % (client, l['mgmt_gw']))
     
     data += craft_option(150).bytes(socket.inet_aton(dhcp_server_address)) # Option 150 - TFTP Server. Used as target for the Zero Touch Protocol. Not necessarily TFTP protocol used.
     print('[%s]     --> Option 150 (Cisco proprietary TFTP server(s)): %s' % (client, dhcp_server_address))
     
     # http://www.juniper.net/documentation/en_US/junos13.2/topics/concept/software-image-and-configuration-automatic-provisioning-understanding.html
-    # data += craft_option(43).bytes(craft_option(0).string(target_junos_file) + craft_option(1).string('/tg-edge/' + lease_details['hostname']) + craft_option(3).string('http')) # Option 43 - ZTP
     data += craft_option(43).bytes(craft_option(0).string(target_junos_file) + craft_option(1).string('/tg-edge/' + l['hostname']) + craft_option(3).string('http')) # Option 43 - ZTP
     print('[%s]     --> Option 43  (Vendor-specific option):' % client)
     print('[%s]         --> Suboption 0: %s' % (client, target_junos_file))
-    # print('[%s]         --> Suboption 1: %s' % (client, '/tg-edge/' + lease_details['hostname']))
     print('[%s]         --> Suboption 1: %s' % (client, '/tg-edge/' + l['hostname']))
     print('[%s]         --> Suboption 3: %s' % (client, 'http'))
 
@@ -322,8 +311,9 @@ if __name__ == "__main__":
                     reply_to = '<broadcast>'
                 else:
                     print('[%s] DHCP unicast - DHCP forwarding' % client)
-                    # reply_to = addressf[0]
-                    reply_to = '10.0.0.1'
+                    reply_to = addressf[0] # senders (DHCP forwarders) IP
+                    # print(addressf[0])
+                    # reply_to = '10.0.0.1'
                 data=reqparse(message) # Parse the DHCP request
                 if data:
                     print('[%s] --> replying to %s' % (client, reply_to))
