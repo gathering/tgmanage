@@ -29,6 +29,9 @@ bootstrap=> \d switches
  last_config_fetch | integer                | 
  current_mac       | character varying(17)  | default NULL::character varying
  model             | character varying(20)  | 
+ ztp_addr          | character varying(15)  | 
+ ztp_cidr          | smallint               | 
+ ztp_gw            | character varying(15)  | 
 Indexes:
     "switches_pkey" PRIMARY KEY, btree (id)
 ```
@@ -37,14 +40,14 @@ Indexes:
 **Sample content in DB**
 ```
 bootstrap=> select * from switches;
- id |  hostname   |   distro_name   | distro_phy_port | mgmt_addr  | mgmt_cidr |  mgmt_gw   | mgmt_vlan | last_config_fetch | current_mac | model 
-----+-------------+-----------------+-----------------+------------+-----------+------------+-----------+-------------------+-------------+-------
-  1 | e-00-0-test | distro-test     | ge-0/0/0        | 10.0.200.2 |        24 | 10.0.200.1 |       300 |                   |             | 
-  2 | e-00-1-test | distro-test     | ge-0/0/3        | 10.0.200.3 |        24 | 10.0.200.1 |       300 |                   |             | 
-  3 | e-00-2-test | distro-test     | ge-0/0/6        | 10.0.200.4 |        24 | 10.0.200.1 |       300 |                   |             | 
-  4 | e-60-0-test | distro-test     | ge-0/0/9        | 10.0.200.5 |        24 | 10.0.200.1 |       300 |                   |             | 
-  5 | e-01-1      | distro-test-new | ge-0/0/0        | 10.0.0.31  |        24 | 10.0.0.1   |       300 |                   |             | 
-  6 | e-01-2      | distro-test-new | ge-0/0/3        | 10.0.0.32  |        24 | 10.0.0.1   |       300 |                   |             | 
+ id |  hostname   |   distro_name   | distro_phy_port | mgmt_addr  | mgmt_cidr |  mgmt_gw   | mgmt_vlan | last_config_fetch |    current_mac    | model | ztp_addr | ztp_cidr | ztp_gw 
+----+-------------+-----------------+-----------------+------------+-----------+------------+-----------+-------------------+-------------------+-------+----------+----------+--------
+  1 | e-00-0-test | distro-test     | ge-0/0/0        | 10.0.200.2 |        24 | 10.0.200.1 |       300 |                   |                   |       |          |          | 
+  2 | e-00-1-test | distro-test     | ge-0/0/3        | 10.0.200.3 |        24 | 10.0.200.1 |       300 |                   |                   |       |          |          | 
+  3 | e-00-2-test | distro-test     | ge-0/0/6        | 10.0.200.4 |        24 | 10.0.200.1 |       300 |                   |                   |       |          |          | 
+  4 | e-60-0-test | distro-test     | ge-0/0/9        | 10.0.200.5 |        24 | 10.0.200.1 |       300 |                   |                   |       |          |          | 
+  6 | e-01-2      | distro-test-new | ge-0/0/3        | 10.0.0.32  |        24 | 10.0.0.1   |       300 |        1424311409 |                   |       |          |          | 
+  5 | e-01-1      | distro-test-new | ge-0/0/0        | 10.0.0.31  |        24 | 10.0.0.1   |       300 |        1424311417 | AA:BB:CC:DD:EE:FF |       |          |          | 
 (6 rows)
 ```
 
