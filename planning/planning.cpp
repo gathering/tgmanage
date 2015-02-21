@@ -32,7 +32,7 @@
 
 #define TRUNCATE_METRIC 1
 #define EXTENSION_COST 70
-#define HORIZ_GAP_COST 100
+#define HORIZ_GAP_COST 10000000
 
 #define FIRST_SUBNET_ADDRESS "151.216.129.0"
 #define SUBNET_SIZE 26
@@ -181,6 +181,7 @@ unsigned Planner::find_distance(Switch from_where, int distro)
 
 		// Cross it (5.0m horizontal gap)...
 		base_cost += 50;
+                base_cost += 1000000; //We don't like horisontal gaps
 
 		// ...and away from the bridge again.
 		base_cost += 36 * abs(int(dp) - bridge_row);
