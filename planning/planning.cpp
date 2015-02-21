@@ -137,10 +137,10 @@ struct VerticalGap {
 };
 // 3, 4m, 4m, 4m gaps (0.6m, 1.6m, 1.6m, 1.6m extra).
 vector<VerticalGap> vertical_gaps = {
-	{ 5, 6 },
-	{ 13, 16 },
-	{ 21, 16 },
-	{ 30, 16 },
+	{ 7, 17 },
+	{ 14, 17 },
+	{ 22, 17 },
+	{ 31, 17 },
 };
 
 class Planner {
