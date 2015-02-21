@@ -25,8 +25,8 @@
 #include <string>
 #include <queue>
 
-#define NUM_DISTRO 6
-#define NUM_ROWS 41
+#define NUM_DISTRO 8
+#define NUM_ROWS 42
 #define SWITCHES_PER_ROW 4
 #define PORTS_PER_DISTRO 38
 
