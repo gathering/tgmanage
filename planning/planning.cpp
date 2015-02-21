@@ -239,13 +239,21 @@ Inventory Planner::find_inventory(Switch from_where, int distro)
 	}
 
 	// The gap between Game and Sector 8 is unsurmountable.
-	if ((abs(distro_placements[distro]) <= 5) == (from_where.row >= 6)) {
+	if ((abs(distro_placements[distro]) <= 7) == (from_where.row >= 8) &&
+	    distro_placements[distro] < 0) {
 		inv.vert_chasm_crossings = 1;
 	}
 
 	// So is the gap over the scene.
-	if ((abs(distro_placements[distro]) <= 13) == (from_where.row >= 14) &&
-	    from_where.num >= 2 && distro_placements[distro] < 0) {
+	if ((abs(distro_placements[distro]) <= 14) == (from_where.row >= 15)) {
+		inv.vert_chasm_crossings = 1;
+	}
+
+	// Gaps between sectors
+	if ((abs(distro_placements[distro]) <= 22) == (from_where.row >= 23)) {
+		inv.vert_chasm_crossings = 1;
+	}
+	if ((abs(distro_placements[distro]) <= 31) == (from_where.row >= 32)) {
 		inv.vert_chasm_crossings = 1;
 	}
 
