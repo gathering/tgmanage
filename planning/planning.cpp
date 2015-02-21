@@ -328,14 +328,27 @@ void Planner::init_switches()
 {
 	switches.clear();
 	for (unsigned i = 1; i <= NUM_ROWS; ++i) {
-		// Game area.
-		if (i >= 1 && i <= 5) {
+		// Sector 9 and 10
+		if (i == 1) {
+			switches.push_back(Switch(i, 2));
+			switches.push_back(Switch(i, 3));
+		}
+
+		if (i >= 2 && i <= 4) {
+			switches.push_back(Switch(i, 1));
+			switches.push_back(Switch(i, 2));
+			switches.push_back(Switch(i, 3));
+		}
+
+		if (i >= 5 && i <= 7) {
+			switches.push_back(Switch(i, 0));
+			switches.push_back(Switch(i, 1));
 			switches.push_back(Switch(i, 2));
 			switches.push_back(Switch(i, 3));
 		}
 
 		// Sectors 7 and 8.
-		if (i >= 6 && i <= 13) {
+		if (i >= 8 && i <= 14) {
 			switches.push_back(Switch(i, 0));
 			switches.push_back(Switch(i, 1));
 			switches.push_back(Switch(i, 2));
@@ -343,13 +356,13 @@ void Planner::init_switches()
 		}
 
 		// Sector 5.
-		if (i >= 14 && i <= 21) {
+		if (i >= 14 && i <= 22) {
 			switches.push_back(Switch(i, 0));
 			switches.push_back(Switch(i, 1));
 		}
 
 		// Sectors 3 and 4.
-		if (i >= 22 && i <= 30) {
+		if (i >= 23 && i <= 30) {
 			switches.push_back(Switch(i, 0));
 			switches.push_back(Switch(i, 1));
 			switches.push_back(Switch(i, 2));
@@ -357,7 +370,7 @@ void Planner::init_switches()
 		}
 
 		// Sector 1.
-		if (i >= 31 && i <= 41) {
+		if (i >= 31 && i <= 42) {
 			switches.push_back(Switch(i, 0));
 			switches.push_back(Switch(i, 1));
 		}
