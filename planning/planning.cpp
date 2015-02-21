@@ -560,7 +560,11 @@ void Planner::print_switch(const Graph &g, int i, int distro)
 		logprintf("(XXXX)");
 #endif
 	} else {
-		logprintf("[%u;22m%u ", distro + 32, distro);
+		if(distro >= 6)
+			logprintf("[%u;1m%u ", distro + 32 - 7, distro);
+		else
+			logprintf("[%u;22m%u ", distro + 32, distro);
+
 
 		int this_distance = find_distance(switches[i], distro);
 #if TRUNCATE_METRIC
@@ -615,10 +619,16 @@ int Planner::do_work(int distro_placements[NUM_DISTRO])
 		char distro_marker_right[16] = " ";
 		for (int d = 0; d < NUM_DISTRO; ++d) {
 			if (int(row) == distro_placements[d]) {
-				sprintf(distro_marker_left, "[%u;1m*", d + 32);
+				if(d >= 6)
+					sprintf(distro_marker_left, "[%u;1m*", d + 32 - 7);
+				else
+					sprintf(distro_marker_left, "[%u;22m*", d + 32);
 			}
 			if (int(row) == -distro_placements[d]) {
-				sprintf(distro_marker_right, "[%u;1m*", d + 32);
+				if(d >= 6)
+					sprintf(distro_marker_right, "[%u;22m*", d + 32 - 7);
+				else
+					sprintf(distro_marker_right, "[%u;1m*", d + 32);
 			}
 		}
 
