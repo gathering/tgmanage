@@ -137,7 +137,7 @@ struct VerticalGap {
 };
 // 3, 4m, 4m, 4m gaps (0.6m, 1.6m, 1.6m, 1.6m extra).
 vector<VerticalGap> vertical_gaps = {
-	{ 7, 17 },
+	{ 8, 17 },
 	{ 14, 17 },
 	{ 22, 17 },
 	{ 31, 17 },
@@ -239,7 +239,7 @@ Inventory Planner::find_inventory(Switch from_where, int distro)
 	}
 
 	// The gap between Game and Sector 8 is unsurmountable.
-	if ((abs(distro_placements[distro]) <= 7) == (from_where.row >= 8) &&
+	if ((abs(distro_placements[distro]) <= 8) == (from_where.row >= 9) &&
 	    distro_placements[distro] < 0) {
 		inv.vert_chasm_crossings = 1;
 	}
@@ -330,17 +330,21 @@ void Planner::init_switches()
 	for (unsigned i = 1; i <= NUM_ROWS; ++i) {
 		// Sector 9 and 10
 		if (i == 1) {
+			switches.push_back(Switch(i, 2));		
+		}
+
+		if (i == 2) {
 			switches.push_back(Switch(i, 2));
 			switches.push_back(Switch(i, 3));
 		}
 
-		if (i >= 2 && i <= 4) {
+		if (i >= 3 && i <= 5) {
 			switches.push_back(Switch(i, 1));
 			switches.push_back(Switch(i, 2));
 			switches.push_back(Switch(i, 3));
 		}
 
-		if (i >= 5 && i <= 7) {
+		if (i >= 6 && i <= 8) {
 			switches.push_back(Switch(i, 0));
 			switches.push_back(Switch(i, 1));
 			switches.push_back(Switch(i, 2));
@@ -348,7 +352,7 @@ void Planner::init_switches()
 		}
 
 		// Sectors 7 and 8.
-		if (i >= 8 && i <= 14) {
+		if (i >= 9 && i <= 14) {
 			switches.push_back(Switch(i, 0));
 			switches.push_back(Switch(i, 1));
 			switches.push_back(Switch(i, 2));
