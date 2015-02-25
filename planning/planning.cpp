@@ -5,7 +5,7 @@
 // Given D distro switches and N access switches, complexity is approx. O(dn³)
 // (runs n iterations, each iteration is O(VE), V is O(n), E is O(dn))).
 //
-// g++ -std=gnu++11 -Wall -g -O3 -fopenmp -DOUTPUT_FILES=1 -o planning planning.cpp && ./planning -4 9 -11 18 27 -27 -35 37
+// g++ -std=gnu++11 -Wall -g -O3 -fopenmp -DOUTPUT_FILES=1 -o planning planning.cpp && ./planning -5 10 -11 18 27 -27 -35 37
 
 #include <stdio.h>
 #include <math.h>
