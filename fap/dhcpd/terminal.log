@@ -1,4 +1,4 @@
-j@lappie:~/git/tgmanage$ sudo python3 junos-bootstrap/dhcpd/server_dhcp.py
+j@lappie:~/git/tgmanage$ sudo python3 fap/dhcpd/server_dhcp.py
 Starting main loop
 [] DHCP unicast - DHCP forwarding
 [40:b4:f0:cc:76:01] Parsing DHCP packet from client

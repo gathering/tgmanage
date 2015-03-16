@@ -48,7 +48,7 @@ def main():
         sys.exit(1)
 
     def template_get(model):
-        return open('junos-bootstrap/httpd/' + model + '.template').read()
+        return open('fap/httpd/' + model + '.template').read()
         
     def template_parse(template_src, hostname):
         cur.execute("SELECT * FROM switches WHERE hostname = '%s'" % hostname)
@@ -61,7 +61,8 @@ def main():
                 'mgmt_addr': row['mgmt_addr'],
                 'mgmt_cidr': row['mgmt_cidr'],
                 'mgmt_gw': row['mgmt_gw'],
-                'mgmt_vlan': row['mgmt_vlan']
+                'mgmt_vlan': row['mgmt_vlan'],
+                'traffic_vlan': row['traffic_vlan']
             }
             cur.execute("UPDATE switches SET last_config_fetch = '%s' WHERE hostname = '%s'" % (str(time.time()).split('.')[0], hostname)) # updated DB with last config fetch
             conn.commit()
@@ -96,7 +97,7 @@ def main():
             elif '/files/' in self.path:
                 # It seems that "http.server" escapes nastiness from the URL - ("/files/../../../root_file" => "/files/root_file")
                 requested_file = self.path.split('/files/')[1]
-                files_dir = 'junos-bootstrap/httpd/files/'
+                files_dir = 'fap/httpd/files/'
                 print('[%s] --> File request for "%s" in "%s"' % (self.client_address[0], requested_file, files_dir))
                 if os.path.isfile(files_dir + requested_file):
                     print('[%s] --> File found' % self.client_address[0])

@@ -290,7 +290,7 @@ if __name__ == "__main__":
     interface = b'eth0'
     dhcp_server_address = '10.0.100.2'
     # target_junos_file = '/files/jinstall-ex-2200-14.1X53-D15.2-domestic-signed.tgz'
-    target_junos_file = '/files/jinstall-ex-2200-12.3R6.6-domestic-signed.tgz'
+    target_junos_file = '/files/jinstall-ex-2200-14.1X53-D15.2-domestic-signed.tgz'
     
     # Setting up the server, and how it will communicate    
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # IPv4 UDP socket
