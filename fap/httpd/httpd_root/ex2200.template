@@ -1,5 +1,5 @@
 system {
-    host-name $hostname;
+    host-name <?php echo $c['hostname']; ?>;
     auto-snapshot;
     time-zone Europe/Oslo;
     authentication-order [ tacplus password ];
@@ -72,7 +72,7 @@ interfaces {
         }
     }
     ae0 {
-        description "Til $distro_name $distro_phy_port";
+        description "Til <?php echo $c['distro_name']; ?> <?php echo $c['distro_phy_port']; ?>";
         aggregated-ether-options {
             lacp {
                 active;
@@ -88,19 +88,19 @@ interfaces {
         }
     }
     vlan {
-        unit $mgmt_vlan {
+        unit <?php echo $c['mgmt_vlan']; ?> {
             description "MGMT L3 interface";
             family inet {
                 filter {
                     input v4-mgmt;
                 }
-                address $mgmt_addr/$mgmt_cidr;
+                address <?php echo $c['mgmt_addr'] . '/' . $c['mgmt_cidr']; ?>;
             }
             family inet6 {
                 filter {
                     input v6-mgmt;
                 }
-                address $mgmt_v6_addr/$mgmt_v6_cidr;
+                address <?php echo $c['mgmt_v6_addr'] . '/' . $c['mgmt_v6_cidr']; ?>;
             }
         }
     }
@@ -198,11 +198,11 @@ protocols {
 
 vlans {
     deltagere {
-        vlan-id $traffic_vlan;
+        vlan-id <?php echo $c['traffic_vlan']; ?>;
     }
     mgmt {
-        vlan-id $mgmt_vlan;
-        l3-interface vlan.$mgmt_vlan;
+        vlan-id <?php echo $c['mgmt_vlan']; ?>;
+        l3-interface vlan.<?php echo $c['mgmt_vlan']; ?>;
     }
 }
 
@@ -210,14 +210,14 @@ routing-options {
     rib inet.0 {
         static {
             route 0.0.0.0/0 {
-                next-hop $mgmt_gw;
+                next-hop <?php echo $c['mgmt_gw']; ?>;
             }
         }
     }
     rib inet6.0 {
         static {
             route ::/0 {
-                next-hop $mgmt_v6_gw;
+                next-hop <?php echo $c['mgmt_v6_gw']; ?>;
             }
         }
     }

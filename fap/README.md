@@ -25,7 +25,8 @@ Example: <a href="dhcpd/terminal.log">dhcpd/terminal.log</a>
 
 
 # TODO
-* Support for IPv6 management (in progress)
+* DONE: Support for IPv6 management
+* Process multiple HTTP request simultaneously
 * Support for only pushing JunOS image to switch - no config (for backup switches)
 * Try/catch on whole ethernet frame in DHCPD
 * Timestamps on each line in log both from DHCPD and HTTPD

@@ -62,7 +62,10 @@ def main():
                 'mgmt_cidr': row['mgmt_cidr'],
                 'mgmt_gw': row['mgmt_gw'],
                 'mgmt_vlan': row['mgmt_vlan'],
-                'traffic_vlan': row['traffic_vlan']
+                'traffic_vlan': row['traffic_vlan'],
+                'mgmt_v6_addr': row['mgmt_v6_addr'],
+                'mgmt_v6_cidr': row['mgmt_v6_cidr'],
+                'mgmt_v6_gw': row['mgmt_v6_gw']
             }
             cur.execute("UPDATE switches SET last_config_fetch = '%s' WHERE hostname = '%s'" % (str(time.time()).split('.')[0], hostname)) # updated DB with last config fetch
             conn.commit()
