@@ -683,6 +683,9 @@ int Planner::do_work(int distro_placements[NUM_DISTRO])
 	in_addr_t subnet_address = inet_addr(FIRST_SUBNET_ADDRESS);
 	num_ports_used.clear();
 	vector<in_addr_t> distro_mgmt_ip;
+	for (unsigned i = 0; i < NUM_DISTRO + 1; i++) {
+		distro_mgmt_ip.push_back(htonl(ntohl(inet_addr(FIRST_MGMT_ADDRESS))+ 1 + i * 64));
+	}
 	for (unsigned i = 0; i < switches.size(); ++i) {
 		const auto distro_it = switches_to_distros.find(i);
 		if (distro_it == switches_to_distros.end()) {
@@ -691,12 +694,7 @@ int Planner::do_work(int distro_placements[NUM_DISTRO])
 		unsigned int distro = distro_it->second;
 		int port_num = num_ports_used[distro]++;
 
-		if(distro_mgmt_ip.size() < distro + 1) {
-			distro_mgmt_ip.push_back(htonl(ntohl(inet_addr(FIRST_MGMT_ADDRESS))+ 2 + distro * 64));
-		}
-		else {
-			distro_mgmt_ip[distro] = htonl(ntohl(distro_mgmt_ip[distro]) + 1);
-		}
+		distro_mgmt_ip[distro] = htonl(ntohl(distro_mgmt_ip[distro]) + 1);
 
 		fprintf(patchlist, "e%u-%u %s %s %s %s %s\n",
 			switches[i].row * 2 - 1, switches[i].num + 1,
