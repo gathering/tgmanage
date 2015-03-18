@@ -734,8 +734,8 @@ int Planner::do_work(int distro_placements[NUM_DISTRO])
 		fprintf(switchlist, "e%u-%u %s/%u %s%u%c::/64 ",switches[i].row * 2 - 1, switches[i].num + 1,
 			inet_ntoa(subnet_addr4), SUBNET_SIZE, IPV6_PREFIX, third_oct, fourth);
 
-		fprintf(switchlist, "%s %s%04u:%04u::/64 1%02u%u %s\n",
-			inet_ntoa(mgmt_ip4), IPV6_PREFIX, third_oct_mgmt, fourth_oct_mgmt,
+		fprintf(switchlist, "%s/26 %s%u:%u::%u/64 1%02u%u %s\n",
+			inet_ntoa(mgmt_ip4), IPV6_PREFIX, third_oct_mgmt, (fourth_oct_mgmt / 64) * 64, fourth_oct_mgmt,
 			switches[i].row * 2 - 1, switches[i].num + 1, distro_name(distro).c_str());
 
 		subnet_address = htonl(ntohl(subnet_address) + (1ULL << (32 - SUBNET_SIZE)));
