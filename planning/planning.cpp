@@ -380,7 +380,7 @@ void Planner::init_switches()
 		}
 
 		// Sector 2.
-		if (i >= 31 && i <= 39) {
+		if (i >= 31 && i <= 40) {
 			switches.push_back(Switch(i, 2));
 			switches.push_back(Switch(i, 3));
 		}
