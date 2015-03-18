@@ -35,7 +35,9 @@
 #define HORIZ_GAP_COST 10000000
 
 #define FIRST_SUBNET_ADDRESS "151.216.129.0"
+#define FIRST_MGMT_ADDRESS "151.216.180.0"
 #define SUBNET_SIZE 26
+#define IPV6_PREFIX "2a02:ed02:"
 
 #define _INF 99999
 
@@ -680,13 +682,22 @@ int Planner::do_work(int distro_placements[NUM_DISTRO])
 	FILE *switchlist = fopen("switches.txt", "w");
 	in_addr_t subnet_address = inet_addr(FIRST_SUBNET_ADDRESS);
 	num_ports_used.clear();
+	vector<in_addr_t> distro_mgmt_ip;
 	for (unsigned i = 0; i < switches.size(); ++i) {
 		const auto distro_it = switches_to_distros.find(i);
 		if (distro_it == switches_to_distros.end()) {
 			continue;
 		}
-		int distro = distro_it->second;
+		unsigned int distro = distro_it->second;
 		int port_num = num_ports_used[distro]++;
+
+		if(distro_mgmt_ip.size() < distro + 1) {
+			distro_mgmt_ip.push_back(htonl(ntohl(inet_addr(FIRST_MGMT_ADDRESS))+ 2 + distro * 64));
+		}
+		else {
+			distro_mgmt_ip[distro] = htonl(ntohl(distro_mgmt_ip[distro]) + 1);
+		}
+
 		fprintf(patchlist, "e%u-%u %s %s %s %s %s\n",
 			switches[i].row * 2 - 1, switches[i].num + 1,
 			distro_name(distro).c_str(),
@@ -695,10 +706,38 @@ int Planner::do_work(int distro_placements[NUM_DISTRO])
 			port_name(distro, port_num + 96).c_str(),
 			port_name(distro, port_num + 144).c_str());
 
+		in_addr mgmt_ip4;
 		in_addr subnet_addr4;
 		subnet_addr4.s_addr = subnet_address;
-		fprintf(switchlist, "%s %u e%u-%u\n",
-			inet_ntoa(subnet_addr4), SUBNET_SIZE, switches[i].row * 2 - 1, switches[i].num + 1);
+		mgmt_ip4.s_addr = distro_mgmt_ip[distro];
+
+		unsigned int third_oct = (subnet_address - (subnet_address / 16777216)*16777216)/65536;
+		unsigned int third_oct_mgmt = (distro_mgmt_ip[distro] - (distro_mgmt_ip[distro] / 16777216)*16777216)/65536;
+		unsigned int fourth_oct = ntohl(subnet_address) % 256;
+		unsigned int fourth_oct_mgmt = ntohl(distro_mgmt_ip[distro]) % 256;
+
+		char fourth;
+		if(fourth_oct == 0) {
+			fourth = 'a';
+		}
+		else if(fourth_oct == 64) {
+			fourth = 'b';
+		}
+		else if(fourth_oct == 128) {
+			fourth = 'c';
+		}
+		else {
+			fourth = 'd';
+		}
+
+		//<switch-hostname> <v4-subnet> <v6-subnet> <v4-mgmt> <v6-mgmt> <vlan-id> <distro-hostname>
+		fprintf(switchlist, "e%u-%u %s/%u %s%u%c::/64 ",switches[i].row * 2 - 1, switches[i].num + 1,
+			inet_ntoa(subnet_addr4), SUBNET_SIZE, IPV6_PREFIX, third_oct, fourth);
+
+		fprintf(switchlist, "%s %s%04u:%04u::/64 1%02u%u %s\n",
+			inet_ntoa(mgmt_ip4), IPV6_PREFIX, third_oct_mgmt, fourth_oct_mgmt,
+			switches[i].row * 2 - 1, switches[i].num + 1, distro_name(distro).c_str());
+
 		subnet_address = htonl(ntohl(subnet_address) + (1ULL << (32 - SUBNET_SIZE)));
 	}
 	fclose(patchlist);
