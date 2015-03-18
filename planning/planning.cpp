@@ -321,8 +321,8 @@ string distro_name(unsigned distro)
 string port_name(unsigned distro, unsigned portnum)
 {
 	char buf[16];
-	int distros[] = { 1, 2, 5, 6 };
-	sprintf(buf, "Gi%u/%u", distros[portnum / 48], (portnum % 48) + 1);
+	int distros[] = { 0, 1, 2, 3 };
+	sprintf(buf, "ge-%u/0/%u", distros[portnum / 48], (portnum % 48));
 	return buf;
 }
 
