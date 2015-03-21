@@ -25,7 +25,7 @@ mkdir -p /var/lib/tftpboot
 # This should be done by bootstrap/update-tools ...
 cp -R ~/tgmanage/pxe/* /var/lib/tftpboot
 
-~/tgmanage/tools/fetch-debinstall.sh /var/lib/tftpboot/debian
+~/tgmanage/bootstrap/fetch-debinstall.sh /var/lib/tftpboot/debian
 # tools/fetch-ubuntulive.sh <- this tool does not exist xD
 # NOTE! The pxe/ directory contains an 'ubuntu' menu...
 # The files required to booting Ubuntu installer or live

@@ -16,14 +16,16 @@ then
 	exit 1;
 fi;
 
-cat netlist.txt | ssh -l root ${PRIMARY} "~/tgmanage/tools/make-missing-conf.pl master ${BASE}"
-ssh -l root ${PRIMARY} "~/tgmanage/tools/make-dhcpd-include.pl ${BASE}"
-ssh -l root ${PRIMARY} "~/tgmanage/tools/make-bind-include.pl master ${BASE}"
+cd ~/tgmanage
+
+cat netlist.txt | ssh -l root ${PRIMARY} "~/tgmanage/bootstrap/make-missing-conf.pl master ${BASE}"
+ssh -l root ${PRIMARY} "~/tgmanage/bootstrap/make-bind-include.pl master ${BASE}"
+ssh -l root ${PRIMARY} "~/tgmanage/bootstrap/make-dhcpd-include.pl ${BASE}"
 
 set +e
 ssh -l root ${PRIMARY} "chown bind.bind /etc/bind/dynamic/*.zone";
 set -e
 
-cat netlist.txt | ssh -l root ${SECONDARY} "~/tgmanage/tools/make-missing-conf.pl slave ${BASE}"
-ssh -l root ${SECONDARY} "~/tgmanage/tools/make-bind-include.pl slave ${BASE}"
-ssh -l root ${SECONDARY} "~/tgmanage/tools/make-dhcpd-include.pl ${BASE}"
+cat netlist.txt | ssh -l root ${SECONDARY} "~/tgmanage/bootstrap/make-missing-conf.pl slave ${BASE}"
+ssh -l root ${SECONDARY} "~/tgmanage/bootstrap/make-bind-include.pl slave ${BASE}"
+ssh -l root ${SECONDARY} "~/tgmanage/bootstrap/make-dhcpd-include.pl ${BASE}"
