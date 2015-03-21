@@ -1,20 +1,20 @@
 Outline:
 ------------------------------------------------------------------
 
-  1 Install OS on three boxes
-  2 Bootstrap:
+  1. Install OS on three boxes
+  2. Bootstrap:
      * Install tgmanage on one, the bootstrap (tools, include, netlist.txt)
      * Install dependencies on bootstrap
      * Push SSH key key to the other boxes (init-sshkeys.sh)
      * Update configuration
      * Update netlist.txt
      * Bootstrap the primary and secondary (make-base-requires.sh)
-  3 Create new networks/scopes/zones Update during the party using 
+  3. Create new networks/scopes/zones Update during the party using 
     update-baseservice.sh from bootstrap
-  4 Apply changes usling tools/apply-baseupdate.sh (reloads bind, restarts dhcpd)
-  5 Changes to generated scopes, pools, zones are done on the primary, in the files
-  6 If tools need patching, patch on boot and push with update-tools.sh
-  7 Before wednesday evening, the infra.tgXX.gathering.org zone should be updated!
+  4. Apply changes usling tools/apply-baseupdate.sh (reloads bind, restarts dhcpd)
+  5. Changes to generated scopes, pools, zones are done on the primary, in the files
+  6. If tools need patching, patch on boot and push with update-tools.sh
+  7. Before wednesday evening, the infra.tgXX.gathering.org zone should be updated!
   * Only use make-base-requires.sh during bootstrap !!!!!!! :P
 
 Detailed instructions and description:
@@ -30,7 +30,7 @@ The following three hosts/servers are normally used:
  * The server to use as Secondary DNS and SMTP.
 Add the three hosts to /etc/hosts, DNS is not available yet...
 
-2: Perform bootstrapping.
+2: Perform bootstrapping
 ------------------------------------------------------------------
 
 Start by placing the 'tgmanage' directory as '/root/tgmanage' on the bootstrap
@@ -58,7 +58,7 @@ The rest of the information needed should be pulled from techwiki.g.o The
 format of the file is: one net per line, lines starting with # are skipped,
 format of each net-line is:
 176.110.124.0 24 noc
-# <network adress> <prefixlen> <network-name>
+\# <network adress> <prefixlen> <network-name>
 
 
 Run 'tools/make-base-requires.sh'. This script will log in on the Primary and
