@@ -68,15 +68,15 @@ needed directories, create the initial configuration files.
 A short listing of the tasks of scripts called by make-base-requires (NOTE: these 
 scripts are run by tools/make-base-requires.sh, you should not need to run these individually):
  * tools/install-dependencies.sh
- ** Installs needed base software to boot, primary and secondary
+ - Installs needed base software to boot, primary and secondary
  * tools/make-named.pl
- ** Basic BIND setup (creates named.conf et.al)
+ - Basic BIND setup (creates named.conf et.al)
  * tools/make-first-zones.pl
- ** Creates static zone-files (tgname, infra, ipv6zone)
+ - Creates static zone-files (tgname, infra, ipv6zone)
  * tools/make-reverse4-files.pl
- ** Creates reverse-zones for IPv4
+ - Creates reverse-zones for IPv4
  * tools/make-dhcpd.pl
- ** Sets up the base setup for DHCP
+ - Sets up the base setup for DHCP
 
 3++: Update during the party using update-baseservice.sh from bootstrap
 ------------------------------------------------------------------
