@@ -41,12 +41,12 @@ our $sec_net   = "151.216.253.0/24"; # network that secondary server is in
 our $ext_xfer  = "193.0.0.0/22; 2001:610:240::/48; 2001:67c:2e8::/48";
 
 # allow XFR from NOC
-our $noc_nett  = "151.216.252.0/24; 2a02:ed02:252::/64";
+our $noc_net  = "151.216.252.0/24; 2a02:ed02:252::/64";
 
 # To generate new dnssec-key for ddns:
 # dnssec-keygen -a HMAC-MD5 -b 128 -n HOST DHCP_UPDATER
 our $ddns_key = "<removed>";
-our $ddns_to  = "127.0.0.1";
+our $ddns_to  = "127.0.0.1"; # just use localhost
 
 # Base networks
 our $base_ipv4net = "151.216.128.0/17";
@@ -54,7 +54,8 @@ our $base_ipv6net = "2a02:ed02::/32";
 our $ipv6zone = "2.0.d.e.2.0.a.2.ip6.arpa";
 
 # extra networks that are outside the normal ranges
-our $extra_net = "185.12.59.0/24";
+# that should have recursive DNS access
+our $rec_net = "185.12.59.0/24";
 
 # add WLC's
 our $wlc1 = "151.216.253.21";

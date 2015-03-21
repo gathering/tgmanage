@@ -11,7 +11,7 @@ Outline:
      * Bootstrap the primary and secondary (make-base-requires.sh)
   3. Create new networks/scopes/zones Update during the party using 
     update-baseservice.sh from bootstrap
-  4. Apply changes usling tools/apply-baseupdate.sh (reloads bind, restarts dhcpd)
+  4. Apply changes usling bootstrap/apply-baseupdate.sh (reloads bind, restarts dhcpd)
   5. Changes to generated scopes, pools, zones are done on the primary, in the files
   6. If tools need patching, patch on boot and push with update-tools.sh
   7. Before wednesday evening, the infra.tgXX.gathering.org zone should be updated!
@@ -110,7 +110,7 @@ To do DNS changes to the main DNS zone or the infra-zone, make the changes
 in the appropriate zone file on the primary DNS server.
 
 To add DNS records to any other DNS zone (forward or reverse), you have
-to use 'nsupdate'. To simplify the process, use bootstrap/generate-dnsrr.pl
+to use 'nsupdate'. To simplify the process, use tools/generate-dnsrr.pl
 Usage on this tool is documented in the "header" of the script...
 
 
@@ -137,14 +137,3 @@ Output from this shuld go in infra.tgXX.gathering.org.zone on primary:
 
 Output from this should go as input to nsupdate, see doc in generate-dnsrr.pl:
 > cat linknet.txt | tools/make-linknet-hosts.pl | tools/generate-dnsrr.pl --domain infra.tgXX.gathering.org -ns -rev
-
-
-Other stuff....
-------------------------------------------------------------------
-Files that are not used? Need to revisit these files...
-
-  * tools/make-switch-placements.pl
-    * Updates positions for switches in NMS map (png)?
-  * tools/make-switches.pl
-  * tools/fetch-portlist.sh
-

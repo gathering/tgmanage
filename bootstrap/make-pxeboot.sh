@@ -21,12 +21,13 @@ END
 
 mkdir -p /var/lib/tftpboot
 
+cd ~/tgmanage
 # NOTE, this step depends on an SCP of basic content from the bootstrap...
 # This should be done by bootstrap/update-tools ...
-cp -R ~/tgmanage/pxe/* /var/lib/tftpboot
+cp -R pxe/* /var/lib/tftpboot
 
-~/tgmanage/bootstrap/fetch-debinstall.sh /var/lib/tftpboot/debian
-# tools/fetch-ubuntulive.sh <- this tool does not exist xD
+bootstrap/fetch-debinstall.sh /var/lib/tftpboot/debian
+# bootstrap/fetch-ubuntulive.sh <- this tool does not exist xD
 # NOTE! The pxe/ directory contains an 'ubuntu' menu...
 # The files required to booting Ubuntu installer or live
 # must be fetched manually (for now)

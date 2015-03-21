@@ -1,7 +1,4 @@
 #!/usr/bin/perl -I /root/tgmanage
-
-# TODO: Port this to the "master|slave base" parameter syntax!
-
 use strict;
 
 unless ( (($#ARGV == 0 ) || ( $#ARGV == 1))

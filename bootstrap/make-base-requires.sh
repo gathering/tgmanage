@@ -67,7 +67,7 @@ ssh -l root ${PRIMARY}   "echo THIS COPY OF TGMANAGE IS MANAGED FROM BOOTSTRAP S
 ssh -l root ${SECONDARY} "echo THIS COPY OF TGMANAGE IS MANAGED FROM BOOTSTRAP SERVER > ~/tgmanage/NOTICE"
 
 # No point in _not_ running update-baseservice at this point....
-tools/update-baseservice.sh ${BASE}
+bootstrap/update-baseservice.sh ${BASE}
 
 # Set up PXE environment. NOTE that we assume that TFTP-server is the ${SECONDARY} (changed from older behaviour)
 ssh -l root ${SECONDARY} "~/tgmanage/bootstrap/make-pxeboot.sh"

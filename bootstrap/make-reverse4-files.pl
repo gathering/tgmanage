@@ -1,5 +1,6 @@
 #!/usr/bin/perl -I /root/tgmanage
 use strict;
+use Net::IP;
 
 BEGIN {
         require "include/config.pm";
@@ -8,14 +9,7 @@ BEGIN {
         };
 }
 
-
-use Net::IP;
-use Net::IP qw(:PROC);
-
-# FIXME: THIS IS NOT APPRORPIATE!
-my $serial = `date +%Y%m%d01`;
-chomp $serial;
-# FIXME
+my $serial = strftime("%Y%m%d", localtime(time())) . "01";
 
 unless ( (($#ARGV == 0 ) || ( $#ARGV == 1))
 	&& (( $ARGV[0] eq "master" ) || ( $ARGV[0] eq "slave" )) )
@@ -30,31 +24,19 @@ my $base = "/etc";
 $base = $ARGV[1] if $#ARGV == 1;
 $base .= "/" if not $base =~ m/\/$/ and not $base eq "";
 
-
 my $bind_base =  $base . "bind/";
 my $dhcpd_base = $base . "dhcp/";
-
 my $dhcp_revzones_file =  $dhcpd_base . "revzones.conf";
 my $bind_pri_revzones_file = $bind_base . "named.reverse4.conf";
 my $bind_sec_revzones_file = $bind_base . "named.slave-reverse4.conf";
 
-my $tgname    = $nms::config::tgname;
-
-my $pri_hostname     = $nms::config::pri_hostname;
 my $pri_v4   = $nms::config::pri_v4;
 my $pri_v6    = $nms::config::pri_v6;
 
-my $sec_hostname     = $nms::config::sec_hostname;
 my $sec_v4   = $nms::config::sec_v4;
 my $sec_v6    = $nms::config::sec_v6;
 
-my $ext_xfer  = $nms::config::ext_xfer;
-
-my $ddns_key  = $nms::config::ddns_key;
-
-my $ddns_to = $nms::config::ddns_to;
-
-my $base_ipv4 = new Net::IP( $nms::config::base_ipv4net );
+my $base_ipv4 = Net::IP->new($nms::config::base_ipv4net) or die ("base_v4 fail");
 my ($p_oct, $s_oct, $t_oct) = ($nms::config::base_ipv4net =~ m/^(\d+)\.(\d+)\.(\d+)\..*/);
 
 $pri_v4 =~ m/^(\d+)\.(\d+)\.(\d+)\.(\d+).*/;
@@ -89,13 +71,13 @@ while (1)
 		# Generating IPv4-related reverse-stuff for
 		# both bind9 and dhcp on master.
 
-		print DFILE "zone " . $rev_zone . " { primary " . $ddns_to . "; key DHCP_UPDATER; }\n";
+		print DFILE "zone " . $rev_zone . " { primary " . $nms::config::ddns_to . "; key DHCP_UPDATER; }\n";
 
 		print NFILE "zone \"". $rev_zone ."\"	{\n";
 		print NFILE "    type master;\n";
 		print NFILE "    allow-update { key DHCP_UPDATER; };\n";
 		print NFILE "    notify yes;\n";
-		print NFILE "    allow-transfer { $sec_v4; $ext_xfer; $nms::config::noc_nett; };\n";
+		print NFILE "    allow-transfer { ns-xfr; ext-xfr; };\n";
 		print NFILE "    file \"reverse/". $rev_zone .".zone\";\n";
 		print NFILE "};\n\n";
 
@@ -106,25 +88,25 @@ while (1)
 		print ZFILE <<"EOF";
 ; Base reverse zones are updated from dhcpd -- DO NOT TOUCH!
 \$TTL 3600
-@	IN	SOA	$pri_hostname.$tgname.gathering.org.	abuse.gathering.org. (
+@	IN	SOA	$nms::config::pri_hostname.$nms::config::tgname.gathering.org.	abuse.gathering.org. (
                         $serial   ; serial
                         3600 ; refresh
                         1800 ; retry
                         608400 ; expire
                         3600 ) ; minimum and default TTL
 
-		IN	NS	$pri_hostname.$tgname.gathering.org.
-		IN	NS	$sec_hostname.$tgname.gathering.org.
+		IN	NS	$nms::config::pri_hostname.$nms::config::tgname.gathering.org.
+		IN	NS	$nms::config::sec_hostname.$nms::config::tgname.gathering.org.
 
 \$ORIGIN $rev_zone.
 EOF
 		if ( ($pt_oct == $t_oct) && ($ps_oct == $s_oct) )
 		{
-			print ZFILE $pf_oct . "		IN	PTR	$pri_hostname.$tgname.gathering.org.\n";
+			print ZFILE $pf_oct . "		IN	PTR	$nms::config::pri_hostname.$nms::config::tgname.gathering.org.\n";
 		}
 		if ( ($st_oct == $t_oct) && ($ss_oct == $s_oct) )
 		{
-			print ZFILE $sf_oct . "		IN	PTR	$sec_hostname.$tgname.gathering.org.\n";
+			print ZFILE $sf_oct . "		IN	PTR	$nms::config::sec_hostname.$nms::config::tgname.gathering.org.\n";
 		}
 	}
 	else
@@ -136,7 +118,7 @@ EOF
 		print SFILE "    notify no;\n";
 		print SFILE "    file \"slave/". $rev_zone .".cache\";\n";
 		print SFILE "    masters { bootstrap; };\n";
-		print SFILE "    allow-transfer { $ext_xfer; $nms::config::noc_nett; };\n";
+		print SFILE "    allow-transfer { ns-xfr; ext-xfr; };\n";
 		print SFILE "};\n\n";
 	}
 

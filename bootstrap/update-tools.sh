@@ -20,6 +20,7 @@ scp -r tools root@${SECONDARY}:tgmanage/
 scp -r include root@${PRIMARY}:tgmanage/
 scp -r include root@${SECONDARY}:tgmanage/
 
-export $TGNAME
+# use last years example files
+export TGNAME
 last_year=`perl -e '($y)=($ENV{TGNAME} =~ m/^tg(\d\d)$/); $y--; print "tg$y"'`
 scp -r examples/$last_year/pxe root@${SECONDARY}:tgmanage/

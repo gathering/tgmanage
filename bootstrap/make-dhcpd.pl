@@ -20,12 +20,12 @@ my $dhcpd_pxeconf =  $dhcpd_base . "pxe-boot.conf";
 my $dhcpd_wlc_conf=  $dhcpd_base . "wlc-conf.conf";
 
 # primary
-my $pri_range = Net::IP->new($nms::config::pri_net) or die ("oopxos");
+my $pri_range = Net::IP->new($nms::config::pri_net) or die ("pri_range fail");
 my $pri_mask = $pri_range->mask();
 my $pri_net = $pri_range->ip();
 
 # secondary
-my $sec_range = Net::IP->new($nms::config::sec_net) or die ("oopxos");
+my $sec_range = Net::IP->new($nms::config::sec_net) or die ("sec_range fail");
 my $sec_mask = $sec_range->mask();
 my $sec_net = $sec_range->ip();
 
