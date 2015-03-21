@@ -16,9 +16,9 @@ $base .= "/" if not $base =~ m/\/$/ and not $base eq "";
 
 my $dhcpd_base = $base . "dhcp/";
 my $dhcpd_conf = $dhcpd_base . "dhcpd.conf";
-my $dhcpd_pxeconf = $dhcpd_base . "v4-pxe-boot.conf";
-my $dhcpd_wlc_conf = $dhcpd_base . "v4-wlc.conf";
-my $dhcpd_voip_conf = $dhcpd_base . "v4-voip.conf";
+my $dhcpd_pxeconf = $dhcpd_base . "v6-pxe-boot.conf";
+my $dhcpd_wlc_conf = $dhcpd_base . "v6-wlc.conf";
+my $dhcpd_voip_conf = $dhcpd_base . "v6-voip.conf";
 
 # primary
 my $pri_range = Net::IP->new($nms::config::pri_net) or die ("pri_range fail");
@@ -58,11 +58,10 @@ key DHCP_UPDATER {
 subnet $pri_net netmask $pri_mask {}
 subnet $sec_net netmask $sec_mask {}
 
-include "/etc/dhcp/v4-revzones.conf";
-include "/etc/dhcp/v4-generated-include.conf";
+include "/etc/dhcp/v6-generated-include.conf";
 include "$dhcpd_pxeconf";
-include "$dhcpd_wlc_conf";
-include "$dhcpd_voip_conf";
+#include "$dhcpd_wlc_conf";
+#include "$dhcpd_voip_conf";
 
 EOF
 		close DHCPDFILE;
@@ -75,15 +74,15 @@ if ( not -f $dhcpd_pxeconf )
 		open PXEFILE, ">" . $dhcpd_pxeconf or die ( $! . " " . $dhcpd_pxeconf);
 
 		print PXEFILE <<"EOF";
-option arch code 93 = unsigned integer 16;
+option dhcp6.bootfile-url code 59 = string;
+option dhcp6.client-arch-type code 61 = array of unsigned integer 16;
 
-if option arch = 00:07 {
-	filename "bootx64.efi";
+if option dhcp6.client-arch-type = 00:07 {
+        option dhcp6.bootfile-url "tftp://[$nms::config::pxe_server_v6]/bootx64.efi";
 } else {
- 	filename "pxelinux.0";
+        # support a hypothetical BIOS system that can PXE boot over IPv6
+        option dhcp6.bootfile-url "tftp://[$nms::config::pxe_server_v6]/pxelinux.0";
 }
-
-next-server $nms::config::pxe_server_v4;
 
 EOF
 

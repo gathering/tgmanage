@@ -13,7 +13,7 @@ apt-get -y install nfs-kernel-server
 cat << END > /etc/default/tftpd-hpa
 TFTP_USERNAME="tftp"
 TFTP_DIRECTORY="/var/lib/tftpboot"
-TFTP_ADDRESS="0.0.0.0:69"
+TFTP_ADDRESS=":69"
 TFTP_OPTIONS="--secure"
 END
 

@@ -57,36 +57,20 @@ our $ipv6zone = "2.0.d.e.2.0.a.2.ip6.arpa";
 # that should have recursive DNS access
 our $rec_net = "185.12.59.0/24";
 
+# extra networks that are outside the normal ranges
+# that should be added to DNS
+our @extra_nets = (
+	'185.12.59.0/24',  # Norsk nett
+);
+
 # add WLC's
 our $wlc1 = "151.216.253.21";
 
-# Change from tg14: PXE-server is set to Secondary/SMTP/TFTP box,
-# and the toolchain assumes this fact. Variable kept for clarity:
-our $pxe_server = $sec_v4;
+# add VOIP-server
+our $voip1 = "134.90.150.162";
 
-# Used by ipv6-stats, but never got updated for tg11-ip's. Commenting.
-# The following is the list of routing netboxes (core, dist, tele, a.s.o)
-our @distrobox_ips = (
-	'151.216.255.1',  # telegw
-	'151.216.255.2',  # nocgw
-	'151.216.255.3',  # camgw
-	'151.216.255.4',  # stageboh
-	'151.216.255.5',  # wtfgw
-	'151.216.255.6',  # logistikkgw
-	'151.216.255.7',  # crewgw
-	'151.216.255.8',  # gamegw
-	'151.216.255.9',  # resepsjongw
-	'151.216.255.10', # sponsorgw
-	'151.216.255.11', # eldregw
-	'151.216.255.17', # distro0
-	'151.216.255.18', # distro1
-	'151.216.255.19', # distro2
-	'151.216.255.20', # distro3
-	'151.216.255.21', # distro4
-	'151.216.255.22', # slutgw
-);
-
-# Forwarding zones.
-our @forwarding_zones = qw( );
+# PXE-server (rest of bootstrap assumes $sec_v4/$sec_v6)
+our $pxe_server_v4 = $sec_v4;
+our $pxe_server_v6 = $sec_v6;
 
 1;

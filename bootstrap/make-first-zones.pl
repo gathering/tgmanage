@@ -1,6 +1,5 @@
 #!/usr/bin/perl -I /root/tgmanage
 use strict;
-
 use Net::IP;
 
 BEGIN {
@@ -99,8 +98,8 @@ if ( not -f  $zonefile )
 ; on the bootstrapping/nms server!
 
 EOF
-	my $ip_pri = new Net::IP( $nms::config::pri_v6 ) or die ( "Error, new Net::IP for " . $nms::config::pri_v6 );
-	my $ip_sec = new Net::IP( $nms::config::sec_v6 ) or die ( "Error, new Net::IP for " . $nms::config::sec_v6 );
+	my $ip_pri = Net::IP->new( $nms::config::pri_v6 ) or die ( "Error, new Net::IP for " . $nms::config::pri_v6 );
+	my $ip_sec = Net::IP->new( $nms::config::sec_v6 ) or die ( "Error, new Net::IP for " . $nms::config::sec_v6 );
 	print IPV6ZONE $ip_pri->reverse_ip() . " IN PTR $nms::config::pri_hostname.$nms::config::tgname.gathering.org.\n";
 	print IPV6ZONE $ip_sec->reverse_ip() . " IN PTR $nms::config::sec_hostname.$nms::config::tgname.gathering.org.\n";
 	close IPV6ZONE;

@@ -40,21 +40,25 @@ fi
 ssh -l root ${PRIMARY} "mkdir -p ${BASE}/bind/conf-master/"
 ssh -l root ${PRIMARY} "mkdir -p ${BASE}/bind/reverse/"
 ssh -l root ${PRIMARY} "mkdir -p ${BASE}/bind/dynamic/"
-ssh -l root ${PRIMARY} "mkdir -p ${BASE}/dhcp/conf.d/"
+ssh -l root ${PRIMARY} "mkdir -p ${BASE}/dhcp/conf-v4/"
+ssh -l root ${PRIMARY} "mkdir -p ${BASE}/dhcp/conf-v6/"
 
 ssh -l root ${PRIMARY}   "~/tgmanage/bootstrap/make-dhcp6-init.sh"
 ssh -l root ${PRIMARY}   "~/tgmanage/bootstrap/make-named.pl master ${BASE}"
 ssh -l root ${PRIMARY}   "~/tgmanage/bootstrap/make-dhcpd.pl ${BASE}"
+ssh -l root ${PRIMARY}   "~/tgmanage/bootstrap/make-dhcpd6.pl ${BASE}"
 ssh -l root ${PRIMARY}   "~/tgmanage/bootstrap/make-first-zones.pl ${BASE}"
 ssh -l root ${PRIMARY}   "~/tgmanage/bootstrap/make-reverse4-files.pl master ${BASE}"
 
-ssh -l root ${SECONDARY} "mkdir -p ${BASE}/dhcp/conf.d/"
 ssh -l root ${SECONDARY} "mkdir -p ${BASE}/bind/conf-slave/"
 ssh -l root ${SECONDARY} "mkdir -p ${BASE}/bind/slave/"
+ssh -l root ${SECONDARY} "mkdir -p ${BASE}/dhcp/conf-v4/"
+ssh -l root ${SECONDARY} "mkdir -p ${BASE}/dhcp/conf-v6/"
 
 ssh -l root ${SECONDARY} "~/tgmanage/bootstrap/make-dhcp6-init.sh"
 ssh -l root ${SECONDARY} "insserv -r isc-dhcp-server"
 ssh -l root ${SECONDARY} "~/tgmanage/bootstrap/make-dhcpd.pl ${BASE}"
+ssh -l root ${SECONDARY} "~/tgmanage/bootstrap/make-dhcpd6.pl ${BASE}"
 ssh -l root ${SECONDARY} "~/tgmanage/bootstrap/make-named.pl slave ${BASE}"
 ssh -l root ${SECONDARY} "~/tgmanage/bootstrap/make-reverse4-files.pl slave ${BASE}"
 

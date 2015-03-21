@@ -17,9 +17,9 @@ while(<NETLIST>) {
 	next if /^(.*#|\s+$)/;  # skip if comment, or blank line
 
         chomp;
-        my ($network, $prefix, $switchname, undef) = split;
+        my ($v4_net, $v6_net, $net_name) = split;
 
-        print "\t\"$network/$prefix\",\n";
+        print "\t\"$v4_net\",\n";
 }
 
 print ");\n";

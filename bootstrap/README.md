@@ -58,8 +58,8 @@ The rest of the information needed should be pulled from techwiki.g.o The
 format of the file is: one net per line, lines starting with # are skipped,
 format of each net-line is:
 
-	# <network adress> <prefixlen> <network-name>
-	176.110.124.0 24 noc
+	# <v4 net> <v6 net> <network-name>
+	151.216.129.0/26 2a02:ed02:129a::/64 noc
 
 
 Run 'bootstrap/make-base-requires.sh'. This script will log in on the Primary and
@@ -77,7 +77,9 @@ scripts are run by bootstrap/make-base-requires.sh, you should not need to run t
   * bootstrap/make-reverse4-files.pl
     * Creates reverse-zones for IPv4
   * bootstrap/make-dhcpd.pl
-    * Sets up the base setup for DHCP
+    * Sets up the base setup for DHCP4
+  * bootstrap/make-dhcpd6.pl
+    * Sets up the base setup for DHCP6
 
 3++: Update during the party using update-baseservice.sh from bootstrap
 ------------------------------------------------------------------
