@@ -1,3 +1,0 @@
-NATed on ASR1k (ModerneGW), and policy-routed.
-
-participant -> telegw -> modernegw (tunnel) -> nocgw -> roofgw -> telegw -> internet
