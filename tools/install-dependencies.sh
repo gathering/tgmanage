@@ -15,6 +15,7 @@ apt-get -y install \
 	git \
 	ntp \
 	screen \
+	tmux \
 	dnsutils \
 	build-essential \
 	libnet-ip-perl \
@@ -46,6 +47,7 @@ if [ "${ROLE}" == "slave" ]; then
 	# Install-tasks specific for the _secondary_ here
 	echo "Installing for secondary/slave"
 	apt-get -y install \
+		isc-dhcp-server \
 		bind9utils \
 		bind9	
 fi
