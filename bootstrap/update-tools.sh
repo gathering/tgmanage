@@ -9,6 +9,8 @@ then
 	exit 1;
 fi;
 
+cd ~/tgmanage
+
 ssh -l root ${PRIMARY} "mkdir -p ~/tgmanage"
 ssh -l root ${SECONDARY} "mkdir -p ~/tgmanage"
 
@@ -17,7 +19,7 @@ scp -r tools root@${PRIMARY}:tgmanage/
 scp -r tools root@${SECONDARY}:tgmanage/
 scp -r include root@${PRIMARY}:tgmanage/
 scp -r include root@${SECONDARY}:tgmanage/
-scp -r clients root@${PRIMARY}:tgmanage/
-scp -r clients root@${SECONDARY}:tgmanage/
 
-scp -r pxe root@${SECONDARY}:tgmanage/
+export $TGNAME
+last_year=`perl -e '($y)=($ENV{TGNAME} =~ m/^tg(\d\d)$/); $y--; print "tg$y"'`
+scp -r examples/$last_year/pxe root@${SECONDARY}:tgmanage/

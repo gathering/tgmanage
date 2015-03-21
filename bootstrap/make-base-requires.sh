@@ -16,9 +16,10 @@ then
 	exit 1;
 fi;
 
-tools/update-tools.sh
-ssh -l root ${PRIMARY} "~/tgmanage/tools/install-dependencies.sh master"
-ssh -l root ${SECONDARY} "~/tgmanage/tools/install-dependencies.sh slave"
+cd ~/tgmanage
+bootstrap/update-tools.sh
+ssh -l root ${PRIMARY} "~/tgmanage/bootstrap/install-dependencies.sh master"
+ssh -l root ${SECONDARY} "~/tgmanage/bootstrap/install-dependencies.sh slave"
 
 if [ "${BASE}" == "/etc" ]; then
 	ssh -l root ${PRIMARY} "cp -pR /etc/bind /etc/bind.dist"
@@ -41,21 +42,21 @@ ssh -l root ${PRIMARY} "mkdir -p ${BASE}/bind/reverse/"
 ssh -l root ${PRIMARY} "mkdir -p ${BASE}/bind/dynamic/"
 ssh -l root ${PRIMARY} "mkdir -p ${BASE}/dhcp/conf.d/"
 
-ssh -l root ${PRIMARY}   "~/tgmanage/tools/make-dhcp6-init.sh"
-ssh -l root ${PRIMARY}   "~/tgmanage/tools/make-named.pl master ${BASE}"
-ssh -l root ${PRIMARY}   "~/tgmanage/tools/make-dhcpd.pl ${BASE}"
-ssh -l root ${PRIMARY}   "~/tgmanage/tools/make-first-zones.pl ${BASE}"
-ssh -l root ${PRIMARY}   "~/tgmanage/tools/make-reverse4-files.pl master ${BASE}"
+ssh -l root ${PRIMARY}   "~/tgmanage/bootstrap/make-dhcp6-init.sh"
+ssh -l root ${PRIMARY}   "~/tgmanage/bootstrap/make-named.pl master ${BASE}"
+ssh -l root ${PRIMARY}   "~/tgmanage/bootstrap/make-dhcpd.pl ${BASE}"
+ssh -l root ${PRIMARY}   "~/tgmanage/bootstrap/make-first-zones.pl ${BASE}"
+ssh -l root ${PRIMARY}   "~/tgmanage/bootstrap/make-reverse4-files.pl master ${BASE}"
 
 ssh -l root ${SECONDARY} "mkdir -p ${BASE}/dhcp/conf.d/"
 ssh -l root ${SECONDARY} "mkdir -p ${BASE}/bind/conf-slave/"
 ssh -l root ${SECONDARY} "mkdir -p ${BASE}/bind/slave/"
 
-ssh -l root ${SECONDARY} "~/tgmanage/tools/make-dhcp6-init.sh"
+ssh -l root ${SECONDARY} "~/tgmanage/bootstrap/make-dhcp6-init.sh"
 ssh -l root ${SECONDARY} "insserv -r isc-dhcp-server"
-ssh -l root ${SECONDARY} "~/tgmanage/tools/make-dhcpd.pl ${BASE}"
-ssh -l root ${SECONDARY} "~/tgmanage/tools/make-named.pl slave ${BASE}"
-ssh -l root ${SECONDARY} "~/tgmanage/tools/make-reverse4-files.pl slave ${BASE}"
+ssh -l root ${SECONDARY} "~/tgmanage/bootstrap/make-dhcpd.pl ${BASE}"
+ssh -l root ${SECONDARY} "~/tgmanage/bootstrap/make-named.pl slave ${BASE}"
+ssh -l root ${SECONDARY} "~/tgmanage/bootstrap/make-reverse4-files.pl slave ${BASE}"
 
 set +e
 ssh -l root ${PRIMARY}   "chown -R bind.bind ${BASE}/bind"
@@ -69,6 +70,6 @@ ssh -l root ${SECONDARY} "echo THIS COPY OF TGMANAGE IS MANAGED FROM BOOTSTRAP S
 tools/update-baseservice.sh ${BASE}
 
 # Set up PXE environment. NOTE that we assume that TFTP-server is the ${SECONDARY} (changed from older behaviour)
-ssh -l root ${SECONDARY} "~/tgmanage/tools/make-pxeboot.sh"
+ssh -l root ${SECONDARY} "~/tgmanage/bootstrap/make-pxeboot.sh"
 
 # all done.

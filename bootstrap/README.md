@@ -35,18 +35,18 @@ The following three hosts/servers are normally used:
 
 Start by placing the 'tgmanage' directory as '/root/tgmanage' on the bootstrap
 box.  Change into the 'tgmanage' directory. Next, run
-'tools/install-dependencies.sh boot'
+'bootstrap/install-dependencies.sh boot'
 
 
 Edit 'include/config.local.pm' and update for this year's TG.  Use
-'tools/create-shellconf.pl' to extract configuration from the perl module to
+'bootstrap/create-shellconf.pl' to extract configuration from the perl module to
 create/update the 'include/tgmanage.cfg.sh' configuration script.
 
-Run 'tools/create-hostsfile.sh' to make sure the bootstrap-box can use
+Run 'bootstrap/create-hostsfile.sh' to make sure the bootstrap-box can use
 hostnames to reach the pri/sec DNS even before DNS is set up.
 
 The tools make extensive use of key-based SSH logins, to make this work
-seamlessly, run 'tools/init-sshkeys.sh' to create an RSA priv/pub keypair, and
+seamlessly, run 'bootstrap/init-sshkeys.sh' to create an RSA priv/pub keypair, and
 push the pubkey to the Primary and Secondary boxes.
 
 
@@ -62,45 +62,45 @@ format of each net-line is:
 	176.110.124.0 24 noc
 
 
-Run 'tools/make-base-requires.sh'. This script will log in on the Primary and
+Run 'bootstrap/make-base-requires.sh'. This script will log in on the Primary and
 Secondary boxes, install dependencies and the BIND/DHCP packages, create all
 needed directories, create the initial configuration files.
 
 A short listing of the tasks of scripts called by make-base-requires (NOTE: these 
-scripts are run by tools/make-base-requires.sh, you should not need to run these individually):
-  * tools/install-dependencies.sh
+scripts are run by bootstrap/make-base-requires.sh, you should not need to run these individually):
+  * bootstrap/install-dependencies.sh
     * Installs needed base software to boot, primary and secondary
-  * tools/make-named.pl
+  * bootstrap/make-named.pl
     * Basic BIND setup (creates named.conf et.al)
-  * tools/make-first-zones.pl
+  * bootstrap/make-first-zones.pl
     * Creates static zone-files (tgname, infra, ipv6zone)
-  * tools/make-reverse4-files.pl
+  * bootstrap/make-reverse4-files.pl
     * Creates reverse-zones for IPv4
-  * tools/make-dhcpd.pl
+  * bootstrap/make-dhcpd.pl
     * Sets up the base setup for DHCP
 
 3++: Update during the party using update-baseservice.sh from bootstrap
 ------------------------------------------------------------------
 
-After 'tools/make-base-requires.sh' has been run, further updating should be
+After 'bootstrap/make-base-requires.sh' has been run, further updating should be
 managed by the following three files:
-  * tools/update-baseservice.sh
+  * bootstrap/update-baseservice.sh
     * Used to add/update bind and DHCP configuration
-  * tools/apply-baseupdate.sh
+  * bootstrap/apply-baseupdate.sh
     * Used to reload bind and restart DHCP
-  * tools/update-tools.sh
+  * bootstrap/update-tools.sh
     * Used to push changes to the tgmanage toolchain
 
 This means, after the base setup is completed, updating and managing the
-configuration is done by updating netlist.txt and running tools/update-baseservice.sh
+configuration is done by updating netlist.txt and running bootstrap/update-baseservice.sh
 from the bootstrap box, or from the NMS box if the toolchain gets moved there during
 the party. 
 
 To create a new DHCP scope, add DNS forward and reverse zone for a new network:
 
   * Add the network to netlist.txt
-  * Run tools/update-baseservice.sh to generate new .conf and .zone files
-  * Run tools/apply-baseupdate.sh to load new configuration
+  * Run bootstrap/update-baseservice.sh to generate new .conf and .zone files
+  * Run bootstrap/apply-baseupdate.sh to load new configuration
 
 To do changes to DHCP config after the scope .conf file has been created 
 (read: later in the party), log in to the primary/dhcp server, and make 
@@ -110,17 +110,17 @@ To do DNS changes to the main DNS zone or the infra-zone, make the changes
 in the appropriate zone file on the primary DNS server.
 
 To add DNS records to any other DNS zone (forward or reverse), you have
-to use 'nsupdate'. To simplify the process, use tools/generate-dnsrr.pl
+to use 'nsupdate'. To simplify the process, use bootstrap/generate-dnsrr.pl
 Usage on this tool is documented in the "header" of the script...
 
 
 The update prosess is handled by a bunch of "sub-tools", these should typically
 not need to be run individually:
-  * tools/make-bind-include.pl
+  * bootstrap/make-bind-include.pl
     * Run via update-baseservice, adds new net's to DNS include
-  * tools/make-dhcpd-include.pl
+  * bootstrap/make-dhcpd-include.pl
     * Run via update-baseservice, adds new net's to DHCP include
-  * tools/make-missing-conf.pl
+  * bootstrap/make-missing-conf.pl
     * Run via update-baseservice, adds missing net-conf to BIND/DHCP
 
 
