@@ -121,11 +121,11 @@ Format for linknet.txt is documented in make-linknet-hosts.pl
 Generate IPv4 infra hostnames and IP address assignments
 by using tools/generate-dnsrr.pl
 
+Output from this shuld go in infra.tgXX.gathering.org.zone on primary:
 > cat linknet.txt | tools/make-linknet-hosts.pl | tools/generate-dnsrr.pl --domain infra.tgXX.gathering.org 
-Output from this shuld go in infra.tgXX.gathering.org.zone on primary
 
+Output from this should go as input to nsupdate, see doc in generate-dnsrr.pl:
 > cat linknet.txt | tools/make-linknet-hosts.pl | tools/generate-dnsrr.pl --domain infra.tgXX.gathering.org -ns -rev
-Output from this should go as input to nsupdate, see doc in generate-dnsrr.pl
 
 
 Other stuff....
