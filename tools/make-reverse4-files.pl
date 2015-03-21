@@ -49,22 +49,13 @@ my $sec_v4   = $nms::config::sec_v4;
 my $sec_v6    = $nms::config::sec_v6;
 
 my $ext_xfer  = $nms::config::ext_xfer;
-my $ext_ns    = $nms::config::ext_ns;
 
 my $ddns_key  = $nms::config::ddns_key;
 
-my $base_ipv4net    = $nms::config::base_ipv4net;
-my $base_ipv4prefix = $nms::config::base_ipv4prefix;
-
-my $noc_nett = $nms::config::noc_nett;
-my $noc_nett_v6 = $nms::config::noc_nett_v6;
-
 my $ddns_to = $nms::config::ddns_to;
 
-my $base_ipv4 = new Net::IP( $base_ipv4net . "/" . $base_ipv4prefix );
-
-$base_ipv4net =~ m/^(\d+)\.(\d+)\.(\d+)\..*/;
-my ( $p_oct, $s_oct, $t_oct ) = ( $1, $2, $3 );
+my $base_ipv4 = new Net::IP( $nms::config::base_ipv4net );
+my ($p_oct, $s_oct, $t_oct) = ($nms::config::base_ipv4net =~ m/^(\d+)\.(\d+)\.(\d+)\..*/);
 
 $pri_v4 =~ m/^(\d+)\.(\d+)\.(\d+)\.(\d+).*/;
 my ( $pp_oct, $ps_oct, $pt_oct, $pf_oct) = ( $1, $2, $3, $4 );
@@ -104,7 +95,7 @@ while (1)
 		print NFILE "    type master;\n";
 		print NFILE "    allow-update { key DHCP_UPDATER; };\n";
 		print NFILE "    notify yes;\n";
-		print NFILE "    allow-transfer { $sec_v4; $ext_xfer; $noc_nett; $noc_nett_v6; };\n";
+		print NFILE "    allow-transfer { $sec_v4; $ext_xfer; $nms::config::noc_nett; };\n";
 		print NFILE "    file \"reverse/". $rev_zone .".zone\";\n";
 		print NFILE "};\n\n";
 
@@ -145,7 +136,7 @@ EOF
 		print SFILE "    notify no;\n";
 		print SFILE "    file \"slave/". $rev_zone .".cache\";\n";
 		print SFILE "    masters { bootstrap; };\n";
-		print SFILE "    allow-transfer { $ext_xfer; $noc_nett; $noc_nett_v6; };\n";
+		print SFILE "    allow-transfer { $ext_xfer; $nms::config::noc_nett; };\n";
 		print SFILE "};\n\n";
 	}
 

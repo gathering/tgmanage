@@ -2,7 +2,6 @@
 use strict;
 
 use Net::IP;
-use Net::IP qw(:PROC);
 
 BEGIN {
         require "include/config.pm";
@@ -17,21 +16,18 @@ $base .= "/" if not $base =~ m/\/$/ and not $base eq "";
 
 my $dhcpd_base = $base . "dhcp/";
 my $dhcpd_conf =  $dhcpd_base . "dhcpd.conf";
-my $dhcp_pxeconf =  $dhcpd_base . "pxe-boot.conf";
-my $dhcp_ciscoapconf =  $dhcpd_base . "ciscowlc.conf";
+my $dhcpd_pxeconf =  $dhcpd_base . "pxe-boot.conf";
+my $dhcpd_wlc_conf=  $dhcpd_base . "wlc-conf.conf";
 
-my $tgname    = $nms::config::tgname;
-my $pri_v4   = $nms::config::pri_v4;
-my $pri_net   = $nms::config::pri_net;
-my $sec_v4   = $nms::config::sec_v4;
-my $pxe_server = $nms::config::pxe_server;
-my $ddns_key  = $nms::config::ddns_key;
-my $ciscowlc_a  = $nms::config::ciscowlc_a;
+# primary
+my $pri_range = Net::IP->new($nms::config::pri_net) or die ("oopxos");
+my $pri_mask = $pri_range->mask();
+my $pri_net = $pri_range->ip();
 
-my $range = new Net::IP( $pri_net ) or die ("oopxos");
-my $mask = $range->mask();	
-my ($net, undef) = split "/", $pri_net;
-
+# secondary
+my $sec_range = Net::IP->new($nms::config::sec_net) or die ("oopxos");
+my $sec_mask = $sec_range->mask();
+my $sec_net = $sec_range->ip();
 
 # Create PXE-boot configuration file for DHCP on master.
 if ( not -f $dhcpd_conf )
@@ -46,8 +42,8 @@ if ( not -f $dhcpd_conf )
 # include almost everything from separate files..
 #
 # log-facility local7;
-option domain-name "$tgname.gathering.org";
-option domain-name-servers $pri_v4, $sec_v4;
+option domain-name "$nms::config::tgname.gathering.org";
+option domain-name-servers $nms::config::pri_v4, $nms::config::sec_v4;
 default-lease-time 3600;
 max-lease-time 7200;
 authoritative;
@@ -55,40 +51,41 @@ authoritative;
 ddns-update-style interim;
 key DHCP_UPDATER {
         algorithm HMAC-MD5.SIG-ALG.REG.INT;
-        secret $ddns_key;
+        secret $nms::config::ddns_key;
 }
 
-subnet $net netmask $mask {}
+subnet $pri_net netmask $pri_mask {}
+subnet $sec_net netmask $sec_mask {}
 
 include "/etc/dhcp/revzones.conf";
 include "/etc/dhcp/generated-include.conf";
-include "/etc/dhcp/pxe-boot.conf";
-include "/etc/dhcp/ciscowlc.conf";
+include "$dhcpd_pxeconf";
+include "$dhcpd_wlc_conf";
 
 EOF
 		close DHCPDFILE;
 }
 
 # Create PXE-boot configuration file for DHCP on master.
-if ( not -f $dhcp_pxeconf )
+if ( not -f $dhcpd_pxeconf )
 {
-		print STDERR "Creating file " . $dhcp_pxeconf . "\n";
-		open PXEFILE, ">" . $dhcp_pxeconf or die ( $! . " " . $dhcp_pxeconf);
+		print STDERR "Creating file " . $dhcpd_pxeconf . "\n";
+		open PXEFILE, ">" . $dhcpd_pxeconf or die ( $! . " " . $dhcpd_pxeconf);
 
-		print PXEFILE "next-server " . $pxe_server . ";\n";
+		print PXEFILE "next-server " . $nms::config::pxe_server . ";\n";
 		print PXEFILE "filename \"pxelinux.0\";\n";
 
 		close PXEFILE;
 }
 
 
-# Create PXE-boot configuration file for DHCP on master.
-if ( not -f $dhcp_ciscoapconf )
+# Create WLC configuration file
+if ( not -f $dhcpd_wlc_conf )
 {
-		print STDERR "Creating file " . $dhcp_ciscoapconf . "\n";
-		open CISCOFILE, ">" . $dhcp_ciscoapconf or die ( $! . " " . $dhcp_pxeconf);
+		print STDERR "Creating file " . $dhcpd_wlc_conf . "\n";
+		open WLCFILE, ">" . $dhcpd_wlc_conf or die ( $! . " " . $dhcpd_wlc_conf);
 
-		print CISCOFILE <<"EOF";
+		print WLCFILE <<"EOF";
 option space CiscoAP;
 option CiscoAP.server-address code 241 = array of ip-address;
 set vendor-string = option vendor-class-identifier;
@@ -96,9 +93,9 @@ set vendor-string = option vendor-class-identifier;
 class "cisco-aps" {
        match if substring (option vendor-class-identifier, 0, 8) = "Cisco AP";
        vendor-option-space CiscoAP;
-       option CiscoAP.server-address $ciscowlc_a;
+       option CiscoAP.server-address $nms::config::wlc1;
 }
 EOF
-		close CISCOFILE;
+		close WLCFILE;
 }
 

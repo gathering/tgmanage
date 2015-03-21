@@ -78,7 +78,8 @@ while (<STDIN>) {
 			# Get IPv6-address based on IPv4-address
 		
 			my ($first, $second, $third, $fourth) = split('\.', $ipv4);
-			$ipv6 = $nms::config::base_ipv6net . $third . "::" . $fourth;
+			# TODO: Need to do some more logic, since base_ipv6net looks like '2a02:ed02::/32'
+			#$ipv6 = $nms::config::base_ipv6net . $third . "::" . $fourth;
 		}
 	}
 	

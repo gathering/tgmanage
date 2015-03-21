@@ -7,8 +7,8 @@
 # TODO: Either rewrite this to be run at/from the bootstrapper,
 # and/or add support for ${BASE} redirection..
 
-apt-get install tftpd-hpa
-apt-get install nfs-kernel-server
+apt-get -y install tftpd-hpa
+apt-get -y install nfs-kernel-server
 
 cat << END > /etc/default/tftpd-hpa
 TFTP_USERNAME="tftp"

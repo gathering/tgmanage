@@ -12,10 +12,7 @@ BEGIN {
 use Net::IP;
 use Net::IP qw(:PROC);
 
-# FIXME: THIS IS NOT APPRORPIATE!
-my $serial = `date +%Y%m%d01`;
-chomp $serial;
-# FIXME
+my $serial = strftime("%Y%m%d", localtime(time())) . "01";
 
 unless ( (($#ARGV == 0 ) || ( $#ARGV == 1))
 	&& (( $ARGV[0] eq "master" ) || ( $ARGV[0] eq "slave" )) )
@@ -51,20 +48,12 @@ my $sec_hostname     = $nms::config::sec_hostname;
 my $sec_v4   = $nms::config::sec_v4;
 my $sec_v6    = $nms::config::sec_v6;
 
-my $ext_xfer  = $nms::config::ext_xfer;
-my $ext_ns    = $nms::config::ext_ns;
-
 my $ddns_key  = $nms::config::ddns_key;
-
-my $base_ipv4net    = $nms::config::base_ipv4net;
-my $base_ipv4prefix = $nms::config::base_ipv4prefix;
 
 my $ddns_to = $nms::config::ddns_to;
 
-my $base_ipv4 = new Net::IP( $base_ipv4net . "/" . $base_ipv4prefix );
-
-$base_ipv4net =~ m/^(\d+)\.(\d+)\.(\d+)\..*/;
-my ( $cp_oct, $cs_oct, $ct_oct ) = ( $1, $2, $3 );
+my $base_ipv4 = new Net::IP( $nms::config::base_ipv4net );
+my ($cp_oct, $cs_oct, $ct_oct) = ($nms::config::base_ipv4net =~ m/^(\d+)\.(\d+)\.(\d+)\..*/);
 
 while ( <STDIN> )
 {

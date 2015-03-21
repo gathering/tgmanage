@@ -71,10 +71,10 @@ sub switch_connect($) {
 	if ($match eq 'Password:') {
 		$conn->print('gurbagurba'); # Dette passordet skal feile
 		$conn->waitfor('/User ?Name:/');
-		$conn->print($nms::config::dlink1g_user);
+		$conn->print($nms::config::tacacs_user);
 		my (undef, $match) = $conn->waitfor('/DGS-3100#|Password:/');
 		if ($match eq 'Password:') {
-			$conn->cmd($nms::config::dlink1g_passwd);
+			$conn->cmd($nms::config::tacacs_pass);
 		}
 	}
 	return ($conn);
