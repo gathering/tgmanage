@@ -36,6 +36,8 @@ ssh -l root ${PRIMARY} "mkdir -p ${BASE}/bind/conf-master/"
 ssh -l root ${PRIMARY} "mkdir -p ${BASE}/bind/reverse/"
 ssh -l root ${PRIMARY} "mkdir -p ${BASE}/bind/dynamic/"
 ssh -l root ${PRIMARY} "mkdir -p ${BASE}/dhcp/conf.d/"
+ssh -l root ${PRIMARY} "~/tgmanage/tools/make-dhcp6-init.sh"
+
 ssh -l root ${PRIMARY}   "~/tgmanage/tools/make-named.pl master ${BASE}"
 ssh -l root ${PRIMARY}   "~/tgmanage/tools/make-dhcpd.pl ${BASE}"
 ssh -l root ${PRIMARY}   "~/tgmanage/tools/make-first-zones.pl ${BASE}"
