@@ -15,7 +15,8 @@ Outline:
   5. Changes to generated scopes, pools, zones are done on the primary, in the files
   6. If tools need patching, patch on boot and push with update-tools.sh
   7. Before wednesday evening, the infra.tgXX.gathering.org zone should be updated!
-  * Only use make-base-requires.sh during bootstrap !!!!!!! :P
+
+**Only use make-base-requires.sh during bootstrap !!!!!!! :P**
 
 Detailed instructions and description:
 ==================================================================
@@ -24,10 +25,10 @@ Detailed instructions and description:
 ------------------------------------------------------------------
 
 The following three hosts/servers are normally used:
- * A 'bootstrap' box. This server will be used to configure
-   the first TG-servers, and may end up hosting the switch-config and NMS.
- * The server to use as Primary DNS and DHCP server
- * The server to use as Secondary DNS and SMTP.
+  * A 'bootstrap' box. This server will be used to configure
+    the first TG-servers, and may end up hosting the switch-config and NMS.
+  * The server to use as Primary DNS and DHCP server
+  * The server to use as Secondary DNS and SMTP.
 
 2: Perform bootstrapping
 ------------------------------------------------------------------
@@ -67,28 +68,28 @@ needed directories, create the initial configuration files.
 
 A short listing of the tasks of scripts called by make-base-requires (NOTE: these 
 scripts are run by tools/make-base-requires.sh, you should not need to run these individually):
- * tools/install-dependencies.sh
- - Installs needed base software to boot, primary and secondary
- * tools/make-named.pl
- - Basic BIND setup (creates named.conf et.al)
- * tools/make-first-zones.pl
- - Creates static zone-files (tgname, infra, ipv6zone)
- * tools/make-reverse4-files.pl
- - Creates reverse-zones for IPv4
- * tools/make-dhcpd.pl
- - Sets up the base setup for DHCP
+  * tools/install-dependencies.sh
+    * Installs needed base software to boot, primary and secondary
+  * tools/make-named.pl
+    * Basic BIND setup (creates named.conf et.al)
+  * tools/make-first-zones.pl
+    * Creates static zone-files (tgname, infra, ipv6zone)
+  * tools/make-reverse4-files.pl
+    * Creates reverse-zones for IPv4
+  * tools/make-dhcpd.pl
+    * Sets up the base setup for DHCP
 
 3++: Update during the party using update-baseservice.sh from bootstrap
 ------------------------------------------------------------------
 
 After 'tools/make-base-requires.sh' has been run, further updating should be
 managed by the following three files:
-* tools/update-baseservice.sh
-** Used to add/update bind and DHCP configuration
-* tools/apply-baseupdate.sh
-** Used to reload bind and restart DHCP
-* tools/update-tools.sh
-** Used to push changes to the tgmanage toolchain
+  * tools/update-baseservice.sh
+    * Used to add/update bind and DHCP configuration
+  * tools/apply-baseupdate.sh
+    * Used to reload bind and restart DHCP
+  * tools/update-tools.sh
+    * Used to push changes to the tgmanage toolchain
 
 This means, after the base setup is completed, updating and managing the
 configuration is done by updating netlist.txt and running tools/update-baseservice.sh
@@ -115,12 +116,12 @@ Usage on this tool is documented in the "header" of the script...
 
 The update prosess is handled by a bunch of "sub-tools", these should typically
 not need to be run individually:
-* tools/make-bind-include.pl
-** Run via update-baseservice, adds new net's to DNS include
-* tools/make-dhcpd-include.pl
-** Run via update-baseservice, adds new net's to DHCP include
-* tools/make-missing-conf.pl
-** Run via update-baseservice, adds missing net-conf to BIND/DHCP
+  * tools/make-bind-include.pl
+    * Run via update-baseservice, adds new net's to DNS include
+  * tools/make-dhcpd-include.pl
+    * Run via update-baseservice, adds new net's to DHCP include
+  * tools/make-missing-conf.pl
+    * Run via update-baseservice, adds missing net-conf to BIND/DHCP
 
 
 7: Generation of linknet dns content
@@ -142,8 +143,8 @@ Other stuff....
 ------------------------------------------------------------------
 Files that are not used? Need to revisit these files...
 
-* tools/make-switch-placements.pl
-** Updates positions for switches in NMS map (png)?
-* tools/make-switches.pl
-* tools/fetch-portlist.sh
+  * tools/make-switch-placements.pl
+    * Updates positions for switches in NMS map (png)?
+  * tools/make-switches.pl
+  * tools/fetch-portlist.sh
 
