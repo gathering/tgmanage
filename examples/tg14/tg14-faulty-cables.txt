@@ -1,0 +1,419 @@
+ e27-2: Cable on port 1:22 has only two pairs
+ e27-2: Cable on port 1:26 has impedance mismatch at16 m
+ e27-2: Cable on port 1:27 has impedance mismatch at16 m
+ e27-2: Cable on port 1:36 has impedance mismatch at16 m
+ e27-2: Cable on port 1:40 has impedance mismatch at22 m
+ e63-4: Cable on port 1:26 has impedance mismatch at16 m
+ e63-4: Cable on port 1:27 has impedance mismatch at18 m
+ e63-4: Cable on port 1:34 has impedance mismatch at14 m
+ e63-4: Cable on port 1:37 has impedance mismatch at20 m
+ e37-2: Cable on port 1:18 has impedance mismatch at7 m
+ e37-2: Cable on port 1:32 has impedance mismatch at6 m
+ e15-2: Cable on port 1:11 has impedance mismatch at17 m
+ e15-2: Cable on port 1:22 has short circuit at 8 m
+ e15-2: Cable on port 1:30 has impedance mismatch at15 m
+ e15-2: Cable on port 1:41 has impedance mismatch at21 m
+ e43-1: Cable on port 1:41 has short circuit at 12 m
+ e81-1: Cable on port 1:1 has impedance mismatch at22 m
+ e81-1: Cable on port 1:4 has impedance mismatch at27 m
+ e13-3: Cable on port 1:11 has short circuit at 8 m
+ e13-3: Cable on port 1:15 has short circuit at 18 m
+ e13-3: Cable on port 1:16 has impedance mismatch at38 m
+ e15-3: Cable on port 1:11 has short circuit at 13 m
+ e15-3: Cable on port 1:22 has impedance mismatch at17 m
+ e15-3: Cable on port 1:43 has impedance mismatch at16 m
+ e41-2: Cable on port 1:33 has impedance mismatch at17 m
+ e41-2: Cable on port 1:47 has impedance mismatch at36 m
+ e19-3: Cable on port 1:4 has only two pairs
+ e19-3: Cable on port 1:10 has short circuit at 28 m
+ e19-3: Cable on port 1:24 has impedance mismatch at18 m
+ e19-3: Cable on port 1:26 has short circuit at 8 m
+ e19-3: Cable on port 1:37 has impedance mismatch at17 m
+ e31-2: Cable on port 1:16 has impedance mismatch at28 m
+ e31-2: Cable on port 1:24 has short circuit at 8 m
+ e31-2: Cable on port 1:41 has impedance mismatch at18 m
+ e31-2: Cable on port 1:43 has only two pairs
+ e59-4: Cable on port 1:3 has short circuit at 3 m
+ e59-4: Cable on port 1:6 has only two pairs
+ e9-4: Cable on port 1:4 has short circuit at 2 m
+ e9-4: Cable on port 1:27 has only two pairs
+ e9-4: Cable on port 1:41 has impedance mismatch at26 m
+ e67-1: Cable on port 1:12 has impedance mismatch at6 m
+ e67-1: Cable on port 1:44 has impedance mismatch at18 m
+ e25-4: Cable on port 1:5 has impedance mismatch at21 m
+ e25-4: Cable on port 1:6 has short circuit at 8 m
+ e25-4: Cable on port 1:12 has impedance mismatch at17 m
+ e25-4: Cable on port 1:20 has short circuit at 13 m
+ e25-4: Cable on port 1:23 has short circuit at 2 m
+ e25-4: Cable on port 1:25 has impedance mismatch at18 m
+ e25-4: Cable on port 1:33 has impedance mismatch at18 m
+ e25-4: Cable on port 1:37 has short circuit at 23 m
+ e25-4: Cable on port 1:39 has only two pairs
+ e57-4: Cable on port 1:20 has impedance mismatch at17 m
+ e57-4: Cable on port 1:31 has short circuit at 12 m
+ e57-4: Cable on port 1:39 has short circuit at 8 m
+ e47-4: Cable on port 1:24 has impedance mismatch at21 m
+ e29-1: Cable on port 1:21 has impedance mismatch at38 m
+ e29-1: Cable on port 1:40 has impedance mismatch at32 m
+ e39-2: Cable on port 1:8 has impedance mismatch at32 m
+ e39-2: Cable on port 1:25 has short circuit at 24 m
+ e39-2: Cable on port 1:31 has impedance mismatch at38 m
+ e61-1: Cable on port 1:14 has short circuit at 8 m
+ e61-1: Cable on port 1:17 has impedance mismatch at19 m
+ e61-1: Cable on port 1:28 has impedance mismatch at16 m
+ e61-1: Cable on port 1:35 has impedance mismatch at13 m
+ e61-1: Cable on port 1:42 has impedance mismatch at17 m
+ e61-1: Cable on port 1:43 has impedance mismatch at18 m
+ e51-2: Cable on port 1:35 has impedance mismatch at19 m
+ e51-2: Cable on port 1:39 has short circuit at 8 m
+ e11-2: Cable on port 1:2 has short circuit at 3 m
+ e11-2: Cable on port 1:6 has impedance mismatch at21 m
+ e11-2: Cable on port 1:7 has impedance mismatch at17 m
+ e11-2: Cable on port 1:8 has impedance mismatch at17 m
+ e11-2: Cable on port 1:28 has impedance mismatch at17 m
+ e75-2: Cable on port 1:23 has short circuit at 9 m
+ e75-2: Cable on port 1:25 has impedance mismatch at22 m
+ e75-2: Cable on port 1:31 has impedance mismatch at22 m
+ e75-2: Cable on port 1:36 has impedance mismatch at17 m
+ e75-2: Cable on port 1:39 has impedance mismatch at27 m
+ e17-2: Cable on port 1:3 has impedance mismatch at16 m
+ e17-2: Cable on port 1:32 has impedance mismatch at18 m
+ e17-2: Cable on port 1:35 has impedance mismatch at16 m
+ e17-2: Cable on port 1:46 has impedance mismatch at35 m
+ e35-2: Cable on port 1:13 has short circuit at 8 m
+ e47-1: Cable on port 1:3 has short circuit at 0 m
+ e63-1: Cable on port 1:1 has impedance mismatch at22 m
+ e63-1: Cable on port 1:2 has impedance mismatch at38 m
+ e63-1: Cable on port 1:3 has impedance mismatch at27 m
+ e63-1: Cable on port 1:13 has only two pairs
+ e63-1: Cable on port 1:23 has short circuit at 3 m
+ e1-4: Cable on port 1:21 has only two pairs
+ e1-4: Cable on port 1:42 has impedance mismatch at27 m
+ e77-3: Cable on port 1:16 has short circuit at 8 m
+ e77-3: Cable on port 1:40 has short circuit at 23 m
+ e67-3: Cable on port 1:2 has short circuit at 8 m
+ e67-3: Cable on port 1:16 has impedance mismatch at16 m
+ e67-3: Cable on port 1:35 has impedance mismatch at17 m
+ e33-1: Cable on port 1:24 has short circuit at 0 m
+ e33-1: Cable on port 1:40 has impedance mismatch at17 m
+ e65-3: Cable on port 1:28 has impedance mismatch at14 m
+ e65-3: Cable on port 1:36 has impedance mismatch at27 m
+ e65-3: Cable on port 1:42 has impedance mismatch at17 m
+ e65-3: Cable on port 1:45 has impedance mismatch at37 m
+ e17-3: Cable on port 1:24 has only two pairs
+ e17-3: Cable on port 1:43 has short circuit at 12 m
+ e51-3: Cable on port 1:39 has impedance mismatch at16 m
+ e23-3: Cable on port 1:1 has impedance mismatch at17 m
+ e23-3: Cable on port 1:28 has impedance mismatch at22 m
+ e39-1: Cable on port 1:3 has impedance mismatch at18 m
+ e39-1: Cable on port 1:15 has short circuit at 9 m
+ e39-1: Cable on port 1:16 has short circuit at 10 m
+ e39-1: Cable on port 1:24 has impedance mismatch at17 m
+ e43-3: Cable on port 1:29 has short circuit at 8 m
+ e43-3: Cable on port 1:38 has short circuit at 0 m
+ e43-3: Cable on port 1:45 has impedance mismatch at35 m
+ e43-4: Cable on port 1:7 has short circuit at 8 m
+ e43-4: Cable on port 1:37 has impedance mismatch at18 m
+ e21-4: Cable on port 1:22 has impedance mismatch at14 m
+ e21-4: Cable on port 1:24 has impedance mismatch at17 m
+ e21-4: Cable on port 1:29 has impedance mismatch at23 m
+ e21-4: Cable on port 1:32 has impedance mismatch at17 m
+ e53-4: Cable on port 1:15 has impedance mismatch at32 m
+ e53-4: Cable on port 1:29 has short circuit at 4 m
+ e53-4: Cable on port 1:30 has impedance mismatch at14 m
+ e45-2: Cable on port 1:6 has only two pairs
+ e45-2: Cable on port 1:17 has short circuit at 4 m
+ e45-2: Cable on port 1:19 has impedance mismatch at13 m
+ e45-2: Cable on port 1:23 has impedance mismatch at13 m
+ e45-2: Cable on port 1:46 has impedance mismatch at20 m
+ e45-1: Cable on port 1:9 has impedance mismatch at28 m
+ e45-1: Cable on port 1:28 has impedance mismatch at20 m
+ e45-1: Cable on port 1:35 has impedance mismatch at23 m
+ e45-1: Cable on port 1:41 has impedance mismatch at23 m
+ e13-1: Cable on port 1:3 has impedance mismatch at18 m
+ e13-1: Cable on port 1:27 has short circuit at 8 m
+ e13-1: Cable on port 1:28 has short circuit at 17 m
+ e13-1: Cable on port 1:31 has impedance mismatch at22 m
+ e25-1: Cable on port 1:20 has short circuit at 8 m
+ e25-1: Cable on port 1:27 has impedance mismatch at27 m
+ e25-1: Cable on port 1:35 has impedance mismatch at17 m
+ e25-1: Cable on port 1:47 has impedance mismatch at35 m
+ e25-2: Cable on port 1:18 has short circuit at 8 m
+ e25-2: Cable on port 1:31 has short circuit at 8 m
+ e57-3: Cable on port 1:34 has short circuit at 8 m
+ e57-3: Cable on port 1:42 has impedance mismatch at26 m
+ e75-3: Cable on port 1:14 has short circuit at 8 m
+ e75-3: Cable on port 1:16 has impedance mismatch at18 m
+ e75-3: Cable on port 1:37 has impedance mismatch at31 m
+ e75-3: Cable on port 1:41 has impedance mismatch at17 m
+ e75-3: Cable on port 1:45 has impedance mismatch at35 m
+ e63-2: Cable on port 1:15 has impedance mismatch at13 m
+ e63-2: Cable on port 1:43 has impedance mismatch at17 m
+ e63-2: Cable on port 1:45 has impedance mismatch at35 m
+ e55-2: Cable on port 1:10 has only two pairs
+ e55-2: Cable on port 1:14 has only two pairs
+ e55-2: Cable on port 1:28 has impedance mismatch at28 m
+ e55-2: Cable on port 1:45 has impedance mismatch at34 m
+ e15-4: Cable on port 1:2 has short circuit at 4 m
+ e15-4: Cable on port 1:25 has short circuit at 0 m
+ e15-4: Cable on port 1:26 has impedance mismatch at16 m
+ e15-4: Cable on port 1:33 has impedance mismatch at16 m
+ e15-4: Cable on port 1:39 has impedance mismatch at18 m
+ e23-1: Cable on port 1:13 has impedance mismatch at17 m
+ e23-1: Cable on port 1:26 has short circuit at 3 m
+ e23-1: Cable on port 1:30 has impedance mismatch at16 m
+ e23-2: Cable on port 1:6 has impedance mismatch at16 m
+ e23-2: Cable on port 1:13 has impedance mismatch at38 m
+ e23-4: Cable on port 1:33 has impedance mismatch at17 m
+ e23-4: Cable on port 1:34 has impedance mismatch at27 m
+ e23-4: Cable on port 1:36 has short circuit at 8 m
+ e23-4: Cable on port 1:43 has impedance mismatch at17 m
+ e23-4: Cable on port 1:47 has impedance mismatch at35 m
+ e79-1: Cable on port 1:13 has impedance mismatch at15 m
+ e79-1: Cable on port 1:25 has only two pairs
+ e79-1: Cable on port 1:26 has impedance mismatch at27 m
+ e79-1: Cable on port 1:39 has short circuit at 13 m
+ e79-1: Cable on port 1:41 has impedance mismatch at23 m
+ e79-1: Cable on port 1:42 has impedance mismatch at13 m
+ e9-3: Cable on port 1:31 has impedance mismatch at31 m
+ e3-3: Cable on port 1:45 has impedance mismatch at14 m
+ e65-2: Cable on port 1:12 has short circuit at 3 m
+ e65-2: Cable on port 1:17 has impedance mismatch at22 m
+ e65-2: Cable on port 1:34 has impedance mismatch at18 m
+ e65-2: Cable on port 1:36 has impedance mismatch at27 m
+ e47-2: Cable on port 1:1 has impedance mismatch at16 m
+ e47-2: Cable on port 1:7 has short circuit at 3 m
+ e47-2: Cable on port 1:18 has impedance mismatch at27 m
+ e47-2: Cable on port 1:22 has impedance mismatch at20 m
+ e47-2: Cable on port 1:29 has impedance mismatch at27 m
+ e47-2: Cable on port 1:31 has impedance mismatch at16 m
+ e47-2: Cable on port 1:32 has impedance mismatch at27 m
+ e47-2: Cable on port 1:38 has impedance mismatch at26 m
+ e47-2: Cable on port 1:46 has impedance mismatch at27 m
+ e51-4: Cable on port 1:22 has short circuit at 8 m
+ e51-4: Cable on port 1:24 has impedance mismatch at17 m
+ e51-4: Cable on port 1:26 has only two pairs
+ e51-4: Cable on port 1:41 has impedance mismatch at24 m
+ e19-1: Cable on port 1:2 has impedance mismatch at27 m
+ e17-1: Cable on port 1:28 has only two pairs
+ e17-1: Cable on port 1:40 has only two pairs
+ e69-3: Cable on port 1:1 has impedance mismatch at7 m
+ e69-3: Cable on port 1:3 has impedance mismatch at42 m
+ e69-3: Cable on port 1:8 has only two pairs
+ e69-3: Cable on port 1:19 has short circuit at 4 m
+ e69-3: Cable on port 1:25 has impedance mismatch at26 m
+ e69-3: Cable on port 1:29 has impedance mismatch at13 m
+ e69-3: Cable on port 1:35 has impedance mismatch at31 m
+ e69-3: Cable on port 1:40 has impedance mismatch at18 m
+ e69-3: Cable on port 1:41 has short circuit at 17 m
+ e69-3: Cable on port 1:46 has impedance mismatch at27 m
+ e21-1: Cable on port 1:9 has impedance mismatch at19 m
+ e21-2: Cable on port 1:23 has impedance mismatch at13 m
+ e21-2: Cable on port 1:25 has impedance mismatch at13 m
+ e21-2: Cable on port 1:29 has impedance mismatch at27 m
+ e21-2: Cable on port 1:37 has impedance mismatch at34 m
+ e21-2: Cable on port 1:39 has impedance mismatch at15 m
+ e69-2: Cable on port 1:1 has impedance mismatch at23 m
+ e69-2: Cable on port 1:15 has impedance mismatch at18 m
+ e49-2: Cable on port 1:12 has impedance mismatch at22 m
+ e49-2: Cable on port 1:26 has impedance mismatch at18 m
+ e49-2: Cable on port 1:30 has impedance mismatch at16 m
+ e49-2: Cable on port 1:34 has impedance mismatch at32 m
+ e33-2: Cable on port 1:3 has impedance mismatch at18 m
+ e33-2: Cable on port 1:12 has impedance mismatch at23 m
+ e33-2: Cable on port 1:15 has impedance mismatch at27 m
+ e33-2: Cable on port 1:25 has impedance mismatch at18 m
+ e33-2: Cable on port 1:28 has short circuit at 3 m
+ e71-4: Cable on port 1:36 has short circuit at 8 m
+ e31-1: Cable on port 1:37 has short circuit at 9 m
+ e53-1: Cable on port 1:12 has impedance mismatch at13 m
+ e53-1: Cable on port 1:45 has impedance mismatch at35 m
+ e71-3: Cable on port 1:15 has impedance mismatch at21 m
+ e71-3: Cable on port 1:16 has only two pairs
+ e71-3: Cable on port 1:19 has short circuit at 8 m
+ e71-3: Cable on port 1:37 has short circuit at 13 m
+ e53-3: Cable on port 1:1 has impedance mismatch at17 m
+ e53-3: Cable on port 1:7 has short circuit at 3 m
+ e53-3: Cable on port 1:15 has impedance mismatch at16 m
+ e53-3: Cable on port 1:20 has impedance mismatch at27 m
+ e53-3: Cable on port 1:40 has impedance mismatch at17 m
+ e53-3: Cable on port 1:44 has impedance mismatch at17 m
+ e53-3: Cable on port 1:46 has impedance mismatch at16 m
+ e57-2: Cable on port 1:40 has impedance mismatch at21 m
+ e61-4: Cable on port 1:12 has short circuit at 12 m
+ e61-4: Cable on port 1:28 has short circuit at 8 m
+ e61-4: Cable on port 1:30 has impedance mismatch at14 m
+ e79-2: Cable on port 1:19 has impedance mismatch at21 m
+ e79-2: Cable on port 1:23 has short circuit at 0 m
+ e79-2: Cable on port 1:30 has impedance mismatch at23 m
+ e79-2: Cable on port 1:34 has impedance mismatch at23 m
+ e79-2: Cable on port 1:44 has impedance mismatch at23 m
+ e51-1: Cable on port 1:6 has short circuit at 13 m
+ e51-1: Cable on port 1:40 has impedance mismatch at26 m
+ e51-1: Cable on port 1:43 has impedance mismatch at17 m
+ e55-4: Cable on port 1:9 has impedance mismatch at13 m
+ e29-2: Cable on port 1:23 has impedance mismatch at22 m
+ e29-2: Cable on port 1:37 has impedance mismatch at15 m
+ e29-2: Cable on port 1:46 has impedance mismatch at36 m
+ e57-1: Cable on port 1:5 has impedance mismatch at3 m
+ e57-1: Cable on port 1:18 has impedance mismatch at20 m
+ e57-1: Cable on port 1:26 has impedance mismatch at23 m
+ e57-1: Cable on port 1:28 has short circuit at 17 m
+ e57-1: Cable on port 1:40 has impedance mismatch at17 m
+ e57-1: Cable on port 1:41 has impedance mismatch at17 m
+ e57-1: Cable on port 1:44 has impedance mismatch at15 m
+ e75-4: Cable on port 1:11 has impedance mismatch at13 m
+ e75-4: Cable on port 1:29 has impedance mismatch at22 m
+ e45-3: Cable on port 1:1 has short circuit at 0 m
+ e45-3: Cable on port 1:3 has short circuit at 8 m
+ e45-3: Cable on port 1:17 has impedance mismatch at17 m
+ e45-3: Cable on port 1:28 has short circuit at 23 m
+ e45-3: Cable on port 1:45 has impedance mismatch at36 m
+ e45-3: Cable on port 1:46 has impedance mismatch at35 m
+ e45-3: Cable on port 1:47 has impedance mismatch at36 m
+ e41-1: Cable on port 1:15 has impedance mismatch at24 m
+ e41-1: Cable on port 1:17 has short circuit at 0 m
+ e41-1: Cable on port 1:25 has impedance mismatch at13 m
+ e41-1: Cable on port 1:45 has impedance mismatch at18 m
+ e59-2: Cable on port 1:32 has only two pairs
+ e59-2: Cable on port 1:34 has impedance mismatch at13 m
+ e59-2: Cable on port 1:37 has impedance mismatch at22 m
+ e59-2: Cable on port 1:42 has short circuit at 2 m
+ e5-4: Cable on port 1:34 has impedance mismatch at13 m
+ e5-4: Cable on port 1:36 has impedance mismatch at27 m
+ e5-4: Cable on port 1:42 has impedance mismatch at16 m
+ e55-1: Cable on port 1:3 has impedance mismatch at21 m
+ e55-1: Cable on port 1:7 has short circuit at 10 m
+ e55-1: Cable on port 1:12 has impedance mismatch at14 m
+ e55-1: Cable on port 1:24 has only two pairs
+ e55-1: Cable on port 1:42 has only two pairs
+ e77-2: Cable on port 1:25 has impedance mismatch at18 m
+ e75-1: Cable on port 1:4 has impedance mismatch at26 m
+ e75-1: Cable on port 1:27 has short circuit at 8 m
+ e75-1: Cable on port 1:30 has impedance mismatch at13 m
+ e75-1: Cable on port 1:33 has short circuit at 16 m
+ e13-4: Cable on port 1:17 has impedance mismatch at15 m
+ e65-1: Cable on port 1:14 has impedance mismatch at18 m
+ e65-4: Cable on port 1:26 has short circuit at 22 m
+ e65-4: Cable on port 1:30 has impedance mismatch at18 m
+ e65-4: Cable on port 1:38 has short circuit at 12 m
+ e19-4: Cable on port 1:1 has only two pairs
+ e37-1: Cable on port 1:2 has impedance mismatch at17 m
+ e69-4: Cable on port 1:6 has short circuit at 3 m
+ e69-4: Cable on port 1:28 has short circuit at 12 m
+ e69-4: Cable on port 1:42 has impedance mismatch at34 m
+ e11-4: Cable on port 1:17 has short circuit at 8 m
+ e71-1: Cable on port 1:18 has impedance mismatch at26 m
+ e71-1: Cable on port 1:21 has short circuit at 18 m
+ e71-1: Cable on port 1:22 has short circuit at 22 m
+ e71-1: Cable on port 1:30 has impedance mismatch at33 m
+ e71-1: Cable on port 1:34 has only two pairs
+ e13-2: Cable on port 1:1 has short circuit at 13 m
+ e13-2: Cable on port 1:35 has only two pairs
+ e13-2: Cable on port 1:38 has impedance mismatch at26 m
+ e11-1: Cable on port 1:44 has only two pairs
+ e49-4: Cable on port 1:13 has impedance mismatch at13 m
+ e49-4: Cable on port 1:28 has impedance mismatch at16 m
+ e73-4: Cable on port 1:5 has impedance mismatch at18 m
+ e73-4: Cable on port 1:23 has impedance mismatch at15 m
+ e73-4: Cable on port 1:33 has short circuit at 8 m
+ e73-4: Cable on port 1:37 has impedance mismatch at15 m
+ e73-4: Cable on port 1:46 has impedance mismatch at31 m
+ e21-3: Cable on port 1:16 has short circuit at 8 m
+ e21-3: Cable on port 1:25 has short circuit at 13 m
+ e21-3: Cable on port 1:34 has impedance mismatch at16 m
+ e21-3: Cable on port 1:39 has impedance mismatch at16 m
+ e21-3: Cable on port 1:46 has impedance mismatch at14 m
+ e73-1: Cable on port 1:1 has impedance mismatch at22 m
+ e73-1: Cable on port 1:3 has impedance mismatch at17 m
+ e73-1: Cable on port 1:16 has short circuit at 0 m
+ e73-1: Cable on port 1:31 has short circuit at 8 m
+ e73-1: Cable on port 1:32 has impedance mismatch at20 m
+ e73-1: Cable on port 1:34 has impedance mismatch at16 m
+ e61-2: Cable on port 1:36 has impedance mismatch at25 m
+ e61-2: Cable on port 1:38 has only two pairs
+ e59-1: Cable on port 1:26 has impedance mismatch at14 m
+ e59-1: Cable on port 1:30 has short circuit at 18 m
+ e59-1: Cable on port 1:35 has impedance mismatch at22 m
+ e27-1: Cable on port 1:11 has short circuit at 0 m
+ e27-1: Cable on port 1:12 has impedance mismatch at27 m
+ e27-1: Cable on port 1:24 has impedance mismatch at13 m
+ e27-1: Cable on port 1:28 has impedance mismatch at17 m
+ e27-1: Cable on port 1:43 has impedance mismatch at23 m
+ e27-1: Cable on port 1:46 has impedance mismatch at46 m
+ e77-1: Cable on port 1:4 has impedance mismatch at17 m
+ e77-1: Cable on port 1:5 has short circuit at 9 m
+ e77-1: Cable on port 1:7 has short circuit at 9 m
+ e77-1: Cable on port 1:19 has impedance mismatch at17 m
+ e77-1: Cable on port 1:23 has short circuit at 0 m
+ e77-1: Cable on port 1:41 has impedance mismatch at17 m
+ e11-3: Cable on port 1:3 has only two pairs
+ e11-3: Cable on port 1:7 has only two pairs
+ e11-3: Cable on port 1:34 has impedance mismatch at17 m
+ e11-3: Cable on port 1:45 has impedance mismatch at35 m
+ e71-2: Cable on port 1:18 has impedance mismatch at25 m
+ e71-2: Cable on port 1:26 has impedance mismatch at18 m
+ e71-2: Cable on port 1:30 has impedance mismatch at18 m
+ e71-2: Cable on port 1:37 has short circuit at 8 m
+ e71-2: Cable on port 1:38 has only two pairs
+ e71-2: Cable on port 1:42 has only two pairs
+ e71-2: Cable on port 1:45 has impedance mismatch at27 m
+ e53-2: Cable on port 1:11 has impedance mismatch at18 m
+ e53-2: Cable on port 1:13 has impedance mismatch at21 m
+ e53-2: Cable on port 1:33 has impedance mismatch at17 m
+ e53-2: Cable on port 1:34 has short circuit at 22 m
+ e53-2: Cable on port 1:37 has impedance mismatch at17 m
+ e53-2: Cable on port 1:42 has only two pairs
+ e53-2: Cable on port 1:43 has impedance mismatch at16 m
+ e43-2: Cable on port 1:1 has impedance mismatch at23 m
+ e43-2: Cable on port 1:34 has impedance mismatch at18 m
+ e43-2: Cable on port 1:40 has impedance mismatch at21 m
+ e81-2: Cable on port 1:33 has impedance mismatch at27 m
+ e81-2: Cable on port 1:43 has impedance mismatch at19 m
+ e81-2: Cable on port 1:45 has impedance mismatch at17 m
+ e7-3: Cable on port 1:25 has only two pairs
+ e7-3: Cable on port 1:44 has impedance mismatch at23 m
+ e19-2: Cable on port 1:7 has impedance mismatch at26 m
+ e19-2: Cable on port 1:11 has impedance mismatch at23 m
+ e19-2: Cable on port 1:14 has short circuit at 0 m
+ e19-2: Cable on port 1:15 has short circuit at 3 m
+ e49-1: Cable on port 1:2 has short circuit at 8 m
+ e49-1: Cable on port 1:39 has short circuit at 9 m
+ e49-1: Cable on port 1:43 has impedance mismatch at11 m
+ e49-1: Cable on port 1:44 has impedance mismatch at31 m
+ e25-3: Cable on port 1:22 has impedance mismatch at15 m
+ e25-3: Cable on port 1:32 has impedance mismatch at17 m
+ e25-3: Cable on port 1:36 has short circuit at 8 m
+ e15-1: Cable on port 1:37 has short circuit at 26 m
+ e63-3: Cable on port 1:18 has short circuit at 40 m
+ e59-3: Cable on port 1:15 has impedance mismatch at23 m
+ e59-3: Cable on port 1:17 has impedance mismatch at27 m
+ e55-3: Cable on port 1:24 has impedance mismatch at17 m
+ e55-3: Cable on port 1:31 has impedance mismatch at17 m
+ e55-3: Cable on port 1:35 has impedance mismatch at16 m
+ e55-3: Cable on port 1:44 has impedance mismatch at17 m
+ e61-3: Cable on port 1:20 has short circuit at 12 m
+ e61-3: Cable on port 1:40 has impedance mismatch at27 m
+ e73-2: Cable on port 1:5 has impedance mismatch at13 m
+ e73-2: Cable on port 1:40 has impedance mismatch at17 m
+ e47-3: Cable on port 1:9 has impedance mismatch at13 m
+ e47-3: Cable on port 1:10 has impedance mismatch at7 m
+ e47-3: Cable on port 1:20 has impedance mismatch at16 m
+ e47-3: Cable on port 1:26 has impedance mismatch at16 m
+ e47-3: Cable on port 1:32 has impedance mismatch at18 m
+ e17-4: Cable on port 1:8 has short circuit at 3 m
+ e17-4: Cable on port 1:16 has impedance mismatch at22 m
+ e17-4: Cable on port 1:24 has short circuit at 8 m
+ e17-4: Cable on port 1:25 has impedance mismatch at18 m
+ e17-4: Cable on port 1:41 has impedance mismatch at18 m
+ e73-3: Cable on port 1:17 has impedance mismatch at23 m
+ e49-3: Cable on port 1:22 has impedance mismatch at16 m
+ e49-3: Cable on port 1:30 has impedance mismatch at27 m
+ e49-3: Cable on port 1:34 has short circuit at 4 m
+ e49-3: Cable on port 1:35 has short circuit at 8 m
+ e49-3: Cable on port 1:45 has impedance mismatch at26 m
+ e1-3: Cable on port 1:39 has short circuit at 4 m
+ e1-3: Cable on port 1:40 has only two pairs
+ e1-3: Cable on port 1:43 has only two pairs
+ e1-3: Cable on port 1:45 has impedance mismatch at27 m
+ e3-4: Cable on port 1:32 has impedance mismatch at28 m

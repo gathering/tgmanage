@@ -1,0 +1,88 @@
+diff -ur isc-dhcp-4.1.1-P1/includes/dhcpd.h isc-dhcp-4.1.1-P1.patched//includes/dhcpd.h
+--- isc-dhcp-4.1.1-P1/includes/dhcpd.h	2012-04-04 16:49:44.000000000 +0200
++++ isc-dhcp-4.1.1-P1.patched//includes/dhcpd.h	2012-04-04 14:56:43.000000000 +0200
+@@ -626,6 +626,7 @@
+ #define SV_LIMIT_PREFS_PER_IA		57
+ #define SV_DELAYED_ACK			58
+ #define SV_MAX_ACK_DELAY		59
++#define SV_NEVER_BROADCAST		60
+ 
+ #if !defined (DEFAULT_PING_TIMEOUT)
+ # define DEFAULT_PING_TIMEOUT 1
+diff -ur isc-dhcp-4.1.1-P1/server/bootp.c isc-dhcp-4.1.1-P1.patched//server/bootp.c
+--- isc-dhcp-4.1.1-P1/server/bootp.c	2009-07-25 00:04:52.000000000 +0200
++++ isc-dhcp-4.1.1-P1.patched//server/bootp.c	2012-04-04 14:55:21.000000000 +0200
+@@ -283,6 +283,15 @@
+ 					   &lease -> scope, oc, MDL))
+ 		raw.flags |= htons (BOOTP_BROADCAST);
+ 
++	/* The inverse. */
++	if ((oc = lookup_option (&server_universe,
++				options, SV_NEVER_BROADCAST)) &&
++	    evaluate_boolean_option_cache (&ignorep, packet, lease,
++					   (struct client_state *)0,
++					   packet -> options, options,
++					   &lease -> scope, oc, MDL))
++		raw.flags &= htons (~BOOTP_BROADCAST);
++
+ 	/* Figure out the address of the next server. */
+ 	memset (&d1, 0, sizeof d1);
+ 	oc = lookup_option (&server_universe, options, SV_NEXT_SERVER);
+diff -ur isc-dhcp-4.1.1-P1/server/dhcp.c isc-dhcp-4.1.1-P1.patched//server/dhcp.c
+--- isc-dhcp-4.1.1-P1/server/dhcp.c	2012-04-04 16:48:46.000000000 +0200
++++ isc-dhcp-4.1.1-P1.patched//server/dhcp.c	2012-04-04 14:55:45.000000000 +0200
+@@ -2482,6 +2482,15 @@
+ 					   &lease -> scope, oc, MDL))
+ 		state -> bootp_flags |= htons (BOOTP_BROADCAST);
+ 
++	/* The inverse. */
++	if ((oc = lookup_option (&server_universe, state -> options,
++				SV_NEVER_BROADCAST)) &&
++	    evaluate_boolean_option_cache (&ignorep, packet, lease,
++					   (struct client_state *)0,
++					   packet -> options, state -> options,
++					   &lease -> scope, oc, MDL))
++		state -> bootp_flags &= htons (~BOOTP_BROADCAST);
++
+ 	/* Get the Maximum Message Size option from the packet, if one
+ 	   was sent. */
+ 	oc = lookup_option (&dhcp_universe, packet -> options,
+diff -ur isc-dhcp-4.1.1-P1/server/dhcpd.conf.5 isc-dhcp-4.1.1-P1.patched//server/dhcpd.conf.5
+--- isc-dhcp-4.1.1-P1/server/dhcpd.conf.5	2012-04-04 16:48:46.000000000 +0200
++++ isc-dhcp-4.1.1-P1.patched//server/dhcpd.conf.5	2012-04-04 16:45:44.000000000 +0200
+@@ -1914,6 +1914,24 @@
+ .RE
+ .PP
+ The
++.I never-broadcast
++statement
++.RS 0.25i
++.PP
++.B never-broadcast \fIflag\fR\fB;\fR
++.PP
++When using DHCP in routed networks, the router has to participate in rewriting
++and sending DHCP replies on to the user.    Unfortunately, some devices,
++in particular Cisco's Nexus series of switches, drop such DHCP reply packets
++with the broadcast bit in the flags field of the DHCP message header set.
++Thi means that some operating systems, in particular Microsoft Windows Vista,
++can have problems getting DHCP to work in such environments.   If you enable
++this flag, the DHCP server will never set the broadcast flags in the replies
++it sends, even if the client set the broadcast flag.   This flag overrides
++the never-broadcast flag if both are set.
++.RE
++.PP
++The
+ .I always-reply-rfc1048
+ statement
+ .RS 0.25i
+diff -ur isc-dhcp-4.1.1-P1/server/stables.c isc-dhcp-4.1.1-P1.patched//server/stables.c
+--- isc-dhcp-4.1.1-P1/server/stables.c	2012-04-04 16:49:44.000000000 +0200
++++ isc-dhcp-4.1.1-P1.patched//server/stables.c	2012-04-04 14:56:43.000000000 +0200
+@@ -203,6 +203,7 @@
+ 	{ "always-reply-rfc1048", "f",		&server_universe,  20, 1 },
+ 	{ "site-option-space", "X",		&server_universe,  21, 1 },
+ 	{ "always-broadcast", "f",		&server_universe,  22, 1 },
++	{ "never-broadcast", "f",		&server_universe,  60, 1 },
+ 	{ "ddns-domainname", "t",		&server_universe,  23, 1 },
+ 	{ "ddns-hostname", "t",			&server_universe,  24, 1 },
+ 	{ "ddns-rev-domainname", "t",		&server_universe,  25, 1 },

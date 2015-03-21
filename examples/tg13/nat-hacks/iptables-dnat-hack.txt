@@ -1,0 +1,140 @@
+Since several services thought our IP's didn't belong to Norway, they sent us 
+to CDN's in Japan, Africa, and some other weird countries. NRK nett-tv also 
+didn't think we was in Norway, hence it did not let you stream things. Action 
+had to be taken.
+
+We had a /24 from our ISP that we knew would be recognized as Norwegian. We 
+therefore decided to NAT everything related to those services behind that /24. 
+We had to figure out all the destination prefixes used for the different 
+services, and only NAT sessions going to those networks. Tests showed that even 
+if Origin was being NATed behind "Norwegian IPs", it would still connect to 
+lol-CDN. We then decided to DNAT all connections to these specific IPs. We 
+found a suitable Origin-CDN hosted at Telenor/Canal Digital, that would accept 
+connections.
+
+In the process of setting this up, we found out that Cisco ASR1k doesn't (at 
+the time, at least) support more than _one_ DNAT-entry (with the same 
+destination, at least). iptables to the rescue.
+
+Two 10gig-interfaces was set up. One as the 'inside', and the other as the 
+'outside'.
+
+The solution worked flawlessly, and peaked at about ~2Gbps of traffic.
+
+## IPTABLES START
+*filter
+:INPUT DROP [0:0]
+:FORWARD ACCEPT [497:117797]
+:OUTPUT ACCEPT [0:0]
+-A INPUT -i lo -j ACCEPT
+-A INPUT -i gre5 -j ACCEPT
+-A INPUT -i eth2 -j ACCEPT
+-A INPUT -p icmp -j ACCEPT
+-A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+-A INPUT -j DROP
+-A FORWARD -i eth3 -o gre5 -m state --state RELATED,ESTABLISHED -j ACCEPT
+-A FORWARD -i gre5 -o eth3 -j ACCEPT
+-A OUTPUT -o lo -j ACCEPT
+-A OUTPUT -j ACCEPT
+COMMIT
+# NAT
+*nat
+:PREROUTING ACCEPT [1073:112412]
+:POSTROUTING ACCEPT [65:16154]
+:OUTPUT ACCEPT [2:129]
+:nataccept - [0:0]
+-A PREROUTING -d 23.15.8.0/24 -j DNAT --to-destination 148.123.13.49
+-A PREROUTING -d 23.32.241.0/24 -j DNAT --to-destination 148.123.13.49
+-A PREROUTING -d 120.29.145.0/24 -j DNAT --to-destination 148.123.13.49
+-A PREROUTING -d 124.40.32.0/24 -j DNAT --to-destination 148.123.13.49
+-A PREROUTING -d 125.56.200.0/24 -j DNAT --to-destination 148.123.13.49
+-A POSTROUTING -s 151.216.0.0/17 -o eth3 -j nataccept
+-A nataccept -j LOG --log-prefix "iptables nat accept "
+-A nataccept -j SNAT --to-source 31.169.55.2-31.169.55.254
+COMMIT
+## IPTABLES END
+
+
+## Cisco ACL
+!
+ip access-list extended steamorigin
+ remark TEST
+   10 permit ip 151.216.0.0 0.0.127.255 158.37.91.0 0.0.0.255
+ remark ORIGIN
+  100 permit ip 151.216.0.0 0.0.127.255 23.15.8.0 0.0.0.255
+  110 permit ip 151.216.0.0 0.0.127.255 23.21.0.0 0.0.255.255
+  120 permit ip 151.216.0.0 0.0.127.255 23.23.0.0 0.0.255.255
+  130 permit ip 151.216.0.0 0.0.127.255 23.32.241.0 0.0.0.255
+  140 permit ip 151.216.0.0 0.0.127.255 23.46.0.0 0.0.255.255
+  300 permit ip 151.216.0.0 0.0.127.255 50.16.0.0 0.0.255.255
+  310 permit ip 151.216.0.0 0.0.127.255 50.17.0.0 0.0.255.255
+  320 permit ip 151.216.0.0 0.0.127.255 54.225.0.0 0.0.255.255
+  400 permit ip 151.216.0.0 0.0.127.255 81.21.146.0 0.0.0.255
+  500 permit ip 151.216.0.0 0.0.127.255 107.20.244.0 0.0.0.255
+  510 permit ip 151.216.0.0 0.0.127.255 120.29.145.0 0.0.0.255
+  520 permit ip 151.216.0.0 0.0.127.255 124.40.32.0 0.0.0.255
+  530 permit ip 151.216.0.0 0.0.127.255 125.56.200.0 0.0.0.255
+  540 permit ip 151.216.0.0 0.0.127.255 164.177.139.0 0.0.0.255
+  550 permit ip 151.216.0.0 0.0.127.255 184.73.0.0 0.0.255.255
+  560 permit ip 151.216.0.0 0.0.127.255 204.236.239.0 0.0.0.255
+ remark STEAM
+ 5100 permit ip 151.216.0.0 0.0.127.255 72.165.61.0 0.0.0.255
+ 5110 permit ip 151.216.0.0 0.0.127.255 81.171.115.0 0.0.0.255
+ 5120 permit ip 151.216.0.0 0.0.127.255 87.248.217.0 0.0.0.255
+ 5300 permit ip 151.216.0.0 0.0.127.255 103.28.54.0 0.0.0.255
+ 5310 permit ip 151.216.0.0 0.0.127.255 146.66.152.0 0.0.0.255
+ 5500 permit ip 151.216.0.0 0.0.127.255 205.185.220.0 0.0.0.255
+ 5510 permit ip 151.216.0.0 0.0.127.255 208.64.200.0 0.0.0.255
+ 5520 permit ip 151.216.0.0 0.0.127.255 209.197.0.0 0.0.255.255
+ 5530 permit ip 151.216.0.0 0.0.127.255 212.187.201.0 0.0.0.255
+ remark NRK-TV
+ 9000 permit ip 151.216.0.0 0.0.127.255 23.8.146.0 0.0.0.255
+ 9010 permit ip 151.216.0.0 0.0.127.255 46.137.77.0 0.0.0.255
+ 9020 permit ip 151.216.0.0 0.0.127.255 50.16.209.0 0.0.0.255
+ 9030 permit ip 151.216.0.0 0.0.127.255 50.16.231.0 0.0.0.255
+ 9040 permit ip 151.216.0.0 0.0.127.255 50.17.243.0 0.0.0.255
+ 9050 permit ip 151.216.0.0 0.0.127.255 54.225.239.0 0.0.0.255
+ 9060 permit ip 151.216.0.0 0.0.127.255 54.243.145.0 0.0.0.255
+ 9070 permit ip 151.216.0.0 0.0.127.255 54.243.68.0 0.0.0.255
+ 9080 permit ip 151.216.0.0 0.0.127.255 65.52.155.0 0.0.0.255
+ 9090 permit ip 151.216.0.0 0.0.127.255 77.88.106.0 0.0.0.255
+ 9100 permit ip 151.216.0.0 0.0.127.255 82.96.58.0 0.0.0.255
+ 9110 permit ip 151.216.0.0 0.0.127.255 94.245.71.0 0.0.0.255
+ 9120 permit ip 151.216.0.0 0.0.127.255 160.68.205.0 0.0.0.255
+ 9130 permit ip 151.216.0.0 0.0.127.255 174.129.219.0 0.0.0.255
+ 9140 permit ip 151.216.0.0 0.0.127.255 184.28.17.0 0.0.0.255
+ 9150 permit ip 151.216.0.0 0.0.127.255 184.73.220.0 0.0.0.255
+ 9160 permit ip 151.216.0.0 0.0.127.255 204.245.63.0 0.0.0.255
+ 9170 permit ip 151.216.0.0 0.0.127.255 204.236.234.0 0.0.0.255
+!
+
+## Cisco route-map
+!!!! telegw;
+!
+route-map nat-madness permit 10
+ match ip address steamorigin
+ set ip next-hop 151.216.0.57
+!
+!
+interface Port-channel2
+ ip policy route-map nat-madness
+!
+interface Port-channel3
+ ip policy route-map nat-madness
+!
+interface TenGigabitEthernet4/4
+ ip policy route-map nat-madness
+!
+
+!!!! nocgw
+!
+route-map nat-madness permit 10
+ match ip address steamorigin
+ set ip next-hop 151.216.125.6
+!
+!
+interface vlan 124
+ ip policy route-map nat-madness
+!
+!
+
