@@ -23,11 +23,15 @@ ssh -l root ${SECONDARY} "~/tgmanage/tools/install-dependencies.sh slave"
 if [ "${BASE}" == "/etc" ]; then
 	ssh -l root ${PRIMARY} "cp -pR /etc/bind /etc/bind.dist"
 	ssh -l root ${PRIMARY} "cp -pR /etc/dhcp /etc/dhcp.dist"
-	ssh -l root ${SECONDARY} "cp -pR /etc/bind /etc/bind.dist"
 
+	ssh -l root ${SECONDARY} "cp -pR /etc/bind /etc/bind.dist"
+	ssh -l root ${SECONDARY} "cp -pR /etc/dhcp /etc/dhcp.dist"
+	
 	set +e
 	ssh -l root ${PRIMARY} "rm /etc/bind/named.conf"
 	ssh -l root ${PRIMARY} "rm /etc/dhcp/dhcpd.conf"
+		
+	ssh -l root ${SECONDARY} "rm /etc/dhcp/dhcpd.conf"
 	ssh -l root ${SECONDARY} "rm /etc/bind/named.conf"
 	set -e
 fi
@@ -36,15 +40,20 @@ ssh -l root ${PRIMARY} "mkdir -p ${BASE}/bind/conf-master/"
 ssh -l root ${PRIMARY} "mkdir -p ${BASE}/bind/reverse/"
 ssh -l root ${PRIMARY} "mkdir -p ${BASE}/bind/dynamic/"
 ssh -l root ${PRIMARY} "mkdir -p ${BASE}/dhcp/conf.d/"
-ssh -l root ${PRIMARY} "~/tgmanage/tools/make-dhcp6-init.sh"
 
+ssh -l root ${PRIMARY}   "~/tgmanage/tools/make-dhcp6-init.sh"
 ssh -l root ${PRIMARY}   "~/tgmanage/tools/make-named.pl master ${BASE}"
 ssh -l root ${PRIMARY}   "~/tgmanage/tools/make-dhcpd.pl ${BASE}"
 ssh -l root ${PRIMARY}   "~/tgmanage/tools/make-first-zones.pl ${BASE}"
 ssh -l root ${PRIMARY}   "~/tgmanage/tools/make-reverse4-files.pl master ${BASE}"
 
+ssh -l root ${SECONDARY} "mkdir -p ${BASE}/dhcp/conf.d/"
 ssh -l root ${SECONDARY} "mkdir -p ${BASE}/bind/conf-slave/"
 ssh -l root ${SECONDARY} "mkdir -p ${BASE}/bind/slave/"
+
+ssh -l root ${SECONDARY} "~/tgmanage/tools/make-dhcp6-init.sh"
+ssh -l root ${SECONDARY} "insserv -r isc-dhcp-server"
+ssh -l root ${SECONDARY} "~/tgmanage/tools/make-dhcpd.pl ${BASE}"
 ssh -l root ${SECONDARY} "~/tgmanage/tools/make-named.pl slave ${BASE}"
 ssh -l root ${SECONDARY} "~/tgmanage/tools/make-reverse4-files.pl slave ${BASE}"
 

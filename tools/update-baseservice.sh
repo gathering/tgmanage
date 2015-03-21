@@ -26,4 +26,4 @@ set -e
 
 cat netlist.txt | ssh -l root ${SECONDARY} "~/tgmanage/tools/make-missing-conf.pl slave ${BASE}"
 ssh -l root ${SECONDARY} "~/tgmanage/tools/make-bind-include.pl slave ${BASE}"
-
+ssh -l root ${SECONDARY} "~/tgmanage/tools/make-dhcpd-include.pl ${BASE}"
