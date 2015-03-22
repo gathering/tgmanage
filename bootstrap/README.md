@@ -37,8 +37,7 @@ Start by placing the 'tgmanage' directory as '/root/tgmanage' on the bootstrap
 box.  Change into the 'tgmanage' directory. Next, run
 'bootstrap/install-dependencies.sh boot'
 
-
-Edit 'include/config.local.pm' and update for this year's TG.  Use
+Copy 'include/config.pm.dist' to 'include/config.pm'. Edit for this year's TG. Use
 'bootstrap/create-shellconf.pl' to extract configuration from the perl module to
 create/update the 'include/tgmanage.cfg.sh' configuration script.
 
