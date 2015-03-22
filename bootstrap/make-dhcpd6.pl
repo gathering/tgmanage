@@ -21,7 +21,7 @@ my $dhcpd_wlc_conf = $dhcpd_base . "v6-wlc.conf";
 my $dhcpd_voip_conf = $dhcpd_base . "v6-voip.conf";
 
 my $sec_net = Net::IP->new($nms::config::sec_net_v6)->short();
-my ($sec_first, $sec_last) = ("5000", "9999");
+my ($sec_first, $sec_last) = ("8000", "9999");
 
 # Create PXE-boot configuration file for DHCP
 if ( not -f $dhcpd_conf )
@@ -133,7 +133,7 @@ option space AP;
 option AP.server-address code 241 = array of ip-address;
 set vendor-string = option vendor-class-identifier;
 
-class "cisco-aps" {
+class "access-points" {
        match if substring (option vendor-class-identifier, 0, 8) = "Access Point";
        vendor-option-space AP;
        option AP.server-address $nms::config::wlc1;
