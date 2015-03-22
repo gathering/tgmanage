@@ -5,8 +5,7 @@ DHCP_INIT="/etc/init.d/isc-dhcp-server"
 
 if [ -e "${DHCP_DEFAULT}" ]; 
 then
-	echo "${DHCP_DEFAULT} exists!"
-	exit 1
+	echo "${DHCP_DEFAULT} exists! Overwriting."
 fi
 
 set -e
@@ -29,8 +28,7 @@ set +e
 
 if [ -e "${DHCP_INIT}" ]; 
 then
-	echo "${DHCP_INIT} exists!"
-	exit 1
+	echo "${DHCP_INIT} exists! Overwriting."
 fi
 
 set -e
