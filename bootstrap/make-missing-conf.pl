@@ -2,6 +2,7 @@
 use strict;
 use Net::IP;
 use NetAddr::IP;
+use POSIX qw(strftime);
 
 BEGIN {
         require "include/config.pm";

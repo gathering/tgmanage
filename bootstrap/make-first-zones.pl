@@ -1,6 +1,7 @@
 #!/usr/bin/perl -I /root/tgmanage
 use strict;
 use Net::IP;
+use POSIX qw(strftime);
 
 BEGIN {
         require "include/config.pm";
