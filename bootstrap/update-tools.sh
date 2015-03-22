@@ -14,7 +14,6 @@ cd ~/tgmanage
 ssh -l root ${PRIMARY} "mkdir -p ~/tgmanage"
 ssh -l root ${SECONDARY} "mkdir -p ~/tgmanage"
 
-scp -r netlist.txt root@${PRIMARY}:tgmanage/
 scp -r bootstrap root@${PRIMARY}:tgmanage/
 scp -r bootstrap root@${SECONDARY}:tgmanage/
 scp -r include root@${PRIMARY}:tgmanage/
