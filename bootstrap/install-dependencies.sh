@@ -25,7 +25,8 @@ apt-get -y install \
 	perl-modules \
 	libdbi-perl \
 	libdbd-pg-perl \
-	libnet-telnet-perl 
+	libnet-telnet-perl \
+	libnetaddr-ip-perl
 
 if [ "${ROLE}" == "boot" ]; then
 	# Install-tasks specific for the _bootstrab box_ here

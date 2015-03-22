@@ -19,6 +19,11 @@ if (@ARGV > 0) {
         )
 }
 
+# Use this to generate nsupdate for all edge switches
+# Expects input from switches.txt (run multiple times if several switches.txt)
+
+# TODO: Needs to be rewritten to use new switches.txt
+
 print "server $nms::config::pri_v4\n";
 
 while (<STDIN>)

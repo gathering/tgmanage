@@ -25,16 +25,18 @@ our $snmp_community = "<removed>";
 our $telnet_timeout = 30;
 
 # IP/IPv6/DNS-info
-our $tgname    = "tg14";
-our $pri_hostname     = "brad";
-our $pri_v4   = "151.216.254.2";
-our $pri_v6    = "2a02:ed02:254::2";
-our $pri_net   = "151.216.254.0/24"; # network that primary server is in
+our $tgname = "tg14";
+our $pri_hostname = "brad";
+our $pri_v4 = "151.216.254.2";
+our $pri_v6 = "2a02:ed02:254::2";
+our $pri_net_v4 = "151.216.254.0/24";
+our $pri_net_v6 = "2a02:ed02:1ee7::/64";
 
-our $sec_hostname     = "janet";
-our $sec_v4   = "151.216.253.2";
-our $sec_v6    = "2a02:ed02:253::2";
-our $sec_net   = "151.216.253.0/24"; # network that secondary server is in
+our $sec_hostname = "janet";
+our $sec_v4 = "151.216.253.2";
+our $sec_v6 = "2a02:ed02:253::2";
+our $sec_net_v4 = "151.216.253.0/24";
+our $sec_net_v6 = "2a02:ed02:1337::/64";
 
 # for RIPE to get reverse zones via DNS AXFR
 # https://www.ripe.net/data-tools/dns/reverse-dns/how-to-set-up-reverse-delegation

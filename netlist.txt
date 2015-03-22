@@ -1,3 +1,5 @@
+# make netlist.txt from switches.txt;
+#   cat switches.txt | perl -lne '($n,$v4,$v6)=split;print "$v4 $v6 $n";'
 151.216.177.0 25 komplett
 151.216.183.0 24 lounge
 151.216.185.0 25 flanke
