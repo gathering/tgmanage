@@ -35,6 +35,7 @@ my $base_ipv4 = Net::IP->new($nms::config::base_ipv4net) or die ("base_v4 fail")
 my ($p_oct, $s_oct, $t_oct) = ($nms::config::base_ipv4net =~ m/^(\d+)\.(\d+)\.(\d+)\..*/);
 my ($pp_oct, $ps_oct, $pt_oct, $pf_oct) = ($nms::config::pri_v4 =~ m/^(\d+)\.(\d+)\.(\d+)\.(\d+).*/);
 my ($sp_oct, $ss_oct, $st_oct, $sf_oct) = ($nms::config::sec_v4 =~ m/^(\d+)\.(\d+)\.(\d+)\.(\d+).*/);
+my $block;
 
 if ( $role eq "master" )
 {
@@ -51,7 +52,6 @@ else
 }
 
 sub add_zone{
-	my $block =  $p_oct . "." . $s_oct . "." . $t_oct . ".0/24";
 	my $rev_zone = $t_oct . "." .  $s_oct . "." . $p_oct . ".in-addr.arpa";
 		
 	if ( $role eq "master" )
@@ -128,6 +128,7 @@ EOF
 
 # for each /24 in the primary v4-net
 while (1){
+	$block =  $p_oct . "." . $s_oct . "." . $t_oct . ".0/24";
 	my $current = Net::IP->new($block) or die ("Net::IP failed for " . $block);
 	
 	add_zone();
