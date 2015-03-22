@@ -144,6 +144,7 @@ while (1){
 # for each specially defined /24
 foreach my $special_net (@nms::config::extra_nets){
 	# a.b.c.d/24
+	$block = $special_net;
 	$base_ipv4 = Net::IP->new($special_net) or die ("base_v4 fail");
 	($p_oct, $s_oct, $t_oct) = ($special_net =~ m/^(\d+)\.(\d+)\.(\d+)\..*/);
 	
