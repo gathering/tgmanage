@@ -1,7 +1,7 @@
 #!/usr/bin/perl -I /root/tgmanage
 use strict;
-
 use Net::IP;
+use NetAddr::IP;
 
 BEGIN {
         require "include/config.pm";
