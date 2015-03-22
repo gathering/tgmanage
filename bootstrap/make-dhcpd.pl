@@ -29,11 +29,11 @@ my $pri_net = $pri_range->ip();
 my $sec_range = Net::IP->new($nms::config::sec_net_v4) or die ("sec_range fail");
 my $sec_mask = $sec_range->mask();
 my $sec_net = $sec_range->ip();
-(my $sec_last = $sec_range->last()) =~ s/\/[0-9]{1,2}//;
-(my $sec_gw = $sec_range->first()) =~ s/\/[0-9]{1,2}//;
-my $sec_num = $sec_range->num();
+(my $sec_last = NetAddr::IP->new($nms::config::sec_net_v4)->last()) =~ s/\/[0-9]{1,2}//;
+(my $sec_gw = NetAddr::IP->new($nms::config::sec_net_v4)->first()) =~ s/\/[0-9]{1,2}//;
+my $sec_num = NetAddr::IP->new($nms::config::sec_net_v4)->num();
 my $sec_n = $sec_num - int($sec_num / 4); # don't use more than 1/4 of the net for DHCP
-(my $sec_first = $sec_range->nth($sec_n)) =~ s/\/[0-9]{1,2}//;
+(my $sec_first = NetAddr::IP->new($nms::config::sec_net_v4)->nth($sec_n)) =~ s/\/[0-9]{1,2}//;
 
 # Create main configuration file for DHCP
 if ( not -f $dhcpd_conf )
