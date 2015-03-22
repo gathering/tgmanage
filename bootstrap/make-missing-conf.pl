@@ -87,15 +87,17 @@ EOF
 	}
 	
 	# DHCP6
-	my $dhcp_dynconf_dir =  $dhcpd_base . "conf-v6/";
-	my $dhconfig = $dhcp_dynconf_dir . $name . ".conf";
+	$dhcp_dynconf_dir =  $dhcpd_base . "conf-v6/";
+	$dhconfig = $dhcp_dynconf_dir . $name . ".conf";
 
 	if ( not -f $dhconfig ){
 		print STDERR "Creating file " . $dhconfig . "\n";
 		
 		my $network = Net::IP->new($v6_net)->short();
 		my ($first, $last) = ("1000", "9999");
-	
+		
+		open DFILE, ">" . $dhconfig or die ( $! . " " . $dhconfig);
+			
 		print DFILE <<"EOF";
 zone $name.$nms::config::tgname.gathering.org {
 	primary $nms::config::ddns_to;
