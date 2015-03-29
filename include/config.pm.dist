@@ -10,10 +10,6 @@ our $db_host = "frank.tg14.gathering.org";
 our $db_username = "nms";
 our $db_password = "<removed>";
 
-# DHCP-servers
-our $dhcp_server1 = "151.216.254.2"; # primary
-our $dhcp_server2 = "151.216.253.19"; # secondary
-
 # TACACS-login for NMS
 our $tacacs_user = "nms";
 our $tacacs_pass = "<removed>";
