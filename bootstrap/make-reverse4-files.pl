@@ -52,7 +52,7 @@ else
 }
 
 sub add_zone{
-	my $ptr_zone = Net::IP->new("$p_oct.$s_oct.$t_oct.0") or die ("dhcp_reverse fail");
+	my $ptr_zone = Net::IP->new("$p_oct.$s_oct.$t_oct.0/24") or die ("dhcp_reverse fail");
 	my $dhcp_ptr = $ptr_zone->reverse_ip();
 	(my $bind_ptr = $dhcp_ptr) =~ s/\.$//;
 		
