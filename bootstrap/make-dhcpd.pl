@@ -135,14 +135,14 @@ if ( not -f $dhcpd_wlc_conf )
 		open WLCFILE, ">" . $dhcpd_wlc_conf or die ( $! . " " . $dhcpd_wlc_conf);
 
 		print WLCFILE <<"EOF";
-option space AP;
-option AP.server-address code 241 = array of ip-address;
+option space WLC;
+option WLC.controller-address code 43 = text;
 set vendor-string = option vendor-class-identifier;
 
 class "access-points" {
        match if substring (option vendor-class-identifier, 0, 8) = "Access Point";
-       vendor-option-space AP;
-       option AP.server-address $nms::config::wlc1;
+       vendor-option-space WLC;
+       option WLC.controller-address "$nms::config::wlc1";
 }
 EOF
 		close WLCFILE;
