@@ -44,6 +44,7 @@ ssh -l root ${PRIMARY} "mkdir -p ${BASE}/dhcp/conf-v4/"
 ssh -l root ${PRIMARY} "mkdir -p ${BASE}/dhcp/conf-v6/"
 
 ssh -l root ${PRIMARY}   "~/tgmanage/bootstrap/make-dhcp6-init.sh"
+ssh -l root ${PRIMARY}   "systemctl enable isc-dhcp6-server"
 ssh -l root ${PRIMARY}   "~/tgmanage/bootstrap/make-named.pl master ${BASE}"
 ssh -l root ${PRIMARY}   "~/tgmanage/bootstrap/make-dhcpd.pl ${BASE}"
 ssh -l root ${PRIMARY}   "~/tgmanage/bootstrap/make-dhcpd6.pl ${BASE}"
