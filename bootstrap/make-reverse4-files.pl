@@ -98,7 +98,7 @@ EOF
 		IN	NS	$nms::config::pri_hostname.$nms::config::tgname.gathering.org.
 		IN	NS	$nms::config::sec_hostname.$nms::config::tgname.gathering.org.
 
-\$ORIGIN $rev_zone.
+\$ORIGIN $bind_ptr.
 EOF
 
 		# add reverse if DNS-servers belong to zone
@@ -116,10 +116,10 @@ EOF
 		# if not master, aka slave
 		print SFILE <<"EOF";
 // $block
-zone "$rev_zone" {
+zone "$bind_ptr" {
 	type slave;
 	notify no;
-	file "slave/$rev_zone.cache";
+	file "slave/$bind_ptr.cache";
 	masters { master_ns; };
 	allow-transfer { ns-xfr; ext-xfr; };
 };
