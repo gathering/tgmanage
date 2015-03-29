@@ -52,7 +52,9 @@ else
 }
 
 sub add_zone{
-	my $rev_zone = $t_oct . "." .  $s_oct . "." . $p_oct . ".in-addr.arpa";
+	my $ptr_zone = Net::IP->new("$p_oct.$s_oct.$t_oct.0") or die ("dhcp_reverse fail");
+	my $dhcp_ptr = $ptr_zone->reverse_ip();
+	(my $bind_ptr = $dhcp_ptr) =~ s/\.$//;
 		
 	if ( $role eq "master" )
 	{
@@ -60,7 +62,7 @@ sub add_zone{
 		# both bind9 and dhcp on master.
 
 		print DFILE <<"EOF";
-zone "$rev_zone" {
+zone $dhcp_ptr {
 	primary $nms::config::ddns_to;
 	key DHCP_UPDATER;
 }
@@ -68,17 +70,17 @@ EOF
 
 		print NFILE <<"EOF";
 // $block
-zone "$rev_zone" {
+zone "$bind_ptr" {
 	type master;
 	allow-update { key DHCP_UPDATER; };
 	notify yes;
 	allow-transfer { ns-xfr; ext-xfr; };
-	file "reverse/$rev_zone.zone";
+	file "reverse/$bind_ptr.zone";
 };
 
 EOF
 
-		my $zfilename = $bind_base . "reverse/" . $rev_zone . ".zone";
+		my $zfilename = $bind_base . "reverse/" . $bind_ptr . ".zone";
 		open ZFILE, ">", $zfilename;
 
 		print ZFILE <<"EOF";
