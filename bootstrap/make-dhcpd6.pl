@@ -79,7 +79,7 @@ authoritative;
 
 # Global definitions for name server address(es) and domain search list
 option domain-name "$nms::config::tgname.gathering.org";
-option domain-name-servers $nms::config::pri_v6, $nms::config::sec_v6;
+option dhcp6.name-servers $nms::config::pri_v6, $nms::config::sec_v6;
 
 key DHCP_UPDATER {
         algorithm HMAC-MD5.SIG-ALG.REG.INT;
