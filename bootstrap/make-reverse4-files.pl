@@ -44,6 +44,7 @@ if ( $role eq "master" )
 }
 elsif ( $role eq "slave" )
 {
+	open DFILE, ">" . $dhcp_revzones_file or die $!;
 	open SFILE, ">" . $bind_sec_revzones_file or die $!;
 }
 else
