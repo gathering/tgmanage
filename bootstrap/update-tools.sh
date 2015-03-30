@@ -18,6 +18,8 @@ scp -r bootstrap root@${PRIMARY}:tgmanage/
 scp -r bootstrap root@${SECONDARY}:tgmanage/
 scp -r include root@${PRIMARY}:tgmanage/
 scp -r include root@${SECONDARY}:tgmanage/
+scp -r clients root@${PRIMARY}:tgmanage/
+scp -r clients root@${SECONDARY}:tgmanage/
 
 # use last years example files
 export TGNAME
