@@ -1,7 +1,7 @@
 <VirtualHost *:80>
         ServerAdmin drift@gathering.org
         ServerName nms.tg15.gathering.org
-        ServerAlias noget.tg15.gathering.org
+        ServerAlias einstein.tg15.gathering.org
 
         DocumentRoot /root/tgmanage/web/nms.gathering.org
         <Directory "/root/tgmanage/web/nms.gathering.org">
@@ -11,16 +11,15 @@
 		Satisfy any
                 Allow from ::1
                 Allow from 127.0.0.1
-		Allow from 192.168.122.0/24
+		Allow from 151.216.254.201/24
+		Allow from 2a02:ed02:254::0/64
 
                 AddHandler cgi-script .cgi .sh .pl .py
                 AddDefaultCharset UTF-8
 
                 AuthUserFile /root/tgmanage/web/.htpasswd
-                AuthGroupFile /dev/null
                 AuthName "Tech:Server Secret Volcano Lair"
                 AuthType Basic
-
                 require valid-user
         </Directory>
 
