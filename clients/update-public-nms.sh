@@ -1,9 +1,12 @@
 #!/bin/sh
+YEAR=15
 TGMANAGE=/root/tgmanage
-DIR=$TGMANAGE/web/nms-public.gathering.org
+DIR=/srv/www/nms-public.tg${YEAR}.gathering.org
+set -x
+mkdir -p $DIR
 
-wget -qO$DIR/nettkart-dhcp.png.new http://nms.tg14.gathering.org/dhcpkart.pl
-wget -qO$DIR/led.txt.new http://nms.tg14.gathering.org/led.pl
+wget -qO$DIR/nettkart-dhcp.png.new http://nms.tg${YEAR}.gathering.org/dhcpkart.pl
+wget -qO$DIR/led.txt.new http://nms.tg${YEAR}.gathering.org/led.pl
 mv $DIR/nettkart-dhcp.png.new $DIR/nettkart-dhcp.png
 mv $DIR/led.txt.new $DIR/led.txt
 /usr/bin/perl $TGMANAGE/clients/update-public-speedometer.pl > $DIR/speedometer.json.tmp

@@ -1,0 +1,12 @@
+<VirtualHost *:80>
+        ServerAdmin drift@gathering.org
+        ServerName tech.tg15.gathering.org
+
+	DocumentRoot /srv/www/tech.tg15.gathering.org
+	
+        LogLevel warn
+        ErrorLog /var/log/apache2/error-tech.tg15.gathering.org.log
+        CustomLog /var/log/apache2/access-tech.tg15.gathering.org.log combined
+
+        AddHandler cgi-script .pl
+</VirtualHost>
