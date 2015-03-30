@@ -378,7 +378,7 @@ void Planner::init_switches()
 		}
 
 		// Sector 5.
-		if (i >= 14 && i <= 22) {
+		if (i >= 15 && i <= 22) {
 			switches.push_back(Switch(i, 0));
 			switches.push_back(Switch(i, 1));
 		}
