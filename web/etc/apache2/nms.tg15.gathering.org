@@ -1,0 +1,36 @@
+<VirtualHost *:80>
+        ServerAdmin drift@gathering.org
+        ServerName nms.tg15.gathering.org
+        ServerAlias noget.tg15.gathering.org
+
+        DocumentRoot /root/tgmanage/web/nms.gathering.org
+        <Directory "/root/tgmanage/web/nms.gathering.org">
+                AllowOverride None
+                Options Indexes FollowSymLinks ExecCGI MultiViews
+                Order allow,deny
+		Satisfy any
+                Allow from ::1
+                Allow from 127.0.0.1
+		Allow from 192.168.122.0/24
+
+                AddHandler cgi-script .cgi .sh .pl .py
+                AddDefaultCharset UTF-8
+
+                AuthUserFile /root/tgmanage/web/.htpasswd
+                AuthGroupFile /dev/null
+                AuthName "Tech:Server Secret Volcano Lair"
+                AuthType Basic
+
+                require valid-user
+        </Directory>
+
+        ErrorLog /var/log/apache2/error-nms.tg15.gathering.org.log
+
+        # Possible values include: debug, info, notice, warn, error, crit,
+        # alert, emerg.
+        LogLevel warn
+
+        CustomLog /var/log/apache2/access-nms.tg15.gathering.org.log combined
+        ServerSignature On
+
+</VirtualHost>

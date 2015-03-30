@@ -1,10 +1,10 @@
  <VirtualHost *:80>
         ServerAdmin drift@gathering.org
-        ServerName stream.tg14.gathering.org
-        ServerAlias krosus.tg14.gathering.org
+        ServerName stream.tg15.gathering.org
+        ServerAlias krosus.tg15.gathering.org
 
-        DocumentRoot /srv/stream.tg14.gathering.org
-        <Directory "/srv/stream.tg14.gathering.org/">
+        DocumentRoot /srv/stream.tg15.gathering.org
+        <Directory "/srv/stream.tg15.gathering.org/">
                 AllowOverride None
                 Options Indexes FollowSymLinks ExecCGI MultiViews
                 Order allow,deny
@@ -14,12 +14,12 @@
 
         </Directory>
 
-        ErrorLog /var/log/apache2/error-stream.tg14.gathering.org.log
+        ErrorLog /var/log/apache2/error-stream.tg15.gathering.org.log
 
         # Possible values include: debug, info, notice, warn, error, crit,
         # alert, emerg.
         LogLevel info
 
-        CustomLog /var/log/apache2/access-stream.tg14.gathering.org.log combined
+        CustomLog /var/log/apache2/access-stream.tg15.gathering.org.log combined
         ServerSignature On
 </VirtualHost>

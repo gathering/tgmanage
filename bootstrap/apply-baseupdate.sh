@@ -10,5 +10,6 @@ then
 fi;
 
 ssh -l root ${PRIMARY} "/etc/init.d/isc-dhcp-server restart"
+ssh -l root ${PRIMARY} "/etc/init.d/isc-dhcp6-server restart"
 ssh -l root ${PRIMARY} "/usr/sbin/rndc reload"
 ssh -l root ${SECONDARY} "/usr/sbin/rndc reload"

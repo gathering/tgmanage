@@ -40,7 +40,7 @@ my $base_ipv4 = Net::IP->new( $nms::config::base_ipv4net );
 my ($cp_oct, $cs_oct, $ct_oct) = ($nms::config::base_ipv4net =~ m/^(\d+)\.(\d+)\.(\d+)\..*/);
 
 while ( <STDIN> ){
-	next if ( $_ =~ m/^#/);
+	next if ( $_ =~ m/^(#|$)/); # comment or blank line
 	my $line = $_;
 	chomp $line;
 	# <v4 net> <v6 net> <network-name>

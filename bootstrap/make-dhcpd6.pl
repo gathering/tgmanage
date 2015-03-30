@@ -35,33 +35,33 @@ if ( not -f $dhcpd_conf )
 # IPv6 address valid lifetime
 #  (at the end the address is no longer usable by the client)
 #  (set to 30 days, the usual IPv6 default)
-default-lease-time 2592000;
+default-lease-time 3600;
 
 # IPv6 address preferred lifetime
 #  (at the end the address is deprecated, i.e., the client should use
 #   other addresses for new connections)
 #  (set to 7 days, the  usual IPv6 default)
-preferred-lifetime 604800;
+preferred-lifetime 3600;
 
 # T1, the delay before Renew
 #  (default is 1/2 preferred lifetime)
 #  (set to 1 hour)
-option dhcp-renewal-time 3600;
+option dhcp-renewal-time 1800;
 
 # T2, the delay before Rebind (if Renews failed)
 #  (default is 3/4 preferred lifetime)
 #  (set to 2 hours)
-option dhcp-rebinding-time 7200;
+option dhcp-rebinding-time 1800;
 
 # Enable RFC 5007 support
 allow leasequery;
 
 # Set preference to 255 (maximum) in order to avoid waiting for
 # additional servers when there is only one
-option dhcp6.preference 255;
+#option dhcp6.preference 255;
 
 # Server side command to enable rapid-commit (2 packet exchange)
-option dhcp6.rapid-commit;
+#option dhcp6.rapid-commit;
 
 # The delay before information-request refresh
 #  (minimum is 10 minutes, maximum one day, default is to not refresh)
@@ -79,7 +79,7 @@ authoritative;
 
 # Global definitions for name server address(es) and domain search list
 option domain-name "$nms::config::tgname.gathering.org";
-option domain-name-servers $nms::config::pri_v6, $nms::config::sec_v6;
+option dhcp6.name-servers $nms::config::pri_v6, $nms::config::sec_v6;
 
 key DHCP_UPDATER {
         algorithm HMAC-MD5.SIG-ALG.REG.INT;
