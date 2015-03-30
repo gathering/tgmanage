@@ -135,14 +135,16 @@ if ( not -f $dhcpd_wlc_conf )
 		open WLCFILE, ">" . $dhcpd_wlc_conf or die ( $! . " " . $dhcpd_wlc_conf);
 
 		print WLCFILE <<"EOF";
-option space AP;
-option AP.server-address code 241 = array of ip-address;
+option space WLC;
+option WLC.controller-address code 43 = text;
 set vendor-string = option vendor-class-identifier;
 
 class "access-points" {
-       match if substring (option vendor-class-identifier, 0, 8) = "Access Point";
-       vendor-option-space AP;
-       option AP.server-address $nms::config::wlc1;
+	# Number of characters has to match the substring
+	# I.e  if "Access Point", you have to use (0, 12)
+	match if substring (option vendor-class-identifier, 0, 12) = "Access Point";
+	vendor-option-space WLC;
+	option WLC.controller-address "$nms::config::wlc1";
 }
 EOF
 		close WLCFILE;
@@ -159,7 +161,7 @@ option space CiscoVOIP;
 option CiscoVOIP.cm-tftp-server code 150  = array of ip-address;
 
 class "cisco-voip-lan" {
-        match if substring (option vendor-class-identifier, 0, 28) = "Cisco Systems, Inc. IP Phone";
+	match if substring (option vendor-class-identifier, 0, 28) = "Cisco Systems, Inc. IP Phone";
 	vendor-option-space CiscoVOIP;
 	log( info, concat( "LOLOPHONE: " , option vendor-class-identifier )); 
 	option CiscoVOIP.cm-tftp-server $nms::config::voip1;

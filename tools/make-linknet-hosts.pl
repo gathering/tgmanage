@@ -4,31 +4,27 @@ use Net::IP;
 #
 # Input file format:
 #
-# ipv4-link-network router1 router2
+# <ipv4-linknet> <ipv6-linknet> src-router dst-router
 #
 # e.g.
-# 151.216.0.2  telegw nocgw
-# 151.216.0.4  telegw cam
-# 151.216.0.6  nocgw coren
-# 151.216.0.8  telegw pressegw
-#
-# Note: IPv6 linknets use link-local adresses, so they are not included in list.
-#
+# 151.216.128.0/31 2a02:ed02:FFFE::0/127 rs1.tele rs1.core
+# 151.216.128.2/31 2a02:ed02:FFFE::2/127 rs1.tele rs1.noc
+
 while (<STDIN>) {
         next if /^(#|\s+$)/;    # skip if comment, or blank line
 	
-	my ($ipv4_raw, $from, $to) = split;
-	my $ipv4;
+	my ($ipv4_raw, $ipv6_raw, $from, $to) = split;
+		
+	# v4 
+	my $ipv4_first = NetAddr::IP->new($ipv4_raw);
+	my $ipv4_second = $ipv4_first + 1;
 	
-	# Assumes ipv4 address is the first address in a /31 :-)) 
-	$ipv4 = NetAddr::IP->new($ipv4_raw."/31") unless $ipv4=~/no/;
-	printf STDERR "Missing IPv4 scope for linket %s -> %s\n", $from, $to if not $ipv4;
-	next if not $ipv4;
+	# v6
+	my $ipv6_first = NetAddr::IP->new($ipv6_raw);
+	my $ipv6_second = $ipv6_first + 1;
 
-	
 	# generate-dnsrr.pl format:
-	# hostname ipv4 ipv6 (with nope as valid null argument)
-	my $ipv4_other =  $ipv4 +1;
-	printf("%s-%s %s nope\n", $from, $to, $ipv4->addr); 
-	printf("%s-%s %s nope\n", $to, $from, $ipv4_other->addr); 
+	# hostname ipv4 ipv6
+	printf("%s-%s %s %s\n", $from, $to, $ipv4_first->addr, $ipv6_first->addr); 
+	printf("%s-%s %s %s\n", $to, $from, $ipv4_second->addr, $ipv6_second->addr); 
 }
