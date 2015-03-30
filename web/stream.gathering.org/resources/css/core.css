@@ -1,0 +1,111 @@
+body {
+  background-color: rgb(32, 32, 64);
+  color: #FFFFFF;
+}
+
+.button {
+  font-weight: bold;
+  color: #333;
+  white-space: nowrap;
+  vertical-align: middle;
+  cursor: pointer;
+  background-color: #eee;
+  background-image: -webkit-linear-gradient(#fcfcfc, #eee);
+  background-image: linear-gradient(#fcfcfc, #eee);
+  background-repeat: repeat-x;
+  border: 1px solid #d5d5d5;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-appearance: none;
+}
+
+.button-signup {
+  color: #fff;
+  text-shadow: 0 -1px 0 rgba(0,0,0,0.15);
+  background-color: #60b044;
+  background: -webkit-linear-gradient(#8add6d, #8add6d 12px, #60b044);
+  background: linear-gradient(#8add6d, #8add6d 12px, #60b044);
+  background-repeat: repeat-x;
+  border-color: #5ca941;
+}
+
+#header {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  width: 100%;
+  height: 518px;
+  background-color: #ffffff;
+  text-align: center;
+  padding-top: 50px;
+  color: #000000;
+  background-image: url('http://git.hvornum.se/resources/images/tech-bg.jpg');
+  text-shadow: 2px 2px #c2c2c2;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+.container {
+  padding-top: 150px;
+}
+
+.section {
+  padding: 8rem 0 7rem;
+  text-align: center;
+}
+
+.stream-item {
+  text-align: left;
+}
+
+  .stream-icon {
+    display: inline-block;
+  }
+
+  .stream-link-content {
+    position: relative;
+    text-align: left;
+    display: inline-block;
+    top: -2rem;
+  }
+
+#stream {
+  width: 1280px;
+  min-width: 960px;
+  height: 540px;
+  min-height: 540px;
+  margin-bottom: 10px;
+  border: 1px solid #000000;
+}
+
+.footer {
+  text-align: center;
+  padding-top: 50px;
+}
+
+/* Bigger than 550 */
+@media (min-width: 550px) {
+  .section {
+    padding: 12rem 0 11rem;
+  }
+  .content { text-align: left; }
+}
+
+/* Bigger than 750 */
+@media (min-width: 750px) {
+  .section {
+    padding: 5rem 0 5rem;
+  }
+  .content { text-align: left; }
+}
+
+/* Bigger than 1000 */
+@media (min-width: 1000px) {
+  .section {
+    padding: 1rem 0 1rem;
+    padding-bottom: 30px;
+  }
+  .content { text-align: left; }
+}
