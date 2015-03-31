@@ -36,7 +36,7 @@ while (<STDIN>){
 	my $fqdn = $swname . "." . $nms::config::tgname . ".gathering.org.";
 	my $sw_fqdn = "sw." . $fqdn;
 	my $gw_fqdn = "gw." . $fqdn;
-	my $text_info = $distro . "(VLAN $vlan): " . join(' + ', @ports);
+	my $text_info = $distro . ", vlan $vlan, " . join(' + ', @ports);
 	
 	# A and AAAA-record to the switch
 	print "prereq nxdomain $sw_fqdn\n" unless $delete;
@@ -75,12 +75,12 @@ while (<STDIN>){
         print "send\n";
 
 	# PTR to the gateway/router
-	print "prereq nxdomain " . Net::IP->new($v4mgmt)->reverse_ip() . "\n" unless $delete;
-        print "update add " . Net::IP->new($v4mgmt)->reverse_ip() . " \t 3600 IN PTR \t $gw_fqdn\n" unless $delete;
-	print "update delete " . Net::IP->new($v4mgmt)->reverse_ip() . " \t IN PTR\n" if $delete;
+	print "prereq nxdomain " . Net::IP->new($v4gw)->reverse_ip() . "\n" unless $delete;
+        print "update add " . Net::IP->new($v4gw)->reverse_ip() . " \t 3600 IN PTR \t $gw_fqdn\n" unless $delete;
+	print "update delete " . Net::IP->new($v4gw)->reverse_ip() . " \t IN PTR\n" if $delete;
         print "send\n";
-	print "prereq nxdomain " . Net::IP->new($v6mgmt)->reverse_ip() . "\n" unless $delete;
-        print "update add " . Net::IP->new($v6mgmt)->reverse_ip() . " \t 3600 IN PTR \t $gw_fqdn\n" unless $delete;
-	print "update delete " . Net::IP->new($v6mgmt)->reverse_ip() . " \t IN PTR\n" if $delete;
+	print "prereq nxdomain " . Net::IP->new($v6gw)->reverse_ip() . "\n" unless $delete;
+        print "update add " . Net::IP->new($v6gw)->reverse_ip() . " \t 3600 IN PTR \t $gw_fqdn\n" unless $delete;
+	print "update delete " . Net::IP->new($v6gw)->reverse_ip() . " \t IN PTR\n" if $delete;
         print "send\n";
 }
