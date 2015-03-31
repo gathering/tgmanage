@@ -30,8 +30,8 @@ while (<STDIN>){
 	(my $v4gw = NetAddr::IP->new($client_v4)->first()) =~ s/\/[0-9]{1,2}//;
 	(my $v6gw = NetAddr::IP->new($client_v6)->first()) =~ s/\/[0-9]{1,2}//;
 	
-	(my $v4mgmt = $sw_v4) = s/\/[0-9]{1,2}//;
-	(my $v6mgmt = $sw_v6) = s/\/[0-9]{1,2}//;
+	(my $v4mgmt = $sw_v4) =~ s/\/[0-9]{1,2}//;
+	(my $v6mgmt = $sw_v6) =~ s/\/[0-9]{1,2}//;
 	
 	my $fqdn = $swname . "." . $nms::config::tgname . ".gathering.org.";
 	my $sw_fqdn = "sw." . $fqdn;
