@@ -118,9 +118,15 @@ while (1) {
 				$cmd =~ s/%SYSNAME%/$sysname/g;
 				if ($cmd =~ /^#\s*require-version\s+(.*\S)\s*$/) {
 					my $required_version = $1;
-					my $versions;
-					$versions = switch_exec_json("show version", $conn);
-					my $version = $versions->{'multi-routing-engine-results'}[0]{'multi-routing-engine-item'}[0]{'software-information'}[0]{'junos-version'}[0]{'data'};
+					my $version;
+					foreach my $line (switch_exec("show version", $conn)) {
+						if ($line =~ /^JUNOS Base OS boot \[(.*)\]/) {
+							$version = $1;
+						} elsif ($line =~ /^Junos: (.*\S)/) {
+							$version = $1;
+						}
+						last if defined $version;
+					}
 					if ($version ne $required_version) {
 						push @data, "# '$version' != '$required_version', aborting script";
 						last;
