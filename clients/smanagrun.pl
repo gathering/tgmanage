@@ -127,6 +127,11 @@ while (1) {
 		waitpid($ssh->{pid}, 0);
 		$sunlock->execute($switch->{sysname});
 	};
-	warn $@ if $@;
+	if ($@) {
+		warn $@;
+		$sdelay->execute($@ . ", delaying...", $switch->{sysname});
+		$sunlock->execute($switch->{sysname});
+		$dbh->commit();
+	}
 }
 

@@ -47,7 +47,8 @@ sub switch_connect_ssh($) {
 	my ($ip) = @_;
 	my $ssh = Net::OpenSSH->new($ip, 
 		user => $nms::config::tacacs_user,
-		password => $nms::config::tacacs_pass);
+		password => $nms::config::tacacs_pass,
+		master_opts => [ "-o", "StrictHostKeyChecking=no" ]);
 	my ($pty, $pid) = $ssh->open2pty({stderr_to_stdout => 1})
 		or die "unable to start remote shell: " . $ssh->error;
 
