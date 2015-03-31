@@ -66,11 +66,11 @@ while (<STDIN>){
 
 	# A and AAAA-record to the gateway/router
 	print "prereq nxrrset $gw_fqdn IN A\n" unless $delete;
-        print "update add $gw_fqdn \t 3600 IN A \t $v4mgmt\n" unless $delete;
+        print "update add $gw_fqdn \t 3600 IN A \t $v4gw\n" unless $delete;
 	print "update delete $gw_fqdn \t IN A\n" if $delete;
         print "send\n";
 	print "prereq nxrrset $gw_fqdn IN AAAA\n" unless $delete;
-        print "update add $gw_fqdn \t 3600 IN AAAA \t $v6mgmt\n" unless $delete;
+        print "update add $gw_fqdn \t 3600 IN AAAA \t $v6gw\n" unless $delete;
 	print "update delete $gw_fqdn \t IN AAAA\n" if $delete;
         print "send\n";
 
