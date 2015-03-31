@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 use warnings;
 use strict;
-use lib '../../include';
+use lib '../include';
 use POSIX;
 
 my $delaytime = 30;
