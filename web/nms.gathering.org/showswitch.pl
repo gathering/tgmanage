@@ -25,7 +25,7 @@ my $start = [Time::HiRes::gettimeofday];
 my $dbh = nms::db_connect();
 
 # Fetch the name
-my $ref = $dbh->selectrow_hashref('SELECT sysname FROM switches WHERE switch=?', undef, $switch);
+my $ref = $dbh->selectrow_hashref('SELECT sysname,ip FROM switches WHERE switch=?', undef, $switch);
 
 print $cgi->header(-type=>'text/html; charset=utf-8');
 print <<"EOF";
@@ -34,7 +34,7 @@ print <<"EOF";
     <title>snmp</title>
   </head>
   <body>
-    <h1>Switch $switch ($ref->{'sysname'})</h1>
+    <h1>Switch $switch ($ref->{'sysname'} - $ref->{'ip'})</h1>
 EOF
 
 my $q = $dbh->prepare('select port,coalesce(description, \'Port \' || port) as description,extract(epoch from time) as time,bytes_in,bytes_out from switches natural left join portnames natural join polls where time between now() - \'1 day\'::interval and now() and switch=? order by switch,port,time;') or die $dbh->errstr;
