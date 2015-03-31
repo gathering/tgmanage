@@ -6,6 +6,7 @@ BEGIN {
 }
 
 use Net::IP;
+use NetAddr::IP;
 use Getopt::Long;
 
 my ($delete);
