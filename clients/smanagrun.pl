@@ -91,9 +91,8 @@ while (1) {
 
 	mylog("Connecting to $switch->{sysname} on $switch->{addr}");
 	eval {
-		#my $conn = switch_connect($switch->{addr});
-		my $telnet = switch_connect_ssh($switch->{addr});
-		my $conn = $telnet->{telnet};
+		my $ssh = switch_connect_ssh($switch->{addr});
+		my $conn = $ssh->{telnet};
 		if (!defined($conn)) {
 			mylog("Could not connect to ".$switch->{sysname}."(".$switch->{addr}.")");
 			$sdelay->execute("Could not connect to switch, delaying...", $switch->{sysname});
@@ -125,8 +124,9 @@ while (1) {
 			$sresult->execute($result, $row->{id});
 		}
 		$conn->close();
-		waitpid($telnet->{pid}, 0);
+		waitpid($ssh->{pid}, 0);
 		$sunlock->execute($switch->{sysname});
-	}
+	};
+	warn $@ if $@;
 }
 

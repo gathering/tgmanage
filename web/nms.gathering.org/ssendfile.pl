@@ -19,7 +19,8 @@ if ($#ARGV != 1) {
 	       "./ssendfile.pl addr configfile\n");
 }
 
-my $conn = nms::switch_connect($ARGV[0]);
+my $ssh = nms::switch_connect_ssh($ARGV[0]);
+my $conn = $ssh->{telnet};
 if (!defined($conn)) {
 	die("Could not connect to switch.\n");
 }
@@ -33,7 +34,8 @@ while (<CONFIG>) {
 #		print "New ip: $1\n";
 #		$conn->cmd(	String => $cmd,
 #				Timeout => 3);
-#		$conn = nms::switch_connect($1);
+#		$ssh = nms::switch_connect_ssh($1);
+#		$conn = $ssh->{telnet};
 #		if (!defined($conn)) {
 #			die "Could not connect to new ip: $1\n";
 #		}

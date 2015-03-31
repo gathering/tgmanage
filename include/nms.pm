@@ -10,7 +10,7 @@ use FileHandle;
 package nms;
 
 use base 'Exporter';
-our @EXPORT = qw(switch_disconnect switch_connect_ssh switch_connect switch_exec switch_timeout db_connect);
+our @EXPORT = qw(switch_disconnect switch_connect_ssh switch_connect_dlink switch_exec switch_timeout db_connect);
 
 BEGIN {
 	require "config.pm";
@@ -75,7 +75,7 @@ sub switch_connect_ssh($) {
 	return { telnet => $telnet, ssh => $ssh, pid => $pid, pty => $pty };
 }
 
-sub switch_connect($) {
+sub switch_connect_dlink($) {
 	my ($ip) = @_;
 
 	my $dumplog = FileHandle->new;
@@ -110,7 +110,7 @@ sub switch_connect($) {
 			$conn->cmd($nms::config::tacacs_pass);
 		}
 	}
-	return ($conn);
+	return { telnet => $conn };
 }
 
 # Send a command to switch and return the data recvied from the switch
