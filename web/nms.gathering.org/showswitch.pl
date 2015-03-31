@@ -59,7 +59,6 @@ while (my $ref = $q->fetchrow_hashref()) {
 	my $in = $ref->{'bytes_in'};
 	my $out = $ref->{'bytes_out'};
 	next if ($time == $prev_time);
-
 	if ($ref->{'port'} != $last_port) {
 		if ($last_port != -1) {
 			my $filename = "$switch-$last_port-$width-$height.png";

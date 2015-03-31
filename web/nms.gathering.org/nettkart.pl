@@ -19,7 +19,7 @@ my $dbh = nms::db_connect();
 GD::Image->trueColor(1);
 
 my $text_img;
-our $img = GD::Image->new($cwd.'/tg14-salkart.png');
+our $img = GD::Image->new($cwd.'/tg15-salkart.png');
 if ($night) {
 	my ($width, $height) = ($img->width, $img->height); 
 
@@ -117,7 +117,7 @@ if ($night) {
 	$magick->Gamma(gamma=>1.90);
 
 	my $m2 = Image::Magick->new;
-	$m2->Read($cwd.'/tg14-salkart.png');
+	$m2->Read($cwd.'/tg15-salkart.png');
 	$m2->Negate();
 	$m2->Composite(image=>$magick, compose=>'Atop');
 

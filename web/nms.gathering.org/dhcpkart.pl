@@ -15,7 +15,7 @@ my $maxtimeout = $greentimeout*9;
 my $dbh = nms::db_connect();
 
 GD::Image->trueColor(1);
-my $map = "$cwd/tg14-salkart.png";
+my $map = "$cwd/tg15-salkart.png";
 die "$map does not exist" unless -e $map;
 $img = GD::Image->new($map);
 

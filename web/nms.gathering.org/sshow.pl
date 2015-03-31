@@ -7,6 +7,7 @@ use strict;
 use Switch;
 use CGI;
 use DBI;
+use HTML::Entities;
 
 # Grab from .htaccess-authentication
 my $user = $ENV{'REMOTE_USER'};
@@ -182,7 +183,7 @@ if ($action eq 'showgid') {
 		}
 		my @lines = split(/[\n\r]+/, $data);
 		foreach my $line (@lines) {
-			print "\t$line\n";
+			print "\t", encode_entities($line), "\n";
 		}
 	} while (($row = $sgetgid->fetchrow_hashref()));
 	print "</pre>\n";
@@ -214,7 +215,7 @@ if ($action eq 'done') {
 		print "   gID: ".$row->{gid}."\n";
 		my @result = split(/[\n\r]+/, $row->{result});
 		foreach (@result) {
-			print "\t".$_."\n";
+			print "\t", encode_entities($_), "\n";
 		}
 		print "\n";
 	}

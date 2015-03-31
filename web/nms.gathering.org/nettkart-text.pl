@@ -6,14 +6,25 @@ use nms;
 my $cgi = CGI->new;
 
 my $dbh = nms::db_connect();
+
+my $night = defined($cgi->param('night'));
+
+if ($night) {
+print $cgi->header(-type=>'text/html; charset=utf-8', -refresh=>'10; nettkart-text.pl?night=1');
+} else {
 print $cgi->header(-type=>'text/html; charset=utf-8', -refresh=>'10; ' . CGI::url());
+}
+
+my $tag = "";
+
+$tag = "bgcolor=black" if($night);
 
 print <<"EOF";
 <html>
   <head>
     <title>nettkart</title>
   </head>
-  <body>
+  <body $tag>
     <map name="switches">
 EOF
 
@@ -38,10 +49,15 @@ while (my $ref = $q->fetchrow_hashref()) {
 }
 $dbh->disconnect;
 
+my $image = "nettkart.pl";
+
+$image = "nettkart.pl?night=1" if ($night);
+
+
 print <<"EOF";
     </map>
 
-    <p><img src="nettkart.pl" usemap="#switches" /></p>
+    <p><img src="$image" usemap="#switches" /></p>
   </body>
 </html>
 EOF
