@@ -67,8 +67,11 @@ sub switch_connect_ssh($) {
 				      -cmd_remove_mode => 1,
 				      -output_record_separator => "\r");
 	$telnet->waitfor(-match => $telnet->prompt,
-			 -errmode => "return")
+	                 -errmode => "return")
 		or die "login failed: " . $telnet->lastline;
+
+	$telnet->cmd("set cli screen-length 0");
+
 	return { telnet => $telnet, ssh => $ssh, pid => $pid, pty => $pty };
 }
 
