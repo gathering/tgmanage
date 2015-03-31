@@ -34,7 +34,8 @@ my $slistdonegid = $dbh->prepare(
 "SELECT DISTINCT gid, cmd, author, added
 FROM squeue
 WHERE processed = 't'
-ORDER BY gid")
+ORDER BY gid DESC
+LIMIT ?::text::int")
 	or die "Could not prepare slistdonegid";
 
 my $slistprocgid = $dbh->prepare(
@@ -42,7 +43,7 @@ my $slistprocgid = $dbh->prepare(
 FROM squeue
 WHERE processed = 'f'
 ORDER BY gid")
-	or die "Could not prepare slistdonegid";
+	or die "Could not prepare slistprocgid";
 
 my $sgetgid = $dbh->prepare(
 "SELECT *
@@ -55,7 +56,7 @@ my $sgetprocessing = $dbh->prepare(
 FROM  squeue
 WHERE processed = 'f'
 ORDER BY updated DESC, gid, sysname")
-	or die "Could not prepare sgetdone";
+	or die "Could not prepare sgetprocessing";
 
 my $sgetnoconnect = $dbh->prepare(
 "SELECT *
@@ -134,7 +135,7 @@ if ($action eq 'listgid') {
 	print "<pre>\n";
 	print "<a href=\"sshow.pl?action=noconnect\" />Kunne ikke koble til</a>\n\n\n";
 	print "<b>Ferdige:</b>\n";
-	$slistdonegid->execute();
+	$slistdonegid->execute($limit);
 	my ($gid, $author);
 	$gid = -1;
 	while ((my $row = $slistdonegid->fetchrow_hashref())) {
@@ -146,7 +147,7 @@ if ($action eq 'listgid') {
 			print "Added: ".$row->{added}."\n";
 		}
 		my $cmd = $row->{cmd};
-		print "\t$cmd\n";
+		print "$cmd\n\n";
 	}
 	print "\n\n";
 	print "<b>I kø:</b>\n";
@@ -161,7 +162,7 @@ if ($action eq 'listgid') {
 			print "Added: ".$row->{added}."\n";
 		}
 		my $cmd = $row->{cmd};
-		print "\t$cmd\n";
+		print "$cmd\n\n";
 	}
 	$dbh->commit();
 	print "</pre>\n";
@@ -198,8 +199,7 @@ if ($action eq 'done') {
 		my $gid = $cgi->param('gid');
 		$sgetdonegid->execute($gid);
 		$squery = $sgetdonegid;
-	}
-	else {
+	} else {
 		$sgetdone->execute($limit);
 		$squery = $sgetdone;
 	}
@@ -212,7 +212,7 @@ if ($action eq 'done') {
 		print "   Author: ".$row->{author}."\n";
 		print "   Cmd: ".$row->{cmd}."\n";
 		print "   Added: ".$row->{added}." Updated: ".$row->{updated}."\n";
-		print "   gID: ".$row->{gid}."\n";
+		print "   GID: ".$row->{gid}."\n";
 		my @result = split(/[\n\r]+/, $row->{result});
 		foreach (@result) {
 			print "\t", encode_entities($_), "\n";

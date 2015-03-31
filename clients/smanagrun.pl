@@ -7,9 +7,9 @@ use strict;
 use Net::Telnet;
 use DBI;
 use POSIX;
+use Data::Dumper::Simple;
 use lib '../include';
 use nms;
-use Data::Dumper::Simple;
 
 BEGIN {
 	require "../include/config.pm";
@@ -108,13 +108,26 @@ while (1) {
 			next;
 		}
 		while (my $row = $sgetallpoll->fetchrow_hashref()) {
-			print "sysname: ".$row->{sysname}." cmd: ".$row->{cmd}."\n";
+			my $sysname = $row->{sysname};
 			my @data;
 			my @commands = split(/[\r\n\000]+/, $row->{cmd});
 			for my $cmd (@commands) {
+				print "sysname: $sysname cmd: $cmd\n";
 				next unless $cmd =~ /\S/; # ignorer linjer med kun whitespace
 				push @data, "# $cmd";
-				if ($cmd =~ s/^!//) {
+				$cmd =~ s/%SYSNAME%/$sysname/g;
+				if ($cmd =~ /^#\s*require-version\s+(.*\S)\s*$/) {
+					my $required_version = $1;
+					my $versions;
+					$versions = switch_exec_json("show version", $conn);
+					my $version = $versions->{'multi-routing-engine-results'}[0]{'multi-routing-engine-item'}[0]{'software-information'}[0]{'junos-version'}[0]{'data'};
+					if ($version ne $required_version) {
+						push @data, "# '$version' != '$required_version', aborting script";
+						last;
+					} else {
+						push @data, "# Version matches";
+					}
+				} elsif ($cmd =~ s/^!//) {
 					push @data, switch_exec($cmd, $conn, 1);
 				} else {
 					push @data, switch_exec($cmd, $conn);
@@ -129,7 +142,8 @@ while (1) {
 	};
 	if ($@) {
 		warn $@;
-		$sdelay->execute($@ . ", delaying...", $switch->{sysname});
+		chomp(my $err = $@);
+		$sdelay->execute($err . ", delaying...", $switch->{sysname});
 		$sunlock->execute($switch->{sysname});
 		$dbh->commit();
 	}

@@ -7,10 +7,11 @@ use Net::Telnet;
 use Data::Dumper;
 use FixedSNMP;
 use FileHandle;
+use JSON;
 package nms;
 
 use base 'Exporter';
-our @EXPORT = qw(switch_disconnect switch_connect_ssh switch_connect_dlink switch_exec switch_timeout db_connect);
+our @EXPORT = qw(switch_disconnect switch_connect_ssh switch_connect_dlink switch_exec switch_exec_json switch_timeout db_connect);
 
 BEGIN {
 	require "config.pm";
@@ -61,9 +62,10 @@ sub switch_connect_ssh($) {
 	#$inputlog->print("\n\nConnecting to " . $ip . "\n\n");
 
 	my $telnet = Net::Telnet->new(-fhopen => $pty,
+				      -timeout => $nms::config::telnet_timeout,
 				      -dump_log => $dumplog,
 				      -input_log => $inputlog,
-				      -prompt => '/.*\@e\d\d-\d> /',
+				      -prompt => '/.*\@e\d+-\d+[>#] /',
 				      -telnetmode => 0,
 				      -cmd_remove_mode => 1,
 				      -output_record_separator => "\r");
@@ -131,7 +133,14 @@ sub switch_exec {
 	}
 	return @data;
 }
-				
+
+sub switch_exec_json($$) {
+	my ($cmd, $conn) = @_;
+	my @json = switch_exec("$cmd | display json", $conn);
+	pop @json; # Remove the banner at the end of the output
+		return ::decode_json(join("", @json));
+}
+
 sub switch_timeout {
 	my ($timeout, $conn) = @_;
 
