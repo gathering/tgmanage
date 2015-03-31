@@ -90,38 +90,43 @@ while (1) {
 	}
 
 	mylog("Connecting to $switch->{sysname} on $switch->{addr}");
-	my $conn = switch_connect($switch->{addr});
-	if (!defined($conn)) {
-		mylog("Could not connect to ".$switch->{sysname}."(".$switch->{addr}.")");
-		$sdelay->execute("Could not connect to switch, delaying...", $switch->{sysname});
-		$sunlock->execute($switch->{sysname});
-		$dbh->commit();
-		next;
-	}
-	my $error;
-	$error = $sgetallpoll->execute($switch->{sysname});
-	if (!$error) {
-		print "Could not execute sgetallpoll\n".$dbh->errstr();
-		$conn->close;
-		next;
-	}
-	while (my $row = $sgetallpoll->fetchrow_hashref()) {
-		print "sysname: ".$row->{sysname}." cmd: ".$row->{cmd}."\n";
-		my @data;
-		my @commands = split(/[\r\n\000]+/, $row->{cmd});
-		for my $cmd (@commands) {
-			next unless $cmd =~ /\S/; # ignorer linjer med kun whitespace
-			push @data, "# $cmd";
-			if ($cmd =~ s/^!//) {
-				push @data, switch_exec($cmd, $conn, 1);
-			} else {
-				push @data, switch_exec($cmd, $conn);
-			}
+	eval {
+		#my $conn = switch_connect($switch->{addr});
+		my $telnet = switch_connect_ssh($switch->{addr});
+		my $conn = $telnet->{telnet};
+		if (!defined($conn)) {
+			mylog("Could not connect to ".$switch->{sysname}."(".$switch->{addr}.")");
+			$sdelay->execute("Could not connect to switch, delaying...", $switch->{sysname});
+			$sunlock->execute($switch->{sysname});
+			$dbh->commit();
+			next;
 		}
-		my $result = join("\n", @data);
-		$sresult->execute($result, $row->{id});
+		my $error;
+		$error = $sgetallpoll->execute($switch->{sysname});
+		if (!$error) {
+			print "Could not execute sgetallpoll\n".$dbh->errstr();
+			$conn->close;
+			next;
+		}
+		while (my $row = $sgetallpoll->fetchrow_hashref()) {
+			print "sysname: ".$row->{sysname}." cmd: ".$row->{cmd}."\n";
+			my @data;
+			my @commands = split(/[\r\n\000]+/, $row->{cmd});
+			for my $cmd (@commands) {
+				next unless $cmd =~ /\S/; # ignorer linjer med kun whitespace
+				push @data, "# $cmd";
+				if ($cmd =~ s/^!//) {
+					push @data, switch_exec($cmd, $conn, 1);
+				} else {
+					push @data, switch_exec($cmd, $conn);
+				}
+			}
+			my $result = join("\n", @data);
+			$sresult->execute($result, $row->{id});
+		}
+		$conn->close();
+		waitpid($telnet->{pid}, 0);
+		$sunlock->execute($switch->{sysname});
 	}
-	$conn->close();
-	$sunlock->execute($switch->{sysname});
 }
 

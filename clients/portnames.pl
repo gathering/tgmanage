@@ -2,7 +2,7 @@
 
 my ($host,$switchtype,$community) = @ARGV;
 
-open SNMP, "snmpwalk -Os -c $community -v 2c $host ifDescr |"
+open SNMP, "snmpwalk -Os -c $community -v 2c $host -mALL ifDescr |"
 	or die "snmpwalk: $!";
 
 print "begin;\n";

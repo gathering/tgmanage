@@ -2,6 +2,7 @@
 use strict;
 use warnings;
 use DBI;
+use Net::OpenSSH;
 use Net::Telnet;
 use Data::Dumper;
 use FixedSNMP;
@@ -9,7 +10,7 @@ use FileHandle;
 package nms;
 
 use base 'Exporter';
-our @EXPORT = qw(switch_disconnect switch_connect switch_exec switch_timeout db_connect);
+our @EXPORT = qw(switch_disconnect switch_connect_ssh switch_connect switch_exec switch_timeout db_connect);
 
 BEGIN {
 	require "config.pm";
@@ -40,6 +41,35 @@ sub db_connect {
 	                       $nms::config::db_password)
 	        or die "Couldn't connect to database";
 	return $dbh;	
+}
+
+sub switch_connect_ssh($) {
+	my ($ip) = @_;
+	my $ssh = Net::OpenSSH->new($ip, 
+		user => $nms::config::tacacs_user,
+		password => $nms::config::tacacs_pass);
+	my ($pty, $pid) = $ssh->open2pty({stderr_to_stdout => 1})
+		or die "unable to start remote shell: " . $ssh->error;
+
+	my $dumplog = FileHandle->new;
+	$dumplog->open(">>/tmp/dumplog-queue") or die "/tmp/dumplog-queue: $!";
+	#$dumplog->print("\n\nConnecting to " . $ip . "\n\n");
+
+	my $inputlog = FileHandle->new;
+	$inputlog->open(">>/tmp/inputlog-queue") or die "/tmp/inputlog-queue: $!";
+	#$inputlog->print("\n\nConnecting to " . $ip . "\n\n");
+
+	my $telnet = Net::Telnet->new(-fhopen => $pty,
+				      -dump_log => $dumplog,
+				      -input_log => $inputlog,
+				      -prompt => '/.*\@e\d\d-\d> /',
+				      -telnetmode => 0,
+				      -cmd_remove_mode => 1,
+				      -output_record_separator => "\r");
+	$telnet->waitfor(-match => $telnet->prompt,
+			 -errmode => "return")
+		or die "login failed: " . $telnet->lastline;
+	return { telnet => $telnet, ssh => $ssh, pid => $pid, pty => $pty };
 }
 
 sub switch_connect($) {

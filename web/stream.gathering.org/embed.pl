@@ -26,7 +26,7 @@ my $location = undef;
 print $client->header();
 
 my $clip = $client->remote_addr();
-my $template = HTML::Template->new(filename => 'index.tmpl');
+my $template = HTML::Template->new(filename => 'embed.tmpl');
 my $is_local = &is_ip_local($clip, $v4net, $v6net);
 
 my @streams = &html_local_test();
@@ -52,11 +52,8 @@ sub html_local_test() {
 		my %hash = (
 			'title_link' => $title_link,
 			'title' => $streams{$name}->{title},
-			'source' => $streams{$name}->{source},
 			'quality' => $streams{$name}->{quality},
-			'location' => $streams{$name}->{location},
 			'type' => $streams{$name}->{type},
-			'delivery' => $multicast_link,
 		);
 		if ($multicast_link eq "multicast") {
 			$hash{'is_multicast'} .= 1; 

@@ -1,18 +1,18 @@
 <html>
 <head>
 	<title>The Gathering <TMPL_VAR NAME=TG_FULL> Streams</title>
-	<link rel="stylesheet" type="text/css" href="style.css" media="all">
-	<script type="text/javascript" src="jwplayer.js"></script> 
+	<link rel="stylesheet" type="text/css" href="pre-tg15/style.css" media="all">
+	<script type="text/javascript" src="pre-tg15/jwplayer.js"></script> 
 </head>
 <body>
 	<div id="innhold">
 		<TMPL_UNLESS NAME=NOHEADER>
 			<h1>The Gathering <TMPL_VAR NAME=TG_FULL> Streams</h1>
-			<embed type="application/x-shockwave-flash" src="player.swf"
+			<embed type="application/x-shockwave-flash" src="pre-tg15/player.swf"
 				width="800" height="450" style="undefined" id="mplf" name="mplf" quality="high"
 				allowfullscreen="true" allowscriptaccess="always" wmode="opaque"
 				stretching="exactfit"
-				flashvars="stretching=exactfit&amp;file=<TMPL_VAR NAME=VLC_BASE_HOST>/event.flv&amp;autostart=true"></embed>
+				flashvars="stretching=exactfit&amp;file=http://wat.gathering.org:9094/southcam.flv&amp;autostart=true"></embed>
 			<p>&nbsp;</p>
 		</TMPL_UNLESS>
 		
@@ -30,7 +30,7 @@
 	</div>
 
 
-	<p>Problems with the non game streams? The easiest way to get hold of us is on IRC (EFNet); one of ViD or doxid should be available if there's too much traffic on #tg to be heard.</p>
+	<p>Problems with the non game streams? The easiest way to get a hold of us is on IRC (EFNet); Either of ViD or DoXiD should be available if there's too much traffic on #tg to be heard.</p>
 	<p><a target="_blank" href="http://stream.tg<TMPL_VAR NAME="TG">.gathering.org">http://stream.tg<TMPL_VAR NAME="TG">.gathering.org</a></p>
 
 </body>

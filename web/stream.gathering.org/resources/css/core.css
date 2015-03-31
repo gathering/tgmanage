@@ -40,15 +40,20 @@ body {
   background-color: #ffffff;
   text-align: center;
   padding-top: 50px;
-  color: #000000;
-  background-image: url('http://git.hvornum.se/resources/images/tech-bg.jpg');
-  text-shadow: 2px 2px #c2c2c2;
+  color: #FFFFFF;
+  background-color: #000000;
+  /*background-image: url('http://git.hvornum.se/resources/images/tech-bg.jpg');*/
+  /*text-shadow: 2px 2px #c2c2c2;*/
   background-repeat: no-repeat;
   background-size: cover;
 }
 
 .container {
   padding-top: 150px;
+}
+
+.videoframe {
+  left: 50%;
 }
 
 .section {
@@ -72,7 +77,7 @@ body {
   }
 
 #stream {
-  width: 1280px;
+  width: 960px;
   min-width: 960px;
   height: 540px;
   min-height: 540px;
@@ -89,23 +94,84 @@ body {
 @media (min-width: 550px) {
   .section {
     padding: 12rem 0 11rem;
+    padding-bottom: 30px;
   }
   .content { text-align: left; }
+  #floater {
+    min-width: 300px;
+    min-height: 190px;
+    width: 300px;
+    height: 190px;
+  }
+  #stream {
+    min-width: 320px;
+    min-height: 183px;
+  }
+    .videoframe {
+      margin-left: -160px;
+    }
 }
 
-/* Bigger than 750 */
-@media (min-width: 750px) {
+/* Bigger than 920 */
+@media (min-width: 920px) {
   .section {
     padding: 5rem 0 5rem;
+    padding-bottom: 30px;
   }
   .content { text-align: left; }
+  #floater {
+    min-width: 300px;
+    min-height: 190px;
+    width: 300px;
+    height: 190px;
+  }
+  #stream {
+    min-width: 500px;
+    min-height: 280px;
+  }
+    .videoframe {
+      margin-left: -250px;
+    }
 }
 
-/* Bigger than 1000 */
-@media (min-width: 1000px) {
+/* Bigger than 1200 */
+@media (min-width: 1200px) {
   .section {
     padding: 1rem 0 1rem;
     padding-bottom: 30px;
   }
   .content { text-align: left; }
+  #floater {
+    min-width: 531px;
+    min-height: 396px;
+  }
+  #stream {
+    min-width: 700px;
+    min-height: 393px;
+  }
+    .videoframe {
+      margin-left: -350px;
+    }
+}
+
+/* Bigger than 1600 */
+@media (min-width: 1600px) {
+  .section {
+    padding: 1rem 0 1rem;
+    padding-bottom: 30px;
+  }
+  .content { text-align: left; }
+  #floater {
+    min-width: 531px;
+    min-height: 396px;
+  }
+  #stream {
+    width: 960px;
+    min-width: 960px;
+    height: 540px;
+    min-height: 540px;
+  }
+    .videoframe {
+      margin-left: -480px;
+    }
 }

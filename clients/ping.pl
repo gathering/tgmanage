@@ -36,6 +36,7 @@ while (1) {
 			$ping->host_add($secondary_ip);
 			$secondary_ip_to_switch{$secondary_ip} = $switch;
 		}
+		print "ip: $ip\n";
 	}
 	my $result = $ping->ping();
 	die $ping->get_error if (!defined($result));
@@ -61,7 +62,7 @@ while (1) {
 	$dbh->pg_putcopyend();
 
 	$dbh->commit;
-
+	if (0) {
 	# ping linknets
 	$ping = Net::Oping->new;
 	$ping->timeout(0.2);
@@ -86,6 +87,7 @@ while (1) {
 	$dbh->pg_putcopyend();
 	$dbh->commit;
 	
+	}
 	sleep 1;
 }
 

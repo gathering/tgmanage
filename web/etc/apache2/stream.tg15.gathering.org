@@ -1,4 +1,4 @@
- <VirtualHost *:80>
+ <VirtualHost *:8080>
         ServerAdmin drift@gathering.org
         ServerName stream.tg15.gathering.org
         ServerAlias krosus.tg15.gathering.org
@@ -9,9 +9,9 @@
                 Options Indexes FollowSymLinks ExecCGI MultiViews
                 Order allow,deny
                 Allow from all
+		Require all granted
                 AddHandler cgi-script .cgi .sh .pl .py
                 AddDefaultCharset UTF-8
-
         </Directory>
 
         ErrorLog /var/log/apache2/error-stream.tg15.gathering.org.log

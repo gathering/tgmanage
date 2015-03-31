@@ -2,7 +2,7 @@
 use strict;
 use warnings;
 
-my $switchtype = "dlink3100";
+my $switchtype = "ex2200";
 
 print "begin;\n";
 print "delete from placements where switch in (select switch from switches where switchtype = '$switchtype');\n";

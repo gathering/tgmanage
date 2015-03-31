@@ -2,7 +2,7 @@
 use strict;
 use warnings;
 
-my $switchtype = "dlink3100";
+my $switchtype = "ex2200";
 
 print "begin;\n";
 print "delete from temppoll;\n";
@@ -22,8 +22,10 @@ while (<STDIN>) {
 	}
 
 	my $name = $info[0];
-	my $range = $info[3];
-	my $ip = $info[4];
+	my $range = $info[1];
+	my $ip = $info[3];
+	$ip =~ s/\/.*$//;
+
 
 	print "insert into switches (ip, sysname, switchtype) values ('$ip', '$name', '$switchtype');\n";
 	print "insert into dhcp select switch, '$range' from switches where sysname = '$name';\n";

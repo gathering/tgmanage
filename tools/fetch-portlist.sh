@@ -15,7 +15,7 @@ walk_ports() {
 	FIRST_PORT=
 	LAST_PORT=
 
-	for PORT in $( snmpwalk -Os -m IF-MIB -v 2c -c $COMMUNITY $IP ifDescr 2>/dev/null | grep -E 'GigE|Ethernet' | cut -d. -f2 | cut -d" " -f1 ); do
+	for PORT in $( snmpwalk -Os -m IF-MIB -v 2c -c $COMMUNITY $IP ifDescr 2>/dev/null | grep -E ' ge|et|xe' | cut -d. -f2 | cut -d" " -f1 ); do
 		if ! snmpget -m IF-MIB -v 2c -c $COMMUNITY $IP ifHCInOctets.$PORT 2>/dev/null | grep -q 'No Such Instance'; then
 			if [ "$LAST_PORT" ] && [ `expr $LAST_PORT + 1` = $PORT ]; then
 				LAST_PORT=$PORT
