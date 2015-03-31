@@ -1,37 +1,122 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
+	<meta charset="utf-8">
 	<title>The Gathering <TMPL_VAR NAME=TG_FULL> Streams</title>
-	<link rel="stylesheet" type="text/css" href="style.css" media="all">
-	<script type="text/javascript" src="jwplayer.js"></script> 
+
+	<!-- Mobile specific
+	---------------------->
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<!-- CSS specifics
+	-------------------->
+	<link rel="stylesheet" href="/resources/css/normalize.css">
+	<link rel="stylesheet" href="/resources/css/skeleton.css">
+	<link rel="stylesheet" href="/resources/css/core.css">
+	<link rel="stylesheet" href="/resources/css/button-styles.css">
+	<link rel="stylesheet" href="/resources/css/video-js.css">
+
+	<style type="text/css">
+		.vjs-big-play-button {
+			top:0;
+			left:0;
+			right:0;
+			bottom:0;
+			margin:auto;
+		}
+	</style>
+
+	<!-- JavaScript specifics
+	---------------------------->
+	<script type="text/javascript" src="/resources/js/jwplayer.js"></script> 
+	<script type="text/javascript" src="/resources/js/video.js"></script>
+	<script type="text/javascript" src="/resources/js/video-quality-selector.js"></script>
+	<script src="//code.jquery.com/jquery-1.11.2.min.js"></script>
+	
+	<script type="text/javascript">
+		function swapVideo (url) {
+			window.location = '/?url=' + window.btoa(url);
+		}
+
+		function float() {
+			$("#floater").animate({top: '-=20px'}, "slow");
+			$("#floater").animate({top: '+=20px'}, "slow");
+			float();
+		}
+
+		$(document).ready(function() {
+			float();
+		});
+	</script>
+
+	<style type="text/css">
+		#floater {
+			position: absolute;
+			top: 172px;
+			right: 0px;
+			width: 531px;
+			height: 396px;
+			background-image: url('/resources/images/pixel-white.png');
+			background-size: cover;
+		}
+	</style>
+
 </head>
 <body>
-	<div id="innhold">
-		<TMPL_UNLESS NAME=NOHEADER>
-			<h1>The Gathering <TMPL_VAR NAME=TG_FULL> Streams</h1>
-			<embed type="application/x-shockwave-flash" src="player.swf"
-				width="800" height="450" style="undefined" id="mplf" name="mplf" quality="high"
-				allowfullscreen="true" allowscriptaccess="always" wmode="opaque"
-				stretching="exactfit"
-				flashvars="stretching=exactfit&amp;file=http://cubemap.tg14.gathering.org/event.flv&amp;autostart=true"></embed>
-			<p>&nbsp;</p>
-		</TMPL_UNLESS>
-		
-		<TMPL_LOOP NAME="STREAMS">
-			<div class="stream-link">
-				<div class="stream-icon"><img src="img/icon_<TMPL_VAR NAME=QUALITY>.png" /> <img src="img/icon_<TMPL_VAR NAME=TYPE>.png" /> <TMPL_IF NAME=LOCATION><img src="img/icon_<TMPL_VAR NAME=LOCATION>.png"></TMPL_IF></div>
-				<div class="stream-link-content">
-					<a href="<TMPL_VAR NAME=TITLE_LINK>"><TMPL_VAR NAME=TITLE></a><br>
-					Source: <TMPL_VAR NAME=SOURCE><br>
-					Delivery: <TMPL_VAR NAME=delivery> <TMPL_IF NAME=IS_MULTICAST>(<a href='<TMPL_VAR NAME=UNICAST_LINK>'>problems? try unicast vlc link here</a>)</TMPL_IF>
-					
+	<div id="header">
+		<h1>The Gathering <TMPL_VAR NAME=TG_FULL> Streams</h1>
+	</div>
+	<div id="floater">
+
+	</div>
+	<div class="section">
+		<div class="container">
+			<div class="row">
+				<div class="twelve columns">
+					<TMPL_UNLESS NAME=NOHEADER>
+						<video id="stream" class="videoframe video-js vjs-default-skin" controls preload="auto" poster="/resources/images/loading.png" data-setup='{ "autoplay": <TMPL_VAR NAME=VIDEO_AUTO_PLAY>, "plugins" : { "resolutionSelector" : { "default_res" : "720", "force_typesz" : [ "video/flv" ] } } }'>
+							<source src="<TMPL_VAR NAME=VIDEO_URL>" id="videodata" type="video/flv" data-res="720">
+							<p class="vjs-no-js">
+								To view this video please enable JavaScript, and consider upgrading to a web browser that <a href="http://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a>
+							</p>
+						</video>
+					</TMPL_UNLESS>
 				</div>
 			</div>
-		</TMPL_LOOP>
+			<div class="row">
+				<div class="twelve columns">
+					<p>Problems with the non game streams? The easiest way to get a hold of us is on IRC (EFNet); Either of ViD or DoXiD should be available if there's too much traffic on #tg to be heard.</p>
+				</div>
+			</div>
+			<div class="row">
+				<div class="one-half column">
+
+					<TMPL_LOOP NAME="STREAMS">
+					<div class="stream-item">
+						<img class="stream-icon" src="img/icon_<TMPL_VAR NAME=QUALITY>.png" />
+						<img class="stream-icon" src="img/icon_<TMPL_VAR NAME=TYPE>.png" />
+						<a class="stream-link-content" href="<TMPL_VAR NAME=TITLE_LINK>"><TMPL_VAR NAME=TITLE></a>
+					</div>
+					</TMPL_LOOP>
+					
+				</div>
+				<div class="one-half column">
+					<TMPL_LOOP NAME="CAMSTREAMS">
+					<div class="stream-item">
+						<img class="stream-icon" src="img/icon_<TMPL_VAR NAME=QUALITY>.png" />
+						<img class="stream-icon" src="img/icon_<TMPL_VAR NAME=TYPE>.png" />
+						<a class="stream-link-content" href="#" onclick="swapVideo('<TMPL_VAR NAME=TITLE_LINK>');"><TMPL_VAR NAME=TITLE></a>
+					</div>
+					</TMPL_LOOP>
+				</div>
+			</div>
+			<div class="row footer">
+				<div class="twelve columns">
+					<p><a target="_blank" href="http://stream.tg<TMPL_VAR NAME="TG">.gathering.org">http://stream.tg<TMPL_VAR NAME="TG">.gathering.org</a></p>
+				</div>
+			</div>
+		</div>
 	</div>
-
-
-	<p>Problems with the non game streams? The easiest way to get hold of us is on IRC (EFNet); one of ViD, Rockj and Sesse should be available if there's too much traffic on #tg to be heard.</p>
-	<p><a target="_blank" href="http://stream.tg<TMPL_VAR NAME="TG">.gathering.org">http://stream.tg<TMPL_VAR NAME="TG">.gathering.org</a></p>
 
 </body>
 </html>

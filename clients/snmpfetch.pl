@@ -144,8 +144,8 @@ sub poll_loop {
 
 		for my $port (@ports) {
 			my @vars = ();
-			push @vars, ["ifHCInOctets", $port];
-			push @vars, ["ifHCOutOctets", $port];
+			push @vars, ["ifInOctets", $port];
+			push @vars, ["ifOutOctets", $port];
 			push @vars, ["ifInErrors", $port];
 			push @vars, ["ifOutErrors", $port];
 			my $varlist = SNMP::VarList->new(@vars);
@@ -193,9 +193,9 @@ sub callback {
 		if ($port != $var->[1]) {
 			die "Response for unknown OID $var->[0].$var->[1] (expected port $port)";
 		}
-		if ($var->[0] eq 'ifHCInOctets') {
+		if ($var->[0] eq 'ifInOctets') {
 			$in = $var->[2];
-		} elsif ($var->[0] eq 'ifHCOutOctets') {
+		} elsif ($var->[0] eq 'ifOutOctets') {
 			$out = $var->[2];
 		} elsif ($var->[0] eq 'ifInErrors') {
 			$ine = $var->[2];
@@ -212,17 +212,21 @@ sub callback {
 			warn $switch->{'sysname'}.":$port: failed reading in";
 		}
 		$ok = 0;	
+		warn "no in";
 	}
 	if (!defined($out) || $out !~ /^\d+$/) {
 		if (defined($oute)) {
 			warn $switch->{'sysname'}.":$port: failed reading in";
 		}
 		$ok = 0;	
+		warn "no out";
 	}
 
 	if ($ok) {
 		$qpoll->execute($switch->{'switch'}, $port, $in, $out, $ine, $oute) || die "%s:%s: %s\n", $switch->{'switch'}, $port, $in;
 		$dbh->commit;
+	} else {
+		warn $switch->{'sysname'} . " failed to OK.";
 	}
 
 	if (++$switch->{'num_done'} == $switch->{'num_ports'}) {
