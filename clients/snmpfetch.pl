@@ -50,7 +50,7 @@ our $qlock = $dbh->prepare("UPDATE switches SET locked='t', last_updated=now() W
 	or die "Couldn't prepare qlock";
 our $qunlock = $dbh->prepare("UPDATE switches SET locked='f', last_updated=now() WHERE switch=?")
 	or die "Couldn't prepare qunlock";
-our $qpoll = $dbh->prepare("INSERT INTO polls (time, switch, port, bytes_in, bytes_out, errors_in, errors_out, official_port) VALUES (timeofday()::timestamp,?,?,?,?,?,?,true)")
+our $qpoll = $dbh->prepare("INSERT INTO polls (time, switch, port, bytes_in, bytes_out, errors_in, errors_out, official_port,operstatus) VALUES (timeofday()::timestamp,?,?,?,?,?,?,true,?)")
 	or die "Couldn't prepare qpoll";
 
 poll_loop(@ARGV);
@@ -148,6 +148,7 @@ sub poll_loop {
 			push @vars, ["ifOutOctets", $port];
 			push @vars, ["ifInErrors", $port];
 			push @vars, ["ifOutErrors", $port];
+			push @vars, ["ifOperStatus", $port];
 			my $varlist = SNMP::VarList->new(@vars);
 			$session->get($varlist, [ \&callback, $switch_status, $port ]);
 		}
@@ -188,6 +189,7 @@ sub callback {
 	my ($switch, $port, $vars) = @_;
 
 	my ($in, $out, $ine, $oute) = (undef, undef, undef, undef);
+	my $operstatus = "false";
 
 	for my $var (@$vars) {
 		if ($port != $var->[1]) {
@@ -201,6 +203,8 @@ sub callback {
 			$ine = $var->[2];
 		} elsif ($var->[0] eq 'ifOutErrors') {
 			$oute = $var->[2];
+		} elsif ($var->[0] eq 'ifOperStatus') {
+			$operstatus = $var->[2];
 		} else {
 			die "Response for unknown OID $var->[0].$var->[1]";
 		}
@@ -223,7 +227,7 @@ sub callback {
 	}
 
 	if ($ok) {
-		$qpoll->execute($switch->{'switch'}, $port, $in, $out, $ine, $oute) || die "%s:%s: %s\n", $switch->{'switch'}, $port, $in;
+		$qpoll->execute($switch->{'switch'}, $port, $in, $out, $ine, $oute,$operstatus) || die "%s:%s: %s\n", $switch->{'switch'}, $port, $in;
 		$dbh->commit;
 	} else {
 		warn $switch->{'sysname'} . " failed to OK.";
