@@ -65,7 +65,7 @@ sub switch_connect_ssh($) {
 				      -timeout => $nms::config::telnet_timeout,
 				      -dump_log => $dumplog,
 				      -input_log => $inputlog,
-				      -prompt => '/.*\@e\d+-\d+[>#] /',
+				      -prompt => '/.*\@[a-z0-9-]+[>#] /',
 				      -telnetmode => 0,
 				      -cmd_remove_mode => 1,
 				      -output_record_separator => "\r");

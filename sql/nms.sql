@@ -145,6 +145,56 @@ ALTER FUNCTION public.get_current_datarate() OWNER TO nms;
 -- Name: get_datarate(); Type: FUNCTION; Schema: public; Owner: nms
 --
 
+CREATE TYPE operstatuses AS (
+	switch integer,
+	ifdescr char(16),
+	operstatus integer,
+	last_poll_time timestamp with time zone
+);
+CREATE FUNCTION get_operstatus() RETURNS SETOF operstatuses
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+        num_entries INTEGER;
+	poll polls;
+	last_poll polls;
+	ret operstatuses;
+BEGIN
+        num_entries := 0;
+        last_poll.switch = -1;
+		
+        FOR poll IN select * from polls where time >= now() - '15 minutes'::interval and time < now() order by switch,ifdescr,time LOOP
+                IF poll.switch <> last_poll.switch OR poll.ifdescr <> last_poll.ifdescr THEN
+                        IF num_entries >= 1 THEN
+                                ret.switch := last_poll.switch;
+                                ret.ifdescr := last_poll.ifdescr;
+                                ret.operstatus := last_poll.operstatus;
+                                ret.last_poll_time := last_poll.time;
+                                return next ret;
+                        END IF;
+                        num_entries := 1;
+                ELSE
+                        num_entries := num_entries + 1;
+                END IF;
+                last_poll.switch := poll.switch;
+                last_poll.ifdescr := poll.ifdescr;
+                last_poll.time := poll.time;
+                last_poll.operstatus := poll.operstatus;
+        END LOOP;
+       -- pah, and once more, for the last switch/port...
+        IF num_entries >= 1 THEN
+                ret.switch := last_poll.switch;
+                ret.ifdescr := last_poll.ifdescr;
+		ret.operstatus := last_poll.operstatus;
+		ret.last_poll_time := last_poll.time;
+                return next ret;
+        END IF;
+
+        RETURN;
+END;
+$$;
+		
+		
 CREATE FUNCTION get_datarate() RETURNS SETOF datarate
     LANGUAGE plpgsql
     AS $$
