@@ -147,8 +147,8 @@ sub poll_loop {
 			push @vars, ["ifInOctets", $port];
 			push @vars, ["ifOutOctets", $port];
 			push @vars, ["ifInErrors", $port];
-			push @vars, ["ifOutErrors", $port];
 			push @vars, ["ifDescr", $port];
+			push @vars, ["ifOutErrors", $port];
 			push @vars, ["ifOperStatus", $port];
 			my $varlist = SNMP::VarList->new(@vars);
 			$session->get($varlist, [ \&callback, $switch_status, $port ]);
@@ -219,16 +219,19 @@ sub callback {
 		if (defined($ine)) {
 			warn $switch->{'sysname'}.":$port: failed reading in";
 		}
-		$ok = 0;	
+		$ok = 0;
 	}
 	if (!defined($out) || $out !~ /^\d+$/) {
 		if (defined($oute)) {
 			warn $switch->{'sysname'}.":$port: failed reading in";
 		}
-		$ok = 0;	
+		$ok = 0;
 	}
 	if (!defined($ifdescr)) {
 		$ok = 0;
+	} elsif ($ifdescr =~ m/\./) {
+		# Skip virtual ports
+		$ok =0;
 	}
 
 	if ($ok) {

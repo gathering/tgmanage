@@ -112,10 +112,10 @@ while (1) {
 			my @data;
 			my @commands = split(/[\r\n\000]+/, $row->{cmd});
 			for my $cmd (@commands) {
-				print "sysname: $sysname cmd: $cmd\n";
 				next unless $cmd =~ /\S/; # ignorer linjer med kun whitespace
-				push @data, "# $cmd";
 				$cmd =~ s/%SYSNAME%/$sysname/g;
+				print "sysname: $sysname cmd: $cmd\n";
+				push @data, "# $cmd";
 				if ($cmd =~ /^#\s*require-version\s+(.*\S)\s*$/) {
 					my $required_version = $1;
 					my $version;

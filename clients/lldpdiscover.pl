@@ -37,7 +37,7 @@ while (my $ref = $snmpq->fetchrow_hashref) {
 }
 
 # First, find all machines that lack an LLDP chassis ID.
-my $q = $dbh->prepare("SELECT switch, ip, community FROM switches WHERE lldp_chassis_id IS NULL AND ip <> '127.0.0.1'");
+my $q = $dbh->prepare("SELECT switch, ip, community FROM switches WHERE lldp_chassis_id IS NULL AND ip <> '127.0.0.1' and switchtype <> 'ex2200'");
 $q->execute;
 
 while (my $ref = $q->fetchrow_hashref) {
@@ -58,7 +58,7 @@ while (my $ref = $q->fetchrow_hashref) {
 $dbh->commit;
 
 # Now ask all switches for their LLDP neighbor table.
-$q = $dbh->prepare("SELECT ip, sysname, community FROM switches WHERE lldp_chassis_id IS NOT NULL AND ip <> '127.0.0.1' AND switchtype <> 'dlink3100'");
+$q = $dbh->prepare("SELECT ip, sysname, community FROM switches WHERE lldp_chassis_id IS NOT NULL AND ip <> '127.0.0.1' AND switchtype <> 'ex2200'");
 $q->execute;
 
 while (my $ref = $q->fetchrow_hashref) {
