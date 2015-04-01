@@ -56,7 +56,7 @@ $text_img->stringFT($tclr, "/usr/share/fonts/truetype/msttcorefonts/Arial.ttf", 
 $text_img->stringFT($tclr, "/usr/share/fonts/truetype/msttcorefonts/Arial.ttf", 10, 0, 40, 47 + (236-42)*2.0/4.0, "1 Gbit/sec");
 $text_img->stringFT($tclr, "/usr/share/fonts/truetype/msttcorefonts/Arial.ttf", 10, 0, 40, 47 + (236-42)*3.0/4.0, "100 Mbit/sec");
 $text_img->stringFT($tclr, "/usr/share/fonts/truetype/msttcorefonts/Arial.ttf", 10, 0, 40, 47 + (236-42)*4.0/4.0, "10 Mbit/sec");
-$text_img->stringFT($tclr, "/usr/share/fonts/truetype/msttcorefonts/Arial.ttf", 10, 0, 1000, 700, "NMS (C) 2005-2012 Tech:Server");
+$text_img->stringFT($tclr, "/usr/share/fonts/truetype/msttcorefonts/Arial.ttf", 10, 0, 1600, 1000, "NMS (C) 2005-2012 Tech:Server");
 
 my $q = $dbh->prepare("select * from ( SELECT switch,sysname,sum(bytes_in) AS bytes_in,sum(bytes_out) AS bytes_out from switches natural left join get_current_datarate() where ip <> inet '127.0.0.1' group by switch,sysname) t1 natural join placements order by zorder;");
 $q->execute();
@@ -87,7 +87,6 @@ while (my $ref = $q->fetchrow_hashref()) {
 	
 	my $sysname = $ref->{'sysname'};
 	$sysname =~ s/-sekrit//;
-	$sysname =~ s/\..*$//;
 	
 	$ref->{'placement'} =~ /\((\d+),(\d+)\),\((\d+),(\d+)\)/;
 	$img->filledRectangle($3,$4,$1,$2,$clr);

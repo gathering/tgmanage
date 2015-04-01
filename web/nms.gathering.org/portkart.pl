@@ -26,7 +26,7 @@ $img->stringFT($blk, "/usr/share/fonts/truetype/msttcorefonts/Arial.ttf", 10, 0,
 $img->stringFT($blk, "/usr/share/fonts/truetype/msttcorefonts/Arial.ttf", 10, 0, 40, 47 + (236-42)*1.0/3.0, "100 Mbit/sec");
 $img->stringFT($blk, "/usr/share/fonts/truetype/msttcorefonts/Arial.ttf", 10, 0, 40, 47 + (236-42)*2.0/3.0, "10 Mbit/sec");
 $img->stringFT($blk, "/usr/share/fonts/truetype/msttcorefonts/Arial.ttf", 10, 0, 40, 47 + (236-42)*3.0/3.0, "1 Mbit/sec");
-$img->stringFT($blk, "/usr/share/fonts/truetype/msttcorefonts/Arial.ttf", 10, 0, 1000, 620, "NMS (C) 2005-2007 Tech:Server");
+$img->stringFT($blk, "/usr/share/fonts/truetype/msttcorefonts/Arial.ttf", 10, 0, 1600, 1000, "NMS (C) 2005-2007 Tech:Server");
 
 my $q = $dbh->prepare('select switch,port,bytes_in,bytes_out,placement,switchtype from switches natural join placements natural join get_datarate() where switchtype like \'%3100%\'');
 $q->execute();

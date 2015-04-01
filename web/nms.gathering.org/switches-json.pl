@@ -16,7 +16,6 @@ while (my $ref = $q->fetchrow_hashref()) {
 	$ref->{'placement'} =~ /\((-?\d+),(-?\d+)\),\((-?\d+),(-?\d+)\)/;
 	my ($x1, $y1, $x2, $y2) = ($1, $2, $3, $4);
 	my $sysname = $ref->{'sysname'};
-	$sysname =~ s/\..*$//;
 	$json{'switches'}{$ref->{'switch'}} = {
 		sysname => $sysname,
 		x => $x2,

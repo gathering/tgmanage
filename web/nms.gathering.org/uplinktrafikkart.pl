@@ -41,7 +41,7 @@ $img->rectangle(12,42,33,236,$blk);
 $img->stringFT($blk, "/usr/share/fonts/truetype/msttcorefonts/Arial.ttf", 10, 0, 40, 47 + (236-42)*0.0/2.0, "4 Gbit/sec");
 $img->stringFT($blk, "/usr/share/fonts/truetype/msttcorefonts/Arial.ttf", 10, 0, 40, 47 + (236-42)*1.0/2.0, "2 Gbit/sec");
 $img->stringFT($blk, "/usr/share/fonts/truetype/msttcorefonts/Arial.ttf", 10, 0, 40, 47 + (236-42)*2.0/2.0, "1 Gbit/sec");
-$img->stringFT($blk, "/usr/share/fonts/truetype/msttcorefonts/Arial.ttf", 10, 0, 1000, 700, "NMS (C) 2005-2012 Tech:Server");
+$img->stringFT($blk, "/usr/share/fonts/truetype/msttcorefonts/Arial.ttf", 10, 0, 1600, 1000, "NMS (C) 2005-2012 Tech:Server");
 
 my $q = $dbh->prepare('select switch,sysname,(select placement from placements where placements.switch=switches.switch) as placement,greatest(sum(bytes_in),sum(bytes_out)) as traffic from switches natural left join get_current_datarate() natural join placements where port between 45 and 48 and switchtype like \'dlink3100%\' group by switch,sysname');
 $q->execute();

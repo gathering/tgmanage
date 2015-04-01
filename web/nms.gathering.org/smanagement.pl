@@ -148,7 +148,14 @@ print << "EOF";
         <td>Kommando(er):</td>
         <td></td>
 	<td><textarea name="cmd" cols="80" rows="24"></textarea></td>
-	<td>En kommando per linje. Linjer som begynner med ! sørger for at nms ikke venter på normal prompt, men fyrer av gårde neste linje umiddelbart. Kjekt for kommandoer av typen "!save\\nY"</td>
+	<td>
+	  <ul>
+	    <li>En kommando per linje.</li>
+	    <li>Linjer som begynner med ! sørger for at nms ikke venter på normal prompt, men fyrer av gårde neste linje umiddelbart. Kjekt for kommandoer av typen "!save\\nY"</li>
+	    <li>%SYSNAME% erstattes med hostnavnet til switchen</li>
+	    <li>"#require-version 14.1X53-D15.2" avbryter scriptet om versjonen av JunOS ikke er lik 14.1X53-D15.2</li>
+	  </ul>
+	</td>
       </td>
       <tr>
         <td><hr /></td>
