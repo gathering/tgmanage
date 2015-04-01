@@ -138,3 +138,11 @@ e81-1 distro7 ge-0/0/18 ge-1/0/18 ge-2/0/18 ge-3/0/18
 e81-2 distro7 ge-0/0/19 ge-1/0/19 ge-2/0/19 ge-3/0/19
 e83-1 distro7 ge-0/0/20 ge-1/0/20 ge-2/0/20 ge-3/0/20
 e83-2 distro7 ge-0/0/21 ge-1/0/21 ge-2/0/21 ge-3/0/21
+sw1-creativia distro6 ge-0/0/18 ge-1/0/18
+sw2-creativia distro6 ge-0/0/19 ge-1/0/19
+sw3-creativia distro6 ge-0/0/20 ge-1/0/20
+sw4-creativia distro6 ge-0/0/21 ge-1/0/21
+sw5-creativia distro6 ge-0/0/22 ge-1/0/22
+sw6-creativia distro6 ge-0/0/23 ge-1/0/23
+sw7-creativia distro6 ge-0/0/24 ge-1/0/24
+sw8-creativia distro6 ge-0/0/25 ge-1/0/25
