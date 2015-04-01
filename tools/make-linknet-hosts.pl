@@ -1,7 +1,16 @@
 #!/usr/bin/perl
 use NetAddr::IP;
 use Net::IP;
-#
+use Getopt::Long;
+
+my ($first);
+
+if (@ARGV > 0) {
+        GetOptions(
+        'f|first'            => \$first,
+        )
+}
+
 # Input file format:
 #
 # <ipv4-linknet> <ipv6-linknet> src-router dst-router
@@ -25,6 +34,11 @@ while (<STDIN>) {
 
 	# generate-dnsrr.pl format:
 	# hostname ipv4 ipv6
-	printf("%s-%s %s %s\n", $from, $to, $ipv4_first->addr, $ipv6_first->addr); 
-	printf("%s-%s %s %s\n", $to, $from, $ipv4_second->addr, $ipv6_second->addr); 
+	if($first){
+		printf("%s %s %s\n", $from, $ipv4_first->addr, $ipv6_first->addr);
+		printf("%s %s %s\n", $to, $ipv4_second->addr, $ipv6_second->addr);
+	} else {
+		printf("%s-%s %s %s\n", $from, $to, $ipv4_first->addr, $ipv6_first->addr);
+		printf("%s-%s %s %s\n", $to, $from, $ipv4_second->addr, $ipv6_second->addr);
+	}
 }
