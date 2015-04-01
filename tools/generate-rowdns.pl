@@ -51,9 +51,11 @@ while (<STDIN>){
 	# PTR to the switch
 	if($delete){
 		print "update delete " . Net::IP->new($v4mgmt)->reverse_ip() . " \t IN PTR\n";
+		print "send\n";
 		print "update delete " . Net::IP->new($v6mgmt)->reverse_ip() . " \t IN PTR\n";
 	} else {
 		print "update add " . Net::IP->new($v4mgmt)->reverse_ip() . " \t 3600 IN PTR \t $sw_fqdn\n";
+		print "send\n";
 		print "update add " . Net::IP->new($v6mgmt)->reverse_ip() . " \t 3600 IN PTR \t $sw_fqdn\n";
 	}
 	print "send\n";
@@ -79,9 +81,11 @@ while (<STDIN>){
 	# PTR to the gateway/router
 	if($delete){
 		print "update delete " . Net::IP->new($v4gw)->reverse_ip() . " \t IN PTR\n";
+		print "send\n";
 		print "update delete " . Net::IP->new($v6gw)->reverse_ip() . " \t IN PTR\n";
 	} else {
 	        print "update add " . Net::IP->new($v4gw)->reverse_ip() . " \t 3600 IN PTR \t $gw_fqdn\n";
+		print "send\n";
 	        print "update add " . Net::IP->new($v6gw)->reverse_ip() . " \t 3600 IN PTR \t $gw_fqdn\n";
 	}
         print "send\n";
