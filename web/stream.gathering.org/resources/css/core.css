@@ -3,6 +3,19 @@ body {
   color: #FFFFFF;
 }
 
+*:fullscreen {
+  position:fixed;
+  top:0; 
+  right:0; 
+  bottom:0; 
+  left:0;
+  margin:0;
+  box-sizing: border-box;
+  width:100%;
+  height:100%;
+  object-fit: contain;
+}
+
 .button {
   font-weight: bold;
   color: #333;
@@ -66,6 +79,8 @@ body {
 }
 
   .stream-icon {
+    width: 51px;
+    height: 52px;
     display: inline-block;
   }
 
@@ -90,6 +105,48 @@ body {
   padding-top: 50px;
 }
 
+.bubble 
+{
+  position: relative;
+  width: 100%;
+  height: 100%;
+  padding: 0px;
+  background: #FFFFFF;
+  -webkit-border-radius: 10px;
+  -moz-border-radius: 10px;
+  border-radius: 10px;
+  border: #7F7F7F solid 2px;
+  padding: 10px;
+}
+
+  .bubble:after 
+  {
+    content: '';
+    position: absolute;
+    border-style: solid;
+    border-width: 16px 12px 0;
+    border-color: #FFFFFF transparent;
+    display: block;
+    width: 0;
+    z-index: 1;
+    bottom: -15px;
+    left: 130px;
+  }
+
+  .bubble:before 
+  {
+    content: '';
+    position: absolute;
+    border-style: solid;
+    border-width: 17px 13px 0;
+    border-color: #7F7F7F transparent;
+    display: block;
+    width: 0;
+    z-index: 0;
+    bottom: -19px;
+    left: 129px;
+  }
+
 /* Bigger than 550 */
 @media (min-width: 550px) {
   .section {
@@ -110,6 +167,8 @@ body {
     .videoframe {
       margin-left: -160px;
     }
+    .videoframe:-webkit-full-screen { margin-left: 0px; }
+    .videoframe:-moz-full-screen { margin-left: 0px; }
 }
 
 /* Bigger than 920 */
@@ -132,6 +191,8 @@ body {
     .videoframe {
       margin-left: -250px;
     }
+    .videoframe:-webkit-full-screen { margin-left: 0px; }
+    .videoframe:-moz-full-screen { margin-left: 0px; }
 }
 
 /* Bigger than 1200 */
@@ -152,6 +213,8 @@ body {
     .videoframe {
       margin-left: -350px;
     }
+    .videoframe:-webkit-full-screen { margin-left: 0px; }
+    .videoframe:-moz-full-screen { margin-left: 0px; }
 }
 
 /* Bigger than 1600 */
@@ -174,4 +237,6 @@ body {
     .videoframe {
       margin-left: -480px;
     }
+    .videoframe:-webkit-full-screen { margin-left: 0px; }
+    .videoframe:-moz-full-screen { margin-left: 0px; }
 }

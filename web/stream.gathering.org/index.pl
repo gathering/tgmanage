@@ -60,28 +60,20 @@ sub loop_webcams() {
 	my @s = ();
 	foreach my $name (sort { $streams{$a}->{priority} <=> $streams{$b}->{priority} } keys %streams) {
 		if ($streams{$name}->{type} eq $_[0] && $streams{$name}->{online}) {
-			my $title_link = "http://stream.tg$tg.gathering.org/stream.pl?delivery=%s&stream=${name}&interlaced=%s";
-			my $multicast_link = $streams{$name}->{has_multicast} ? "multicast" : "unicast";
-			$multicast_link = "unicast" if ($force_unicast == 1 || not $is_local);
+			my $vlc_url = "http://stream.tg$tg.gathering.org/generate_vlc.pl?delivery=%s&stream=${name}&interlaced=%s";
+			my $multicast = $streams{$name}->{has_multicast} ? "multicast" : "unicast";
+			$multicast = "unicast" if ($force_unicast == 1 || not $is_local);
 
-			if ($streams{$name}->{external}) {
-				 $title_link = $streams{$name}->{url};
-			} else {
-				$title_link = sprintf($title_link, $multicast_link, $streams{$name}->{interlaced});
-			}
+			my $vlc_link = sprintf($vlc_url, $multicast, $streams{$name}->{interlaced});
+			my $href_link = '<a class="stream-link-content" href="#" onclick="swapVideo(\'' . $streams{$name}->{url} . '\');">';
+
 			my %hash = (
-				'title_link' => $title_link,
+				'href' => $href_link,
 				'title' => $streams{$name}->{title},
 				'quality' => $streams{$name}->{quality},
 				'type' => $streams{$name}->{type},
+				'vlc_link' => $vlc_link,
 			);
-			if ($multicast_link eq "multicast") {
-				$hash{'is_multicast'} .= 1; 
-				my $unicast_link = $title_link;
-				$unicast_link=~s/multicast/unicast/g;
-				$hash{'unicast_link'} .= $unicast_link;
-			}
-			$hash{'description'} .= $streams{$name}->{description} if exists($streams{$name}->{description});
 			push(@s, \%hash);
 		}
 	}

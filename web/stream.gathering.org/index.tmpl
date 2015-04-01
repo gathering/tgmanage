@@ -38,14 +38,36 @@
 			window.location = '/?url=' + window.btoa(url);
 		}
 
-		function float() {
-			$("#floater").animate({top: '-=20px'}, "slow");
-			$("#floater").animate({top: '+=20px'}, "slow");
-			float();
+		var _float = true;
+
+		function animateFloat() {
+			if(_float) {
+				$("#floater").animate({top: '-=20px'}, "slow");
+				$("#floater").animate({top: '+=20px'}, "slow", animateFloat);
+			}
+		}
+
+		function toggleAnimation() {
+			$('#bubble').stop().fadeOut( 400 );
+			if(_float) {
+				_float = false;
+				$("#floater").delay(800).animate({top: '172px'}, "slow");
+			} else {
+				_float = true;
+				animateFloat();
+			}
 		}
 
 		$(document).ready(function() {
-			float();
+			$("#floater").click(function() {
+				toggleAnimation();
+			});
+			$("#bubble").click(function() {
+				toggleAnimation();
+			});
+			
+			//animateFloat();
+			//$( "#bubble" ).delay( 5000 ).fadeOut( 400 );
 		});
 	</script>
 
@@ -59,6 +81,17 @@
 			background-image: url('/resources/images/pixel-white.png');
 			background-size: cover;
 		}
+
+		#bubble {
+			position: absolute;
+			visibility: hidden;
+			top: 62px;
+			right: 170px;
+			width: 200px;
+			height: 25px;
+			color: #000000;
+			cursor: pointer;
+		}
 	</style>
 
 </head>
@@ -67,7 +100,12 @@
 		<h1>The Gathering <TMPL_VAR NAME=TG_FULL> Streams</h1>
 	</div>
 	<div id="floater">
-
+		
+	</div>
+	<div id="bubble">
+		<div class="bubble">
+			If you hate me, click me!
+		</div>
 	</div>
 	<div class="section">
 		<div class="container">
@@ -94,8 +132,9 @@
 					<TMPL_LOOP NAME="STREAMS">
 					<div class="stream-item">
 						<img class="stream-icon" src="img/icon_<TMPL_VAR NAME=QUALITY>.png" />
+						<a href="<TMPL_VAR NAME=VLC_LINK>"><img class="stream-icon" src="/resources/images/vlc.png" /></a>
 						<img class="stream-icon" src="img/icon_<TMPL_VAR NAME=TYPE>.png" />
-						<a class="stream-link-content" href="<TMPL_VAR NAME=TITLE_LINK>"><TMPL_VAR NAME=TITLE></a>
+						<TMPL_VAR NAME=HREF><TMPL_VAR NAME=TITLE></a>
 					</div>
 					</TMPL_LOOP>
 					
@@ -104,8 +143,9 @@
 					<TMPL_LOOP NAME="CAMSTREAMS">
 					<div class="stream-item">
 						<img class="stream-icon" src="img/icon_<TMPL_VAR NAME=QUALITY>.png" />
+						<a href="<TMPL_VAR NAME=VLC_LINK>"><img class="stream-icon" src="/resources/images/vlc.png" /></a>
 						<img class="stream-icon" src="img/icon_<TMPL_VAR NAME=TYPE>.png" />
-						<a class="stream-link-content" href="#" onclick="swapVideo('<TMPL_VAR NAME=TITLE_LINK>');"><TMPL_VAR NAME=TITLE></a>
+						<TMPL_VAR NAME=HREF><TMPL_VAR NAME=TITLE></a>
 					</div>
 					</TMPL_LOOP>
 				</div>

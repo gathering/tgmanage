@@ -6,7 +6,7 @@ use NetAddr::IP;
 our $v4net = NetAddr::IP->new("151.216.128.0/17");
 our $v6net = NetAddr::IP->new("2a02:ed02::/32");
 our $multicast = "udp://\@233.191.12.1";
-our $video_url = "http://wat.gathering.org:9094/southcam.flv";
+our $video_url = "http://cubemap.tg15.gathering.org/event.flv";
 our $tg = 15;
 our $tg_full = 2015;
 
@@ -23,13 +23,14 @@ our %streams =  (
 			'quality' => 'hd',
 			'priority' => 20,
 			'port' => 80,
-			'url' => '/event.ts',
-			'online' => 0,
+			'url' => 'http://cubemap.tg15.gathering.org/event.flv',
+			'online' => 1,
+			'external' => 1,
 			'interlaced' => 0,
 			'has_multicast' => 0,
 			'multicast_ip' => 'udp://@[ff7e:a40:2a02:ed02:ffff::15]:2015',
 			'source' => 'Event',
-			'title' => 'Event HD (720p50)'
+			'title' => 'Event HD (720p50 H.264) 6Mbit/s'
 		},
 #		'creativia-hd' => {
 #			'type' => 'event',
@@ -86,15 +87,15 @@ our %streams =  (
 			'type' => 'camera',
 			'quality' => 'hd',
 			'priority' => 40,
-			'url' => "http://wat.gathering.org:9094/southcam.flv", # <-- In use (Need to rebuild row 67 in index.pl)
-            'port' => 80,
+			'url' => "http://cubemap.tg15.gathering.org/southcam.flv", # <-- In use (Need to rebuild row 67 in index.pl)
+			'port' => 80,
 			'interlaced' => 0,
 			'has_multicast' => 0,
 			'external' => 1, # <-- In use (Need to rebuild row 67 in index.pl)
 			'online' => 1,
 #			'multicast_ip' => "udp://@[ff7e:a40:2a02:ed02:ffff::16]",
 			'source' => 'Tech',
-			'title' => 'Webcam South (HD) (1920x1080 H.264) 10mbps',
+			'title' => "Webcam South (HD) (720p H.264) 3Mbit/s",
 		},
 
 		'roofcam-raw' => { 
@@ -115,7 +116,7 @@ our %streams =  (
 			'type' => 'camera',
 			'quality' => 'hd',
 			'priority' => 130,
-            'url' => 'http://wat.gathering.org:9094/noccam.flv',
+			'url' => 'http://cubemap.tg15.gathering.org/noccam.flv',
 			'port' => 80, # <-- Safe to remove
 			'external' => 1,
 			'has_multicast' => 0, # <-- Safe to remove
@@ -123,7 +124,7 @@ our %streams =  (
 			'online' => 1,
 			'multicast_ip' => "udp://@[ff7e:a40:2a02:ed02:ffff::18]:2018",# <-- Safe to remove
 			'source' => "Tech", # <-- Safe to remove
-			'title' => "Webcam NOC (HD) (1280x720 H.264) 5mbps"
+			'title' => "Webcam NOC (HD) (720p H.264) 3Mbit/s"
 		},
 
 );
