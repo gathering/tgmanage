@@ -24,6 +24,12 @@ require "$cwd/mygraph.pl";
 my $start = [Time::HiRes::gettimeofday];
 my $dbh = nms::db_connect();
 
+sub filename($$$$) {
+	my ($switch, $last_port, $width, $height) = @_;
+	$last_port =~ y,/,_,;
+	return "$switch-$last_port-$width-$height.png";
+}
+
 # Fetch the name
 my $ref = $dbh->selectrow_hashref('SELECT sysname,ip FROM switches WHERE switch=?', undef, $switch);
 
@@ -37,13 +43,13 @@ print <<"EOF";
     <h1>Switch $switch ($ref->{'sysname'} - $ref->{'ip'})</h1>
 EOF
 
-my $q = $dbh->prepare('select port,coalesce(description, \'Port \' || port) as description,extract(epoch from time) as time,bytes_in,bytes_out from switches natural left join portnames natural join polls where time between now() - \'1 day\'::interval and now() and switch=? order by switch,port,time;') or die $dbh->errstr;
+my $q = $dbh->prepare('select ifdescr,\'Port \' || ifdescr as description,extract(epoch from time) as time,ifinoctets,ifoutoctets from switches natural join polls2 where time between now() - \'1 day\'::interval and now() and switch=? order by switch,ifdescr,time;') or die $dbh->errstr;
 $q->execute($switch) or die $dbh->errstr;
 
 my (@totx, @toty1, @toty2) = ();
 
 my (@x, @y1, @y2) = ();
-my $last_port = -1;
+my $last_port;
 my $portname = "";
 my $min_x = time;
 my $max_x = time - 86400;
@@ -54,14 +60,36 @@ my ($min_ty,$max_ty) = (0, 10_000_000/8);
 
 $prev_time = -1;
 my $last_totx;
+# Buffer all the rows so we can fancy-sort them
+my @rows;
 while (my $ref = $q->fetchrow_hashref()) {
+	push @rows, $ref;
+}
+sub cmp_ports {
+	my @a = split(/(\d+)/, $_[0]);
+	my @b = split(/(\d+)/, $_[1]);
+	for (my $i = 0; $i < scalar @a; ++$i) {
+		last if $i >= scalar @b;
+		my $a = $a[$i];
+		my $b = $b[$i];
+		if ($a =~ /^\d+$/ && $a =~ /^\d+$/) {
+			return $a <=> $b if ($a != $b);
+		} else {
+			return $a cmp $b if ($a ne $b);
+		}
+	}
+	# None of the N first parts differed, this means the shortest one is first
+	return scalar @a <=> scalar @b;
+}
+sort { cmp_ports($a->{'ifdescr'}, $b->{'ifdescr'}) } @rows;
+foreach my $ref (@rows) {
 	my $time = $ref->{'time'};
-	my $in = $ref->{'bytes_in'};
-	my $out = $ref->{'bytes_out'};
+	my $in = $ref->{'ifinoctets'};
+	my $out = $ref->{'ifoutoctets'};
 	next if ($time == $prev_time);
-	if ($ref->{'port'} != $last_port) {
-		if ($last_port != -1) {
-			my $filename = "$switch-$last_port-$width-$height.png";
+	if ($ref->{'ifdescr'} ne $last_port) {
+		if (defined $last_port) {
+			my $filename = filename($switch, $last_port, $width, $height);
 
 			# reap children
 			waitpid(-1, WNOHANG);
@@ -92,9 +120,9 @@ while (my $ref = $q->fetchrow_hashref()) {
 		@y2 = ();
 		($min_y,$max_y) = (0, 10_000_000/8);
 		$prev_time = $ref->{'time'};
-		$prev_in = $ref->{'bytes_in'};
-		$prev_out = $ref->{'bytes_out'};
-		$last_port = $ref->{'port'};
+		$prev_in = $ref->{'ifinoctets'};
+		$prev_out = $ref->{'ifoutoctets'};
+		$last_port = $ref->{'ifdescr'};
 		$portname = $ref->{'description'};
 		($if,$of,$ifv,$ofv) = (0,0,0,0);
 		($prev_time,$prev_in,$prev_out) = ($time,$in,$out);
@@ -176,7 +204,7 @@ while (my $ref = $q->fetchrow_hashref()) {
 $dbh->disconnect;
 
 # last graph
-my $filename = "$switch-$last_port-$width-$height.png";
+my $filename = filename($switch, $last_port, $width, $height);
 
 my $pid = fork();
 if ($pid == 0) {
