@@ -1,4 +1,4 @@
-#!/usr/bin/perl -I /srv/streamlib
+#!/usr/bin/perl -I /root/tgmanage/web/streamlib
 use warnings;
 use strict;
 use CGI;
@@ -47,7 +47,13 @@ $template->param(STREAMS => \@streams);
 $template->param(CAMSTREAMS => \@camstreams);
 $template->param(NOHEADER => $no_header);
 if(exists $input{url}) {
-	$template->param(VIDEO_URL => decode_base64($input{url}));
+	my $decodedUrl = decode_base64($input{url});
+	# Check against XS-scripting:
+	if (index($decodedUrl, 'cubemap.tg15.gathering.org/') != -1) {
+		$template->param(VIDEO_URL => $decodedUrl);
+	} else {
+		$template->param(VIDEO_URL => $video_url);
+	}
 	$template->param(VIDEO_AUTO_PLAY => 'true');
 } else {
 	$template->param(VIDEO_URL => $video_url);
@@ -62,7 +68,7 @@ sub loop_webcams() {
 		if ($streams{$name}->{type} eq $_[0] && $streams{$name}->{online}) {
 			my $vlc_url = "http://stream.tg$tg.gathering.org/generate_vlc.pl?delivery=%s&stream=${name}&interlaced=%s";
 			my $multicast = $streams{$name}->{has_multicast} ? "multicast" : "unicast";
-			$multicast = "unicast" if ($force_unicast == 1 || not $is_local);
+			$multicast = "unicast" if (defined $force_unicast && $force_unicast == 1 || not $is_local);
 
 			my $vlc_link = sprintf($vlc_url, $multicast, $streams{$name}->{interlaced});
 			my $href_link = '<a class="stream-link-content" href="#" onclick="swapVideo(\'' . $streams{$name}->{url} . '\');">';

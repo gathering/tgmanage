@@ -10,7 +10,7 @@ use Net::CIDR;
 
 my $dbh = nms::db_connect();
 
-my $coregws = $dbh->prepare("SELECT switch, ip, community, sysname FROM switches WHERE switchtype <> 'ex2200'")
+my $coregws = $dbh->prepare("SELECT switch, ip, community, sysname FROM switches WHERE sysname NOT LIKE 'e%' and sysname NOT LIKE 'sw%creativia%' AND sysname NOT LIKE 'sw%crew'")
 	or die "Can't prepare query: $!";
 $coregws->execute;
 

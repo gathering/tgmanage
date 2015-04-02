@@ -1,0 +1,21 @@
+<VirtualHost *:8080>
+	ServerAdmin drift@gathering.org
+        ServerName stats.tg15.gathering.org
+
+        DocumentRoot /root/tgmanage/web/stats.gathering.org
+        <Directory "/root/tgmanage/web/stats.gathering.org">
+                AllowOverride None
+                Options Indexes FollowSymLinks ExecCGI MultiViews
+
+		Require all granted
+        </Directory>
+
+        ErrorLog /var/log/apache2/error-stats.tg15.gathering.org.log
+
+        # Possible values include: debug, info, notice, warn, error, crit,
+        # alert, emerg.
+        LogLevel warn
+
+        CustomLog /var/log/apache2/access-stats.tg15.gathering.org.log combined
+        ServerSignature On
+</VirtualHost>

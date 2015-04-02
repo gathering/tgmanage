@@ -86,13 +86,13 @@ sub inner_loop
 		my $s = new SNMP::Session(DestHost => $switch{'mgtip'},
 					  Community => $switch{'community'},
 					  Version => '2');
-			my @vars = ();
-			push @vars, [ "sysName", 0];
-			push @vars, [ "sysDescr", 0];
-			push @vars, [ "1.3.6.1.4.1.2636.3.1.13.1.7.7.1.0", 0];
-			my $varlist = SNMP::VarList->new(@vars);
-			$s->get($varlist, [ \&ckcall, \%switch ]);
-		$s->gettable('ifTable',callback => [\&callback, \%switch]);
+		my @vars = ();
+		push @vars, [ "sysName", 0];
+		push @vars, [ "sysDescr", 0];
+		push @vars, [ "1.3.6.1.4.1.2636.3.1.13.1.7.7.1.0", 0];
+		my $varlist = SNMP::VarList->new(@vars);
+		$s->get($varlist, [ \&ckcall, \%switch ]);
+		$s->gettable('ifXTable',callback => [\&callback, \%switch]);
 	}
 	mylog( "Added " . @switches . " ");
 	SNMP::MainLoop(5);
@@ -120,7 +120,7 @@ sub ckcall
 	}
 	$dbh->commit;
 }
-my @values = ('ifDescr','ifSpeed','ifType','ifOperStatus','ifInErrors','ifOutErrors','ifOutOctets','ifInOctets');
+my @values = ('ifName','ifHighSpeed','ifHCOutOctets','ifHCInOctets');
 my $query = "INSERT INTO polls2 (switch,time";
 foreach my $val (@values) {
 	$query .= ",$val";
@@ -141,9 +141,9 @@ sub callback
 	my %ifs = ();
 
 	foreach my $key (keys %{$table}) {
-		my $descr = $table->{$key}->{'ifDescr'};
+		my $descr = $table->{$key}->{'ifName'};
 
-		if ($descr =~ m/(ge|xt|xe)-/ && $descr !~ m/\./) {
+		if ($descr =~ m/(ge|xe|et)-/ && $descr !~ m/\./) {
 			$ifs{$descr} = $table->{$key};
 		}
 	}
@@ -164,7 +164,7 @@ sub callback
 		or die "Couldn't unlock switch";
 	$dbh->commit;
 }
-
+print $query . "\n";
 while (1) {
 	inner_loop();
 }

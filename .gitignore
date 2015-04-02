@@ -6,15 +6,17 @@ web/nms-public.gathering.org/weathermap
 web/nms-public.gathering.org/nettkart.json
 web/nms-public.gathering.org/ping.json
 web/nms-public.gathering.org/speedometer.json
+web/nms-public.gathering.org/switches.json
 web/nms.gathering.org/.htaccess
 web/nms.gathering.org/img/
-dlink-ng/dlink-ng-config.pm
-dlink-ng/log/
+working-area/
 include/config.pm
 include/tgmanage.cfg.sh
 planning/planning
 web/.htpasswd
 web/.htpasswd.munin
+*.swp
+
 
 # Exclude JunOS images
 junos-bootstrap/httpd/files/*

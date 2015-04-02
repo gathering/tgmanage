@@ -5,8 +5,8 @@ use DBI;
 use Net::OpenSSH;
 use Net::Telnet;
 use Data::Dumper;
-use FixedSNMP;
 use FileHandle;
+use SNMP;
 use JSON;
 package nms;
 

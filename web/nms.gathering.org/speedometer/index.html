@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset=utf-8 />
+        <title></title>
+        <link rel="stylesheet" type="text/css" href="default.css" />
+        <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
+        
+        
+        
+        <!-- Load c3.css -->
+        <link href="c3-master/c3.css" rel="stylesheet" type="text/css">
+
+        <!-- Load d3.js and c3.js -->
+        <script src="http://d3js.org/d3.v3.min.js"></script>
+        <script src="c3-master/c3.min.js"></script>
+        
+        
+    </head>
+    <body>
+        <div id="data" style="color: #fff;">
+        
+        </div>
+        
+        <script>
+            var chart = c3.generate({
+                bindto: '#data',
+                data: {
+                    columns: [
+                        ['data', 0]
+                    ],
+                    type: 'gauge',
+                    onclick: function (d, i) { console.log("onclick", d, i); },
+                    onmouseover: function (d, i) { console.log("onmouseover", d, i); },
+                    onmouseout: function (d, i) { console.log("onmouseout", d, i); }
+                },
+                gauge: {
+                //        label: {
+                //            format: function(value, ratio) {
+                //                return value;
+                //            },
+                //            show: false // to turn off the min/max labels.
+                //        },
+                //    min: 0, // 0 is default, //can handle negative min e.g. vacuum / voltage / current flow / rate of change
+                //    max: 100, // 100 is default
+                //    units: ' %',
+                //    width: 39 // for adjusting arc thickness
+                    width: 30,
+                    min: 0,
+                    max: 100
+                },
+                color: {
+                    pattern: ['#00D185', '#F7AB7D', '#FF6929', '#E81417'], // the three color levels for the percentage values.
+                    threshold: {
+                    // unit: 'value', // percentage is default
+                    // max: 400, // 100 is default
+                        values: [100, 200, 300, 400]
+                    }
+                },
+                size: {
+                    height: 800
+                }
+            });
+
+            setInterval(function () {
+            
+                $.getJSON("../aggregated_traffic.pl", function(result){
+                    // var sum = Math.round((parseInt(result.sum_in/8)+parseInt(result.sum_out/8))/(1024*1024*1 024));
+                    
+                    var sum = Math.round(parseInt(result.sum_in)/(1024*1024*1024));
+                    console.log(sum);
+                    /*
+                    $.each(result, function(i, field){
+                        $("div").append(field + " ");
+                    });
+                    */
+                    chart.load({
+                        columns: [['data', sum]]
+                    });
+                });
+            
+            
+
+            }, 3000);
+        </script>
+    </body>
+</html>

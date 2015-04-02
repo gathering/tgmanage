@@ -1,7 +1,6 @@
 <VirtualHost *:8080>
         ServerAdmin drift@gathering.org
         ServerName munin.tg15.gathering.org
-        ServerAlias munin.tg15.gathering.org
 
 	# Enable this for template generation
 	Alias /munin /var/cache/munin/www
@@ -47,11 +46,18 @@
 		# that time. 
 		#
 
-		AuthUserFile /root/tgmanage/web/.htpasswd
-                AuthName "Tech:Server Secret Volcano Lair"
-                AuthType Basic
-                require valid-user
-	
+		SetEnvIF ^X-Forwarded-For$ "^185\.12\.59\.12$" AllowIP
+                SetEnvIF ^X-Forwarded-For$ "^2a02:ed02:1337::12$" AllowIP
+
+                <RequireAny>
+                        AuthUserFile /root/tgmanage/web/.htpasswd
+                        AuthName "Tech:Server Secret Volcano Lair"
+                        AuthType Basic
+                        Require valid-user
+
+                        Require env AllowIP
+                </RequireAny>
+
 	    <IfModule mod_expires.c>
 	        ExpiresActive On
 	    	ExpiresDefault M310

@@ -24,6 +24,7 @@ our %streams =  (
 			'priority' => 20,
 			'port' => 80,
 			'url' => 'http://cubemap.tg15.gathering.org/event.flv',
+			'ts_enabled' => 1,
 			'online' => 1,
 			'external' => 1,
 			'interlaced' => 0,
@@ -32,6 +33,37 @@ our %streams =  (
 			'source' => 'Event',
 			'title' => 'Event HD (720p50 H.264) 6Mbit/s'
 		},
+                'creativia-hd' => {
+                        'type' => 'event',
+                        'quality' => 'hd',
+                        'priority' => 100,
+                        'port' => 80,
+                        'url' => 'http://cubemap.tg15.gathering.org/creativia.flv',
+                        'ts_enabled' => 1,
+                        'online' => 1,
+                        'external' => 1,
+                        'interlaced' => 0,
+                        'has_multicast' => 0,
+                        'multicast_ip' => 'udp://@[ff7e:a40:2a02:ed02:ffff::15]:2015',
+                        'source' => 'Event',
+                        'title' => 'Creativia HD (1080p50 H.264) 6Mbit/s'
+                },
+                'game-hd' => {
+                        'type' => 'event',
+                        'quality' => 'hd',
+                        'priority' => 110,
+                        'port' => 80,
+                        'url' => 'http://cubemap.tg15.gathering.org/game.flv',
+                        'ts_enabled' => 1,
+                        'online' => 1,
+                        'external' => 1,
+                        'interlaced' => 0,
+                        'has_multicast' => 0,
+                        'multicast_ip' => 'udp://@[ff7e:a40:2a02:ed02:ffff::15]:2015',
+                        'source' => 'Event',
+                        'title' => 'Game HD (720p50 H.264) 6Mbit/s'
+                },
+
 #		'creativia-hd' => {
 #			'type' => 'event',
 #			'quality' => 'hd',
@@ -80,15 +112,13 @@ our %streams =  (
 #			'source' => 'Event',
 #			'title' => 'Event SD (gathering.org flash player)',
 #		},
-#
-
-
 		'south-raw' => { 
 			'type' => 'camera',
 			'quality' => 'hd',
 			'priority' => 40,
 			'url' => "http://cubemap.tg15.gathering.org/southcam.flv", # <-- In use (Need to rebuild row 67 in index.pl)
 			'port' => 80,
+			'ts_enabled' => 0,
 			'interlaced' => 0,
 			'has_multicast' => 0,
 			'external' => 1, # <-- In use (Need to rebuild row 67 in index.pl)
@@ -104,6 +134,7 @@ our %streams =  (
 			'priority' => 118,
 			'url' => "/roofcam.ts",
 			'port' => 80,
+			'ts_enabled' => 0,
 			'interlaced' => 1,
 			'online' => 0,
 			'has_multicast' => 0,
@@ -126,7 +157,6 @@ our %streams =  (
 			'source' => "Tech", # <-- Safe to remove
 			'title' => "Webcam NOC (HD) (720p H.264) 3Mbit/s"
 		},
-
 );
 
 

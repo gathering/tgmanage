@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset=utf-8 />
+        <title></title>
+        <link rel="stylesheet" type="text/css" href="default.css" />
+        <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
+    </head>
+    <body>
+        <div id="data" style="color: #f0a;">
+        
+        </div>
+        
+
+        <canvas id="myChart" width="1920" height="1200"></canvas>
+
+        
+        <script src="chart_js/Chart.js"></script>
+        
+        <script>
+        $(document).ready(function(){
+            var data = {
+                labels: ["January", "February", "March", "April", "May", "June", "July"],
+                datasets: [
+                    {
+                        label: "My First dataset",
+                        fillColor: "rgba(220,220,220,0.2)",
+                        strokeColor: "rgba(220,220,220,1)",
+                        pointColor: "rgba(220,220,220,1)",
+                        pointStrokeColor: "#fff",
+                        pointHighlightFill: "#fff",
+                        pointHighlightStroke: "rgba(220,220,220,1)",
+                        data: [65, 59, 80, 81, 56, 55, 40]
+                    },
+                    {
+                        label: "My Second dataset",
+                        fillColor: "rgba(151,187,205,0.2)",
+                        strokeColor: "rgba(151,187,205,1)",
+                        pointColor: "rgba(151,187,205,1)",
+                        pointStrokeColor: "#fff",
+                        pointHighlightFill: "#fff",
+                        pointHighlightStroke: "rgba(151,187,205,1)",
+                        data: [28, 48, 40, 19, 86, 27, 90]
+                    }
+                ]
+            };
+            
+            var ctx = $("#myChart").get(0).getContext("2d");
+            var myLineChart = new Chart(ctx).Line(data, {
+			    responsive: true
+		    });
+		    
+		    
+            setInterval(function() {
+                // $("#data").load( "test.php?" + Math.random());
+                // var month = $("#month").val();
+                var point = Math.round(Math.random()*100);
+                var point2 = Math.round(Math.random()*100);
+                var points = new Array();
+                points.push(point);
+                points.push(point2);
+                myLineChart.addData(points, 'asdf');
+                
+                /*
+                myLineChart.datasets[0].points[2].value = Math.random()*100;
+                myLineChart.datasets[0].push(Math.random()*100);
+                */
+                // Would update the first dataset's value of 'March' to be 50
+                myLineChart.update();
+            }, 1000);
+        });
+        </script>
+    </body>
+</html>

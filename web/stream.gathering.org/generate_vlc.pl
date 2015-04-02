@@ -1,4 +1,4 @@
-#!/usr/bin/perl -I /srv/streamlib
+#!/usr/bin/perl -I /root/tgmanage/web/streamlib
 
 use warnings;
 use strict;
@@ -51,9 +51,11 @@ if (exists($streams{$stream})) {
 	} else {
 		#$port_del = 80;
 		$extinf .= "Unicasted";
-                $url = $base_url;
+        $url = $base_url;
 		$url_path = $streams{$stream}->{url};
-		$url_path =~ s/.flv/.ts/;
+		if($streams{$stream}->{ts_enabled} eq 1) {
+			$url_path =~ s/.flv/.ts/;
+		}
 	}
 
 	$port_del = $streams{$stream}->{preport} if (defined($streams{$stream}->{preport}));

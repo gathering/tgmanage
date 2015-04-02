@@ -1,4 +1,4 @@
-#!/usr/bin/perl -I /srv/streamlib
+#!/usr/bin/perl -I /root/tgmanage/web/streamlib
 use warnings;
 use strict;
 use CGI;

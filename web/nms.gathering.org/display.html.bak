@@ -1,0 +1,46 @@
+<html>
+	<head>
+		<title>TG15 - The Future Is Back</title>
+		<style type="text/css">
+			.frames {
+				position: absolute;
+				bottom: 0px;
+				left: 0px;
+				visibility: hidden;
+				margin: 0px;
+				overflow-y: hidden;
+				overflow-x: hidden;
+			}
+		</style>
+		<script src="//code.jquery.com/jquery-1.11.2.min.js"></script>
+		<script type="text/javascript">
+			var page = 0;
+			var iframes = 3;
+			var delay = 10;
+
+			function rotate() {
+				$('body').delay(delay*1000).queue(function(next) { 
+											$('iframe').each(function(i, obj) {
+												if (i == page) {
+													this.style.visibility = 'visible';
+												} else {
+													this.style.visibility = 'hidden';
+												}
+											});
+											next();
+											rotate();
+										});
+				page = (page + 1) % iframes;
+			}
+
+			$(document).ready(function(){
+				rotate();
+			});
+		</script>
+	</head>
+	<body style="background-image: url('http://funfact.tg15.gathering.org/background.png'); background-size: cover; background-repeat: no-repeat; overflow: hidden;">
+		<iframe height="1080" class="frames" width="1920" id="observium" frameborder="0" src="http://nms.tg15.gathering.org/ping.html" scrolling="no"></iframe>
+		<iframe height="1080" class="frames" width="1920" id="observium" frameborder="0" src="http://nms.tg15.gathering.org/dhcpkart.pl" scrolling="no"></iframe>
+		<iframe height="600" class="frames" width="92%" id="observium" frameborder="0" src="http://observium.tg15.gathering.org/graph-realtime.php?type=bits&id=447&interval=30" scrolling="no" style="visibility: visible;"></iframe>
+	</body>
+</html>

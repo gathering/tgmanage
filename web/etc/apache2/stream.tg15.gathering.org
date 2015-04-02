@@ -3,8 +3,8 @@
         ServerName stream.tg15.gathering.org
         ServerAlias krosus.tg15.gathering.org
 
-        DocumentRoot /srv/stream.tg15.gathering.org
-        <Directory "/srv/stream.tg15.gathering.org/">
+        DocumentRoot /root/tgmanage/web/stream.gathering.org
+        <Directory "/root/tgmanage/web/stream.gathering.org/">
                 AllowOverride None
                 Options Indexes FollowSymLinks ExecCGI MultiViews
                 Order allow,deny

@@ -2,10 +2,20 @@
         ServerAdmin drift@gathering.org
         ServerName nms-public.tg15.gathering.org
 
-	DocumentRoot /srv/www/nms-public.tg15.gathering.org
+	DocumentRoot /root/tgmanage/web/nms-public.gathering.org
 	AddHandler cgi-script .cgi .sh .pl .py
 	
         LogLevel warn
         ErrorLog /var/log/apache2/error-nms-public.tg15.gathering.org.log
         CustomLog /var/log/apache2/access-nms-public.tg15.gathering.org.log combined
+
+	<Directory "/root/tgmanage/web/nms-public.gathering.org">
+                AllowOverride None
+                Options Indexes FollowSymLinks ExecCGI MultiViews
+
+                Require all granted
+        </Directory>
+
+	ServerSignature On
+
 </VirtualHost>

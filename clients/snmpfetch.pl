@@ -217,21 +217,22 @@ sub callback {
 	my $ok = 1;
 	if (!defined($in) || $in !~ /^\d+$/) {
 		if (defined($ine)) {
-			warn $switch->{'sysname'}.":$port: failed reading in";
+			warn $switch->{'sysname'}.":$port: failed reading in ($ine)" . (defined($in) ? ": $in" : "");
 		}
 		$ok = 0;
 	}
 	if (!defined($out) || $out !~ /^\d+$/) {
 		if (defined($oute)) {
-			warn $switch->{'sysname'}.":$port: failed reading in";
+			warn $switch->{'sysname'}.":$port: failed reading out ($oute)" . (defined($out) ? ": $out" : "");
 		}
 		$ok = 0;
 	}
 	if (!defined($ifdescr)) {
+		warn $switch->{'sysname'}.":$port: failed reading ifdescr";
 		$ok = 0;
 	} elsif ($ifdescr =~ m/\./) {
 		# Skip virtual ports
-		$ok =0;
+		$ok = 0;
 	}
 
 	if ($ok) {

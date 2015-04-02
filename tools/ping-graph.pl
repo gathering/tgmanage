@@ -17,7 +17,7 @@ BEGIN {
 
 my $dbh = db_connect();
 my $switches = $dbh->selectall_hashref('SELECT sysname,switch FROM switches ORDER BY sysname', 'sysname');
-if (0) {
+if (1) {
 	my %switchfds = ();
 	while (my ($sysname, $switch) = each %$switches) {
 		print "$sysname -> $switch->{switch}\n";
