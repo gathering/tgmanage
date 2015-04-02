@@ -121,7 +121,7 @@ sub ckcall
 	$dbh->commit;
 }
 my @values = ('ifName','ifHighSpeed','ifHCOutOctets','ifHCInOctets');
-my $query = "INSERT INTO polls2 (switch,time";
+my $query = "INSERT INTO polls (switch,time";
 foreach my $val (@values) {
 	$query .= ",$val";
 }

@@ -15,6 +15,7 @@ include/tgmanage.cfg.sh
 planning/planning
 web/.htpasswd
 web/.htpasswd.munin
+fap/tools/generate_distro_config_ae_event-options/
 *.swp
 
 
