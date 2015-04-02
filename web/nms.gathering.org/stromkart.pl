@@ -31,7 +31,7 @@ my $wht = $img->colorResolve(255, 255, 255);
 my $gry = $img->colorResolve(127, 127, 127);
 
 #my $q = $dbh->prepare('select switch,sysname,(select placement from placements where placements.switch=switches.switch) as placement,count((bytes_in > 0 and bytes_out > 0) or null) as active_ports,(max(last_poll_time) >= current_timestamp - interval \'2 minutes\') as fresh from switches natural left join get_current_datarate() natural join placements where switchtype like \'dlink3100%\' group by switch,sysname');
-my $q = $dbh->prepare(' select switch,sysname,(select placement from placements where placements.switch = switches.switch) as placement,count((operstatus = 1) or null) as active_ports from switches natural left join get_operstatus() natural join placements where ifdescr like \'ge-0/0/%\'  group by switch,sysname');
+my $q = $dbh->prepare(' select switch,sysname,(select placement from placements where placements.switch = switches.switch) as placement,count((ifoperstatus = 1) or null) as active_ports from switches natural left join get_operstatus() natural join placements where ifdescr like \'ge-0/0/%\'  group by switch,sysname');
 $q->execute();
 while (my $ref = $q->fetchrow_hashref()) {
 	my $ports = $ref->{'active_ports'};

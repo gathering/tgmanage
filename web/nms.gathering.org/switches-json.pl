@@ -11,6 +11,7 @@ my $dbh = nms::db_connect();
 my %json = ();
 
 my $q = $dbh->prepare('select switch,sysname,placement,zorder from switches natural join placements');
+my $q2 = $dbh->prepare('select distinct on (switch) switch,temp,time,sysname from switch_temp natural join switches order by switch,time desc');
 $q->execute();
 while (my $ref = $q->fetchrow_hashref()) {
 	$ref->{'placement'} =~ /\((-?\d+),(-?\d+)\),\((-?\d+),(-?\d+)\)/;
@@ -26,6 +27,11 @@ while (my $ref = $q->fetchrow_hashref()) {
 	};
 }
 
+$q2->execute();
+while (my $ref = $q2->fetchrow_hashref()) {
+	$json{'switches'}{$ref->{'switch'}}{'temp'} = $ref->{'temp'};
+	$json{'switches'}{$ref->{'switch'}}{'time'} = $ref->{'time'};
+}
 my $q = $dbh->prepare('select linknet,switch1,switch2 from linknets');
 $q->execute();
 while (my $ref = $q->fetchrow_hashref()) {

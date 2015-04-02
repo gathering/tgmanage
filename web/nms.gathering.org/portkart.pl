@@ -28,7 +28,16 @@ $img->stringFT($blk, "/usr/share/fonts/truetype/msttcorefonts/Arial.ttf", 10, 0,
 $img->stringFT($blk, "/usr/share/fonts/truetype/msttcorefonts/Arial.ttf", 10, 0, 40, 47 + (236-42)*3.0/3.0, "1 Mbit/sec");
 $img->stringFT($blk, "/usr/share/fonts/truetype/msttcorefonts/Arial.ttf", 10, 0, 1600, 1000, "NMS (C) 2005-2007 Tech:Server");
 
-my $q = $dbh->prepare('select switch,port,bytes_in,bytes_out,placement,switchtype from switches natural join placements natural join get_datarate() where switchtype like \'%3100%\'');
+sub portnum($) {
+	my ($port) = @_;
+	if ($port =~ /(\d+)$/) {
+		return $1;
+	}
+	warn "Unrecognized port name: $port";
+	return undef;
+}
+
+my $q = $dbh->prepare('select switch,ifdescr,ifinoctets,ifoutoctets,placement,switchtype from switches natural join placements natural join get_datarate() where switchtype like \'%2200%\' and sysname like \'e%-%\'');
 $q->execute();
 while (my $ref = $q->fetchrow_hashref()) {
 
@@ -38,9 +47,9 @@ while (my $ref = $q->fetchrow_hashref()) {
 	
 	my $clr;
 
-	if (defined($ref->{'bytes_in'})) {
+	if (defined($ref->{'ifinoctets'})) {
 		my $intensity = 0.0;
-		my $traffic = 4.0 * ($ref->{'bytes_in'} + $ref->{'bytes_out'});  # average and convert to bits (should be about the same in practice)
+		my $traffic = 4.0 * ($ref->{'ifinoctets'} + $ref->{'ifoutoctets'});  # average and convert to bits (should be about the same in practice)
 
 		my $max = 100_000_000_000.0;   # 1Gbit
 		my $min =       1_000_000.0;   # 1Mbit
@@ -55,8 +64,8 @@ while (my $ref = $q->fetchrow_hashref()) {
 	
 	$ref->{'placement'} =~ /\((\d+),(\d+)\),\((\d+),(\d+)\)/;
 	my $npo = 48;
-	my $f = ($ref->{'port'} - 1) % 2;
-	my $po = ($ref->{'port'} - 1 - $f)/2;
+	my $f = portnum($ref->{'ifdescr'}) % 2;
+	my $po = (portnum($ref->{'ifdescr'}) - $f)/2;
 	my $h = 2*($2-$4)/$npo;
 	my $w = ($1-$3)/2;
 	
