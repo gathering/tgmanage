@@ -40,7 +40,7 @@ for my $ports (0..4) {
 	$img->stringFT($blk, "/usr/share/fonts/truetype/msttcorefonts/Arial.ttf", 10, 0, 40, $y + 10, $ports);
 }
 
-my $q = $dbh->prepare(' select switch,sysname,(select placement from placements where placements.switch = switches.switch) as placement,count((ifoperstatus = 1) or null) as active_ports from switches natural left join get_operstatus() natural join placements where ifdescr = \'ge-0/0/44\' or ifdescr = \'ge-0/0/45\' or ifdescr = \'ge-0/0/46\' or ifdescr = \'ge-0/0/47\' group by switch,sysname');
+my $q = $dbh->prepare('select switch,sysname,(select placement from placements where placements.switch=switches.switch) as placement,count((ifhcinoctets > 0 and ifhcoutoctets > 0) or null) as active_ports from switches natural left join get_current_datarate() where (ifname = \'ge-0/0/44\' or ifname = \'ge-0/0/45\' or ifname = \'ge-0/0/46\' or ifname = \'ge-0/0/47\') and switchtype like \'%2200%\' group by switch,sysname');
 $q->execute();
 while (my $ref = $q->fetchrow_hashref()) {
 	my $ports = $ref->{'active_ports'};
