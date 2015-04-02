@@ -10,13 +10,13 @@ SET check_function_bodies = false;
 SET client_min_messages = warning;
 
 --
--- Name: nms; Type: DATABASE; Schema: -; Owner: postgres
+-- Name: nms; Type: DATABASE; Schema: -; Owner: nms
 --
 
 CREATE DATABASE nms WITH TEMPLATE = template0 ENCODING = 'UTF8' LC_COLLATE = 'en_US.UTF-8' LC_CTYPE = 'en_US.UTF-8';
 
 
-ALTER DATABASE nms OWNER TO postgres;
+ALTER DATABASE nms OWNER TO nms;
 
 \connect nms
 
@@ -49,14 +49,28 @@ SET search_path = public, pg_catalog;
 
 CREATE TYPE datarate AS (
 	switch integer,
-	port integer,
-	bytes_in double precision,
-	bytes_out double precision,
+	ifname character varying(30),
+	ifhcinoctets double precision,
+	ifhcoutoctets double precision,
 	last_poll_time timestamp with time zone
 );
 
 
-ALTER TYPE public.datarate OWNER TO nms;
+ALTER TYPE datarate OWNER TO nms;
+
+--
+-- Name: operstatuses; Type: TYPE; Schema: public; Owner: postgres
+--
+
+CREATE TYPE operstatuses AS (
+	switch integer,
+	ifdescr character(30),
+	ifoperstatus integer,
+	last_poll_time timestamp with time zone
+);
+
+
+ALTER TYPE operstatuses OWNER TO postgres;
 
 --
 -- Name: sample; Type: TYPE; Schema: public; Owner: postgres
@@ -68,7 +82,7 @@ CREATE TYPE sample AS (
 );
 
 
-ALTER TYPE public.sample OWNER TO postgres;
+ALTER TYPE sample OWNER TO postgres;
 
 --
 -- Name: sample_state; Type: TYPE; Schema: public; Owner: postgres
@@ -80,7 +94,7 @@ CREATE TYPE sample_state AS (
 );
 
 
-ALTER TYPE public.sample_state OWNER TO postgres;
+ALTER TYPE sample_state OWNER TO postgres;
 
 --
 -- Name: add_new_element(sample[], sample); Type: FUNCTION; Schema: public; Owner: postgres
@@ -113,29 +127,28 @@ ALTER FUNCTION public.add_new_element(sample_state, sample) OWNER TO postgres;
 CREATE FUNCTION get_current_datarate() RETURNS SETOF datarate
     LANGUAGE sql
     AS $$
-      SELECT switch,port,
-      (bytes_out[1] - bytes_out[2]) / EXTRACT(EPOCH FROM (time[1] - time[2])) AS bytes_out,
-      (bytes_in[1] - bytes_in[2]) / EXTRACT(EPOCH FROM (time[1] - time[2])) AS bytes_in,
+      SELECT switch,ifname,
+      (ifhcoutoctets[1] - ifhcoutoctets[2]) / EXTRACT(EPOCH FROM (time[1] - time[2])) AS ifhcoutoctets,
+      (ifhcinoctets[1] - ifhcinoctets[2]) / EXTRACT(EPOCH FROM (time[1] - time[2])) AS ifhcinoctets,
       time[1] AS last_poll_time
       FROM (
-        SELECT switch,port,
+        SELECT switch,ifname,
         ARRAY_AGG(time) AS time,
-        ARRAY_AGG(bytes_in) AS bytes_in,
-        ARRAY_AGG(bytes_out) AS bytes_out
+        ARRAY_AGG(ifhcinoctets) AS ifhcinoctets,
+        ARRAY_AGG(ifhcoutoctets) AS ifhcoutoctets
         FROM (
-           SELECT *,rank() OVER (PARTITION BY switch,port ORDER BY time DESC) AS poll_num
-           FROM polls WHERE time BETWEEN (now() - interval '5 minutes') AND now()
-           AND official_port
+           SELECT *,rank() OVER (PARTITION BY switch,ifname ORDER BY time DESC) AS poll_num
+           FROM polls WHERE time BETWEEN (now() - interval '11 minutes') AND now()
         ) t1
         WHERE poll_num <= 2
-        GROUP BY switch,port
+        GROUP BY switch,ifname
       ) t2
       WHERE
         time[2] IS NOT NULL
-        AND bytes_in[1] >= 0 AND bytes_out[1] >= 0
-        AND bytes_in[2] >= 0 AND bytes_out[2] >= 0
-        AND bytes_out[1] >= bytes_out[2]
-        AND bytes_in[1] >= bytes_in[2];
+        AND ifhcinoctets[1] >= 0 AND ifhcoutoctets[1] >= 0
+        AND ifhcinoctets[2] >= 0 AND ifhcoutoctets[2] >= 0
+        AND ifhcoutoctets[1] >= ifhcoutoctets[2]
+        AND ifhcinoctets[1] >= ifhcinoctets[2];
 $$;
 
 
@@ -145,56 +158,6 @@ ALTER FUNCTION public.get_current_datarate() OWNER TO nms;
 -- Name: get_datarate(); Type: FUNCTION; Schema: public; Owner: nms
 --
 
-CREATE TYPE operstatuses AS (
-	switch integer,
-	ifdescr char(16),
-	operstatus integer,
-	last_poll_time timestamp with time zone
-);
-CREATE FUNCTION get_operstatus() RETURNS SETOF operstatuses
-    LANGUAGE plpgsql
-    AS $$
-DECLARE
-        num_entries INTEGER;
-	poll polls;
-	last_poll polls;
-	ret operstatuses;
-BEGIN
-        num_entries := 0;
-        last_poll.switch = -1;
-		
-        FOR poll IN select * from polls where time >= now() - '15 minutes'::interval and time < now() order by switch,ifdescr,time LOOP
-                IF poll.switch <> last_poll.switch OR poll.ifdescr <> last_poll.ifdescr THEN
-                        IF num_entries >= 1 THEN
-                                ret.switch := last_poll.switch;
-                                ret.ifdescr := last_poll.ifdescr;
-                                ret.operstatus := last_poll.operstatus;
-                                ret.last_poll_time := last_poll.time;
-                                return next ret;
-                        END IF;
-                        num_entries := 1;
-                ELSE
-                        num_entries := num_entries + 1;
-                END IF;
-                last_poll.switch := poll.switch;
-                last_poll.ifdescr := poll.ifdescr;
-                last_poll.time := poll.time;
-                last_poll.operstatus := poll.operstatus;
-        END LOOP;
-       -- pah, and once more, for the last switch/port...
-        IF num_entries >= 1 THEN
-                ret.switch := last_poll.switch;
-                ret.ifdescr := last_poll.ifdescr;
-		ret.operstatus := last_poll.operstatus;
-		ret.last_poll_time := last_poll.time;
-                return next ret;
-        END IF;
-
-        RETURN;
-END;
-$$;
-		
-		
 CREATE FUNCTION get_datarate() RETURNS SETOF datarate
     LANGUAGE plpgsql
     AS $$
@@ -209,29 +172,29 @@ BEGIN
         num_entries := 0;
         last_poll.switch = -1;
 
-        FOR poll IN select * from polls where time >= now() - '15 minutes'::interval and time < now() order by switch,port,time LOOP
-                IF poll.switch <> last_poll.switch OR poll.port <> last_poll.port THEN
+        FOR poll IN select * from polls where time >= now() - '15 minutes'::interval and time < now() order by switch,ifname,time LOOP
+                IF poll.switch <> last_poll.switch OR poll.ifname <> last_poll.ifname THEN
                         IF num_entries >= 2 THEN
                                 timediff := EXTRACT(epoch from last_poll.time - second_last_poll.time);
                                 ret.switch := last_poll.switch;
-                                ret.port := last_poll.port;
+                                ret.ifname := last_poll.ifname;
                                 
-                                IF last_poll.bytes_in < second_last_poll.bytes_in THEN
-                                        second_last_poll.bytes_in = 0;
+                                IF last_poll.ifhcinoctets < second_last_poll.ifhcinoctets THEN
+                                        second_last_poll.ifhcinoctets = 0;
                                 END IF;
-                                IF last_poll.bytes_out < second_last_poll.bytes_out THEN
-                                        second_last_poll.bytes_out = 0;
+                                IF last_poll.ifhcoutoctets < second_last_poll.ifhcoutoctets THEN
+                                        second_last_poll.ifhcoutoctets = 0;
                                 END IF;
 
-                                ret.bytes_in := (last_poll.bytes_in - second_last_poll.bytes_in) / timediff;
-                                ret.bytes_out := (last_poll.bytes_out - second_last_poll.bytes_out) / timediff;
+                                ret.ifhcinoctets := (last_poll.ifhcinoctets - second_last_poll.ifhcinoctets) / timediff;
+                                ret.ifhcoutoctets := (last_poll.ifhcoutoctets - second_last_poll.ifhcoutoctets) / timediff;
                                 ret.last_poll_time := last_poll.time;
                                 return next ret;
                         ELSIF num_entries = 1 THEN
                                 ret.switch := last_poll.switch;
-                                ret.port := last_poll.port;
-                                ret.bytes_in := -1;
-                                ret.bytes_out := -1;
+                                ret.ifname := last_poll.ifname;
+                                ret.ifhcinoctets := -1;
+                                ret.ifhcoutoctets := -1;
                                 ret.last_poll_time := last_poll.time;
                                 return next ret;
                         END IF;
@@ -240,38 +203,38 @@ BEGIN
                         num_entries := num_entries + 1;
                 END IF;
                 second_last_poll.switch := last_poll.switch;
-                second_last_poll.port := last_poll.port;
+                second_last_poll.ifname := last_poll.ifname;
                 second_last_poll.time := last_poll.time;
-                second_last_poll.bytes_in := last_poll.bytes_in;
-                second_last_poll.bytes_out := last_poll.bytes_out;
+                second_last_poll.ifhcinoctets := last_poll.ifhcinoctets;
+                second_last_poll.ifhcoutoctets := last_poll.ifhcoutoctets;
                 last_poll.switch := poll.switch;
-                last_poll.port := poll.port;
+                last_poll.ifname := poll.ifname;
                 last_poll.time := poll.time;
-                last_poll.bytes_in := poll.bytes_in;
-                last_poll.bytes_out := poll.bytes_out;
+                last_poll.ifhcinoctets := poll.ifhcinoctets;
+                last_poll.ifhcoutoctets := poll.ifhcoutoctets;
         END LOOP;
-       -- pah, and once more, for the last switch/port...
+       -- pah, and once more, for the last switch/ifname...
         IF num_entries >= 2 THEN
                 timediff := EXTRACT(epoch from last_poll.time - second_last_poll.time);
                 ret.switch := last_poll.switch;
-                ret.port := last_poll.port;
+                ret.ifname := last_poll.ifname;
                 
-                IF last_poll.bytes_in < second_last_poll.bytes_in THEN
-                        second_last_poll.bytes_in = 0;
+                IF last_poll.ifhcinoctets < second_last_poll.ifhcinoctets THEN
+                        second_last_poll.ifhcinoctets = 0;
                 END IF;
-                IF last_poll.bytes_out < second_last_poll.bytes_out THEN
-                        second_last_poll.bytes_out = 0;
+                IF last_poll.ifhcoutoctets < second_last_poll.ifhcoutoctets THEN
+                        second_last_poll.ifhcoutoctets = 0;
                 END IF;
 
-                ret.bytes_in := (last_poll.bytes_in - second_last_poll.bytes_in) / timediff;
-                ret.bytes_out := (last_poll.bytes_out - second_last_poll.bytes_out) / timediff;
+                ret.ifhcinoctets := (last_poll.ifhcinoctets - second_last_poll.ifhcinoctets) / timediff;
+                ret.ifhcoutoctets := (last_poll.ifhcoutoctets - second_last_poll.ifhcoutoctets) / timediff;
 		ret.last_poll_time := last_poll.time;
                 return next ret;
         ELSIF num_entries = 1 THEN
                 ret.switch := last_poll.switch;
-                ret.port := last_poll.port;
-                ret.bytes_in := -1;
-                ret.bytes_out := -1;
+                ret.ifname := last_poll.ifname;
+                ret.ifhcinoctets := -1;
+                ret.ifhcoutoctets := -1;
 		ret.last_poll_time := last_poll.time;
                 return next ret;
         END IF;
@@ -282,6 +245,56 @@ $$;
 
 
 ALTER FUNCTION public.get_datarate() OWNER TO nms;
+
+--
+-- Name: get_operstatus(); Type: FUNCTION; Schema: public; Owner: nms
+--
+
+CREATE FUNCTION get_operstatus() RETURNS SETOF operstatuses
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+        num_entries INTEGER;
+    poll polls2;
+    last_poll polls2;
+    ret operstatuses;
+BEGIN
+        num_entries := 0;
+        last_poll.switch = -1;
+        
+        FOR poll IN select * from polls2 where time >= now() - '15 minutes'::interval and time < now() order by switch,ifdescr,time LOOP
+                IF poll.switch <> last_poll.switch OR poll.ifdescr <> last_poll.ifdescr THEN
+                        IF num_entries >= 1 THEN
+                                ret.switch := last_poll.switch;
+                                ret.ifdescr := last_poll.ifdescr;
+                                ret.ifoperstatus := last_poll.ifoperstatus;
+                                ret.last_poll_time := last_poll.time;
+                                return next ret;
+                        END IF;
+                        num_entries := 1;
+                ELSE
+                        num_entries := num_entries + 1;
+                END IF;
+                last_poll.switch := poll.switch;
+                last_poll.ifdescr := poll.ifdescr;
+                last_poll.time := poll.time;
+                last_poll.ifoperstatus := poll.ifoperstatus;
+        END LOOP;
+       -- pah, and once more, for the last switch/port...
+        IF num_entries >= 1 THEN
+                ret.switch := last_poll.switch;
+                ret.ifdescr := last_poll.ifdescr;
+        ret.ifoperstatus := last_poll.ifoperstatus;
+        ret.last_poll_time := last_poll.time;
+                return next ret;
+        END IF;
+
+        RETURN;
+END;
+$$;
+
+
+ALTER FUNCTION public.get_operstatus() OWNER TO nms;
 
 --
 -- Name: current_change(sample); Type: AGGREGATE; Schema: public; Owner: postgres
@@ -310,7 +323,7 @@ CREATE TABLE ap_poll (
 );
 
 
-ALTER TABLE public.ap_poll OWNER TO nms;
+ALTER TABLE ap_poll OWNER TO nms;
 
 --
 -- Name: backup_polls; Type: TABLE; Schema: public; Owner: nms; Tablespace: 
@@ -327,7 +340,7 @@ CREATE TABLE backup_polls (
 );
 
 
-ALTER TABLE public.backup_polls OWNER TO nms;
+ALTER TABLE backup_polls OWNER TO nms;
 
 --
 -- Name: cpuloadpoll_id_seq; Type: SEQUENCE; Schema: public; Owner: nms
@@ -341,7 +354,7 @@ CREATE SEQUENCE cpuloadpoll_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.cpuloadpoll_id_seq OWNER TO nms;
+ALTER TABLE cpuloadpoll_id_seq OWNER TO nms;
 
 --
 -- Name: cpuloadpoll; Type: TABLE; Schema: public; Owner: nms; Tablespace: 
@@ -356,7 +369,7 @@ CREATE TABLE cpuloadpoll (
 );
 
 
-ALTER TABLE public.cpuloadpoll OWNER TO nms;
+ALTER TABLE cpuloadpoll OWNER TO nms;
 
 --
 -- Name: dhcp; Type: TABLE; Schema: public; Owner: nms; Tablespace: 
@@ -370,7 +383,7 @@ CREATE TABLE dhcp (
 );
 
 
-ALTER TABLE public.dhcp OWNER TO nms;
+ALTER TABLE dhcp OWNER TO nms;
 
 --
 -- Name: linknet_ping; Type: TABLE; Schema: public; Owner: nms; Tablespace: 
@@ -384,7 +397,7 @@ CREATE TABLE linknet_ping (
 );
 
 
-ALTER TABLE public.linknet_ping OWNER TO nms;
+ALTER TABLE linknet_ping OWNER TO nms;
 
 --
 -- Name: linknets; Type: TABLE; Schema: public; Owner: nms; Tablespace: 
@@ -399,7 +412,7 @@ CREATE TABLE linknets (
 );
 
 
-ALTER TABLE public.linknets OWNER TO nms;
+ALTER TABLE linknets OWNER TO nms;
 
 --
 -- Name: linknets_linknet_seq; Type: SEQUENCE; Schema: public; Owner: nms
@@ -413,7 +426,7 @@ CREATE SEQUENCE linknets_linknet_seq
     CACHE 1;
 
 
-ALTER TABLE public.linknets_linknet_seq OWNER TO nms;
+ALTER TABLE linknets_linknet_seq OWNER TO nms;
 
 --
 -- Name: linknets_linknet_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: nms
@@ -435,7 +448,7 @@ CREATE TABLE mbd_log (
 );
 
 
-ALTER TABLE public.mbd_log OWNER TO nms;
+ALTER TABLE mbd_log OWNER TO nms;
 
 --
 -- Name: mldpolls; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
@@ -450,7 +463,7 @@ CREATE TABLE mldpolls (
 );
 
 
-ALTER TABLE public.mldpolls OWNER TO postgres;
+ALTER TABLE mldpolls OWNER TO postgres;
 
 --
 -- Name: ping; Type: TABLE; Schema: public; Owner: nms; Tablespace: 
@@ -463,7 +476,7 @@ CREATE TABLE ping (
 );
 
 
-ALTER TABLE public.ping OWNER TO nms;
+ALTER TABLE ping OWNER TO nms;
 
 --
 -- Name: ping_secondary_ip; Type: TABLE; Schema: public; Owner: nms; Tablespace: 
@@ -476,7 +489,7 @@ CREATE TABLE ping_secondary_ip (
 );
 
 
-ALTER TABLE public.ping_secondary_ip OWNER TO nms;
+ALTER TABLE ping_secondary_ip OWNER TO nms;
 
 --
 -- Name: placements; Type: TABLE; Schema: public; Owner: nms; Tablespace: 
@@ -489,13 +502,29 @@ CREATE TABLE placements (
 );
 
 
-ALTER TABLE public.placements OWNER TO nms;
+ALTER TABLE placements OWNER TO nms;
 
 --
 -- Name: polls; Type: TABLE; Schema: public; Owner: nms; Tablespace: 
 --
 
 CREATE TABLE polls (
+    switch integer,
+    "time" timestamp with time zone,
+    ifname character varying(30),
+    ifhighspeed bigint,
+    ifhcoutoctets bigint,
+    ifhcinoctets bigint
+);
+
+
+ALTER TABLE polls OWNER TO nms;
+
+--
+-- Name: polls_old; Type: TABLE; Schema: public; Owner: nms; Tablespace: 
+--
+
+CREATE TABLE polls_old (
     "time" timestamp with time zone NOT NULL,
     switch integer NOT NULL,
     port integer NOT NULL,
@@ -503,12 +532,14 @@ CREATE TABLE polls (
     bytes_out bigint NOT NULL,
     errors_in bigint NOT NULL,
     errors_out bigint NOT NULL,
-    official_port boolean DEFAULT false NOT NULL
+    official_port boolean DEFAULT false NOT NULL,
+    operstatus integer DEFAULT 2 NOT NULL,
+    ifdescr character(16) DEFAULT NULL::bpchar
 );
-ALTER TABLE ONLY polls ALTER COLUMN "time" SET STATISTICS 100;
+ALTER TABLE ONLY polls_old ALTER COLUMN "time" SET STATISTICS 100;
 
 
-ALTER TABLE public.polls OWNER TO nms;
+ALTER TABLE polls_old OWNER TO nms;
 
 --
 -- Name: polls_poll_seq; Type: SEQUENCE; Schema: public; Owner: nms
@@ -522,7 +553,7 @@ CREATE SEQUENCE polls_poll_seq
     CACHE 1;
 
 
-ALTER TABLE public.polls_poll_seq OWNER TO nms;
+ALTER TABLE polls_poll_seq OWNER TO nms;
 
 --
 -- Name: portnames; Type: TABLE; Schema: public; Owner: nms; Tablespace: 
@@ -535,7 +566,7 @@ CREATE TABLE portnames (
 );
 
 
-ALTER TABLE public.portnames OWNER TO nms;
+ALTER TABLE portnames OWNER TO nms;
 
 --
 -- Name: seen_mac; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
@@ -548,7 +579,7 @@ CREATE TABLE seen_mac (
 );
 
 
-ALTER TABLE public.seen_mac OWNER TO postgres;
+ALTER TABLE seen_mac OWNER TO postgres;
 
 --
 -- Name: squeue; Type: TABLE; Schema: public; Owner: nms; Tablespace: 
@@ -573,7 +604,7 @@ CREATE TABLE squeue (
 );
 
 
-ALTER TABLE public.squeue OWNER TO nms;
+ALTER TABLE squeue OWNER TO nms;
 
 --
 -- Name: squeue_group_sequence; Type: SEQUENCE; Schema: public; Owner: nms
@@ -587,7 +618,7 @@ CREATE SEQUENCE squeue_group_sequence
     CACHE 1;
 
 
-ALTER TABLE public.squeue_group_sequence OWNER TO nms;
+ALTER TABLE squeue_group_sequence OWNER TO nms;
 
 --
 -- Name: squeue_sequence; Type: SEQUENCE; Schema: public; Owner: nms
@@ -601,7 +632,7 @@ CREATE SEQUENCE squeue_sequence
     CACHE 1;
 
 
-ALTER TABLE public.squeue_sequence OWNER TO nms;
+ALTER TABLE squeue_sequence OWNER TO nms;
 
 --
 -- Name: stemppoll_sequence; Type: SEQUENCE; Schema: public; Owner: nms
@@ -615,7 +646,20 @@ CREATE SEQUENCE stemppoll_sequence
     CACHE 1;
 
 
-ALTER TABLE public.stemppoll_sequence OWNER TO nms;
+ALTER TABLE stemppoll_sequence OWNER TO nms;
+
+--
+-- Name: switch_temp; Type: TABLE; Schema: public; Owner: nms; Tablespace: 
+--
+
+CREATE TABLE switch_temp (
+    switch integer,
+    temp integer,
+    "time" timestamp with time zone
+);
+
+
+ALTER TABLE switch_temp OWNER TO nms;
 
 --
 -- Name: switches; Type: TABLE; Schema: public; Owner: nms; Tablespace: 
@@ -636,7 +680,7 @@ CREATE TABLE switches (
 );
 
 
-ALTER TABLE public.switches OWNER TO nms;
+ALTER TABLE switches OWNER TO nms;
 
 --
 -- Name: switches_switch_seq; Type: SEQUENCE; Schema: public; Owner: nms
@@ -650,7 +694,7 @@ CREATE SEQUENCE switches_switch_seq
     CACHE 1;
 
 
-ALTER TABLE public.switches_switch_seq OWNER TO nms;
+ALTER TABLE switches_switch_seq OWNER TO nms;
 
 --
 -- Name: switchtypes; Type: TABLE; Schema: public; Owner: nms; Tablespace: 
@@ -662,7 +706,7 @@ CREATE TABLE switchtypes (
 );
 
 
-ALTER TABLE public.switchtypes OWNER TO nms;
+ALTER TABLE switchtypes OWNER TO nms;
 
 --
 -- Name: temppoll; Type: TABLE; Schema: public; Owner: nms; Tablespace: 
@@ -676,7 +720,7 @@ CREATE TABLE temppoll (
 );
 
 
-ALTER TABLE public.temppoll OWNER TO nms;
+ALTER TABLE temppoll OWNER TO nms;
 
 --
 -- Name: uplinks; Type: TABLE; Schema: public; Owner: nms; Tablespace: 
@@ -690,7 +734,7 @@ CREATE TABLE uplinks (
 );
 
 
-ALTER TABLE public.uplinks OWNER TO nms;
+ALTER TABLE uplinks OWNER TO nms;
 
 --
 -- Name: linknet; Type: DEFAULT; Schema: public; Owner: nms
@@ -732,17 +776,24 @@ ALTER TABLE ONLY switchtypes
 
 
 --
+-- Name: polls2_time_ifname_switch_idx; Type: INDEX; Schema: public; Owner: nms; Tablespace: 
+--
+
+CREATE INDEX polls2_time_ifname_switch_idx ON polls USING btree ("time", ifname, switch);
+
+
+--
 -- Name: polls_switchporttime; Type: INDEX; Schema: public; Owner: nms; Tablespace: 
 --
 
-CREATE INDEX polls_switchporttime ON polls USING btree (switch, port, "time");
+CREATE INDEX polls_switchporttime ON polls_old USING btree (switch, port, "time");
 
 
 --
 -- Name: polls_time; Type: INDEX; Schema: public; Owner: nms; Tablespace: 
 --
 
-CREATE INDEX polls_time ON polls USING btree ("time");
+CREATE INDEX polls_time ON polls_old USING btree ("time");
 
 
 --
@@ -757,6 +808,13 @@ CREATE INDEX seen_mac_addr_family ON seen_mac USING btree (family(address));
 --
 
 CREATE INDEX seen_mac_seen ON seen_mac USING btree (seen);
+
+
+--
+-- Name: switch_temp_index; Type: INDEX; Schema: public; Owner: nms; Tablespace: 
+--
+
+CREATE INDEX switch_temp_index ON switch_temp USING btree (switch);
 
 
 --
@@ -792,6 +850,13 @@ CREATE UNIQUE INDEX switches_switch ON switches USING btree (switch);
 --
 
 CREATE INDEX temppoll_search ON temppoll USING btree (switch, id);
+
+
+--
+-- Name: test2_mm_idx; Type: INDEX; Schema: public; Owner: nms; Tablespace: 
+--
+
+CREATE UNIQUE INDEX test2_mm_idx ON polls_old USING btree ("time", switch, ifdescr);
 
 
 --
@@ -872,7 +937,6 @@ GRANT ALL ON SCHEMA public TO PUBLIC;
 REVOKE ALL ON TABLE dhcp FROM PUBLIC;
 REVOKE ALL ON TABLE dhcp FROM nms;
 GRANT ALL ON TABLE dhcp TO nms;
-GRANT ALL ON TABLE dhcp TO root;
 
 
 --
@@ -901,7 +965,6 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE mldpolls TO nms;
 REVOKE ALL ON TABLE placements FROM PUBLIC;
 REVOKE ALL ON TABLE placements FROM nms;
 GRANT ALL ON TABLE placements TO nms;
-GRANT ALL ON TABLE placements TO root;
 
 
 --
@@ -921,7 +984,6 @@ GRANT SELECT,INSERT ON TABLE seen_mac TO nms;
 REVOKE ALL ON TABLE squeue FROM PUBLIC;
 REVOKE ALL ON TABLE squeue FROM nms;
 GRANT ALL ON TABLE squeue TO nms;
-GRANT ALL ON TABLE squeue TO root;
 
 
 --
@@ -931,7 +993,6 @@ GRANT ALL ON TABLE squeue TO root;
 REVOKE ALL ON TABLE switches FROM PUBLIC;
 REVOKE ALL ON TABLE switches FROM nms;
 GRANT ALL ON TABLE switches TO nms;
-GRANT ALL ON TABLE switches TO root;
 
 
 --
