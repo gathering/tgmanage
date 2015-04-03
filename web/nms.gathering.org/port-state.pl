@@ -9,32 +9,20 @@ use Data::Dumper;
 
 my $cgi = CGI->new;
 
-my $dbh = nms::db_connect();
 
+my $dbh = nms::db_connect();
 my $switch = $cgi->param('switch');
 my @ports = split(",",$cgi->param('ports'));
-my @fields = split(",",$cgi->param('fields'));
 my $cin = $cgi->param('time');
-my $when;
-if (!defined($cin)) {
-	$when =" time > now() - '5m'::interval";
-} else {
+my $when =" time > now() - '5m'::interval";
+my %json = ();
+
+if (defined($cin)) {
 	$when = " time < now() - '$cin'::interval and time > now() - ('$cin'::interval + '25m'::interval) ";
 }
 
-if (!(@fields)) {
- @fields = ('ifhighspeed','ifhcoutoctets','ifhcinoctets');
-}
-my $query = 'select distinct on (switch,ifname';
-my $val;
-foreach $val (@fields) {
-	$query .= ",$val";
-}
-$query .= ') extract(epoch from date_trunc(\'second\',time)) as time,switch,ifname';
-foreach $val (@fields) {
-	$query .= ",max($val) as $val";
-}
-$query .= ',switches.sysname from polls natural join switches where ' . $when . ' ';
+my $query = 'select distinct on (switch,ifname,ifhighspeed,ifhcoutoctets,ifhcinoctets) extract(epoch from date_trunc(\'second\',time)) as time,switch,ifname,max(ifhighspeed) as ifhighspeed,max(ifhcinoctets) as ifhcinoctets,max(ifhcoutoctets) as ifhcoutoctets,switch,sysname from polls natural join switches where ' . $when . ' ';
+
 my $or = "and (";
 my $last = "";
 foreach my $port (@ports) {
@@ -46,32 +34,24 @@ $query .= "$last";
 if (defined($switch)) {
 	$query .= "and sysname = '$switch'";
 }
-$query .= 'group by time,switch,ifname';
-foreach $val (@fields) {
-	$query .= ",$val";
-}
-$query .= ',sysname order by switch,ifname';
-foreach $val (@fields) {
-	$query .= ",$val";
-}
-$query .= ',time desc';
+$query .= 'group by time,switch,ifname,ifhighspeed,ifhcinoctets,ifhcoutoctets,sysname order by switch,ifname,ifhighspeed,ifhcoutoctets,ifhcinoctets,time desc';
 my $q = $dbh->prepare($query);
 $q->execute();
 
-my %json = ();
 while (my $ref = $q->fetchrow_hashref()) {
-	foreach $val (@fields) {
+ 	my @fields = ('ifhighspeed','ifhcoutoctets','ifhcinoctets');
+	foreach my $val (@fields) {
 		$json{'switches'}{$ref->{'sysname'}}{'ports'}{$ref->{'ifname'}}{$val} = $ref->{$val};
 	}
 	$json{'switches'}{$ref->{'sysname'}}{'ports'}{$ref->{'ifname'}}{'time'} = $ref->{'time'};
 }
 #print Dumper(%json);
 
- $q = $dbh->prepare('select switch,sysname,placement,zorder,ip,switchtype,poll_frequency,community,last_updated from switches natural join placements');
-my  $q2 = $dbh->prepare('select distinct on (switch) switch,temp,time,sysname from switch_temp natural join switches order by switch,time desc');
+my $q2 = $dbh->prepare('select switch,sysname,placement,zorder,ip,switchtype,poll_frequency,community,last_updated from switches natural join placements');
+my $q3 = $dbh->prepare('select distinct on (switch) switch,temp,time,sysname from switch_temp natural join switches order by switch,time desc');
 
-$q->execute();
-while (my $ref = $q->fetchrow_hashref()) {
+$q2->execute();
+while (my $ref = $q2->fetchrow_hashref()) {
 	$ref->{'placement'} =~ /\((-?\d+),(-?\d+)\),\((-?\d+),(-?\d+)\)/;
 	my ($x1, $y1, $x2, $y2) = ($1, $2, $3, $4);
 	my $sysname = $ref->{'sysname'};
@@ -86,16 +66,16 @@ while (my $ref = $q->fetchrow_hashref()) {
 	$json{'switches'}{$ref->{'sysname'}}{'placement'}{'height'} = $y1 - $y2;
 	$json{'switches'}{$ref->{'sysname'}}{'placement'}{'zorder'} = $ref->{'zorder'};
 }
-$q2->execute();
-while (my $ref = $q2->fetchrow_hashref()) {
+$q3->execute();
+while (my $ref = $q3->fetchrow_hashref()) {
 	my $sysname = $ref->{'sysname'};
 	$json{'switches'}{$ref->{'sysname'}}{'temp'} = $ref->{'temp'};
 	$json{'switches'}{$ref->{'sysname'}}{'temp_time'} = $ref->{'time'};
 }
 
-$q = $dbh->prepare(' select linknet, (select sysname from switches where switch = switch1) as sysname1, addr1, (select sysname from switches where switch = switch2) as sysname2,addr2 from linknets');
-$q->execute();
-while (my $ref = $q->fetchrow_hashref()) {
+my $q4 = $dbh->prepare(' select linknet, (select sysname from switches where switch = switch1) as sysname1, addr1, (select sysname from switches where switch = switch2) as sysname2,addr2 from linknets');
+$q4->execute();
+while (my $ref = $q4->fetchrow_hashref()) {
 	push @{$json{'linknets'}}, $ref;
 }
 
