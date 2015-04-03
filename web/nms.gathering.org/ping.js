@@ -67,11 +67,10 @@ function draw_switches(json) {
 function create_linknet(linknetnum, switch1, switch2) {
 	var s1 = switches[switch1];
 	var s2 = switches[switch2];
-
 	var s1x = parseInt(s1.style.left.replace("px", "")) + 0.5 * parseInt(s1.style.width.replace("px", ""));
 	var s1y = parseInt(s1.style.top.replace("px", "")) + 0.5 * parseInt(s1.style.height.replace("px", ""));
 	var s2x = parseInt(s2.style.left.replace("px", "")) + 0.5 * parseInt(s2.style.width.replace("px", ""));
-	var s2y = parseInt(s2.style.top.replace("px", "")) + 0.5 * parseInt(s2.style.width.replace("px", ""));
+	var s2y = parseInt(s2.style.top.replace("px", "")) + 0.5 * parseInt(s2.style.height.replace("px", ""));
 
 	var midx = 0.5 * (s1x + s2x);
 	var midy = 0.5 * (s1y + s2y);
