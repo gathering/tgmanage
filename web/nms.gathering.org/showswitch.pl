@@ -43,7 +43,7 @@ print <<"EOF";
     <h1>Switch $switch ($ref->{'sysname'} - $ref->{'ip'})</h1>
 EOF
 
-my $q = $dbh->prepare('select ifdescr,\'Port \' || ifdescr as description,extract(epoch from time) as time,ifinoctets,ifoutoctets from switches natural join polls2 where time between now() - \'1 day\'::interval and now() and switch=? order by switch,ifdescr,time;') or die $dbh->errstr;
+my $q = $dbh->prepare('select ifname,\'Port \' || ifname as description,extract(epoch from time) as time,ifhcinoctets,ifhcoutoctets from switches natural join polls where time between now() - \'1 day\'::interval and now() and switch=? order by switch,ifname,time;') or die $dbh->errstr;
 $q->execute($switch) or die $dbh->errstr;
 
 my (@totx, @toty1, @toty2) = ();
@@ -81,13 +81,13 @@ sub cmp_ports {
 	# None of the N first parts differed, this means the shortest one is first
 	return scalar @a <=> scalar @b;
 }
-sort { cmp_ports($a->{'ifdescr'}, $b->{'ifdescr'}) } @rows;
+sort { cmp_ports($a->{'ifname'}, $b->{'ifname'}) } @rows;
 foreach my $ref (@rows) {
 	my $time = $ref->{'time'};
-	my $in = $ref->{'ifinoctets'};
-	my $out = $ref->{'ifoutoctets'};
+	my $in = $ref->{'ifhcinoctets'};
+	my $out = $ref->{'ifhcoutoctets'};
 	next if ($time == $prev_time);
-	if ($ref->{'ifdescr'} ne $last_port) {
+	if ($ref->{'ifname'} ne $last_port) {
 		if (defined $last_port) {
 			my $filename = filename($switch, $last_port, $width, $height);
 
@@ -120,9 +120,9 @@ foreach my $ref (@rows) {
 		@y2 = ();
 		($min_y,$max_y) = (0, 10_000_000/8);
 		$prev_time = $ref->{'time'};
-		$prev_in = $ref->{'ifinoctets'};
-		$prev_out = $ref->{'ifoutoctets'};
-		$last_port = $ref->{'ifdescr'};
+		$prev_in = $ref->{'ifhcinoctets'};
+		$prev_out = $ref->{'ifhcoutoctets'};
+		$last_port = $ref->{'ifname'};
 		$portname = $ref->{'description'};
 		($if,$of,$ifv,$ofv) = (0,0,0,0);
 		($prev_time,$prev_in,$prev_out) = ($time,$in,$out);

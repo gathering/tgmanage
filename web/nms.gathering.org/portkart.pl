@@ -37,7 +37,7 @@ sub portnum($) {
 	return undef;
 }
 
-my $q = $dbh->prepare('select switch,ifdescr,ifinoctets,ifoutoctets,placement,switchtype from switches natural join placements natural join get_datarate() where switchtype like \'%2200%\' and sysname like \'e%-%\'');
+my $q = $dbh->prepare('select switch,ifname,ifhcinoctets,ifhcoutoctets,placement,switchtype from switches natural join placements natural join get_datarate() where switchtype like \'%2200%\' and sysname like \'e%-%\'');
 $q->execute();
 while (my $ref = $q->fetchrow_hashref()) {
 
@@ -47,9 +47,9 @@ while (my $ref = $q->fetchrow_hashref()) {
 	
 	my $clr;
 
-	if (defined($ref->{'ifinoctets'})) {
+	if (defined($ref->{'ifhcinoctets'})) {
 		my $intensity = 0.0;
-		my $traffic = 4.0 * ($ref->{'ifinoctets'} + $ref->{'ifoutoctets'});  # average and convert to bits (should be about the same in practice)
+		my $traffic = 4.0 * ($ref->{'ifhcinoctets'} + $ref->{'ifhcoutoctets'});  # average and convert to bits (should be about the same in practice)
 
 		my $max = 100_000_000_000.0;   # 1Gbit
 		my $min =       1_000_000.0;   # 1Mbit
@@ -64,8 +64,8 @@ while (my $ref = $q->fetchrow_hashref()) {
 	
 	$ref->{'placement'} =~ /\((\d+),(\d+)\),\((\d+),(\d+)\)/;
 	my $npo = 48;
-	my $f = portnum($ref->{'ifdescr'}) % 2;
-	my $po = (portnum($ref->{'ifdescr'}) - $f)/2;
+	my $f = portnum($ref->{'ifname'}) % 2;
+	my $po = (portnum($ref->{'ifname'}) - $f)/2;
 	my $h = 2*($2-$4)/$npo;
 	my $w = ($1-$3)/2;
 	

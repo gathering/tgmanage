@@ -22,7 +22,7 @@ if (defined($secret2)) {
 my $dbh = nms::db_connect();
 
 my %json = ();
-my $q = $dbh->prepare("select * from ( SELECT switch,sysname,sum(ifinoctets) AS ifinoctets,sum(ifoutoctets) AS ifoutoctets from switches natural left join get_current_datarate() where ip <> inet '127.0.0.1' group by switch,sysname) t1 natural join placements order by zorder;");
+my $q = $dbh->prepare("select * from ( SELECT switch,sysname,sum(ifhcinoctets) AS ifhcinoctets,sum(ifhcoutoctets) AS ifhcoutoctets from switches natural left join get_current_datarate() where ip <> inet '127.0.0.1' group by switch,sysname) t1 natural join placements order by zorder;");
 $q->execute();
 while (my $ref = $q->fetchrow_hashref()) {
 
@@ -34,9 +34,9 @@ while (my $ref = $q->fetchrow_hashref()) {
 	
 	my $clr;
 
-	if (defined($ref->{'ifinoctets'})) {
+	if (defined($ref->{'ifhcinoctets'})) {
 		my $intensity = 0.0;
-		my $traffic = 4.0 * ($ref->{'ifinoctets'} + $ref->{'ifoutoctets'});  # average and convert to bits (should be about the same in practice)
+		my $traffic = 4.0 * ($ref->{'ifhcinoctets'} + $ref->{'ifhcoutoctets'});  # average and convert to bits (should be about the same in practice)
 
 		my $max = 100_000_000_000.0;   # 100Gbit
 		my $min =      10_000_000.0;   # 10Mbit
