@@ -7,6 +7,8 @@ var nms = {
 	ping_data:undefined,
 	globalmap:[], // DOM objects for switches
 	drawn:false, // Set to 'true' when switches are drawn
+	switch_showing:"",
+	night:false,
 	did_update:false // Set to 'true' after we've done some basic updating
 };
 
@@ -17,19 +19,66 @@ var nms = {
 
 var handler_uplinks = {
 	updater:uplinkUpdater,
-	init:uplinkInit
+	init:uplinkInit,
+	name:"Uplink map"
 };
 
 var handler_temp = {
 	updater:tempUpdater,
-	init:tempInit
+	init:tempInit,
+	name:"Temperature map"
 };
 
 var handler_ping = {
 	updater:pingUpdater,
-	init:pingInit
+	init:pingInit,
+	name:"IPv4 Ping map"
 };
 
+var handler_traffic = {
+	updater:trafficUpdater,
+	init:trafficInit,
+	name:"Uplink traffic map"
+};
+
+function byteCount(bytes) {
+	var units = ['', 'K', 'M', 'G', 'T', 'P'];
+	i = 0;
+	while (bytes > 1024) {
+		bytes = bytes / 1024;
+		i++;
+	}
+	return bytes.toFixed(1) + units[i];
+}
+
+function toggleNightMode() {
+	var bg = "white";
+	var filter = "invert(0%)";
+	if (!nms.night) {
+		bg = "black";
+		filter = "invert(100%)";
+		nms.night = true;
+	} else {
+		nms.night = false;
+	}
+	var body = document.getElementById("body");
+	body.style.background = bg;
+	var img = document.getElementById("map");
+	img.style.webkitFilter = filter;
+}
+
+/*
+ * Hide switch info-box
+ */
+function hideSwitch()
+{
+		var swtop = document.getElementById("info-switch-parent");
+		var switchele = document.getElementById("info-switch-table");
+		if (switchele != undefined)
+			swtop.removeChild(switchele);
+		nms.switch_showing = "";
+
+}
 /*
  * Display info on switch "x" in the info-box
  */
@@ -41,9 +90,14 @@ function switchInfo(x)
 		var tr;
 		var td1;
 		var td2;
-		
-		swtop.removeChild(switchele);
-
+	
+		if (nms.switch_showing == x) {
+			hideSwitch();	
+			return;
+		} else {
+			hideSwitch();	
+			nms.switch_showing = x;
+		}
 		switchele = document.createElement("table");
 		switchele.id = "info-switch-table";
 		switchele.style.zIndex =  100;
@@ -51,12 +105,78 @@ function switchInfo(x)
 			
 		tr = document.createElement("tr"); td1 = document.createElement("td"); td2 = document.createElement("td");
 		td1.innerHTML = "Sysname";
-		td2.innerHTML = x;
+		td2.innerHTML = x + '<button type="button" style="float: right" onclick="hideSwitch();">X</button>';
+		tr.appendChild(td1); tr.appendChild(td2); switchele.appendChild(tr);
+
+		var speed = 0;
+		var speed2 = 0;
+		for (port in nms.switches_now["switches"][x]["ports"]) {
+			if (nms.switches_now["switches"][x]["ports"] == undefined ||
+			    nms.switches_then["switches"][x]["ports"] == undefined) {
+				continue;
+			}
+			if (/ge-0\/0\/44$/.exec(port) ||
+			    /ge-0\/0\/45$/.exec(port) ||
+			    /ge-0\/0\/46$/.exec(port) ||
+			    /ge-0\/0\/47$/.exec(port))
+			 {
+				 var t = nms.switches_then["switches"][x]["ports"][port];
+				 var n = nms.switches_now["switches"][x]["ports"][port];
+				 speed += (parseInt(t["ifhcoutoctets"]) - parseInt(n["ifhcoutoctets"])) / (parseInt(t["time"] - n["time"]));
+				 speed2 += (parseInt(t["ifhcinoctets"]) - parseInt(n["ifhcinoctets"])) / (parseInt(t["time"] - n["time"]));
+			 }
+		}
+
+		tr = document.createElement("tr"); td1 = document.createElement("td"); td2 = document.createElement("td");
+		td1.innerHTML = "Uplink speed (out , port 44,45,46,47)";
+		td2.innerHTML = byteCount(8 * speed) + "b/s";
+		tr.appendChild(td1); tr.appendChild(td2); switchele.appendChild(tr);
+
+		tr = document.createElement("tr"); td1 = document.createElement("td"); td2 = document.createElement("td");
+		td1.innerHTML = "Uplink speed (in , port 44,45,46,47)";
+		td2.innerHTML = byteCount(8 * speed2) + "b/s";
+		tr.appendChild(td1); tr.appendChild(td2); switchele.appendChild(tr);
+
+		speed = 0;
+		for (port in nms.switches_now["switches"][x]["ports"]) {
+			if (nms.switches_now["switches"][x]["ports"] == undefined ||
+			    nms.switches_then["switches"][x]["ports"] == undefined) {
+				continue;
+			}
+			 var t = nms.switches_then["switches"][x]["ports"][port];
+			 var n = nms.switches_now["switches"][x]["ports"][port];
+			 speed += (parseInt(t["ifhcinoctets"]) -parseInt(n["ifhcinoctets"])) / (parseInt(t["time"] - n["time"]));
+		}
+
+		tr = document.createElement("tr"); td1 = document.createElement("td"); td2 = document.createElement("td");
+		td1.innerHTML = "Total speed (in)";
+		td2.innerHTML = byteCount(8 * speed) + "b/s";
+		tr.appendChild(td1); tr.appendChild(td2); switchele.appendChild(tr);
+
+		speed = 0;
+		for (port in nms.switches_now["switches"][x]["ports"]) {
+			if (nms.switches_now["switches"][x]["ports"] == undefined ||
+			    nms.switches_then["switches"][x]["ports"] == undefined) {
+				continue;
+			}
+			 var t = nms.switches_then["switches"][x]["ports"][port];
+			 var n = nms.switches_now["switches"][x]["ports"][port];
+			 speed += (parseInt(t["ifhcoutoctets"]) -parseInt(n["ifhcoutoctets"])) / (parseInt(t["time"] - n["time"]));
+		}
+
+		tr = document.createElement("tr"); td1 = document.createElement("td"); td2 = document.createElement("td");
+		td1.innerHTML = "Total speed (out)";
+		td2.innerHTML = byteCount(8 * speed) + "b/s";
 		tr.appendChild(td1); tr.appendChild(td2); switchele.appendChild(tr);
 
 		tr = document.createElement("tr"); td1 = document.createElement("td"); td2 = document.createElement("td");
 		td1.innerHTML = "Management IP";
 		td2.innerHTML = sw["management"]["ip"];
+		tr.appendChild(td1); tr.appendChild(td2); switchele.appendChild(tr);
+
+		tr = document.createElement("tr"); td1 = document.createElement("td"); td2 = document.createElement("td");
+		td1.innerHTML = "Latency";
+		td2.innerHTML = nms.ping_data["switches"][x]["latency"];
 		tr.appendChild(td1); tr.appendChild(td2); switchele.appendChild(tr);
 
 		tr = document.createElement("tr"); td1 = document.createElement("td"); td2 = document.createElement("td");
@@ -84,6 +204,7 @@ function switchInfo(x)
 		td2.innerHTML = sw["management"]["poll_frequency"];
 		tr.appendChild(td1); tr.appendChild(td2); switchele.appendChild(tr);
 
+
 		swtop.appendChild(switchele);
 }
 
@@ -107,6 +228,7 @@ function createSwitch(sysname, x, y, zorder, width, height)
 	s.style.border = '1px solid black';
 	s.style.padding = "0";
 	s.style.zIndex = zorder + 100;
+	s.style.cursor = "pointer";
 	s.addEventListener("click", function(){ switchInfo(sysname); });
 	s.title = sysname + " - " + nms.switches_now["switches"][sysname]["management"]["ip"];
 	nms.globalmap[sysname] = s;
@@ -162,7 +284,22 @@ function updateInfo()
  */
 function colorSwitch(sysname, color)
 {
-	nms.globalmap[sysname].style.background = color;
+	if (nms.globalmap[sysname]) {
+		nms.globalmap[sysname].style.background = color;
+	}
+}
+
+/*
+ * Reset switch color to "blue".
+ * Used when changing mode so colors don't linger for switches that are
+ * not explicitly colored by the update handler.
+ */
+function resetSwitches() {
+	if (nms.switches_now) {
+		for (var sw in nms.switches_now["switches"]) {
+			colorSwitch(sw,"blue");
+		}
+	}
 }
 
 /*
@@ -171,9 +308,14 @@ function colorSwitch(sysname, color)
  */
 function uplinkUpdater()
 {
+	if (!nms.switches_now["switches"])
+		return;
 	for (sw in nms.switches_now["switches"]) {
 		var uplinks=0;
 		for (port in nms.switches_now["switches"][sw]["ports"]) {
+			if (!nms.switches_then["switches"][sw]["ports"] || 
+			    !nms.switches_now["switches"][sw]["ports"])
+				continue;
 			if (/ge-0\/0\/44$/.exec(port) ||
 			    /ge-0\/0\/45$/.exec(port) ||
 			    /ge-0\/0\/46$/.exec(port) ||
@@ -193,6 +335,51 @@ function uplinkUpdater()
 		} else if (uplinks == 3) { 
 			colorSwitch(sw, "green");
 		} else if (uplinks > 3) {
+			colorSwitch(sw, "white");
+		}
+	}
+}
+
+/*
+ * Init-function for uplink map
+ */
+function trafficInit()
+{
+	setLegend(1,"blue","0 uplink utilization");	
+	setLegend(5,"red", "1000Mb/s or more uplink utilization");	
+	setLegend(4,"yellow","100Mb/s to 800Mb/s uplink utilization");	
+	setLegend(3,"green", "5Mb/s to 100Mb/s uplink utilization");	
+	setLegend(2,"white","0 to 5Mb/s uplink utilization");	
+}
+
+function trafficUpdater()
+{
+	if (!nms.switches_now["switches"])
+		return;
+	for (sw in nms.switches_now["switches"]) {
+		var speed = 0;
+		for (port in nms.switches_now["switches"][sw]["ports"]) {
+			if (/ge-0\/0\/44$/.exec(port) ||
+			    /ge-0\/0\/45$/.exec(port) ||
+			    /ge-0\/0\/46$/.exec(port) ||
+			    /ge-0\/0\/47$/.exec(port))
+			 {
+				 var t = nms.switches_then["switches"][sw]["ports"][port];
+				 var n = nms.switches_now["switches"][sw]["ports"][port];
+				 speed += (parseInt(t["ifhcoutoctets"]) -parseInt(n["ifhcoutoctets"])) / (parseInt(t["time"] - n["time"]));
+				 speed += (parseInt(t["ifhcinoctets"]) -parseInt(n["ifhcinoctets"])) / (parseInt(t["time"] - n["time"]));
+			 }
+		}
+		var m = 1024 * 1024 / 8;
+		if (speed == 0) {
+			colorSwitch(sw,"blue");
+		} else if (speed > (1000 * m)) {
+			colorSwitch(sw,"red");
+		} else if (speed > (800 * m)) {
+			colorSwitch(sw, "yellow");
+		} else if (speed > (5 * m)) { 
+			colorSwitch(sw, "green");
+		} else {
 			colorSwitch(sw, "white");
 		}
 	}
@@ -317,8 +504,11 @@ function updateMap()
 function setUpdater(fo)
 {
 	nms.updater = undefined;
+	resetSwitches();
 	fo.init();
 	nms.updater = fo.updater;
+	var foo = document.getElementById("updater_name");
+	foo.innerHTML = fo.name + "   ";
 	initialUpdate();
 	if (nms.ping_data && nms.switches_then && nms.switches_now) {
 		nms.updater();
@@ -405,6 +595,13 @@ function updateSpeed()
 				console.log("ops");
 				continue;
 			}
+			if (!nms.switches_then || !nms.switches_then["switches"] || !nms.switches_then["switches"][sw] || !nms.switches_then["switches"][sw]["ports"]) {
+				continue;
+			}
+			if (!nms.switches_now || !nms.switches_now["switches"] || !nms.switches_now["switches"][sw] || !nms.switches_now["switches"][sw]["ports"]) {
+				continue;
+			}
+
 			if (!nms.switches_then["switches"][sw]["ports"][port]) {
 				console.log("ops");
 				continue;
