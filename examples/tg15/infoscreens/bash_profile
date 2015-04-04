@@ -1,0 +1,8 @@
+if [ -z "$DISPLAY" ] && [ $(tty) == /dev/tty6 ]; then
+while [ 1 == 1 ]
+     do
+          startx
+          echo "Stuff died. Waiting in case you want to cancel."
+          sleep 2
+     done
+fi
