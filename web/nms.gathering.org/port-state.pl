@@ -18,7 +18,7 @@ my $when =" time > now() - '5m'::interval";
 my %json = ();
 
 if (defined($cin)) {
-	$when = " time < now() - '$cin'::interval and time > now() - ('$cin'::interval + '25m'::interval) ";
+	$when = " time < now() - '$cin'::interval and time > now() - ('$cin'::interval + '15m'::interval) ";
 }
 
 my $query = 'select distinct on (switch,ifname,ifhighspeed,ifhcoutoctets,ifhcinoctets) extract(epoch from date_trunc(\'second\',time)) as time,switch,ifname,max(ifhighspeed) as ifhighspeed,max(ifhcinoctets) as ifhcinoctets,max(ifhcoutoctets) as ifhcoutoctets,switch,sysname from polls natural join switches where ' . $when . ' ';
