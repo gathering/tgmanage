@@ -148,9 +148,13 @@ sub switch_timeout {
 	return ('Set timeout to ' . $timeout);
 }
 
-sub switch_disconnect {
-	my ($conn) = @_;
-	$conn->close;
+sub switch_disconnect($) {
+	my ($struct) = @_;
+	my $conn = $struct->{telnet};
+	$conn->close();
+	if ($struct->{pid}) {
+		waitpid($struct->{pid}, 0);
+	}
 }
 
 sub snmp_open_session {

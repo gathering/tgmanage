@@ -104,7 +104,7 @@ while (1) {
 		$error = $sgetallpoll->execute($switch->{sysname});
 		if (!$error) {
 			print "Could not execute sgetallpoll\n".$dbh->errstr();
-			$conn->close;
+			switch_disconnect($ssh);
 			next;
 		}
 		while (my $row = $sgetallpoll->fetchrow_hashref()) {
@@ -142,8 +142,7 @@ while (1) {
 			my $result = join("\n", @data);
 			$sresult->execute($result, $row->{id});
 		}
-		$conn->close();
-		waitpid($ssh->{pid}, 0);
+		switch_disconnect($ssh);
 		$sunlock->execute($switch->{sysname});
 	};
 	if ($@) {
