@@ -10,7 +10,8 @@ my $cgi = CGI->new;
 my $dbh = nms::db_connect();
 my %json = ();
 
-my $q = $dbh->prepare('select switch,sysname,placement,zorder from switches natural join placements');
+my $q = $dbh->prepare('select switch,sysname,placement,zorder from switches natural join placements WHERE sysname != \'e3-2\''); # FULHACK to remove e3-2 from the maps
+# my $q = $dbh->prepare('select switch,sysname,placement,zorder from switches natural join placements'); # FULHACK to remove e3-2 from the maps
 my $q2 = $dbh->prepare('select distinct on (switch) switch,temp,time,sysname from switch_temp natural join switches order by switch,time desc');
 $q->execute();
 while (my $ref = $q->fetchrow_hashref()) {

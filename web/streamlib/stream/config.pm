@@ -46,7 +46,7 @@ our %streams =  (
                         'has_multicast' => 0,
                         'multicast_ip' => 'udp://@[ff7e:a40:2a02:ed02:ffff::15]:2015',
                         'source' => 'Event',
-                        'title' => 'Creativia HD (1080p50 H.264) 6Mbit/s'
+                        'title' => 'Creativia HD (1080p50 H.264) 10Mbit/s'
                 },
                 'game-hd' => {
                         'type' => 'event',

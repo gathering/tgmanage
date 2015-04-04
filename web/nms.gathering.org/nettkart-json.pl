@@ -43,8 +43,8 @@ while (my $ref = $q->fetchrow_hashref()) {
 		if ($traffic >= $min) {
 			$intensity = log($traffic / $min) / log(10);
 
-			my $fudge1 = oct('0x'.substr(Digest::MD5::md5_hex($cgi->{'sysname'} . $cgi->param('secret')), 0, 8));
-			my $fudge2 = oct('0x'.substr(Digest::MD5::md5_hex($cgi->{'sysname'} . $cgi->param('secret2')), 0, 8));
+			my $fudge1 = oct('0x'.substr(Digest::MD5::md5_hex($ref->{'sysname'} . $cgi->param('secret')), 0, 8));
+			my $fudge2 = oct('0x'.substr(Digest::MD5::md5_hex($ref->{'sysname'} . $cgi->param('secret2')), 0, 8));
 			$intensity += ($fudge1 + ($fudge2 - $fudge1) * $fade_time) * $noise;
 
 			$intensity = 4.0 if ($intensity > 4.0);
