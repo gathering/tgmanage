@@ -6,7 +6,7 @@ use NetAddr::IP;
 our $v4net = NetAddr::IP->new("151.216.128.0/17");
 our $v6net = NetAddr::IP->new("2a02:ed02::/32");
 our $multicast = "udp://\@233.191.12.1";
-our $video_url = "http://cubemap.tg15.gathering.org/event.flv";
+our $video_url = "http://cubemap.tg15.gathering.org/creativia.flv";
 our $tg = 15;
 our $tg_full = 2015;
 
@@ -25,7 +25,7 @@ our %streams =  (
 			'port' => 80,
 			'url' => 'http://cubemap.tg15.gathering.org/event.flv',
 			'ts_enabled' => 1,
-			'online' => 1,
+			'online' => 0,
 			'external' => 1,
 			'interlaced' => 0,
 			'has_multicast' => 0,
@@ -55,7 +55,7 @@ our %streams =  (
                         'port' => 80,
                         'url' => 'http://cubemap.tg15.gathering.org/game.flv',
                         'ts_enabled' => 1,
-                        'online' => 1,
+                        'online' => 0,
                         'external' => 1,
                         'interlaced' => 0,
                         'has_multicast' => 0,
