@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Generate a random placement-entry insert for a named switch (convenient
+# if you manually add a switch with no placement)
+
 for a in $* ; do 
 X=$(( $RANDOM % 500 ))
 Y=$(( $RANDOM % 500 ))
