@@ -15,8 +15,8 @@ var canvas = {
 	scale:1
 };
 var margin = {
-	x:40,
-	y:100,
+	x:10,
+	y:20,
 	text:3
 };
 
@@ -305,13 +305,14 @@ function canvasClick(e)
  *
  * Recomputes the scale and applies it.
  *
- * The recomputation is pretty bad, since it doesn't take the size of the
- * header/toolbar into account at all, except through margin.*
+ * Has to use c.offset* since we are just scaling the canvas, not
+ * everything else.
+ *
  */
 function resizeEvent()
 {
-	var width = window.innerWidth;
-	var height = window.innerHeight;
+	var width = window.innerWidth - c.offsetLeft;
+	var height = window.innerHeight - c.offsetTop;
 	if (width / (orig.width + margin.x) > height  /  (orig.height + margin.y)) {
 		canvas.scale = height / (orig.height + margin.y);
 	} else {
@@ -455,6 +456,12 @@ function connectSwitches(insw1, insw2,color1, color2) {
 	ctx.closePath();
 	ctx.stroke();
 	ctx.moveTo(0,0);
+}
+
+function debugIt(e)
+{
+	console.log("Debug triggered");
+	console.log(e);
 }
 
 window.addEventListener('resize',resizeEvent,true);
