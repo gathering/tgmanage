@@ -4,6 +4,14 @@ var fontSize = 20;
 var fontFace = "Arial Black";
 var nightMode = false;
 var nightBlur = {};
+
+/* "Orig" refers to the oriinal coordinate system.
+ *
+ * The short version is: This is the extents of the map, regardless of
+ * resolution. So if you place something at 1920x1032, it'll be at the very
+ * corner. If you change "orig", you also have to re-calculate all switch
+ * placements etc.
+ */
 var orig = {
 	width:1920,
 	height:1032
