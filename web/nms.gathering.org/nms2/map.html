@@ -44,7 +44,12 @@
                                 <li><a href="#temp" onclick="setUpdater(handler_temp)">Temperature map</a></li>
                                 <li><a href="#ping" onclick="setUpdater(handler_ping)">Ping map</a></li>
                                 <li><a href="#traffic" onclick="setUpdater(handler_traffic)">Traffic map</a></li>
+                                <li><a href="#disco" onclick="setUpdater(handler_disco)">DISCO</a></li>
+				<li class="divider"> </li>
                                 <li><a href="#" onclick="toggleNightMode()" title="Add 'nightMode' anywhere in the url to auto-enable">Toggle Night Mode</a></li>
+				<li class="divider"> </li>
+				<li><input type="range" id="scaler" name="points" min="0.5" max="3" step="0.01" onchange="scaleChange()" /></li>
+				<li><a href="#">Scale: <div id="scaler-text"></div></a></li>
                             </ul>
                         </li>
                     </ul>
@@ -65,7 +70,10 @@
 
         <div class="row-fluid">
             <div class="span12">
-                <p id="playground"><img src="img/tg15-salkart.png" alt="" id="map" style="filter:invert; z-index: 0;"></p>
+<canvas id="myCanvas" width="1920" height="1032" style="cursor: pointer; border:1px solid #000000;" onclick="canvasClick(event)">
+</canvas>
+
+<div style="display:none;"><img id="source" src="prototype/tg15-salkart-full.png" ></div>
             </div>
         </div>
 
@@ -86,6 +94,8 @@
     <script type="text/javascript">
     updatePorts();
     updatePing();
+	window.addEventListener('resize',resizeEvent,true);
+	document.addEventListener('load',resizeEvent,true);
     setInterval(updatePorts,5000);
     setInterval(updateInfo,5000);
     setInterval(updatePing,1000);
@@ -100,6 +110,8 @@
             setUpdater(handler_temp);
     } else if (/#traffic/.exec(url)) {
             setUpdater(handler_traffic);
+    } else if (/#disco/.exec(url)) {
+            setUpdater(handler_disco);
     } else {
             setUpdater(handler_ping);
     }
