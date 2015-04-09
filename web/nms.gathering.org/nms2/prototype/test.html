@@ -1,7 +1,7 @@
 <html>
 
 <body id="bdy">
-<input type="range" id="scaler" name="points" min="0.5" max="3" step="0.01" onchange="scaleChange()" /><div id="scaler-text"></div>
+<input type="range" id="scaler" name="points" min="0.5" max="3" step="0.01" onchange="scaleChange()" /><div id="scaler-text">NaN</div>
 <input type="button" id="discoMode" onclick="if (discoMode == undefined) discoMode = setInterval(randomizeColors,100);" value="DISCO"></input>
 <input type="button" id="nodiscoMode" onclick="if (discoMode != undefined) { clearInterval(discoMode); discoMode = undefined; }" value="Office mode"></input>
 <input type="button" id="randomMode" onclick="randomizeColors();" value="Random colors"></input>
@@ -14,10 +14,12 @@
 <canvas id="myCanvas" width="1920" height="1032" style="cursor: pointer; border:1px solid #000000;" onclick="canvasClick(event)">
 </canvas>
 
-<div style="display:none;"><img id="source" src="tg15-salkart-full.png" ><canvas id="mySeceretCanvas"></canvas></div>
+<div style="display:none;"><img id="source" src="tg15-salkart-full.png" ></div>
+<script src="test.js"> </script>
 <script>
 var discoMode = undefined;
+window.addEventListener('resize',resizeEvent,true);
+document.addEventListener('load',resizeEvent,true);
 </script>
-<script src="test.js"> </script>
 </body>
 </html>

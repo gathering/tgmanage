@@ -52,11 +52,11 @@ var linknets = [
  *
  * XXX: Might have to change the index here to match backend
  */
-function drawLinknet(i)
+function drawLinknet(ln)
 {
-	var c1 = linknets[i].c1 ? linknets[i].c1 : "blue";
-	var c2 = linknets[i].c2 ? linknets[i].c2 : "blue";
-	connectSwitches(linknets[i].sw1,linknets[i].sw2, c1, c2);
+	var c1 = ln.c1 ? ln.c1 : "blue";
+	var c2 = ln.c2 ? ln.c2 : "blue";
+	connectSwitches(ln.sw1,ln.sw2, c1, c2);
 }
 
 /*
@@ -65,7 +65,7 @@ function drawLinknet(i)
 function drawLinknets()
 {
 	for (var i in linknets) {
-		drawLinknet(i);
+		drawLinknet(linknets[i]);
 	}
 }
 
@@ -95,7 +95,7 @@ function drawSwitch(sw)
 		ctx.fillStyle = color;
 		if (nightMode && nightBlur[sw] != true) {
 			ctx.shadowBlur = 10;
-			ctx.shadowColor = "#00EE00";
+			ctx.shadowColor = "#99ff99";
 			nightBlur[sw] = true;
 		} else {
 			ctx.shadowBlur = 0;
@@ -164,10 +164,10 @@ function isin(box, x, y)
  * Return the name of the switch found at coordinates (x,y), or 'undefined'
  * if none is found.
  */
-function findSwitch(x,y) {
+function findSwitch(x,y)
+{
 	x = parseInt(parseInt(x) / canvas.scale);
 	y = parseInt(parseInt(y) / canvas.scale);
-	console.log ("x: " + x + " y: " + y);
 
 	for (var v in switches) {
 		if(isin(switches[v]['placement'],x,y)) {
@@ -183,7 +183,6 @@ function findSwitch(x,y) {
 function setSwitchColor(sw, c)
 {
 	switches[sw]['color'] = c;
-	drawSwitch(sw);
 }
 
 /*
@@ -255,6 +254,7 @@ function crossHair(x,y)
 function switchClick(sw)
 {
 	setSwitchColor(sw, "white");
+	drawSwitch(sw);
 }
 
 /*
@@ -265,10 +265,10 @@ function randomizeColors()
 	for (var i in linknets) {
 		setLinknetColors(i, getRandomColor(), getRandomColor());
 	}
-	drawLinknets();
 	for (var sw in switches) {
 		setSwitchColor(sw, getRandomColor());
 	}
+	drawScene();
 }
 
 /*
@@ -282,10 +282,10 @@ function resetColors()
 	for (var i in linknets) {
 		setLinknetColors(i, "blue","blue");
 	}
-	drawLinknets();
 	for (var sw in switches) {
 		setSwitchColor(sw, "blue");
 	}
+	drawScene();
 }
 
 /*
@@ -293,7 +293,6 @@ function resetColors()
  */
 function canvasClick(e)
 {
-	console.log(e);
 	var sw = findSwitch(e.pageX - e.target.offsetLeft, e.pageY - e.target.offsetTop);
 	if (sw != undefined) {
 		switchClick(sw);
@@ -334,13 +333,18 @@ function drawBG()
 	}
 }
 
-function setNightMode(toggle) {
+/*
+ * Enable/disable night mode (ViD better appreciate this)
+ */
+function setNightMode(toggle)
+{
 	nightMode = toggle;
 	var body = document.getElementById("bdy");
 	bdy.style.background = toggle ? "black" : "white";
 	bdy.style.color = toggle ? "#00FF00" : "black";
 	setScale();
 }
+
 /*
  * Draw a box (e.g.: switch).
  */
@@ -387,16 +391,11 @@ function drawSideways(text,x,y,w,h)
  * XXX: This is broken for chromium on local file system (e.g.: file:///)
  * Seems like a chromium bug?
  */
-function invertCanvas() {
-	var canvas = document.getElementById('myCanvas');
-	var context = canvas.getContext('2d');
-	var canvas2 = document.getElementById('mySecretCanvas');
-	var context2 = canvas.getContext('2d');
-
+function invertCanvas()
+{
 	var imageObj = document.getElementById('source');
-	context2.drawImage(imageObj, 0, 0, canvas.width, canvas.height);
-
-	var imageData = context2.getImageData(0, 0, canvas.width, canvas.height);
+	ctx.drawImage(imageObj, 0, 0, c.width, c.height);
+	var imageData = ctx.getImageData(0, 0, c.width, c.height);
 	var data = imageData.data;
 
 	for(var i = 0; i < data.length; i += 4) {
@@ -404,7 +403,7 @@ function invertCanvas() {
 		data[i + 1] = 255 - data[i + 1];
 		data[i + 2] = 255 - data[i + 2];
 	}
-	context.putImageData(imageData, 0, 0);
+	ctx.putImageData(imageData, 0, 0);
 }
 
 /*
@@ -414,8 +413,8 @@ function invertCanvas() {
  *
  * XXX: Both should be renamed to have 'text' or something in them
  */
-function drawRegular(text,x,y,w,h) {
-
+function drawRegular(text,x,y,w,h)
+{
 	ctx.fillStyle = "white";
 	ctx.strokeStyle = "black";
 	ctx.lineWidth = Math.round(1 * canvas.scale);
@@ -434,7 +433,8 @@ function drawRegular(text,x,y,w,h) {
  * XXX: beginPath() and closePath() is needed to avoid re-using the
  * gradient/color 
  */
-function connectSwitches(insw1, insw2,color1, color2) {
+function connectSwitches(insw1, insw2,color1, color2)
+{
 	var sw1 = switches[insw1].placement;
 	var sw2 = switches[insw2].placement;
 	if (color1 == undefined)
@@ -463,7 +463,4 @@ function debugIt(e)
 	console.log("Debug triggered");
 	console.log(e);
 }
-
-window.addEventListener('resize',resizeEvent,true);
-document.addEventListener('load',resizeEvent,true);
 
