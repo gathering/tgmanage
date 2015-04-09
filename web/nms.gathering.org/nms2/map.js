@@ -744,8 +744,10 @@ function findSwitch(x,y) {
  */
 function setSwitchColor(sw, c)
 {
-	nms.switches_now.switches[sw]['color'] = c;
-	drawSwitch(sw);
+	if(nms.switches_now.switches[sw]['color'] != c) {
+		nms.switches_now.switches[sw]['color'] = c;
+		drawSwitch(sw);
+	}
 }
 
 /*
