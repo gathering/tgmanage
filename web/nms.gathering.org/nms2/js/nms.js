@@ -14,6 +14,8 @@ var nms = {
 	damage:false,
 	drawText:true,
 	now:false,
+	fontSize:14,
+	fontFace:"Arial Black",
 	did_update:false // Set to 'true' after we've done some basic updating
 };
 
@@ -24,8 +26,6 @@ var counters = {
 
 var c = document.getElementById("myCanvas");
 var ctx = c.getContext("2d");
-var fontSize = 14;
-var fontFace = "Arial Black";
 var orig = {
 	width:1920,
 	height:1032
@@ -776,7 +776,7 @@ function drawSwitches()
 function drawScene()
 {
 	if (nms.damage) {
-		ctx.font = Math.round(fontSize * canvas.scale) + "px " + fontFace;
+		ctx.font = Math.round(nms.fontSize * canvas.scale) + "px " + nms.fontFace;
 		if (nms.now != false) {
 			ctx.clearRect(0,0,200,20);
 			ctx.fillStyle = "white";
