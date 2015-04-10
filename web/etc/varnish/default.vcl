@@ -94,9 +94,12 @@ sub vcl_backend_response {
 	    } else {
 		    set beresp.ttl = 0s;
 	    }
-		    if(bereq.url ~ "port-state.pl" && beresp.status == 200) {
-			set beresp.ttl = 30s;
-			}
+	    if(bereq.url ~ "port-state.pl" && beresp.status == 200) {
+		    set beresp.ttl = 30s;
+	    }
+	    if (beresp.status == 200 && bereq.url ~ "now=") {
+		    set beresp.ttl = 10m;
+	    }
 	    if (beresp.status == 500) {
 		    return (retry);
 	    }
