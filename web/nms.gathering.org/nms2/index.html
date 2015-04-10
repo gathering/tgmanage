@@ -48,6 +48,8 @@
 				<li class="divider"> </li>
                                 <li><a href="#" onclick="toggleNightMode()" title="Add 'nightMode' anywhere in the url to auto-enable">Toggle Night Mode</a></li>
 				<li class="divider"> </li>
+				<li><a href="#" onclick="document.getElementById('nowPickerBox').style.display = 'block';">Travel in time</a></li>
+				<li class="divider"> </li>
 				<li><input type="range" id="scaler" name="points" min="0.5" max="3" step="0.01" onchange="scaleChange()" /></li>
 				<li><a href="#">Scale: <div id="scaler-text"></div></a></li>
                             </ul>
@@ -62,6 +64,11 @@
     <div class="container-fluid">
         <div class="panel" style="position: fixed; z-index: 10000;">
             <div class="span4">
+	    	<div id="nowPickerBox" style="display:none; background:
+		white; border: 1px solid #000000;" >	
+		      <input type="text" class="form-control" placeholder="YYYY-MM-DD hh:mm:ss" id="nowPicker" value="" />
+		      <button class="btn btn-default" onclick="changeNow();">Travel</button>
+	        </div>
                 <div id="info-switch-parent" style="background: silver">
                     <table class="table" id="info-switch-table"></table>
                 </div>
@@ -90,7 +97,7 @@
       var draw_linknets = true;
       var can_edit = false;
     </script>
-    <script type="text/javascript" src="map.js"></script>
+    <script type="text/javascript" src="js/nms.js"></script>
     <script type="text/javascript">
     updatePorts();
     updatePing();

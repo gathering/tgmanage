@@ -14,11 +14,16 @@ my $dbh = nms::db_connect();
 my $switch = $cgi->param('switch');
 my @ports = split(",",$cgi->param('ports'));
 my $cin = $cgi->param('time');
-my $when =" time > now() - '5m'::interval";
+my $now = "now()";
+if ($cgi->param('now') != undef) {
+	$now = "'" . $cgi->param('now') . "'::timestamp ";
+}
+
+my $when =" time > " . $now . " - '5m'::interval and time < " . $now . " ";
 my %json = ();
 
 if (defined($cin)) {
-	$when = " time < now() - '$cin'::interval and time > now() - ('$cin'::interval + '15m'::interval) ";
+	$when = " time < " . $now . " - '$cin'::interval and time > ". $now . " - ('$cin'::interval + '15m'::interval) ";
 }
 
 my $query = 'select distinct on (switch,ifname,ifhighspeed,ifhcoutoctets,ifhcinoctets) extract(epoch from date_trunc(\'second\',time)) as time,switch,ifname,max(ifhighspeed) as ifhighspeed,max(ifhcinoctets) as ifhcinoctets,max(ifhcoutoctets) as ifhcoutoctets,switch,sysname from polls natural join switches where ' . $when . ' ';
@@ -48,7 +53,7 @@ while (my $ref = $q->fetchrow_hashref()) {
 #print Dumper(%json);
 
 my $q2 = $dbh->prepare('select switch,sysname,placement,zorder,ip,switchtype,poll_frequency,community,last_updated from switches natural join placements');
-my $q3 = $dbh->prepare('select distinct on (switch) switch,temp,time,sysname from switch_temp natural join switches order by switch,time desc');
+my $q3 = $dbh->prepare('select distinct on (switch) switch,temp,time,sysname from switch_temp natural join switches where ' . $when . ' order by switch,time desc');
 
 $q2->execute();
 while (my $ref = $q2->fetchrow_hashref()) {

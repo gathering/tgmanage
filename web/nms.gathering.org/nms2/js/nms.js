@@ -12,6 +12,7 @@ var nms = {
 	switch_color:{},
 	damage:false,
 	drawText:true,
+	now:false,
 	did_update:false // Set to 'true' after we've done some basic updating
 };
 
@@ -22,7 +23,7 @@ var counters = {
 
 var c = document.getElementById("myCanvas");
 var ctx = c.getContext("2d");
-var fontSize = 12;
+var fontSize = 16;
 var fontFace = "Arial Black";
 var orig = {
 	width:1920,
@@ -88,6 +89,36 @@ function byteCount(bytes) {
 
 function toggleNightMode() {
 	setNightMode(!nms.nightMode);
+}
+
+function checkNow(now) {
+	if (Date.parse(now)) {
+		var d = new Date(Date.parse(now));
+		var str = d.getFullYear() + "-" + (parseInt(d.getMonth())+1) + "-" + d.getDate() + " ";
+		str += d.getHours() + ":" + d.getMinutes() + ":" + d.getSeconds();
+		return str;
+
+	}
+	if (now == "")
+		return "";
+	return false;
+}
+
+function changeNow() {
+	var newnow = checkNow(document.getElementById("nowPicker").value);
+	if (!newnow) {
+		alert('Bad date-field in time travel field');
+		return;
+	}
+	if (newnow == "")
+		newnow = false;
+	
+	nms.now = newnow;
+	updatePorts();
+	var boxHide = document.getElementById("nowPickerBox");
+	if (boxHide) {
+		boxHide.style.display = "none";
+	}
 }
 
 /*
@@ -484,7 +515,7 @@ function updatePing()
 {
 	$.ajax({
 		type: "GET",
-		url: "/ping-json2.pl",
+		url: "/ping-json2.pl?now=" + nms.now,
 		dataType: "text",
 		success: function (data, textStatus, jqXHR) {
 			nms.ping_data = JSON.parse(data);
@@ -498,9 +529,12 @@ function updatePing()
  */
 function updatePorts()
 {
+	var now = "";
+	if (nms.now)
+		now = "?now=" + nms.now;
 	$.ajax({
 		type: "GET",
-		url: "/port-state.pl",
+		url: "/port-state.pl"+ now ,
 		dataType: "text",
 		success: function (data, textStatus, jqXHR) {
 			var  switchdata = JSON.parse(data);
@@ -509,9 +543,12 @@ function updatePorts()
 			initialUpdate();
 		}
 	});
+	now="";
+	if (nms.now)
+		now = "&now=" + nms.now;
 	$.ajax({
 		type: "GET",
-		url: "/port-state.pl?time=5m",
+		url: "/port-state.pl?time=5m" + now,
 		dataType: "text",
 		success: function (data, textStatus, jqXHR) {
 			var  switchdata = JSON.parse(data);
