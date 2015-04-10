@@ -105,31 +105,28 @@ function checkNow(now) {
 	return false;
 }
 
-var tgStart = {
-	year:2015,
-	month:04,
-	date:01,
-	hour:09,
-	minute:00,
-	second:0
-};
+var tgStart = stringToEpoch('2015-03-31T15:00:00');
 
-var replayTime = {};
+var replayTime = 0;
 
-var replayIncrement = 30;
+var replayIncrement = 30 * 60;
+
+function stringToEpoch(t) {
+	var ret = new Date(Date.parse(t));
+	return parseInt(parseInt(ret.valueOf()) / 1000);
+}
+
+function epochToString(t) {
+	var d = new Date(parseInt(t) * parseInt(1000));
+	var str = d.getFullYear() + "-" + (parseInt(d.getMonth())+1) + "-" + d.getDate() + "T";
+	str += d.getHours() + ":" + d.getMinutes() + ":" + d.getSeconds();
+	return str;
+}
+	
 
 function timeReplay() {
-	nms.now = replayTime.year + '-' + replayTime.month + '-' + replayTime.date + ' ' + replayTime.hour + ':' + replayTime.minute + ':' + replayTime.second;
-	replayTime.minute += replayIncrement;
-	if (replayTime.minute >= 60) {
-		replayTime.minute = 0;
-		if (replayTime.hour == 23) {
-			replayTime.hour = 0;
-			replayTime.date += 1;
-		} else {
-			replayTime.hour += 1;
-		}
-	}
+	replayTime = parseInt(replayTime) + parseInt(replayIncrement);
+	nms.now = epochToString(replayTime);
 	nms.damage = true;
 }
 var replayHandler = false;
@@ -137,9 +134,7 @@ function startReplay() {
 	if (replayHandler)
 		clearInterval(replayHandler);
 	resetColors();
-	for (var v in tgStart) {
-		replayTime[v] = tgStart[v];
-	}
+	replayTime = tgStart;
 	timeReplay();
 	replayHandler = setInterval(timeReplay,1000);
 }
@@ -490,11 +485,20 @@ function rgb_from_latency(latency_ms)
 
 function pingUpdater()
 {
-	for (var sw in nms.ping_data["switches"]) {
-		setSwitchColor(sw, gradient_from_latency(nms.ping_data["switches"][sw]["latency"]));
+	for (var sw in nms.switches_now["switches"]) {
+		var c = "blue";
+		if (nms.ping_data['switches'] && nms.ping_data['switches'][sw])
+			c = gradient_from_latency(nms.ping_data["switches"][sw]["latency"]);
+		setSwitchColor(sw, c);
 	}
-	for (var ln in nms.ping_data["linknets"]) {
-		setLinknetColors(ln, gradient_from_latency(nms.ping_data["linknets"][ln][0]),gradient_from_latency(nms.ping_data["linknets"][ln][1]));
+	for (var ln in nms.switches_now["linknets"]) {
+		var c1 = "blue";
+		var c2 = c1;
+		if (nms.ping_data['linknets'] && nms.ping_data['linknets'][ln]) {
+			c1 = gradient_from_latency(nms.ping_data["linknets"][ln][0]);
+			c2 = gradient_from_latency(nms.ping_data["linknets"][ln][1]);
+		}
+		setLinknetColors(ln, c1, c2);
 	}
 }
 
@@ -772,6 +776,7 @@ function drawSwitches()
 function drawScene()
 {
 	if (nms.damage) {
+		ctx.font = Math.round(fontSize * canvas.scale) + "px " + fontFace;
 		if (nms.now != false) {
 			ctx.clearRect(0,0,200,20);
 			ctx.fillStyle = "white";
@@ -783,7 +788,6 @@ function drawScene()
 			ctx.strokeText("Now: " + nms.now, 0 + margin.text, 20 * canvas.scale);
 			ctx.fillText("Now: " + nms.now, 0 + margin.text, 20 * canvas.scale);
 		}
-		ctx.font = Math.round(fontSize * canvas.scale) + "px " + fontFace;
 		drawLinknets();
 		drawSwitches();
 		nms.damage = false;
