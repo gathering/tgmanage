@@ -132,14 +132,16 @@ function timeReplay() {
 	}
 	nms.damage = true;
 }
-
+var replayHandler = false;
 function startReplay() {
+	if (replayHandler)
+		clearInterval(replayHandler);
 	resetColors();
 	for (var v in tgStart) {
 		replayTime[v] = tgStart[v];
 	}
 	timeReplay();
-	setInterval(timeReplay,1000);
+	replayHandler = setInterval(timeReplay,1000);
 }
 
 function changeNow() {
@@ -554,9 +556,10 @@ function initialUpdate()
  */
 function updatePing()
 {
+	var now = nms.now ? ("?now=" + nms.now) : "";
 	$.ajax({
 		type: "GET",
-		url: "/ping-json2.pl?now=" + nms.now,
+		url: "/ping-json2.pl" + now,
 		dataType: "text",
 		success: function (data, textStatus, jqXHR) {
 			nms.ping_data = JSON.parse(data);
@@ -571,7 +574,7 @@ function updatePing()
 function updatePorts()
 {
 	var now = "";
-	if (nms.now)
+	if (nms.now != false)
 		now = "?now=" + nms.now;
 	$.ajax({
 		type: "GET",
@@ -585,7 +588,7 @@ function updatePorts()
 		}
 	});
 	now="";
-	if (nms.now)
+	if (nms.now != false)
 		now = "&now=" + nms.now;
 	$.ajax({
 		type: "GET",
@@ -998,7 +1001,6 @@ function setNightMode(toggle) {
 	nms.nightMode = toggle;
 	var body = document.getElementById("body");
 	body.style.background = toggle ? "black" : "white";
-	body.style.color = toggle ? "#00FF00" : "black";
 	setScale();
 }
 /*

@@ -53,7 +53,9 @@
 				<li class="divider"> </li>
 				<li><input type="range" id="scaler" name="points" min="0.5" max="3" step="0.01" onchange="scaleChange()" /></li>
 				<li><a href="#">Scale: <div id="scaler-text"></div></a></li>
-                            </ul>
+				<li class="divider"> </li>
+	    			<li><a onclick="document.getElementById('aboutBox').style.display = 'block';">About</a></li>
+			    </ul>
                         </li>
                     </ul>
                     <p id="updater_name" class="navbar-text"></p>
@@ -63,7 +65,7 @@
     </div>
 
     <div class="container-fluid">
-        <div class="panel" style="position: fixed; z-index: 10000;">
+        <div class="panel" style="position: fixed; z-index: 100;">
             <div class="span4">
 	    	<div id="nowPickerBox" style="display:none; background:
 		white; border: 1px solid #000000;" >	
@@ -78,6 +80,49 @@
 
         <div class="row-fluid">
             <div class="span12">
+	    <div id="aboutBox" class="panel" style="display: none; background: white; position: fixed; border: 1px solid #000000; z-index: 10;">
+	    <button onclick="document.getElementById('aboutBox').style.display = 'none';" style="float: right;">X</button>
+	    <h1>Welcome to NMS</h1>
+	    <h3>Cool stuff:</h3>
+	    <ul>
+	    <li>Everything is always there (but the frontend is a bit
+	    sluggish atm).</li>
+	    <li>Click a switch for more info</li>
+	    <li>Rewind: You can check out state at a specific time or
+	    replay from the beginning of the event</li>
+	    <li>Night mode, now with blur.</li>
+	    <li>Auto-scaling the viewport/canvas</li>
+	    <li>Total client speed (up right)</li>
+	    <li>An about-page that's full of bullet points!</li>
+	    </ul>
+	    <h3>Todo list front end:</h3>
+	    <ul>
+	    <li>Fill out this list and text</li>
+	    <li>Polish time travel UI</li>
+	    <li>Lock scale</li>
+	    <li>Clean up various global variables</li>
+	    <li>Split drawing into multiple canvases to fix Firefox
+	    performance (And because it's generally better)</li>
+	    <li>Add DHCP map</li>
+	    <li>Add magic map (combined map of sorts)</li>
+	    <li>Upgrade jQuery and Boost</li>
+	    <li>Fix legend display</li>
+	    <li>Better dialog-boxes (Both this and various others)</li>
+	    <li>Add switch-box to review state on individual ports</li>
+	    <li>Moving switches around (like ping.html + edit)</li>
+	    <li>More?</li>
+	    </ul>
+	    <h3>Todo for backend:</h3>
+	    <li>Fix horrible SQL :D</li>
+	    <li>Close SQL injections (IT'S WIDE OPEN BECAUSE WHY NOT THAT'S NEVER A PROBLEM)</li>
+	    <li>Fix SNMP-fetcher so it gets ifXTable and at least ifOperStatus from ifTable. Possibly other tweaks.</li>
+	    <li>Support for adding switches through an API, not just pure SQL.</li>
+	    <li>Integrate with FAP</li>
+	    <li>Clean up old interfaces</li>
+	    <li>Review various agents/tools</li>
+	    </ul>
+
+	    </div>
 <canvas id="myCanvas" width="1920" height="1032" style="cursor: pointer;" onclick="canvasClick(event)">
 </canvas>
 
