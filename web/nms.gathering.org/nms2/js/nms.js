@@ -10,6 +10,7 @@ var nms = {
 	nightMode:false,
 	nightBlur:{},
 	switch_color:{},
+	linknet_color:{},
 	damage:false,
 	drawText:true,
 	now:false,
@@ -23,7 +24,7 @@ var counters = {
 
 var c = document.getElementById("myCanvas");
 var ctx = c.getContext("2d");
-var fontSize = 16;
+var fontSize = 14;
 var fontFace = "Arial Black";
 var orig = {
 	width:1920,
@@ -102,6 +103,43 @@ function checkNow(now) {
 	if (now == "")
 		return "";
 	return false;
+}
+
+var tgStart = {
+	year:2015,
+	month:04,
+	date:01,
+	hour:09,
+	minute:00,
+	second:0
+};
+
+var replayTime = {};
+
+var replayIncrement = 30;
+
+function timeReplay() {
+	nms.now = replayTime.year + '-' + replayTime.month + '-' + replayTime.date + ' ' + replayTime.hour + ':' + replayTime.minute + ':' + replayTime.second;
+	replayTime.minute += replayIncrement;
+	if (replayTime.minute >= 60) {
+		replayTime.minute = 0;
+		if (replayTime.hour == 23) {
+			replayTime.hour = 0;
+			replayTime.date += 1;
+		} else {
+			replayTime.hour += 1;
+		}
+	}
+	nms.damage = true;
+}
+
+function startReplay() {
+	resetColors();
+	for (var v in tgStart) {
+		replayTime[v] = tgStart[v];
+	}
+	timeReplay();
+	setInterval(timeReplay,1000);
 }
 
 function changeNow() {
@@ -453,6 +491,9 @@ function pingUpdater()
 	for (var sw in nms.ping_data["switches"]) {
 		setSwitchColor(sw, gradient_from_latency(nms.ping_data["switches"][sw]["latency"]));
 	}
+	for (var ln in nms.ping_data["linknets"]) {
+		setLinknetColors(ln, gradient_from_latency(nms.ping_data["linknets"][ln][0]),gradient_from_latency(nms.ping_data["linknets"][ln][1]));
+	}
 }
 
 function pingInit()
@@ -620,8 +661,8 @@ function updateSpeed()
  */
 function drawLinknet(i)
 {
-	var c1 = nms.switches_now.linknets[i].c1 ? nms.switches_now.linknets[i].c1 : "blue";
-	var c2 = nms.switches_now.linknets[i].c2 ? nms.switches_now.linknets[i].c2 : "blue";
+	var c1 = nms.linknet_color[i] && nms.linknet_color[i].c1 ? nms.linknet_color[i].c1 : "blue";
+	var c2 = nms.linknet_color[i] && nms.linknet_color[i].c2 ? nms.linknet_color[i].c2 : "blue";
 	if (nms.switches_now.switches[nms.switches_now.linknets[i].sysname1] && nms.switches_now.switches[nms.switches_now.linknets[i].sysname2]) {
 		connectSwitches(nms.switches_now.linknets[i].sysname1,nms.switches_now.linknets[i].sysname2, c1, c2);
 	}
@@ -646,10 +687,13 @@ function drawLinknets()
  */
 function setLinknetColors(i,c1,c2)
 {
-	if (nms.switches_now.linknets[i].c1 != c1 ||
-	    nms.switches_now.linknets[i].c2 != c2) {
-		nms.switches_now.linknets[i].c1 = c1;
-		nms.switches_now.linknets[i].c2 = c2;
+	if (!nms.linknet_color[i] || 
+ 	     nms.linknet_color[i].c1 != c1 ||
+	     nms.linknet_color[i].c2 != c2) {
+		if (!nms.linknet_color[i])
+			nms.linknet_color[i] = {};
+		nms.linknet_color[i]['c1'] = c1;
+		nms.linknet_color[i]['c2'] = c2;
 		nms.damage = true;
 	}
 }
@@ -725,6 +769,17 @@ function drawSwitches()
 function drawScene()
 {
 	if (nms.damage) {
+		if (nms.now != false) {
+			ctx.clearRect(0,0,200,20);
+			ctx.fillStyle = "white";
+			ctx.strokeStyle = "black";
+			ctx.lineWidth = Math.round(1 * canvas.scale);
+			if (canvas.scale < 0.7) {
+				ctx.lineWidth = 0.5;
+			}
+			ctx.strokeText("Now: " + nms.now, 0 + margin.text, 20 * canvas.scale);
+			ctx.fillText("Now: " + nms.now, 0 + margin.text, 20 * canvas.scale);
+		}
 		ctx.font = Math.round(fontSize * canvas.scale) + "px " + fontFace;
 		drawLinknets();
 		drawSwitches();
@@ -978,8 +1033,8 @@ function drawSideways(text,x,y,w,h)
 	if (canvas.scale < 0.7) {
 		ctx.lineWidth = 0.5;
 	}
-	ctx.fillText(text, - canvas.scale * (y + h - margin.text),canvas.scale * (x + w - margin.text) );
 	ctx.strokeText(text, - canvas.scale * (y + h - margin.text),canvas.scale * (x + w - margin.text) );
+	ctx.fillText(text, - canvas.scale * (y + h - margin.text),canvas.scale * (x + w - margin.text) );
 
 	ctx.rotate(Math.PI / 2);
 }
@@ -1025,8 +1080,8 @@ function drawRegular(text,x,y,w,h) {
 	if (canvas.scale < 0.7) {
 		ctx.lineWidth = 0.5;
 	}
-	ctx.fillText(text, (x + margin.text) * canvas.scale, (y + h - margin.text) * canvas.scale);
 	ctx.strokeText(text, (x + margin.text) * canvas.scale, (y + h - margin.text) * canvas.scale);
+	ctx.fillText(text, (x + margin.text) * canvas.scale, (y + h - margin.text) * canvas.scale);
 }
 
 /*
@@ -1054,7 +1109,7 @@ function connectSwitches(insw1, insw2,color1, color2) {
 	ctx.strokeStyle = gradient;
 	ctx.moveTo(x0,y0);
 	ctx.lineTo(x1,y1); 
-	ctx.lineWidth = Math.floor(2 * canvas.scale);
+	ctx.lineWidth = Math.floor(5 * canvas.scale);
 	ctx.closePath();
 	ctx.stroke();
 	ctx.moveTo(0,0);

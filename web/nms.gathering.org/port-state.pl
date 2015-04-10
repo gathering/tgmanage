@@ -81,7 +81,8 @@ while (my $ref = $q3->fetchrow_hashref()) {
 my $q4 = $dbh->prepare(' select linknet, (select sysname from switches where switch = switch1) as sysname1, addr1, (select sysname from switches where switch = switch2) as sysname2,addr2 from linknets');
 $q4->execute();
 while (my $ref = $q4->fetchrow_hashref()) {
-	push @{$json{'linknets'}}, $ref;
+	$json{'linknets'}{$ref->{'linknet'}} = $ref;
+#	push @{$json{'linknets'}}, $ref;
 }
 
 print $cgi->header(-type=>'text/json; charset=utf-8');

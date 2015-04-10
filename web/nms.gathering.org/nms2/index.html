@@ -49,6 +49,7 @@
                                 <li><a href="#" onclick="toggleNightMode()" title="Add 'nightMode' anywhere in the url to auto-enable">Toggle Night Mode</a></li>
 				<li class="divider"> </li>
 				<li><a href="#" onclick="document.getElementById('nowPickerBox').style.display = 'block';">Travel in time</a></li>
+				<li><a href="#" onclick="startReplay();" title="Replay from opening 30 minutes per second">Replay TG</p></li>
 				<li class="divider"> </li>
 				<li><input type="range" id="scaler" name="points" min="0.5" max="3" step="0.01" onchange="scaleChange()" /></li>
 				<li><a href="#">Scale: <div id="scaler-text"></div></a></li>
@@ -77,7 +78,7 @@
 
         <div class="row-fluid">
             <div class="span12">
-<canvas id="myCanvas" width="1920" height="1032" style="cursor: pointer; border:1px solid #000000;" onclick="canvasClick(event)">
+<canvas id="myCanvas" width="1920" height="1032" style="cursor: pointer;" onclick="canvasClick(event)">
 </canvas>
 
 <div style="display:none;"><img id="source" src="prototype/tg15-salkart-full.png" ></div>
