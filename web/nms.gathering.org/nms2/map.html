@@ -101,6 +101,7 @@
     setInterval(updatePing,1000);
     setInterval(updateMap,1000);
     setInterval(updateSpeed,3000);
+    setInterval(drawScene,1000);
     url = document.URL;
     if (/#ping/.exec(url)) {
             setUpdater(handler_ping);
