@@ -11,7 +11,7 @@ var nms = {
 	nightBlur:{},
 	switch_color:{},
 	linknet_color:{},
-	damage:false,
+	textDrawn:{},
 	drawText:true,
 	now:false,
 	fontSize:14,
@@ -19,13 +19,8 @@ var nms = {
 	did_update:false // Set to 'true' after we've done some basic updating
 };
 
-var counters = {
-	undamaged:0,
-	damaged:0
-};
+var dr = {};
 
-var c = document.getElementById("myCanvas");
-var ctx = c.getContext("2d");
 var orig = {
 	width:1920,
 	height:1032
@@ -42,7 +37,34 @@ var margin = {
 	text:3
 };
 
+var tgStart = stringToEpoch('2015-03-31T15:00:00');
+var tgEnd = stringToEpoch('2015-04-05T12:00:00');
+var replayTime = 0;
+var replayIncrement = 30 * 60;
+var replayHandler = false;
 
+function initDrawing() {
+	dr['bg'] = {};
+	dr['bg']['c'] = document.getElementById("bgCanvas");
+	dr['bg']['ctx'] = dr['bg']['c'].getContext('2d');
+	dr['link'] = {};
+	dr['link']['c'] = document.getElementById("linkCanvas");
+	dr['link']['ctx'] = dr['link']['c'].getContext('2d');
+	dr['blur'] = {};
+	dr['blur']['c'] = document.getElementById("blurCanvas");
+	dr['blur']['ctx'] = dr['blur']['c'].getContext('2d');
+	dr['switch'] = {};
+	dr['switch']['c'] = document.getElementById("switchCanvas");
+	dr['switch']['ctx'] = dr['switch']['c'].getContext('2d');
+	dr['text'] = {};
+	dr['text']['c'] = document.getElementById("textCanvas");
+	dr['text']['ctx'] = dr['text']['c'].getContext('2d');
+	dr['top'] = {};
+	dr['top']['c'] = document.getElementById("topCanvas");
+	dr['top']['ctx'] = dr['top']['c'].getContext('2d');
+}
+
+initDrawing();
 /*
  * Handlers. "updater" is run periodically when the handler is active, and
  * "init" is run once when it's activated.
@@ -88,11 +110,13 @@ function byteCount(bytes) {
 	return bytes.toFixed(1) + units[i];
 }
 
-function toggleNightMode() {
+function toggleNightMode()
+{
 	setNightMode(!nms.nightMode);
 }
 
-function checkNow(now) {
+function checkNow(now)
+{
 	if (Date.parse(now)) {
 		var d = new Date(Date.parse(now));
 		var str = d.getFullYear() + "-" + (parseInt(d.getMonth())+1) + "-" + d.getDate() + " ";
@@ -105,18 +129,15 @@ function checkNow(now) {
 	return false;
 }
 
-var tgStart = stringToEpoch('2015-03-31T15:00:00');
 
-var replayTime = 0;
-
-var replayIncrement = 30 * 60;
-
-function stringToEpoch(t) {
+function stringToEpoch(t)
+{
 	var ret = new Date(Date.parse(t));
 	return parseInt(parseInt(ret.valueOf()) / 1000);
 }
 
-function epochToString(t) {
+function epochToString(t)
+{
 	var d = new Date(parseInt(t) * parseInt(1000));
 	var str = d.getFullYear() + "-" + (parseInt(d.getMonth())+1) + "-" + d.getDate() + "T";
 	str += d.getHours() + ":" + d.getMinutes() + ":" + d.getSeconds();
@@ -124,12 +145,17 @@ function epochToString(t) {
 }
 	
 
-function timeReplay() {
+function timeReplay()
+{
+	if (replayTime >= tgEnd) {
+		clearInterval(replayHandler);
+		return;
+	}
 	replayTime = parseInt(replayTime) + parseInt(replayIncrement);
 	nms.now = epochToString(replayTime);
-	nms.damage = true;
+	drawNow();
 }
-var replayHandler = false;
+
 function startReplay() {
 	if (replayHandler)
 		clearInterval(replayHandler);
@@ -307,7 +333,8 @@ function switchInfo(x)
 function updateInfo()
 {
 	if (!nms.drawn && nms.switches_now != undefined) {
-		nms.damage = true;
+		drawSwitches();
+		nms.drawn = true;
 	}
 	var speedele = document.getElementById("speed");
 	speedele.innerHTML = (8 * parseInt(nms.speed) / 1024 / 1024 / 1024 ).toPrecision(5) + " Gbit/s";
@@ -414,12 +441,16 @@ function rgb_from_max(x)
 	var colorred = 255 * x;
 	var colorblue = 255 - colorred;
 
-	return 'rgb(' + Math.round(colorred) + ", 0, " + Math.round(colorblue) + ')';
+	return 'rgb(' + Math.floor(colorred) + ", 0, " + Math.floor(colorblue) + ')';
 }
 
 function temp_color(t)
 {
-	t = Math.round((t / 60) * 100);
+	if (t == undefined) {
+		console.log("Temp_color, but temp is undefined");
+		return "blue";
+	}
+	t = Math.floor((t / 60) * 100);
 	return rgb_from_max(t);
 }
 
@@ -437,9 +468,12 @@ function setLegend(x,color,name)
 function tempUpdater()
 {
 	for (sw in nms.switches_now["switches"]) {
-		var t = nms.switches_now["switches"][sw]["temp"];
+		var t = "white";
+		if (nms.switches_now["switches"][sw]["temp"]) {
+			t = temp_color(nms.switches_now["switches"][sw]["temp"]);
+		}
 		
-		setSwitchColor(sw, temp_color(t));
+		setSwitchColor(sw, t);
 	}
 }
 
@@ -474,11 +508,11 @@ function rgb_from_latency(latency_ms)
 	} else if (l >= 1.0) {
 		l = 2.0 - l;
 		l = Math.pow(l, 1.0/2.2);
-		l = Math.round(l * 255.0);
+		l = Math.floor(l * 255.0);
 		return 'rgb(255, ' + l + ', 0)';
 	} else {
 		l = Math.pow(l, 1.0/2.2);
-		l = Math.round(l * 255.0);
+		l = Math.floor(l * 255.0);
 		return 'rgb(' + l + ', 255, 0)';
 	}
 }
@@ -548,7 +582,8 @@ function initialUpdate()
 	if (nms.ping_data && nms.switches_then && nms.switches_now && nms.updater != undefined && nms.did_update == false ) {
 		resizeEvent();
 		if (!nms.drawn) {
-			nms.damage = true;
+			drawSwitches();
+			drawLinknets();
 		}
 		nms.updater();
 		nms.did_update = true;
@@ -701,7 +736,7 @@ function setLinknetColors(i,c1,c2)
 			nms.linknet_color[i] = {};
 		nms.linknet_color[i]['c1'] = c1;
 		nms.linknet_color[i]['c2'] = c2;
-		nms.damage = true;
+		drawLinknet(i);
 	}
 }
 
@@ -717,22 +752,24 @@ function drawSwitch(sw)
 		if (color == undefined) {
 			color = "blue";
 		}
-		ctx.fillStyle = color;
+		dr.switch.ctx.fillStyle = color;
 		if (nms.nightMode && nms.nightBlur[sw] != true) {
-			ctx.shadowBlur = 10;
-			ctx.shadowColor = "#00EE00";
+			dr.switch.ctx.shadowBlur = 10;
+			dr.switch.ctx.shadowColor = "#00EE00";
 			nms.nightBlur[sw] = true;
 		} else {
-			ctx.shadowBlur = 0;
-			ctx.shadowColor = "#000000";
+			dr.switch.ctx.shadowBlur = 0;
+			dr.switch.ctx.shadowColor = "#000000";
 		}
 		drawBox(box['x'],box['y'],box['width'],box['height']);
-		ctx.shadowBlur = 0;
-		if (nms.drawText) {
-		if ((box['width'] + 10 )< box['height'] )
-			drawSideways(sw,box['x'],box['y'],box['width'],box['height']);
-		else
-			drawRegular(sw,box['x'],box['y'],box['width'],box['height']);
+		dr.switch.ctx.shadowBlur = 0;
+		if (!nms.textDrawn[sw]) {
+			if ((box['width'] + 10 )< box['height'])
+				drawSideways(sw,box['x'],box['y'],box['width'],box['height']);
+			else
+				drawRegular(sw,box['x'],box['y'],box['width'],box['height']);
+			
+			nms.textDrawn[sw] = true;
 		}
 }
 
@@ -766,6 +803,21 @@ function drawSwitches()
 	nms.drawn = true;
 }
 
+function drawNow()
+{
+	if (nms.now != false) {
+		dr.top.ctx.font = Math.round(nms.fontSize * canvas.scale) + "px " + nms.fontFace;
+		dr.top.ctx.clearRect(0,0,Math.floor(200 * canvas.scale),Math.floor(30 * canvas.scale));
+		dr.top.ctx.fillStyle = "white";
+		dr.top.ctx.strokeStyle = "black";
+		dr.top.ctx.lineWidth = Math.round(1 * canvas.scale);
+		if (canvas.scale < 0.7) {
+			dr.top.ctx.lineWidth = 0.5;
+		}
+		dr.top.ctx.strokeText("Now: " + nms.now, 0 + margin.text, 20 * canvas.scale);
+		dr.top.ctx.fillText("Now: " + nms.now, 0 + margin.text, 20 * canvas.scale);
+	}
+}
 /*
  * Draw foreground/scene.
  *
@@ -775,26 +827,9 @@ function drawSwitches()
  */
 function drawScene()
 {
-	if (nms.damage) {
-		ctx.font = Math.round(nms.fontSize * canvas.scale) + "px " + nms.fontFace;
-		if (nms.now != false) {
-			ctx.clearRect(0,0,200,20);
-			ctx.fillStyle = "white";
-			ctx.strokeStyle = "black";
-			ctx.lineWidth = Math.round(1 * canvas.scale);
-			if (canvas.scale < 0.7) {
-				ctx.lineWidth = 0.5;
-			}
-			ctx.strokeText("Now: " + nms.now, 0 + margin.text, 20 * canvas.scale);
-			ctx.fillText("Now: " + nms.now, 0 + margin.text, 20 * canvas.scale);
-		}
-		drawLinknets();
-		drawSwitches();
-		nms.damage = false;
-		counters.damaged++;
-	} else {
-		counters.undamaged++;
-	}
+	dr.text.ctx.font = Math.floor(nms.fontSize * canvas.scale) + "px " + nms.fontFace;
+	drawLinknets();
+	drawSwitches();
 }
 
 /*
@@ -803,11 +838,18 @@ function drawScene()
  */
 function setScale()
 {
-	c.height = canvas.height =  orig.height * canvas.scale ;
-	c.width = canvas.width = orig.width * canvas.scale ;
+
+	canvas.height =  orig.height * canvas.scale ;
+	canvas.width = orig.width * canvas.scale ;
+	for (var a in dr) {
+		dr[a].c.height = canvas.height;
+		dr[a].c.width = canvas.width;
+	}
+	nms.nightBlur = {};
+	nms.textDrawn = {};
 	drawBG();
-	nightBlur = {};
 	drawScene();
+	
 	document.getElementById("scaler").value = canvas.scale;
 	document.getElementById("scaler-text").innerHTML = (parseFloat(canvas.scale)).toPrecision(3);
 }
@@ -848,7 +890,7 @@ function setSwitchColor(sw, c)
 {
 	if(!nms.switch_color || !nms.switch_color[sw] || nms.switch_color[sw] != c) {
 		nms.switch_color[sw] = c;
-		nms.damage = true;
+		drawSwitch(sw);
 	}
 }
 
@@ -921,7 +963,6 @@ function randomizeColors()
 	for (var sw in nms.switches_now.switches) {
 		setSwitchColor(sw, getRandomColor());
 	}
-	nms.damage = true;
 }
 
 function discoInit()
@@ -975,8 +1016,8 @@ function canvasClick(e)
  */
 function resizeEvent()
 {
-	var width = window.innerWidth - c.offsetLeft;
-	var height = window.innerHeight - c.offsetTop;
+	var width = window.innerWidth - dr.bg.c.offsetLeft;
+	var height = window.innerHeight - dr.bg.c.offsetTop;
 	if (width / (orig.width + margin.x) > height  /  (orig.height + margin.y)) {
 		canvas.scale = height / (orig.height + margin.y);
 	} else {
@@ -994,11 +1035,8 @@ function drawBG()
 		invertCanvas();
 	} else {
 		var image = document.getElementById('source');
-		image.style.webkitFilter = "invert(100%)";
-		ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+		dr.bg.ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
 	}
-	nms.damage = true;
-	drawScene();
 }
 
 function setNightMode(toggle) {
@@ -1012,17 +1050,17 @@ function setNightMode(toggle) {
  */
 function drawBox(x,y,boxw,boxh)
 {
-	var myX = Math.round(x * canvas.scale);
-	var myY = Math.round(y * canvas.scale);
-	var myX2 = Math.round((boxw) * canvas.scale);
-	var myY2 = Math.round((boxh) * canvas.scale);
-	ctx.fillRect(myX,myY, myX2, myY2);
-	ctx.lineWidth = Math.round(0.5 * canvas.scale);
+	var myX = Math.floor(x * canvas.scale);
+	var myY = Math.floor(y * canvas.scale);
+	var myX2 = Math.floor((boxw) * canvas.scale);
+	var myY2 = Math.floor((boxh) * canvas.scale);
+	dr.switch.ctx.fillRect(myX,myY, myX2, myY2);
+	dr.switch.ctx.lineWidth = Math.floor(0.5 * canvas.scale);
 	if (canvas.scale < 1.0) {
-		ctx.lineWidth = 0.5;
+		dr.switch.ctx.lineWidth = 0.5;
 	}
-	ctx.strokeStyle = "#000000";
-	ctx.strokeRect(myX,myY, myX2, myY2);
+	dr.switch.ctx.strokeStyle = "#000000";
+	dr.switch.ctx.strokeRect(myX,myY, myX2, myY2);
 }
 
 /*
@@ -1032,17 +1070,17 @@ function drawBox(x,y,boxw,boxh)
  */
 function drawSideways(text,x,y,w,h)
 {
-	ctx.rotate(Math.PI * 3 / 2);
-	ctx.fillStyle = "white";
-	ctx.strokeStyle = "black";
-	ctx.lineWidth = Math.round(1 * canvas.scale);
+	dr.text.ctx.rotate(Math.PI * 3 / 2);
+	dr.text.ctx.fillStyle = "white";
+	dr.text.ctx.strokeStyle = "black";
+	dr.text.ctx.lineWidth = Math.floor(1 * canvas.scale);
 	if (canvas.scale < 0.7) {
-		ctx.lineWidth = 0.5;
+		dr.text.ctx.lineWidth = 0.5;
 	}
-	ctx.strokeText(text, - canvas.scale * (y + h - margin.text),canvas.scale * (x + w - margin.text) );
-	ctx.fillText(text, - canvas.scale * (y + h - margin.text),canvas.scale * (x + w - margin.text) );
+	dr.text.ctx.strokeText(text, - canvas.scale * (y + h - margin.text),canvas.scale * (x + w - margin.text) );
+	dr.text.ctx.fillText(text, - canvas.scale * (y + h - margin.text),canvas.scale * (x + w - margin.text) );
 
-	ctx.rotate(Math.PI / 2);
+	dr.text.ctx.rotate(Math.PI / 2);
 }
 
 /*
@@ -1052,15 +1090,10 @@ function drawSideways(text,x,y,w,h)
  * Seems like a chromium bug?
  */
 function invertCanvas() {
-	var canvas = document.getElementById('myCanvas');
-	var context = canvas.getContext('2d');
-	var canvas2 = document.getElementById('mySecretCanvas');
-	var context2 = canvas.getContext('2d');
-
 	var imageObj = document.getElementById('source');
-	context2.drawImage(imageObj, 0, 0, canvas.width, canvas.height);
+	dr.bg.ctx.drawImage(imageObj, 0, 0, canvas.width, canvas.height);
 
-	var imageData = context2.getImageData(0, 0, canvas.width, canvas.height);
+	var imageData = dr.bg.ctx.getImageData(0, 0, canvas.width, canvas.height);
 	var data = imageData.data;
 
 	for(var i = 0; i < data.length; i += 4) {
@@ -1068,7 +1101,7 @@ function invertCanvas() {
 		data[i + 1] = 255 - data[i + 1];
 		data[i + 2] = 255 - data[i + 2];
 	}
-	context.putImageData(imageData, 0, 0);
+	dr.bg.ctx.putImageData(imageData, 0, 0);
 }
 
 /*
@@ -1080,14 +1113,14 @@ function invertCanvas() {
  */
 function drawRegular(text,x,y,w,h) {
 
-	ctx.fillStyle = "white";
-	ctx.strokeStyle = "black";
-	ctx.lineWidth = Math.round(1 * canvas.scale);
+	dr.text.ctx.fillStyle = "white";
+	dr.text.ctx.strokeStyle = "black";
+	dr.text.ctx.lineWidth = Math.floor(1 * canvas.scale);
 	if (canvas.scale < 0.7) {
-		ctx.lineWidth = 0.5;
+		dr.text.ctx.lineWidth = 0.5;
 	}
-	ctx.strokeText(text, (x + margin.text) * canvas.scale, (y + h - margin.text) * canvas.scale);
-	ctx.fillText(text, (x + margin.text) * canvas.scale, (y + h - margin.text) * canvas.scale);
+	dr.text.ctx.strokeText(text, (x + margin.text) * canvas.scale, (y + h - margin.text) * canvas.scale);
+	dr.text.ctx.fillText(text, (x + margin.text) * canvas.scale, (y + h - margin.text) * canvas.scale);
 }
 
 /*
@@ -1108,17 +1141,17 @@ function connectSwitches(insw1, insw2,color1, color2) {
 	var y0 = Math.floor((sw1.y + sw1.height/2) * canvas.scale);
 	var x1 = Math.floor((sw2.x + sw2.width/2) * canvas.scale);
 	var y1 = Math.floor((sw2.y + sw2.height/2) * canvas.scale);
-	var gradient = ctx.createLinearGradient(x1,y1,x0,y0);
+	var gradient = dr.link.ctx.createLinearGradient(x1,y1,x0,y0);
 	gradient.addColorStop(0, color1);
 	gradient.addColorStop(1, color2);
-	ctx.beginPath();
-	ctx.strokeStyle = gradient;
-	ctx.moveTo(x0,y0);
-	ctx.lineTo(x1,y1); 
-	ctx.lineWidth = Math.floor(5 * canvas.scale);
-	ctx.closePath();
-	ctx.stroke();
-	ctx.moveTo(0,0);
+	dr.link.ctx.beginPath();
+	dr.link.ctx.strokeStyle = gradient;
+	dr.link.ctx.moveTo(x0,y0);
+	dr.link.ctx.lineTo(x1,y1); 
+	dr.link.ctx.lineWidth = Math.floor(5 * canvas.scale);
+	dr.link.ctx.closePath();
+	dr.link.ctx.stroke();
+	dr.link.ctx.moveTo(0,0);
 }
 
 function debugIt(e)

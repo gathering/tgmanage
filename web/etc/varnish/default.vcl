@@ -98,7 +98,7 @@ sub vcl_backend_response {
 		    set beresp.ttl = 30s;
 	    }
 	    if (beresp.status == 200 && bereq.url ~ "now=") {
-		    set beresp.ttl = 10m;
+		    set beresp.ttl = 60m;
 	    }
 	    if (beresp.status == 500) {
 		    return (retry);
