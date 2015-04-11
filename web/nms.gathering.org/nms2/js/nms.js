@@ -166,7 +166,7 @@ function startReplay() {
 }
 
 function changeNow() {
-	var newnow = checkNow(document.getElementById("nowPicker").value);
+	 var newnow = checkNow(document.getElementById("nowPicker").value);
 	if (!newnow) {
 		alert('Bad date-field in time travel field');
 		return;
@@ -191,6 +191,7 @@ function hideSwitch()
 		var switchele = document.getElementById("info-switch-table");
 		if (switchele != undefined)
 			swtop.removeChild(switchele);
+		swtop.style.display = 'none';
 		nms.switch_showing = "";
 
 }
@@ -220,7 +221,7 @@ function switchInfo(x)
 			
 		tr = document.createElement("tr"); td1 = document.createElement("td"); td2 = document.createElement("td");
 		td1.innerHTML = "Sysname";
-		td2.innerHTML = x + '<button type="button" style="float: right" onclick="hideSwitch();">X</button>';
+		td2.innerHTML = x + '<button type="button" class="btn" style="float: right" onclick="hideSwitch();">X</button>';
 		tr.appendChild(td1); tr.appendChild(td2); switchele.appendChild(tr);
 
 		var speed = 0;
@@ -325,6 +326,7 @@ function switchInfo(x)
 
 
 		swtop.appendChild(switchele);
+		swtop.style.display = 'block';
 }
 
 /*
