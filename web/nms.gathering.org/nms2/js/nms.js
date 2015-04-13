@@ -821,16 +821,16 @@ function drawSwitches()
 function drawNow()
 {
 	if (nms.now != false) {
-		dr.top.ctx.font = Math.round(nms.fontSize * canvas.scale) + "px " + nms.fontFace;
-		dr.top.ctx.clearRect(0,0,Math.floor(200 * canvas.scale),Math.floor(30 * canvas.scale));
+		dr.top.ctx.font = Math.round(2 * nms.fontSize * canvas.scale) + "px " + nms.fontFace;
+		dr.top.ctx.clearRect(0,0,Math.floor(400 * canvas.scale),Math.floor(60 * canvas.scale));
 		dr.top.ctx.fillStyle = "white";
 		dr.top.ctx.strokeStyle = "black";
-		dr.top.ctx.lineWidth = Math.round(1 * canvas.scale);
+		dr.top.ctx.lineWidth = Math.round(2 * canvas.scale);
 		if (canvas.scale < 0.7) {
-			dr.top.ctx.lineWidth = 0.5;
+			dr.top.ctx.lineWidth = 2;
 		}
-		dr.top.ctx.strokeText("Now: " + nms.now, 0 + margin.text, 20 * canvas.scale);
-		dr.top.ctx.fillText("Now: " + nms.now, 0 + margin.text, 20 * canvas.scale);
+		dr.top.ctx.strokeText("Now: " + nms.now, 0 + margin.text, 30 * canvas.scale);
+		dr.top.ctx.fillText("Now: " + nms.now, 0 + margin.text, 30 * canvas.scale);
 	}
 }
 /*
