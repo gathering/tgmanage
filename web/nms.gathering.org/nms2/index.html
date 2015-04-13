@@ -22,6 +22,18 @@
       <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
       <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
     <![endif]-->
+    <style type="text/css">
+    canvas {
+	    -webkit-touch-callout: none;
+	    -webkit-user-select: none;
+	    -khtml-user-select: none;
+	    -moz-user-select: none;
+	    -ms-user-select: none;
+	    user-select: none;
+            outline: none;
+	    -webkit-tap-highlight-color: rgba(255, 255, 255, 0); /* mobile webkit */
+    }   
+    </style>
   </head>
 
 <body id="body">
@@ -41,9 +53,9 @@
             <li class="dropdown">
               <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Map mode<span class="caret"></span></a>
               <ul class="dropdown-menu" role="menu">
+                                <li><a href="#ping" onclick="setUpdater(handler_ping)">Ping map</a></li>
                                 <li><a href="#uplink" onclick="setUpdater(handler_uplinks)">Uplink map</a></li>
                                 <li><a href="#temp" onclick="setUpdater(handler_temp)">Temperature map</a></li>
-                                <li><a href="#ping" onclick="setUpdater(handler_ping)">Ping map</a></li>
                                 <li><a href="#traffic" onclick="setUpdater(handler_traffic)">Traffic map</a></li>
                                 <li><a href="#disco" onclick="setUpdater(handler_disco)">DISCO</a></li>
 				<li class="divider"> </li>
@@ -51,15 +63,25 @@
 				<li class="divider"> </li>
 				<li><a href="#" onclick="document.getElementById('nowPickerBox').style.display = 'block';">Travel in time</a></li>
 				<li><a href="#" onclick="startReplay();" title="Replay from opening 30 minutes per second">Replay TG</a></li>
+				<li><a href="#" onclick="document.getElementById('aboutData').style.display = 'block';">About TG15 data</a></li>
 				<li class="divider"> </li>
                 <li class="dropdown-header">Map scale</li>
 				<li><input type="range" id="scaler" name="points" min="0.5" max="3" step="0.01" onchange="scaleChange()" /></li>
 				<li><a href="#">Scale: <div id="scaler-text"></div></a></li>
 				<li class="divider"> </li>
-	    			<li><a onclick="document.getElementById('aboutBox').style.display = 'block';">About</a></li>
+	    			<li><a onclick="document.getElementById('aboutBox').style.display = 'block'; hideSwitch();" style="cursor: pointer;" >About</a></li>
               </ul>
 	      </li>
                     <li><p id="updater_name" class="navbar-text"></p></li>
+                    <div class="navbar-form navbar-left">
+		    <div class="form-group">
+		    <button class="btn btn-default" id="legend-1"></button>
+		    <button class="btn btn-default" id="legend-2"></button>
+		    <button class="btn btn-default" id="legend-3"></button>
+		    <button class="btn btn-default" id="legend-4"></button>
+		    <button class="btn btn-default" id="legend-5"></button>
+		    </div>
+		    </div>
             </li>
           </ul>
           <ul class="nav navbar-nav navbar-right">
@@ -73,46 +95,92 @@
 
         <div class="row-fluid">
             <div class="span12">
-	    	<div id="nowPickerBox" class="panel" style="position: fixed; display:none; background: white; border: 1px solid #000000; z-index: 130;" >	
+	    	<div id="aboutData" class="panel panel-default"
+		style="position: fixed; display:none; z-index: 130;">
+		<div class="panel-heading"><h3 class="panel-title">About
+		the TG15 data
+		<button type="button" class="close" aria-label="Close" onclick="document.getElementById('aboutData').style.display = 'none';" style="float: right"><span
+		aria-hidden="true">&times;</span></button></h3></div>
+		<div class="panel-body">
+		<p>The data you see from The Gathering 2015 will seem
+		"broken up". This is not because we don't have data from
+		the first day, but because the backend was re-written on
+		day 1/2 and this web app only uses the new API.</p>
+		<p>NMS was set up on March 30th (Monday). Data started
+		pouring in on the 31st. </p>
+		<p>Ping data is available for the entire event with 1
+		second resolution.</p>
+		<p>DHCP data is available only for the last detected DHCP
+		ack (no history, except extensive text-based logs)</p>
+		<p>Uplink status is available for most of the event, but
+		not exposed here.</p>
+		<p>Traffic status was temporarily bugged, but is available
+		from late on day 2.</p>
+		<p>Temperature data is available from day 2.</p>
+		<p>Plans are being made to ensure that we don't have gaps
+		like these in the future.</p>
+		<p>It is also worth mentioning that things like switch
+		positions are not logged historically, so you see the final
+		position on the map.</p>
+		</div>
+
+		</div>
+	    	<div id="nowPickerBox" class="panel panel-default" style="position: fixed; display:none; z-index: 130;" >	
+			<div class="panel-heading"><h3
+			class="panel-title">Time travel</h3></div>
+			<div class="panel-body">
 		      <input type="text" class="form-control" placeholder="YYYY-MM-DD hh:mm:ss" id="nowPicker" value="" />
 		      <button class="btn btn-default" onclick="changeNow();">Travel</button>
-		      <button class="btn" style="float: right;" onclick="document.getElementById('nowPickerBox').style.display = 'none';">Cancel</button>
+		      <button class="btn" onclick="document.getElementById('nowPickerBox').style.display = 'none';">Cancel</button>
+		      </div>
 	        </div>
-                <div id="info-switch-parent" class="panel" style="display: none; background: silver; position: fixed; z-index: 120;">
+                <div id="info-switch-parent" class="panel panel-default" style="display: none; backgroun:silver; position: fixed; z-index: 120;">
+			<div class="panel-heading"><h3 class="panel-title"
+			id="info-switch-title"></h3></div>
+			<div class="panel-body">
+			<div id="info-switch-panel-body">
                     <table class="table" id="info-switch-table"></table>
+		    </div>
+		    </div>
                 </div>
-	    <div id="aboutBox" class="panel" style="display: none; background: white; position: fixed; border: 1px solid #000000; z-index: 100;">
-	    <button onclick="document.getElementById('aboutBox').style.display = 'none';" class="btn" style="float: right;">X</button>
-	    <h1>Welcome to NMS</h1>
+	    <div id="aboutBox" class="panel panel-default" style="display: none; position: fixed; z-index: 100;">
+	    <div class="panel-heading"><h3 class="panel-title">Welcome to NMS
+	    <button type="button" class="close" aria-labe="Close" onclick="document.getElementById('aboutBox').style.display = 'none';" style="float: right;"><span aria-hidden="true">&times;</span></button></h3></div>
+	    <div class="panel-body">
+	    
 	    <h3>Cool stuff:</h3>
 	    <ul>
-	    <li>Everything is always there (but the frontend is a bit
-	    sluggish atm).</li>
 	    <li>Click a switch for more info</li>
-	    <li>Rewind: You can check out state at a specific time or
-	    replay from the beginning of the event</li>
+	    <li>Rewind: You can check out state at a specific time or replay from the beginning of the event</li>
 	    <li>Night mode, now with blur.</li>
 	    <li>Auto-scaling the viewport/canvas</li>
 	    <li>Total client speed (up right)</li>
-	    <li>An about-page that's full of bullet points!</li>
+	    <li>Generic(-ish) map handlers: provide a name, init-function
+	    and an update-function and the nms lib does the rest as far as
+	    integration goes.</li>
+	    <li>An about-page that's full of bullet-points!</li>
 	    </ul>
 	    <h3>Todo list front end:</h3>
 	    <ul>
-	    <li>Fill out this list and text</li>
-	    <li>Polish time travel UI</li>
-	    <li>Lock scale</li>
+	    <li>Polish time travel UI (Allow playing from a given time at a given speed, play/pause buttons, etc)</li>
+	    <li>Toggle auto-scale on/off</li>
 	    <li>Clean up various global variables</li>
 	    <li>Split blur into separate canvas (canvas is there, it's just
 	    not used)</li>
 	    <li>Add DHCP map</li>
 	    <li>Add magic map (combined map of sorts)</li>
-	    <li>Add better control panel stuff</li>
-	    <li>Overhaul general UI for a proper bootstrap-approved look.</li>
-	    <li>Fix legend display</li>
-	    <li>Better dialog-boxes (Both this and various others)</li>
-	    <li>Add switch-box to review state on individual ports</li>
+	    <li>Add better control panel stuff (Review timers, change some, etc)</li>
+	    <li>Adjust updatePorts() frequency based on necessity (1sec
+	    updates is overkill for regular operation, but needed for time
+	    travel)</li>
+	    <li>Fix legend display (There's a legend for all handlers, but
+	    it's currently hidden beneath the canvas)</li>
+	    <li>More info on switches: Port state, possibly link time
+	    trends)</li>
 	    <li>Moving switches around (like ping.html + edit)</li>
-	    <li>More?</li>
+	    <li>Split nms.js into multiple components to unclutter the
+	    code</li>
+	    <li>More.</li>
 	    </ul>
 	    <h3>Todo for backend:</h3>
 	    <ul>
@@ -124,7 +192,11 @@
 	    <li>Clean up old interfaces</li>
 	    <li>Review various agents/tools</li>
 	    <li>Improve cache headers</li>
+	    <li>Consider time log of DHCP (right now it just stores the
+	    most recent timestamp, making time travel impossible)</li>
+	    <li>Munin plugin for ports.</li>
 	    </ul>
+	    </div>
 
 	    </div>
 <canvas id="bgCanvas" width="1920" height="1032" style="position: fixed; z-index: 1;"> </canvas>
@@ -138,25 +210,16 @@
 <div style="display:none;"><img id="source" src="img/tg15-salkart-full.png" ></div>
             </div>
         </div>
-
-        <div class="row-fluid">
-            <div class="span12">
-                <div id="info-legend-box">
-                    <button id="legend-1"></button> <button id="legend-2"></button> <button id="legend-3"></button> <button id="legend-4"></button> <button id="legend-5"></button>
-                </div>
-            </div>
-        </div>
     </div><!--/.fluid-container-->
-    <script src="js/jquery.min.js" type="text/javascript">
-    <ascript src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+    <script src="js/jquery.min.js" type="text/javascript"></script>
     <script src="js/bootstrap.min.js" type="text/javascript"></script>
     <script type="text/javascript" src="js/nms.js"></script>
     <script type="text/javascript">
     updatePorts();
     updatePing();
-	window.addEventListener('resize',resizeEvent,true);
-	document.addEventListener('load',resizeEvent,true);
-    setInterval(updatePorts,5000);
+    window.addEventListener('resize',resizeEvent,true);
+    document.addEventListener('load',resizeEvent,true);
+    setInterval(updatePorts,1000);
     setInterval(updateInfo,5000);
     setInterval(updatePing,1000);
     setInterval(updateMap,1000);
@@ -178,6 +241,9 @@
     if (/nightMode/.exec(url)) {
             toggleNightMode();
     }
+    $(function () {
+	      $('[data-toggle="tooltip"]').tooltip()
+    })
     </script>
 </body>
 </html>

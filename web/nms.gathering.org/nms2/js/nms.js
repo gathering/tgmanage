@@ -37,7 +37,7 @@ var margin = {
 	text:3
 };
 
-var tgStart = stringToEpoch('2015-03-31T15:00:00');
+var tgStart = stringToEpoch('2015-04-01T09:00:00');
 var tgEnd = stringToEpoch('2015-04-05T12:00:00');
 var replayTime = 0;
 var replayIncrement = 30 * 60;
@@ -188,12 +188,12 @@ function changeNow() {
 function hideSwitch()
 {
 		var swtop = document.getElementById("info-switch-parent");
+		var swpanel = document.getElementById("info-switch-panel-body");
 		var switchele = document.getElementById("info-switch-table");
 		if (switchele != undefined)
-			swtop.removeChild(switchele);
+			swpanel.removeChild(switchele);
 		swtop.style.display = 'none';
 		nms.switch_showing = "";
-
 }
 /*
  * Display info on switch "x" in the info-box
@@ -203,6 +203,8 @@ function switchInfo(x)
 		var switchele = document.getElementById("info-switch-table");
 		var sw = nms.switches_now["switches"][x];
 		var swtop = document.getElementById("info-switch-parent");
+		var swpanel = document.getElementById("info-switch-panel-body");
+		var swtitle = document.getElementById("info-switch-title");
 		var tr;
 		var td1;
 		var td2;
@@ -214,16 +216,13 @@ function switchInfo(x)
 			hideSwitch();	
 			nms.switch_showing = x;
 		}
+		document.getElementById("aboutBox").style.display = "none";
 		switchele = document.createElement("table");
 		switchele.id = "info-switch-table";
 		switchele.style.zIndex =  100;
-		switchele.className = "table table-bordered";
-			
-		tr = document.createElement("tr"); td1 = document.createElement("td"); td2 = document.createElement("td");
-		td1.innerHTML = "Sysname";
-		td2.innerHTML = x + '<button type="button" class="btn" style="float: right" onclick="hideSwitch();">X</button>';
-		tr.appendChild(td1); tr.appendChild(td2); switchele.appendChild(tr);
-
+		switchele.className = "table";
+		
+		swtitle.innerHTML = x + '<button type="button" class="close" aria-labe="Close" onclick="hideSwitch();" style="float: right;"><span aria-hidden="true">&times;</span></button>';
 		var speed = 0;
 		var speed2 = 0;
 		for (port in nms.switches_now["switches"][x]["ports"]) {
@@ -249,6 +248,8 @@ function switchInfo(x)
 		tr.appendChild(td1); tr.appendChild(td2); switchele.appendChild(tr);
 
 		tr = document.createElement("tr"); td1 = document.createElement("td"); td2 = document.createElement("td");
+		td1['data-toggle'] = "popover";
+		td1.title = "Port 44, 45, 46 and 47 are used as uplinks.";
 		td1.innerHTML = "Uplink speed (in , port 44,45,46,47)";
 		td2.innerHTML = byteCount(8 * speed2) + "b/s";
 		tr.appendChild(td1); tr.appendChild(td2); switchele.appendChild(tr);
@@ -325,7 +326,7 @@ function switchInfo(x)
 		tr.appendChild(td1); tr.appendChild(td2); switchele.appendChild(tr);
 
 
-		swtop.appendChild(switchele);
+		swpanel.appendChild(switchele);
 		swtop.style.display = 'block';
 }
 
@@ -437,6 +438,9 @@ function uplinkInit()
 	setLegend(5,"white","4 uplinks");	
 }
 
+/*
+ * Give us a color from blue (0) to red (100).
+ */
 function rgb_from_max(x)
 {
 	x = x/100;
@@ -446,19 +450,28 @@ function rgb_from_max(x)
 	return 'rgb(' + Math.floor(colorred) + ", 0, " + Math.floor(colorblue) + ')';
 }
 
+/*
+ * Tweaked this to scale from roughly 20C to 35C. Hence the -20  and /15
+ * thing (e.g., "0" is 20 and "15" is 35 by the time we pass it to
+ * rgb_from_max());
+ */
 function temp_color(t)
 {
 	if (t == undefined) {
 		console.log("Temp_color, but temp is undefined");
 		return "blue";
 	}
-	t = Math.floor((t / 60) * 100);
+	t = parseInt(t) - 20;
+	t = Math.floor((t / 15) * 100);
 	return rgb_from_max(t);
 }
 
 /*
  * There are 4 legend-bars. This is a helper-function to set the color and
  * description/name for each one. Used from handler init-functions.
+ *
+ * FIXME: Should be smarter, possibly use a canvas-writer so we can get
+ * proper text (e.g.: not black text on dark blue). 
  */
 function setLegend(x,color,name)
 {
@@ -481,11 +494,11 @@ function tempUpdater()
 
 function tempInit()
 {
-	setLegend(1,temp_color(10),"10 °C");	
-	setLegend(2,temp_color(20),"20 °C");	
-	setLegend(3,temp_color(30),"30 °C");	
-	setLegend(4,temp_color(40),"40 °C");	
-	setLegend(5,temp_color(50),"50 °C");	
+	setLegend(1,temp_color(20),"20 °C");	
+	setLegend(2,temp_color(22),"22 °C");	
+	setLegend(3,temp_color(27),"27 °C");	
+	setLegend(4,temp_color(31),"31 °C");	
+	setLegend(5,temp_color(35),"35 °C");	
 }
 
 function gradient_from_latency(latency_ms, latency_secondary_ms)
