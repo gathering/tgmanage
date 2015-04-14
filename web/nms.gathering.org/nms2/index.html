@@ -70,6 +70,7 @@
 				<li><a href="#">Scale: <div id="scaler-text"></div></a></li>
 				<li class="divider"> </li>
 	    			<li><a onclick="document.getElementById('aboutBox').style.display = 'block'; hideSwitch();" style="cursor: pointer;" >About</a></li>
+	    			<li><a onclick="showTimerDebug(); hideSwitch();" style="cursor: pointer;" >Debug timers</a></li>
               </ul>
 	      </li>
                     <li><p id="updater_name" class="navbar-text"></p></li>
@@ -199,6 +200,19 @@
 	    </div>
 
 	    </div>
+	    <div id="debugTimers" class="panel panel-default" style="display: none; position: fixed; z-index: 100;">
+	    <div class="panel-heading"><h1 class="panel-title">Debug
+	    timers (e.g.: Break stuff! FAST!)
+	    <button type="button" class="close" aria-labe="Close" onclick="document.getElementById('debugTimers').style.display = 'none';" style="float: right;"><span aria-hidden="true">&times;</span></button></h3></div>
+	    <div id="timerTableTop" class="panel-body">
+	    <p>These are internal timers for the NMS frontend. They are
+	    provided mainly to debug the frontend. Setting AJAX-triggering
+	    counters to ridiculous numbers is not advised (mainly because
+	    it causes server load).</p>
+	    <table id="timerTable"> </table>
+	    </div>
+	    </div>
+
 <canvas id="bgCanvas" width="1920" height="1032" style="position: fixed; z-index: 1;"> </canvas>
 <canvas id="linkCanvas" width="1920" height="1032" style="position: fixed; z-index: 10;"> </canvas>
 <canvas id="blurCanvas" width="1920" height="1032" style="position: fixed; z-index: 20;"> </canvas>
@@ -215,35 +229,7 @@
     <script src="js/bootstrap.min.js" type="text/javascript"></script>
     <script type="text/javascript" src="js/nms.js"></script>
     <script type="text/javascript">
-    updatePorts();
-    updatePing();
-    window.addEventListener('resize',resizeEvent,true);
-    document.addEventListener('load',resizeEvent,true);
-    setInterval(updatePorts,1000);
-    setInterval(updateInfo,5000);
-    setInterval(updatePing,1000);
-    setInterval(updateMap,1000);
-    setInterval(updateSpeed,3000);
-    url = document.URL;
-    if (/#ping/.exec(url)) {
-            setUpdater(handler_ping);
-    }else if (/#uplink/.exec(url)) {
-            setUpdater(handler_uplinks);
-    } else if (/#temp/.exec(url)) {
-            setUpdater(handler_temp);
-    } else if (/#traffic/.exec(url)) {
-            setUpdater(handler_traffic);
-    } else if (/#disco/.exec(url)) {
-            setUpdater(handler_disco);
-    } else {
-            setUpdater(handler_ping);
-    }
-    if (/nightMode/.exec(url)) {
-            toggleNightMode();
-    }
-    $(function () {
-	      $('[data-toggle="tooltip"]').tooltip()
-    })
+    initNMS();
     </script>
 </body>
 </html>

@@ -4,33 +4,120 @@ var nms = {
 	switches_then:undefined, // 2 minutes old
 	speed:0, // Current aggregated speed
 	full_speed:false, // Set to 'true' to include ALL interfaces
-	ping_data:undefined,
+	ping_data:undefined, // JSON data for ping history.
 	drawn:false, // Set to 'true' when switches are drawn
-	switch_showing:"",
-	nightMode:false,
-	nightBlur:{},
-	switch_color:{},
-	linknet_color:{},
-	textDrawn:{},
-	drawText:true,
-	now:false,
-	fontSize:14,
+	switch_showing:"", // Which switch we are displaying (if any).
+	nightMode:false, 
+	/*
+	 * Switch-specific variables. These are currently separate from
+	 * "switches_now" because switches_now is reset every time we get
+	 * new data.
+	 */
+	nightBlur:{}, // Have we blurred this switch or not?
+	switch_color:{},  // Color for switch
+	linknet_color:{}, // color for linknet
+	textDrawn:{}, // Have we drawn text for this switch?
+	now:false, // Date we are looking at (false for current date).
+	fontSize:14, // This is scaled too, but 14 seems to make sense.
 	fontFace:"Arial Black",
-	did_update:false // Set to 'true' after we've done some basic updating
+	outstandingAjaxRequests:0,
+	ajaxOverflow:0,
+	/*
+	 * Set to 'true' after we've done some basic updating. Used to
+	 * bootstrap the map quickly as soon as we have enough data, then
+	 * ignored.
+	 */
+	did_update:false,
+	/*
+	 * Various setInterval() handlers.
+	 */
+	handlers: {
+		replay:false,
+		ports:false,
+		info:false,
+		ping:false,
+		map:false,
+		speed:false
+	}
 };
 
+
+/*
+ * Returns a handler object.
+ *
+ * This might seem a bit much for 'setInterval()' etc, but it's really more
+ * about self-documentation and predictable ways of configuring timers.
+ */
+function nmsTimer(handler, interval, name, description) {
+	this.handler = handler;
+	this.handle = false;
+	this.interval = parseInt(interval);
+	this.name = name;
+	this.description = description;
+	this.start = function() { 
+		if (this.handle) {
+			this.stop();
+		}
+		this.handle = setInterval(this.handler,this.interval);
+		};
+	this.stop = function() { 
+		if (this.handle)
+			clearInterval(this.handle);
+			this.handle = false;
+		};
+
+	this.setInterval = function(interval) {
+		var started = this.handle == false ? false : true;
+		this.stop();
+		this.interval = parseInt(interval);
+		if (started)
+			this.start();
+	};
+}
+
+/*
+ * Drawing primitives.
+ *
+ * This contains both canvas and context for drawing layers. It's on a
+ * top-level namespace to reduce SLIGHTLY the ridiculously long names
+ * (e.g.: dr.bg.ctx.drawImage() is long enough....).
+ *
+ * Only initialized once (for now).
+ */
 var dr = {};
 
+/*
+ * Original scale. This is just used to define the coordinate system.
+ * 1920x1032 was chosen for tg15 by coincidence: We scaled the underlying
+ * map down to "full hd" and these are the bounds we got. There's no
+ * particular reason this couldn't change, except it means re-aligning all
+ * switches.
+ */
 var orig = {
 	width:1920,
 	height:1032
 	};
 
+/*
+ * Canvas dimensions, and scale factor.
+ *
+ * We could derive scale factor from canvas.width / orig.width, but it's
+ * used so frequently that this makes much more sense.
+ *
+ * Width and height are rarely used.
+ */
 var canvas = { 
 	width:0,
 	height:0,
 	scale:1
 };
+
+/*
+ * Various margins at the sides.
+ *
+ * Not really used much, except for "text", which is really more of a
+ * padding than margin...
+ */
 var margin = {
 	x:10,
 	y:20,
@@ -41,30 +128,7 @@ var tgStart = stringToEpoch('2015-04-01T09:00:00');
 var tgEnd = stringToEpoch('2015-04-05T12:00:00');
 var replayTime = 0;
 var replayIncrement = 30 * 60;
-var replayHandler = false;
 
-function initDrawing() {
-	dr['bg'] = {};
-	dr['bg']['c'] = document.getElementById("bgCanvas");
-	dr['bg']['ctx'] = dr['bg']['c'].getContext('2d');
-	dr['link'] = {};
-	dr['link']['c'] = document.getElementById("linkCanvas");
-	dr['link']['ctx'] = dr['link']['c'].getContext('2d');
-	dr['blur'] = {};
-	dr['blur']['c'] = document.getElementById("blurCanvas");
-	dr['blur']['ctx'] = dr['blur']['c'].getContext('2d');
-	dr['switch'] = {};
-	dr['switch']['c'] = document.getElementById("switchCanvas");
-	dr['switch']['ctx'] = dr['switch']['c'].getContext('2d');
-	dr['text'] = {};
-	dr['text']['c'] = document.getElementById("textCanvas");
-	dr['text']['ctx'] = dr['text']['c'].getContext('2d');
-	dr['top'] = {};
-	dr['top']['c'] = document.getElementById("topCanvas");
-	dr['top']['ctx'] = dr['top']['c'].getContext('2d');
-}
-
-initDrawing();
 /*
  * Handlers. "updater" is run periodically when the handler is active, and
  * "init" is run once when it's activated.
@@ -99,6 +163,32 @@ var handler_disco = {
 	init:discoInit,
 	name:"Disco fever"
 };
+
+/*
+ * Convenience-function to populate the 'dr' structure.
+ *
+ * Only run once.
+ */
+function initDrawing() {
+	dr['bg'] = {};
+	dr['bg']['c'] = document.getElementById("bgCanvas");
+	dr['bg']['ctx'] = dr['bg']['c'].getContext('2d');
+	dr['link'] = {};
+	dr['link']['c'] = document.getElementById("linkCanvas");
+	dr['link']['ctx'] = dr['link']['c'].getContext('2d');
+	dr['blur'] = {};
+	dr['blur']['c'] = document.getElementById("blurCanvas");
+	dr['blur']['ctx'] = dr['blur']['c'].getContext('2d');
+	dr['switch'] = {};
+	dr['switch']['c'] = document.getElementById("switchCanvas");
+	dr['switch']['ctx'] = dr['switch']['c'].getContext('2d');
+	dr['text'] = {};
+	dr['text']['c'] = document.getElementById("textCanvas");
+	dr['text']['ctx'] = dr['text']['c'].getContext('2d');
+	dr['top'] = {};
+	dr['top']['c'] = document.getElementById("topCanvas");
+	dr['top']['ctx'] = dr['top']['c'].getContext('2d');
+}
 
 function byteCount(bytes) {
 	var units = ['', 'K', 'M', 'G', 'T', 'P'];
@@ -148,7 +238,7 @@ function epochToString(t)
 function timeReplay()
 {
 	if (replayTime >= tgEnd) {
-		clearInterval(replayHandler);
+		nms.handlers.replay.stop();
 		return;
 	}
 	replayTime = parseInt(replayTime) + parseInt(replayIncrement);
@@ -157,12 +247,11 @@ function timeReplay()
 }
 
 function startReplay() {
-	if (replayHandler)
-		clearInterval(replayHandler);
+	nms.handlers.replay.stop();
 	resetColors();
 	replayTime = tgStart;
 	timeReplay();
-	replayHandler = setInterval(timeReplay,1000);
+	nms.handlers.replay.start();;
 }
 
 function changeNow() {
@@ -565,7 +654,7 @@ function pingInit()
  */
 function updateMap()
 {
-	if (nms.updater != undefined) {
+	if (nms.updater != undefined && nms.switches_now && nms.switches_then) {
 		nms.updater();
 	}
 }
@@ -611,6 +700,11 @@ function initialUpdate()
 function updatePing()
 {
 	var now = nms.now ? ("?now=" + nms.now) : "";
+	if (nms.outstandingAjaxRequests > 5) {
+		nms.ajaxOverflow++;
+		return;
+	}
+	nms.outstandingAjaxRequests++;
 	$.ajax({
 		type: "GET",
 		url: "/ping-json2.pl" + now,
@@ -618,6 +712,9 @@ function updatePing()
 		success: function (data, textStatus, jqXHR) {
 			nms.ping_data = JSON.parse(data);
 			initialUpdate();
+		},
+		complete: function(jqXHR, textStatus) {
+			nms.outstandingAjaxRequests--;
 		}
 	});
 }
@@ -628,6 +725,11 @@ function updatePing()
 function updatePorts()
 {
 	var now = "";
+	if (nms.outstandingAjaxRequests > 5) {
+		nms.ajaxOverflow++;
+		return;
+	}
+	nms.outstandingAjaxRequests++;
 	if (nms.now != false)
 		now = "?now=" + nms.now;
 	$.ajax({
@@ -639,11 +741,15 @@ function updatePorts()
 			nms.switches_now = switchdata;
 			parseIntPlacements();
 			initialUpdate();
+		},
+		complete: function(jqXHR, textStatus) {
+			nms.outstandingAjaxRequests--;
 		}
 	});
 	now="";
 	if (nms.now != false)
 		now = "&now=" + nms.now;
+	nms.outstandingAjaxRequests++;
 	$.ajax({
 		type: "GET",
 		url: "/port-state.pl?time=5m" + now,
@@ -652,6 +758,9 @@ function updatePorts()
 			var  switchdata = JSON.parse(data);
 			nms.switches_then = switchdata;
 			initialUpdate();
+		},
+		complete: function(jqXHR, textStatus) {
+			nms.outstandingAjaxRequests--;
 		}
 	})
 }
@@ -818,6 +927,9 @@ function drawSwitches()
 	nms.drawn = true;
 }
 
+/*
+ * Draw current time-window
+ */
 function drawNow()
 {
 	if (nms.now != false) {
@@ -835,6 +947,9 @@ function drawNow()
 }
 /*
  * Draw foreground/scene.
+ *
+ * FIXME: Review this! This was made before linknets and switches were
+ * split apart.
  *
  * This is used so linknets are drawn before switches. If a switch is all
  * that has changed, we just need to re-draw that, but linknets require
@@ -873,7 +988,7 @@ function setScale()
  * Returns true if the coordinates (x,y) is inside the box defined by
  * box.{x,y,w.h} (e.g.: placement of a switch).
  */
-function isin(box, x, y)
+function isIn(box, x, y)
 {
 	if ((x >= box.x) && (x <= (box.x + box.width)) && (y >= box.y) && (y <= (box.y + box.height))) {
 		return true;
@@ -891,7 +1006,7 @@ function findSwitch(x,y) {
 	y = parseInt(parseInt(y) / canvas.scale);
 
 	for (var v in nms.switches_now.switches) {
-		if(isin(nms.switches_now.switches[v]['placement'],x,y)) {
+		if(isIn(nms.switches_now.switches[v]['placement'],x,y)) {
 			return v;
 		}
 	}
@@ -920,19 +1035,6 @@ function getRandomColor()
 }
 
 /*
- * Helper functions for the front-end testing.
- */
-function hideBorder()
-{
-	c.style.border = "";
-}
-
-function showBorder()
-{
-	c.style.border = "1px solid #000000";
-}
-
-/*
  * Event handler for the front-end drag bar to change scale
  */
 function scaleChange()
@@ -940,23 +1042,6 @@ function scaleChange()
 	var scaler = document.getElementById("scaler").value;
 	canvas.scale = scaler;
 	setScale();
-}
-
-/*
- * Draw a "cross hair" at/around (x,y).
- *
- * Used for testing.
- */
-function crossHair(x,y)
-{
-	ctx.fillStyle = "yellow";
-	ctx.fillRect(x,y,-100,10);
-	ctx.fillStyle = "red";
-	ctx.fillRect(x,y,100,10);
-	ctx.fillStyle = "blue";
-	ctx.fillRect(x,y,10,-100);
-	ctx.fillStyle = "green";
-	ctx.fillRect(x,y,10,100);
 }
 
 /*
@@ -989,6 +1074,7 @@ function discoInit()
 	setLegend(3,"green", "3");
 	setLegend(2,"white","4");
 }
+
 /*
  * Resets the colors of linknets and switches.
  *
@@ -1010,7 +1096,9 @@ function resetColors()
 }
 
 /*
- * onclick handler for the canvas
+ * onclick handler for the canvas.
+ *
+ * Currently just shows info for a switch.
  */
 function canvasClick(e)
 {
@@ -1054,6 +1142,12 @@ function drawBG()
 	}
 }
 
+/*
+ * Set night mode to whatever 'toggle' is.
+ * 
+ * XXX: setScale() is a bit of a hack, but it really is the same stuff we
+ * need to do: Redraw "everything" (not really).
+ */
 function setNightMode(toggle) {
 	nms.nightMode = toggle;
 	var body = document.getElementById("body");
@@ -1169,8 +1263,101 @@ function connectSwitches(insw1, insw2,color1, color2) {
 	dr.link.ctx.moveTo(0,0);
 }
 
-function debugIt(e)
-{
-	console.log("Debug triggered");
-	console.log(e);
+
+function initNMS() {
+	var url;
+	initDrawing();
+	updatePorts();
+	updatePing();
+	window.addEventListener('resize',resizeEvent,true);
+	document.addEventListener('load',resizeEvent,true);
+	
+	nms.handlers.ports = new nmsTimer(updatePorts, 1000, "Port updater", "AJAX request to update port data (traffic, etc)");
+	nms.handlers.ports.start();
+
+	nms.handlers.info = new nmsTimer(updateInfo, 5000, "Info updater", "Updates info-box about client speed (fast - no backend requests)");
+	nms.handlers.info.start();
+
+	nms.handlers.ping = new nmsTimer(updatePing, 1000, "Ping updater", "AJAX request to update ping data");
+	nms.handlers.ping.start();
+	
+	nms.handlers.map = new nmsTimer(updateMap, 1000, "Map handler", "Updates the map using the chosen map handler (ping, uplink, traffic, etc)");
+	nms.handlers.map.start();
+	
+	nms.handlers.speed = new nmsTimer(updateSpeed, 3000, "Speed updater", "Recompute total speed (no backend requests)");
+	nms.handlers.speed.start();
+	
+	nms.handlers.replay = new nmsTimer(timeReplay, 1000, "Time machine", "Handler used to change time");
+
+	url = document.URL;
+	if (/#ping/.exec(url)) {
+		setUpdater(handler_ping);
+	}else if (/#uplink/.exec(url)) {
+		setUpdater(handler_uplinks);
+	} else if (/#temp/.exec(url)) {
+		setUpdater(handler_temp);
+	} else if (/#traffic/.exec(url)) {
+		setUpdater(handler_traffic);
+	} else if (/#disco/.exec(url)) {
+		setUpdater(handler_disco);
+	} else {
+		setUpdater(handler_ping);
+	}
+	if (/nightMode/.exec(url)) {
+		toggleNightMode();
+	}
+}
+
+function showTimerDebug() {
+	var tableTop = document.getElementById('timerTableTop');
+	var table = document.getElementById('timerTable');
+	var tr, td1, td2;
+	if (table)
+		tableTop.removeChild(table);
+	table = document.createElement("table");
+	table.id = "timerTable";
+	table.style.zIndex = 100;
+	table.className = "table";
+	table.classList.add("table");
+	table.classList.add("table-default");
+	table.border = "1";
+		tr = document.createElement("tr");
+		td = document.createElement("th");
+		td.innerHTML = "Handler";
+		tr.appendChild(td);
+		td = document.createElement("th");
+		td.innerHTML = "Interval (ms)";
+		tr.appendChild(td);
+		td = document.createElement("th");
+		td.innerHTML = "Name";
+		tr.appendChild(td);
+		td = document.createElement("th");
+		td.innerHTML = "Description";
+		tr.appendChild(td);
+		table.appendChild(tr);
+	for (var v in nms.handlers) {
+		tr = document.createElement("tr");
+		td = document.createElement("td");
+		td.innerHTML = nms.handlers[v].handle;
+		tr.appendChild(td);
+		td = document.createElement("td");
+		td.innerHTML = "<input type=\"text\" id='handlerValue" + v + "' value='" + nms.handlers[v].interval + "'>";
+		td.innerHTML += "<button type=\"button\" class=\"btn btn-default\" onclick=\"nms.handlers['" + v + "'].setInterval(document.getElementById('handlerValue" + v + "').value);\">Apply</button>";
+		tr.appendChild(td);
+		td = document.createElement("td");
+		td.innerHTML = nms.handlers[v].name;
+		tr.appendChild(td);
+		td = document.createElement("td");
+		td.innerHTML = nms.handlers[v].description;
+		tr.appendChild(td);
+		table.appendChild(tr);
+	}
+	tableTop.appendChild(table);
+	document.getElementById('debugTimers').style.display = 'block'; 
+}
+
+function debugHandlers() {
+	for (var v in nms.handlers) {
+		console.log(nms.handlers[v]);
+	}
 }

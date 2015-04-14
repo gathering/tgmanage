@@ -11,8 +11,6 @@ my $cgi = CGI->new;
 
 
 my $dbh = nms::db_connect();
-my $switch = $cgi->param('switch');
-my @ports = split(",",$cgi->param('ports'));
 my $cin = $cgi->param('time');
 my $now = "now()";
 if ($cgi->param('now') != undef) {
@@ -26,20 +24,7 @@ if (defined($cin)) {
 	$when = " time < " . $now . " - '$cin'::interval and time > ". $now . " - ('$cin'::interval + '15m'::interval) ";
 }
 
-my $query = 'select distinct on (switch,ifname,ifhighspeed,ifhcoutoctets,ifhcinoctets) extract(epoch from date_trunc(\'second\',time)) as time,switch,ifname,max(ifhighspeed) as ifhighspeed,max(ifhcinoctets) as ifhcinoctets,max(ifhcoutoctets) as ifhcoutoctets,switch,sysname from polls natural join switches where ' . $when . ' ';
-
-my $or = "and (";
-my $last = "";
-foreach my $port (@ports) {
-	$query .= "$or ifname = '$port' ";
-	$or = " OR ";
-	$last = ")";
-}
-$query .= "$last";
-if (defined($switch)) {
-	$query .= "and sysname = '$switch'";
-}
-$query .= 'group by time,switch,ifname,ifhighspeed,ifhcinoctets,ifhcoutoctets,sysname order by switch,ifname,ifhighspeed,ifhcoutoctets,ifhcinoctets,time desc';
+my $query = 'select distinct extract(epoch from date_trunc(\'second\',time)) as time,ifname,ifhighspeed,ifhcinoctets,ifhcoutoctets,sysname from polls natural join switches where ' . $when . ' order by time desc';
 my $q = $dbh->prepare($query);
 $q->execute();
 

@@ -16,7 +16,7 @@ my $when =" updated > " . $now . " - '15 secs'::interval and updated < " . $now 
 
 my %json = ();
 
-my $q = $dbh->prepare("SELECT DISTINCT ON (switch,sysname) switch,sysname, latency_ms FROM ping NATURAL JOIN switches WHERE $when ORDER BY switch,sysname, updated DESC;");
+my $q = $dbh->prepare("SELECT DISTINCT updated,switch,sysname, latency_ms FROM ping NATURAL JOIN switches WHERE $when ORDER BY updated DESC;");
 $q->execute();
 while (my $ref = $q->fetchrow_hashref()) {
 	$json{'switches'}{$ref->{'sysname'}}{'latency'} = $ref->{'latency_ms'};
