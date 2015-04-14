@@ -24,7 +24,7 @@ if (defined($cin)) {
 	$when = " time < " . $now . " - '$cin'::interval and time > ". $now . " - ('$cin'::interval + '15m'::interval) ";
 }
 
-my $query = 'select distinct extract(epoch from date_trunc(\'second\',time)) as time,ifname,ifhighspeed,ifhcinoctets,ifhcoutoctets,sysname from polls natural join switches where ' . $when . ' order by time desc';
+my $query = 'select sysname,extract(epoch from date_trunc(\'second\',time)) as time, ifname,ifhighspeed,ifhcinoctets,ifhcoutoctets from polls natural join switches where time in  (select max(time) from polls where ' . $when . ' group by switch,ifname);';
 my $q = $dbh->prepare($query);
 $q->execute();
 
