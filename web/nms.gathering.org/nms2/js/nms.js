@@ -18,7 +18,7 @@ var nms = {
 	linknet_color:{}, // color for linknet
 	textDrawn:{}, // Have we drawn text for this switch?
 	now:false, // Date we are looking at (false for current date).
-	fontSize:14, // This is scaled too, but 14 seems to make sense.
+	fontSize:16, // This is scaled too, but 16 seems to make sense.
 	fontFace:"Arial Black",
 	outstandingAjaxRequests:0,
 	ajaxOverflow:0,
@@ -190,6 +190,10 @@ function initDrawing() {
 	dr['top']['ctx'] = dr['top']['c'].getContext('2d');
 }
 
+/*
+ * Convenience function that doesn't support huge numbers, and it's easier
+ * to comment than to fix. But not really, but I'm not fixing it anyway.
+ */
 function byteCount(bytes) {
 	var units = ['', 'K', 'M', 'G', 'T', 'P'];
 	i = 0;
@@ -205,6 +209,11 @@ function toggleNightMode()
 	setNightMode(!nms.nightMode);
 }
 
+/*
+ * Parse 'now' from user-input.
+ *
+ * Should probably just use stringToEpoch() instead, but alas, not yet.
+ */
 function checkNow(now)
 {
 	if (Date.parse(now)) {
@@ -219,18 +228,43 @@ function checkNow(now)
 	return false;
 }
 
-
+/*
+ * Convert back and forth between epoch.
+ *
+ * There's no particular reason why I use seconds instead of javascript
+ * microseconds, except to leave the mark of a C coder on this javascript
+ * project.
+ */
 function stringToEpoch(t)
 {
 	var ret = new Date(Date.parse(t));
 	return parseInt(parseInt(ret.valueOf()) / 1000);
 }
 
+/*
+ * Have to pad with zeroes to avoid "17:5:0" instead of the conventional
+ * and more readable "17:05:00".
+ */
 function epochToString(t)
 {
 	var d = new Date(parseInt(t) * parseInt(1000));
-	var str = d.getFullYear() + "-" + (parseInt(d.getMonth())+1) + "-" + d.getDate() + "T";
-	str += d.getHours() + ":" + d.getMinutes() + ":" + d.getSeconds();
+	var str = d.getFullYear() + "-";
+	if (parseInt(d.getMonth()) < 9)
+		str += "0";
+	str += (parseInt(d.getMonth())+1) + "-";
+	if (d.getDate() < 10)
+		str += "0";
+	str += d.getDate() + "T";
+	if (d.getHours() < 10)
+		str += "0";
+	str += d.getHours() + ":";
+	if (d.getMinutes() < 10)
+		str += "0";
+	str += d.getMinutes() + ":";
+	if (d.getSeconds() < 10)
+		str += "0";
+	str += d.getSeconds();
+
 	return str;
 }
 	
@@ -243,7 +277,6 @@ function timeReplay()
 	}
 	replayTime = parseInt(replayTime) + parseInt(replayIncrement);
 	nms.now = epochToString(replayTime);
-	drawNow();
 }
 
 function startReplay() {
@@ -424,12 +457,8 @@ function switchInfo(x)
  */
 function updateInfo()
 {
-	if (!nms.drawn && nms.switches_now != undefined) {
-		drawSwitches();
-		nms.drawn = true;
-	}
 	var speedele = document.getElementById("speed");
-	speedele.innerHTML = (8 * parseInt(nms.speed) / 1024 / 1024 / 1024 ).toPrecision(5) + " Gbit/s";
+	speedele.innerHTML = byteCount(8 * parseInt(nms.speed)) + "bit/s";
 }
 
 /*
@@ -475,11 +504,11 @@ function uplinkUpdater()
  */
 function trafficInit()
 {
-	setLegend(1,"blue","0 uplink utilization");	
-	setLegend(5,"red", "1000Mb/s or more uplink utilization");	
-	setLegend(4,"yellow","100Mb/s to 800Mb/s uplink utilization");	
-	setLegend(3,"green", "5Mb/s to 100Mb/s uplink utilization");	
-	setLegend(2,"white","0 to 5Mb/s uplink utilization");	
+	setLegend(1,"blue","0 (N/A)");	
+	setLegend(5,"red", "1000Mb/s or more");	
+	setLegend(4,"yellow","100Mb/s to 800Mb/s");	
+	setLegend(3,"green", "5Mb/s to 100Mb/s");	
+	setLegend(2,"white","0 to 5Mb/s");	
 }
 
 function trafficUpdater()
@@ -657,6 +686,7 @@ function updateMap()
 	if (nms.updater != undefined && nms.switches_now && nms.switches_then) {
 		nms.updater();
 	}
+	drawNow();
 }
 
 /*
@@ -929,21 +959,24 @@ function drawSwitches()
 
 /*
  * Draw current time-window
+ *
+ * FIXME: The math here is just wild approximation and guesswork because
+ * I'm lazy.
  */
 function drawNow()
 {
-	if (nms.now != false) {
-		dr.top.ctx.font = Math.round(2 * nms.fontSize * canvas.scale) + "px " + nms.fontFace;
-		dr.top.ctx.clearRect(0,0,Math.floor(400 * canvas.scale),Math.floor(60 * canvas.scale));
-		dr.top.ctx.fillStyle = "white";
-		dr.top.ctx.strokeStyle = "black";
-		dr.top.ctx.lineWidth = Math.round(2 * canvas.scale);
-		if (canvas.scale < 0.7) {
-			dr.top.ctx.lineWidth = 2;
-		}
-		dr.top.ctx.strokeText("Now: " + nms.now, 0 + margin.text, 30 * canvas.scale);
-		dr.top.ctx.fillText("Now: " + nms.now, 0 + margin.text, 30 * canvas.scale);
+	// XXX: Get rid of microseconds that we get from the backend.
+	var now = /^[^.]*/.exec(nms.switches_now.time);
+	dr.top.ctx.font = Math.round(2 * nms.fontSize * canvas.scale) + "px " + nms.fontFace;
+	dr.top.ctx.clearRect(0,0,Math.floor(800 * canvas.scale),Math.floor(100 * canvas.scale));
+	dr.top.ctx.fillStyle = "white";
+	dr.top.ctx.strokeStyle = "black";
+	dr.top.ctx.lineWidth = Math.floor(4 * canvas.scale);
+	if (dr.top.ctx.lineWidth == 0) {
+		dr.top.ctx.lineWidth = Math.round(4 * canvas.scale);
 	}
+	dr.top.ctx.strokeText(now, 0 + margin.text, 30 * canvas.scale);
+	dr.top.ctx.fillText(now, 0 + margin.text, 30 * canvas.scale);
 }
 /*
  * Draw foreground/scene.
@@ -1182,9 +1215,9 @@ function drawSideways(text,x,y,w,h)
 	dr.text.ctx.rotate(Math.PI * 3 / 2);
 	dr.text.ctx.fillStyle = "white";
 	dr.text.ctx.strokeStyle = "black";
-	dr.text.ctx.lineWidth = Math.floor(1 * canvas.scale);
-	if (canvas.scale < 0.7) {
-		dr.text.ctx.lineWidth = 0.5;
+	dr.text.ctx.lineWidth = Math.floor(3 * canvas.scale);
+	if (dr.text.ctx.lineWidth == 0) {
+		dr.text.ctx.lineWidth = Math.round(3 * canvas.scale);
 	}
 	dr.text.ctx.strokeText(text, - canvas.scale * (y + h - margin.text),canvas.scale * (x + w - margin.text) );
 	dr.text.ctx.fillText(text, - canvas.scale * (y + h - margin.text),canvas.scale * (x + w - margin.text) );
@@ -1224,9 +1257,9 @@ function drawRegular(text,x,y,w,h) {
 
 	dr.text.ctx.fillStyle = "white";
 	dr.text.ctx.strokeStyle = "black";
-	dr.text.ctx.lineWidth = Math.floor(1 * canvas.scale);
-	if (canvas.scale < 0.7) {
-		dr.text.ctx.lineWidth = 0.5;
+	dr.text.ctx.lineWidth = Math.floor(3 * canvas.scale);
+	if (dr.text.ctx.lineWidth == 0) {
+		dr.text.ctx.lineWidth = Math.round(3 * canvas.scale);
 	}
 	dr.text.ctx.strokeText(text, (x + margin.text) * canvas.scale, (y + h - margin.text) * canvas.scale);
 	dr.text.ctx.fillText(text, (x + margin.text) * canvas.scale, (y + h - margin.text) * canvas.scale);

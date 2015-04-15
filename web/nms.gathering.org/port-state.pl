@@ -70,5 +70,9 @@ while (my $ref = $q4->fetchrow_hashref()) {
 #	push @{$json{'linknets'}}, $ref;
 }
 
+my $q5 = $dbh->prepare ('select ' . $now . ' as time;');
+$q5->execute();
+$json{'time'} = $q5->fetchrow_hashref()->{'time'};
+
 print $cgi->header(-type=>'text/json; charset=utf-8');
 print JSON::XS::encode_json(\%json);
