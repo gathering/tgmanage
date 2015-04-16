@@ -18,6 +18,11 @@ web/.htpasswd.munin
 fap/tools/generate_distro_config_ae_event-options/
 *.swp
 
-
-# Exclude JunOS images
-junos-bootstrap/httpd/files/*
+# Stupid system files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
