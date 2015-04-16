@@ -20,6 +20,13 @@ var nms = {
 	now:false, // Date we are looking at (false for current date).
 	fontSize:16, // This is scaled too, but 16 seems to make sense.
 	fontFace:"Arial Black",
+	/*
+	 * This is used to track outbound AJAX requests and skip updates if
+	 * we have too many outstanding requests. The ajaxOverflow is a
+	 * counter that tracks how many times this has happened.
+	 *
+	 * It's a cheap way to be nice to the server.
+	 */
 	outstandingAjaxRequests:0,
 	ajaxOverflow:0,
 	/*
@@ -29,7 +36,11 @@ var nms = {
 	 */
 	did_update:false,
 	/*
-	 * Various setInterval() handlers.
+	 * Various setInterval() handlers. See nmsTimer() for how they are
+	 * used.
+	 *
+	 * Cool fact: Adding one here adds it to the 'debug timers'
+	 * drop-down.
 	 */
 	handlers: {
 		replay:false,
@@ -124,6 +135,16 @@ var margin = {
 	text:3
 };
 
+/*
+ * All of these should be moved into nms.*
+ *
+ * tgStart/tgEnd are "constants".
+ * replayTime is the current time as far as the replay-function is. This
+ * should be merged with nms.now.
+ *
+ * replayIncrement is how many seconds to add for each replay timer tick
+ * (e.g.: 30 minutes added for every 1 second display-time).
+ */
 var tgStart = stringToEpoch('2015-04-01T09:00:00');
 var tgEnd = stringToEpoch('2015-04-05T12:00:00');
 var replayTime = 0;
@@ -204,6 +225,10 @@ function byteCount(bytes) {
 	return bytes.toFixed(1) + units[i];
 }
 
+/*
+ * Definitely not a way to toggle night mode. Does something COMPLETELY
+ * DIFFERENT.
+ */
 function toggleNightMode()
 {
 	setNightMode(!nms.nightMode);
@@ -243,7 +268,8 @@ function stringToEpoch(t)
 
 /*
  * Have to pad with zeroes to avoid "17:5:0" instead of the conventional
- * and more readable "17:05:00".
+ * and more readable "17:05:00". I'm sure there's a better way, but this
+ * works just fine.
  */
 function epochToString(t)
 {
@@ -268,7 +294,12 @@ function epochToString(t)
 	return str;
 }
 	
-
+/*
+ * Move 'nms.now' forward in time, unless we're at the end of the event.
+ *
+ * This is run on a timer (nms.handlers.replay) every second when we are
+ * replaying.
+ */
 function timeReplay()
 {
 	if (replayTime >= tgEnd) {
@@ -279,6 +310,18 @@ function timeReplay()
 	nms.now = epochToString(replayTime);
 }
 
+/*
+ * Start replaying the event.
+ *
+ * I want this to be more generic:
+ *  - Set time
+ *  - Set end-time
+ *  - Start/stop/pause
+ *  - Set speed increment
+ *
+ * Once the lib supports this, I can move 'tgStart' and 'tgEnd' to the GUI
+ * and just provide them as default values or templates.
+ */
 function startReplay() {
 	nms.handlers.replay.stop();
 	resetColors();
@@ -287,6 +330,9 @@ function startReplay() {
 	nms.handlers.replay.start();;
 }
 
+/*
+ * Used to move to a specific time, but not replay.
+ */
 function changeNow() {
 	 var newnow = checkNow(document.getElementById("nowPicker").value);
 	if (!newnow) {
@@ -310,10 +356,9 @@ function changeNow() {
 function hideSwitch()
 {
 		var swtop = document.getElementById("info-switch-parent");
-		var swpanel = document.getElementById("info-switch-panel-body");
 		var switchele = document.getElementById("info-switch-table");
 		if (switchele != undefined)
-			swpanel.removeChild(switchele);
+			switchele.parentNode.removeChild(switchele);
 		swtop.style.display = 'none';
 		nms.switch_showing = "";
 }
@@ -450,15 +495,6 @@ function switchInfo(x)
 
 		swpanel.appendChild(switchele);
 		swtop.style.display = 'block';
-}
-
-/*
- * Update various info elements periodically.
- */
-function updateInfo()
-{
-	var speedele = document.getElementById("speed");
-	speedele.innerHTML = byteCount(8 * parseInt(nms.speed)) + "bit/s";
 }
 
 /*
@@ -810,6 +846,7 @@ function updateSpeed()
 	var speed_kant = parseInt(0);
 	var counter=0;
 	var sw;
+	var speedele = document.getElementById("speed");
 	for (sw in nms.switches_now["switches"]) {
 		for (port in nms.switches_now["switches"][sw]["ports"]) {
 			if (!nms.switches_now["switches"][sw]["ports"][port]) {
@@ -848,6 +885,8 @@ function updateSpeed()
 		}
 	}
 	nms.speed = speed_in;
+	if (speedele)
+		speedele.innerHTML = byteCount(8 * parseInt(nms.speed)) + "bit/s";
 }
 
 /*
@@ -1296,9 +1335,14 @@ function connectSwitches(insw1, insw2,color1, color2) {
 	dr.link.ctx.moveTo(0,0);
 }
 
-
+/*
+ * Boot up "fully fledged" NMS.
+ *
+ * If you only want parts of the functionality, then re-implement this
+ * (e.g., just add and start the handlers you want, don't worry about
+ * drawing, etc).
+ */
 function initNMS() {
-	var url;
 	initDrawing();
 	updatePorts();
 	updatePing();
@@ -1308,21 +1352,21 @@ function initNMS() {
 	nms.handlers.ports = new nmsTimer(updatePorts, 1000, "Port updater", "AJAX request to update port data (traffic, etc)");
 	nms.handlers.ports.start();
 
-	nms.handlers.info = new nmsTimer(updateInfo, 5000, "Info updater", "Updates info-box about client speed (fast - no backend requests)");
-	nms.handlers.info.start();
-
 	nms.handlers.ping = new nmsTimer(updatePing, 1000, "Ping updater", "AJAX request to update ping data");
 	nms.handlers.ping.start();
 	
 	nms.handlers.map = new nmsTimer(updateMap, 1000, "Map handler", "Updates the map using the chosen map handler (ping, uplink, traffic, etc)");
 	nms.handlers.map.start();
 	
-	nms.handlers.speed = new nmsTimer(updateSpeed, 3000, "Speed updater", "Recompute total speed (no backend requests)");
+	nms.handlers.speed = new nmsTimer(updateSpeed, 1000, "Speed updater", "Recompute total speed (no backend requests)");
 	nms.handlers.speed.start();
 	
 	nms.handlers.replay = new nmsTimer(timeReplay, 1000, "Time machine", "Handler used to change time");
+	detectHandler();
+}
 
-	url = document.URL;
+function detectHandler() {
+	var url = document.URL;
 	if (/#ping/.exec(url)) {
 		setUpdater(handler_ping);
 	}else if (/#uplink/.exec(url)) {
@@ -1341,6 +1385,11 @@ function initNMS() {
 	}
 }
 
+/*
+ * Display and populate the dialog box for debugging timers.
+ *
+ * Could probably be cleaned up.
+ */
 function showTimerDebug() {
 	var tableTop = document.getElementById('timerTableTop');
 	var table = document.getElementById('timerTable');
@@ -1387,10 +1436,4 @@ function showTimerDebug() {
 	}
 	tableTop.appendChild(table);
 	document.getElementById('debugTimers').style.display = 'block'; 
-}
-
-function debugHandlers() {
-	for (var v in nms.handlers) {
-		console.log(nms.handlers[v]);
-	}
 }
