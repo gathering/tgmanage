@@ -1,0 +1,44 @@
+# /var/lib/tftpboot/pxelinux.cfg/default
+DEFAULT vesamenu.c32
+MENU INCLUDE menus/common.cfg
+MENU TITLE The Gathering 2015 - The Future is Back
+
+LABEL boot_hd0
+        MENU LABEL Boot from first hard drive
+        MENU DEFAULT
+        TEXT HELP
+Boots your system as normal from the first BIOS drive
+        ENDTEXT
+        COM32 chain.c32
+        APPEND hd0
+
+MENU SEPARATOR 
+
+LABEL debian
+        MENU LABEL ^1 Debian 
+        TEXT HELP
+Debian installers and live-boot options.
+        ENDTEXT
+        COM32 vesamenu.c32
+        APPEND menus/debian.cfg
+
+LABEL ubuntu
+        MENU LABEL ^2 Ubuntu 
+        TEXT HELP
+Ubuntu installers and live-boot options.
+        ENDTEXT
+        COM32 vesamenu.c32
+        APPEND menus/ubuntu.cfg
+
+LABEL hannamontana
+        MENU LABEL ^3 Hanna Montana
+        COM32 vesamenu.c32
+        APPEND menus/hannamontana.cfg
+
+LABEL tools
+        MENU LABEL ^4 Tools
+        COM32 vesamenu.c32
+        APPEND menus/tools.cfg
+
+ONTIMEOUT boot_hd0
+TIMEOUT 300

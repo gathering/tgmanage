@@ -1,0 +1,7 @@
+sw1-infodesk rs1.north ge-0/0/12
+sw2-gamestudio rs1.north ge-0/0/45
+sw3-streamerlounge rs1.north ge-0/0/16
+sw1-crew rs1.crew ge-0/0/39 ge-0/0/40 ge-0/0/41
+sw2-crew rs1.crew ge-0/0/42 ge-0/0/43 ge-0/0/44
+sw3-crew rs1.crew ge-0/0/45 ge-0/0/46 ge-0/0/47
+e3-2 distro1 ge-0/0/21 ge-1/0/21 ge-2/0/21

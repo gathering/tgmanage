@@ -1,0 +1,11 @@
+$ORIGIN .
+$TTL 3600	; 1 hour
+2.0.d.e.2.0.a.2.ip6.arpa IN SOA	marty.tg15.gathering.org. abuse.gathering.org. (
+				2015033468 ; serial
+				3600       ; refresh (1 hour)
+				1800       ; retry (30 minutes)
+				608400     ; expire (1 week 1 hour)
+				3600       ; minimum (1 hour)
+				)
+			NS	emmet.tg15.gathering.org.
+			NS	marty.tg15.gathering.org.
