@@ -597,6 +597,13 @@ function updatePorts()
  * nms.speed is a total of ifHCInOctets across all client-interfaces
  * nms.speed_full is a total of for /all/ interfaces.
  *
+ * This is run separate of updatePorts mainly for historic reasons, but
+ * if it was added to the tail end of updatePorts, there'd have to be some
+ * logic to ensure it was run after both requests. Right now, it's just
+ * equally wrong for both scenarios, not consistently wrong (or something).
+ *
+ * FIXME: Err, yeah, add this to the tail-end of updatePorts instead :D
+ *
  */
 function updateSpeed()
 {
