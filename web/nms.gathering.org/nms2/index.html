@@ -86,7 +86,7 @@
             </li>
           </ul>
           <ul class="nav navbar-nav navbar-right">
-            <li><p id="speed" class="navbar-text" title="Client port speed"></p></li>
+            <li><p id="speed" class="navbar-text" title="Client port speed / Total port speed"></p></li>
           </ul>
         </div><!--/.nav-collapse -->
       </div>
@@ -170,12 +170,9 @@
 	    not used)</li>
 	    <li>Add DHCP map</li>
 	    <li>Add magic map (combined map of sorts)</li>
-	    <li>Add better control panel stuff (Review timers, change some, etc)</li>
 	    <li>Adjust updatePorts() frequency based on necessity (1sec
 	    updates is overkill for regular operation, but needed for time
 	    travel)</li>
-	    <li>Fix legend display (There's a legend for all handlers, but
-	    it's currently hidden beneath the canvas)</li>
 	    <li>More info on switches: Port state, possibly link time
 	    trends)</li>
 	    <li>Moving switches around (like ping.html + edit)</li>
@@ -185,16 +182,21 @@
 	    </ul>
 	    <h3>Todo for backend:</h3>
 	    <ul>
-	    <li>Fix horrible SQL :D</li>
+	    <li>IPv6 support</li>
 	    <li>Close SQL injections (IT'S WIDE OPEN BECAUSE WHY NOT THAT'S NEVER A PROBLEM)</li>
-	    <li>Fix SNMP-fetcher so it gets ifXTable and at least ifOperStatus from ifTable. Possibly other tweaks.</li>
+	    <li>Consider time log of DHCP (right now it just stores the
+	    most recent timestamp, making time travel impossible)</li>
+	    <li>Fix SNMP-fetcher so it gets ifXTable and at least ifOperStatus from ifTable. Don't request the entire ifXTable if we can avoid it. Possibly other tweaks.</li>
 	    <li>Support for adding switches through an API, not just pure SQL.</li>
+	    <li>Comments. Allow two type of comments: switch-specific
+	    comments and "global". Possibly ticket-like support. Ooooooooh,
+	    jira support? :P </li>
 	    <li>Integrate with FAP</li>
 	    <li>Clean up old interfaces</li>
 	    <li>Review various agents/tools</li>
 	    <li>Improve cache headers</li>
-	    <li>Consider time log of DHCP (right now it just stores the
-	    most recent timestamp, making time travel impossible)</li>
+	    <li>Re-test the SQL schema. It's been modified and works fine
+	    on my laptop, but I need to dump it, commit it and test it.</li>
 	    <li>Munin plugin for ports.</li>
 	    </ul>
 	    </div>
@@ -228,6 +230,8 @@
     <script src="js/jquery.min.js" type="text/javascript"></script>
     <script src="js/bootstrap.min.js" type="text/javascript"></script>
     <script type="text/javascript" src="js/nms.js"></script>
+    <script type="text/javascript" src="js/nms-color-util.js"></script>
+    <script type="text/javascript" src="js/nms-map-handlers.js"></script>
     <script type="text/javascript">
     initNMS();
     </script>

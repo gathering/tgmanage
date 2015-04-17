@@ -21,7 +21,7 @@ my $when =" time > " . $now . " - '5m'::interval and time < " . $now . " ";
 my %json = ();
 
 if (defined($cin)) {
-	$when = " time < " . $now . " - '$cin'::interval and time > ". $now . " - ('$cin'::interval + '15m'::interval) ";
+	$when = " time < " . $now . " - '$cin'::interval and time > ". $now . " - ('$cin'::interval + '5m'::interval) ";
 }
 
 my $query = 'select sysname,extract(epoch from date_trunc(\'second\',time)) as time, ifname,ifhighspeed,ifhcinoctets,ifhcoutoctets from polls natural join switches where time in  (select max(time) from polls where ' . $when . ' group by switch,ifname);';

@@ -3,7 +3,6 @@ var nms = {
 	switches_now:undefined, // Most recent data
 	switches_then:undefined, // 2 minutes old
 	speed:0, // Current aggregated speed
-	full_speed:false, // Set to 'true' to include ALL interfaces
 	ping_data:undefined, // JSON data for ping history.
 	drawn:false, // Set to 'true' when switches are drawn
 	switch_showing:"", // Which switch we are displaying (if any).
@@ -42,10 +41,9 @@ var nms = {
 	 * Cool fact: Adding one here adds it to the 'debug timers'
 	 * drop-down.
 	 */
-	handlers: {
+	timers: {
 		replay:false,
 		ports:false,
-		info:false,
 		ping:false,
 		map:false,
 		speed:false
@@ -149,41 +147,6 @@ var tgStart = stringToEpoch('2015-04-01T09:00:00');
 var tgEnd = stringToEpoch('2015-04-05T12:00:00');
 var replayTime = 0;
 var replayIncrement = 30 * 60;
-
-/*
- * Handlers. "updater" is run periodically when the handler is active, and
- * "init" is run once when it's activated.
- */
-
-var handler_uplinks = {
-	updater:uplinkUpdater,
-	init:uplinkInit,
-	name:"Uplink map"
-};
-
-var handler_temp = {
-	updater:tempUpdater,
-	init:tempInit,
-	name:"Temperature map"
-};
-
-var handler_ping = {
-	updater:pingUpdater,
-	init:pingInit,
-	name:"IPv4 Ping map"
-};
-
-var handler_traffic = {
-	updater:trafficUpdater,
-	init:trafficInit,
-	name:"Uplink traffic map"
-};
-
-var handler_disco = {
-	updater:randomizeColors,
-	init:discoInit,
-	name:"Disco fever"
-};
 
 /*
  * Convenience-function to populate the 'dr' structure.
@@ -297,13 +260,13 @@ function epochToString(t)
 /*
  * Move 'nms.now' forward in time, unless we're at the end of the event.
  *
- * This is run on a timer (nms.handlers.replay) every second when we are
+ * This is run on a timer (nms.timers.replay) every second when we are
  * replaying.
  */
 function timeReplay()
 {
 	if (replayTime >= tgEnd) {
-		nms.handlers.replay.stop();
+		nms.timers.replay.stop();
 		return;
 	}
 	replayTime = parseInt(replayTime) + parseInt(replayIncrement);
@@ -323,11 +286,11 @@ function timeReplay()
  * and just provide them as default values or templates.
  */
 function startReplay() {
-	nms.handlers.replay.stop();
+	nms.timers.replay.stop();
 	resetColors();
 	replayTime = tgStart;
 	timeReplay();
-	nms.handlers.replay.start();;
+	nms.timers.replay.start();;
 }
 
 /*
@@ -498,129 +461,6 @@ function switchInfo(x)
 }
 
 /*
- * Update function for uplink map
- * Run periodically when uplink map is active.
- */
-function uplinkUpdater()
-{
-	if (!nms.switches_now["switches"])
-		return;
-	for (sw in nms.switches_now["switches"]) {
-		var uplinks=0;
-		for (port in nms.switches_now["switches"][sw]["ports"]) {
-			if (!nms.switches_then["switches"][sw]["ports"] || 
-			    !nms.switches_now["switches"][sw]["ports"])
-				continue;
-			if (/ge-0\/0\/44$/.exec(port) ||
-			    /ge-0\/0\/45$/.exec(port) ||
-			    /ge-0\/0\/46$/.exec(port) ||
-			    /ge-0\/0\/47$/.exec(port))
-			 {
-				 if (parseInt(nms.switches_then["switches"][sw]["ports"][port]["ifhcoutoctets"]) != parseInt(nms.switches_now["switches"][sw]["ports"][port]["ifhcoutoctets"])) {
-					 uplinks += 1;
-				 }
-			 }
-		}
-		if (uplinks == 0) {
-			setSwitchColor(sw,"blue");
-		} else if (uplinks == 1) {
-			setSwitchColor(sw,"red");
-		} else if (uplinks == 2) {
-			setSwitchColor(sw, "yellow");
-		} else if (uplinks == 3) { 
-			setSwitchColor(sw, "green");
-		} else if (uplinks > 3) {
-			setSwitchColor(sw, "white");
-		}
-	}
-}
-
-/*
- * Init-function for uplink map
- */
-function trafficInit()
-{
-	setLegend(1,"blue","0 (N/A)");	
-	setLegend(5,"red", "1000Mb/s or more");	
-	setLegend(4,"yellow","100Mb/s to 800Mb/s");	
-	setLegend(3,"green", "5Mb/s to 100Mb/s");	
-	setLegend(2,"white","0 to 5Mb/s");	
-}
-
-function trafficUpdater()
-{
-	if (!nms.switches_now["switches"])
-		return;
-	for (sw in nms.switches_now["switches"]) {
-		var speed = 0;
-		for (port in nms.switches_now["switches"][sw]["ports"]) {
-			if (/ge-0\/0\/44$/.exec(port) ||
-			    /ge-0\/0\/45$/.exec(port) ||
-			    /ge-0\/0\/46$/.exec(port) ||
-			    /ge-0\/0\/47$/.exec(port))
-			 {
-				 var t = nms.switches_then["switches"][sw]["ports"][port];
-				 var n = nms.switches_now["switches"][sw]["ports"][port];
-				 speed += (parseInt(t["ifhcoutoctets"]) -parseInt(n["ifhcoutoctets"])) / (parseInt(t["time"] - n["time"]));
-				 speed += (parseInt(t["ifhcinoctets"]) -parseInt(n["ifhcinoctets"])) / (parseInt(t["time"] - n["time"]));
-			 }
-		}
-		var m = 1024 * 1024 / 8;
-		if (speed == 0) {
-			setSwitchColor(sw,"blue");
-		} else if (speed > (1000 * m)) {
-			setSwitchColor(sw,"red");
-		} else if (speed > (800 * m)) {
-			setSwitchColor(sw, "yellow");
-		} else if (speed > (5 * m)) { 
-			setSwitchColor(sw, "green");
-		} else {
-			setSwitchColor(sw, "white");
-		}
-	}
-}
-
-/*
- * Init-function for uplink map
- */
-function uplinkInit()
-{
-	setLegend(1,"blue","0 uplinks");	
-	setLegend(2,"red","1 uplink");	
-	setLegend(3,"yellow","2 uplinks");	
-	setLegend(4,"green","3 uplinks");	
-	setLegend(5,"white","4 uplinks");	
-}
-
-/*
- * Give us a color from blue (0) to red (100).
- */
-function rgb_from_max(x)
-{
-	x = x/100;
-	var colorred = 255 * x;
-	var colorblue = 255 - colorred;
-
-	return 'rgb(' + Math.floor(colorred) + ", 0, " + Math.floor(colorblue) + ')';
-}
-
-/*
- * Tweaked this to scale from roughly 20C to 35C. Hence the -20  and /15
- * thing (e.g., "0" is 20 and "15" is 35 by the time we pass it to
- * rgb_from_max());
- */
-function temp_color(t)
-{
-	if (t == undefined) {
-		console.log("Temp_color, but temp is undefined");
-		return "blue";
-	}
-	t = parseInt(t) - 20;
-	t = Math.floor((t / 15) * 100);
-	return rgb_from_max(t);
-}
-
-/*
  * There are 4 legend-bars. This is a helper-function to set the color and
  * description/name for each one. Used from handler init-functions.
  *
@@ -632,86 +472,6 @@ function setLegend(x,color,name)
 	var el = document.getElementById("legend-" + x);
 	el.style.background = color;
 	el.innerHTML = name;
-}
-
-function tempUpdater()
-{
-	for (sw in nms.switches_now["switches"]) {
-		var t = "white";
-		if (nms.switches_now["switches"][sw]["temp"]) {
-			t = temp_color(nms.switches_now["switches"][sw]["temp"]);
-		}
-		
-		setSwitchColor(sw, t);
-	}
-}
-
-function tempInit()
-{
-	setLegend(1,temp_color(20),"20 °C");	
-	setLegend(2,temp_color(22),"22 °C");	
-	setLegend(3,temp_color(27),"27 °C");	
-	setLegend(4,temp_color(31),"31 °C");	
-	setLegend(5,temp_color(35),"35 °C");	
-}
-
-function gradient_from_latency(latency_ms, latency_secondary_ms)
-{
-	if (latency_secondary_ms === undefined) {
-		return rgb_from_latency(latency_ms);
-	}
-	return 'linear-gradient(' +
-		rgb_from_latency(latency_ms) + ', ' +
-		rgb_from_latency(latency_secondary_ms) + ')';
-}
-
-function rgb_from_latency(latency_ms)
-{
-	if (latency_ms === null || latency_ms === undefined) {
-		return '#0000ff';
-	}
-
-	var l = latency_ms / 40.0;
-	if (l >= 2.0) {
-		return 'rgb(255, 0, 0)';
-	} else if (l >= 1.0) {
-		l = 2.0 - l;
-		l = Math.pow(l, 1.0/2.2);
-		l = Math.floor(l * 255.0);
-		return 'rgb(255, ' + l + ', 0)';
-	} else {
-		l = Math.pow(l, 1.0/2.2);
-		l = Math.floor(l * 255.0);
-		return 'rgb(' + l + ', 255, 0)';
-	}
-}
-
-function pingUpdater()
-{
-	for (var sw in nms.switches_now["switches"]) {
-		var c = "blue";
-		if (nms.ping_data['switches'] && nms.ping_data['switches'][sw])
-			c = gradient_from_latency(nms.ping_data["switches"][sw]["latency"]);
-		setSwitchColor(sw, c);
-	}
-	for (var ln in nms.switches_now["linknets"]) {
-		var c1 = "blue";
-		var c2 = c1;
-		if (nms.ping_data['linknets'] && nms.ping_data['linknets'][ln]) {
-			c1 = gradient_from_latency(nms.ping_data["linknets"][ln][0]);
-			c2 = gradient_from_latency(nms.ping_data["linknets"][ln][1]);
-		}
-		setLinknetColors(ln, c1, c2);
-	}
-}
-
-function pingInit()
-{
-	setLegend(1,gradient_from_latency(1),"1ms");	
-	setLegend(2,gradient_from_latency(30),"30ms");	
-	setLegend(3,gradient_from_latency(60),"60ms");	
-	setLegend(4,gradient_from_latency(80),"80ms");	
-	setLegend(5,"#0000ff" ,"No response");	
 }
 
 /*
@@ -834,16 +594,14 @@ function updatePorts()
 /*
  * Use nms.switches_now and nms.switches_then to update 'nms.speed'.
  *
- * nms.speed is a total of ifHCInOctets across all interfaces.
+ * nms.speed is a total of ifHCInOctets across all client-interfaces
+ * nms.speed_full is a total of for /all/ interfaces.
  *
- * if nms.full_speed is true: Include ALL interfaces
- * if nms.full_speed is false: Include only e* switches and exclude
- * uplinks.
  */
 function updateSpeed()
 {
 	var speed_in = parseInt(0);
-	var speed_kant = parseInt(0);
+	var speed_full = parseInt(0);
 	var counter=0;
 	var sw;
 	var speedele = document.getElementById("speed");
@@ -871,8 +629,9 @@ function updateSpeed()
 			if (then == 0 || now == 0 || diffval == 0 || diffval == NaN) {
 				continue;
 			}
-			if (nms.full_speed || (( /e\d-\d/.exec(sw) || /e\d\d-\d/.exec(sw)) &&  ( /ge-\d\/\d\/\d$/.exec(port) || /ge-\d\/\d\/\d\d$/.exec(port)))) {
-				if (nms.full_speed || !(
+			speed_full += parseInt(diffval/diff);
+			if (( /e\d-\d/.exec(sw) || /e\d\d-\d/.exec(sw)) &&  ( /ge-\d\/\d\/\d$/.exec(port) || /ge-\d\/\d\/\d\d$/.exec(port))) {
+				if (!(
 					/ge-0\/0\/44$/.exec(port) ||
 					/ge-0\/0\/45$/.exec(port) ||
 					/ge-0\/0\/46$/.exec(port) ||
@@ -881,12 +640,15 @@ function updateSpeed()
 					counter++;
 				}
 			}
-			//speed_in += parseInt(diffval/diff) / 1024 ;
 		}
 	}
 	nms.speed = speed_in;
-	if (speedele)
+	nms.speed_full = speed_full;
+	if (speedele) {
 		speedele.innerHTML = byteCount(8 * parseInt(nms.speed)) + "bit/s";
+		speedele.innerHTML += " / " + byteCount(8 * parseInt(nms.speed_full)) + "bit/s";
+
+	}
 }
 
 /*
@@ -1097,16 +859,6 @@ function setSwitchColor(sw, c)
 }
 
 /*
- * Return a random-ish color (for testing)
- */
-function getRandomColor()
-{
-	var i = Math.round(Math.random() * 5);
-	var colors = [ "white", "red", "pink", "yellow", "orange", "green" ];
-	return colors[i];	
-}
-
-/*
  * Event handler for the front-end drag bar to change scale
  */
 function scaleChange()
@@ -1122,29 +874,6 @@ function scaleChange()
 function switchClick(sw)
 {
 	switchInfo(sw);
-}
-
-/*
- * Testing-function to randomize colors of linknets and switches
- */
-function randomizeColors()
-{
-	for (var i in nms.switches_now.linknets) {
-		setLinknetColors(i, getRandomColor(), getRandomColor());
-	}
-	for (var sw in nms.switches_now.switches) {
-		setSwitchColor(sw, getRandomColor());
-	}
-}
-
-function discoInit()
-{
-	setNightMode(true);
-	setLegend(1,"blue","0");	
-	setLegend(5,"red", "1");
-	setLegend(4,"yellow","2");
-	setLegend(3,"green", "3");
-	setLegend(2,"white","4");
 }
 
 /*
@@ -1349,19 +1078,19 @@ function initNMS() {
 	window.addEventListener('resize',resizeEvent,true);
 	document.addEventListener('load',resizeEvent,true);
 	
-	nms.handlers.ports = new nmsTimer(updatePorts, 1000, "Port updater", "AJAX request to update port data (traffic, etc)");
-	nms.handlers.ports.start();
+	nms.timers.ports = new nmsTimer(updatePorts, 1000, "Port updater", "AJAX request to update port data (traffic, etc)");
+	nms.timers.ports.start();
 
-	nms.handlers.ping = new nmsTimer(updatePing, 1000, "Ping updater", "AJAX request to update ping data");
-	nms.handlers.ping.start();
+	nms.timers.ping = new nmsTimer(updatePing, 1000, "Ping updater", "AJAX request to update ping data");
+	nms.timers.ping.start();
 	
-	nms.handlers.map = new nmsTimer(updateMap, 1000, "Map handler", "Updates the map using the chosen map handler (ping, uplink, traffic, etc)");
-	nms.handlers.map.start();
+	nms.timers.map = new nmsTimer(updateMap, 1000, "Map handler", "Updates the map using the chosen map handler (ping, uplink, traffic, etc)");
+	nms.timers.map.start();
 	
-	nms.handlers.speed = new nmsTimer(updateSpeed, 1000, "Speed updater", "Recompute total speed (no backend requests)");
-	nms.handlers.speed.start();
+	nms.timers.speed = new nmsTimer(updateSpeed, 1000, "Speed updater", "Recompute total speed (no backend requests)");
+	nms.timers.speed.start();
 	
-	nms.handlers.replay = new nmsTimer(timeReplay, 1000, "Time machine", "Handler used to change time");
+	nms.timers.replay = new nmsTimer(timeReplay, 1000, "Time machine", "Handler used to change time");
 	detectHandler();
 }
 
@@ -1403,34 +1132,35 @@ function showTimerDebug() {
 	table.classList.add("table");
 	table.classList.add("table-default");
 	table.border = "1";
+	tr = document.createElement("tr");
+	td = document.createElement("th");
+	td.innerHTML = "Handler";
+	tr.appendChild(td);
+	td = document.createElement("th");
+	td.innerHTML = "Interval (ms)";
+	tr.appendChild(td);
+	td = document.createElement("th");
+	td.innerHTML = "Name";
+	tr.appendChild(td);
+	td = document.createElement("th");
+	td.innerHTML = "Description";
+	tr.appendChild(td);
+	table.appendChild(tr);
+	for (var v in nms.timers) {
+		console.log(v);
 		tr = document.createElement("tr");
-		td = document.createElement("th");
-		td.innerHTML = "Handler";
-		tr.appendChild(td);
-		td = document.createElement("th");
-		td.innerHTML = "Interval (ms)";
-		tr.appendChild(td);
-		td = document.createElement("th");
-		td.innerHTML = "Name";
-		tr.appendChild(td);
-		td = document.createElement("th");
-		td.innerHTML = "Description";
-		tr.appendChild(td);
-		table.appendChild(tr);
-	for (var v in nms.handlers) {
-		tr = document.createElement("tr");
 		td = document.createElement("td");
-		td.innerHTML = nms.handlers[v].handle;
+		td.innerHTML = nms.timers[v].handle;
 		tr.appendChild(td);
 		td = document.createElement("td");
-		td.innerHTML = "<input type=\"text\" id='handlerValue" + v + "' value='" + nms.handlers[v].interval + "'>";
-		td.innerHTML += "<button type=\"button\" class=\"btn btn-default\" onclick=\"nms.handlers['" + v + "'].setInterval(document.getElementById('handlerValue" + v + "').value);\">Apply</button>";
+		td.innerHTML = "<input type=\"text\" id='handlerValue" + v + "' value='" + nms.timers[v].interval + "'>";
+		td.innerHTML += "<button type=\"button\" class=\"btn btn-default\" onclick=\"nms.timers['" + v + "'].setInterval(document.getElementById('handlerValue" + v + "').value);\">Apply</button>";
 		tr.appendChild(td);
 		td = document.createElement("td");
-		td.innerHTML = nms.handlers[v].name;
+		td.innerHTML = nms.timers[v].name;
 		tr.appendChild(td);
 		td = document.createElement("td");
-		td.innerHTML = nms.handlers[v].description;
+		td.innerHTML = nms.timers[v].description;
 		tr.appendChild(td);
 		table.appendChild(tr);
 	}
