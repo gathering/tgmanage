@@ -37,7 +37,7 @@ while (my $ref = $q->fetchrow_hashref()) {
 }
 #print Dumper(%json);
 
-my $q2 = $dbh->prepare('select switch,sysname,placement,zorder,ip,switchtype,poll_frequency,community,last_updated from switches natural join placements');
+my $q2 = $dbh->prepare('select switch,sysname,placement,ip,switchtype,poll_frequency,community,last_updated from switches natural join placements');
 my $q3 = $dbh->prepare('select distinct on (switch) switch,temp,time,sysname from switch_temp natural join switches where ' . $when . ' order by switch,time desc');
 
 $q2->execute();
@@ -54,7 +54,6 @@ while (my $ref = $q2->fetchrow_hashref()) {
 	$json{'switches'}{$ref->{'sysname'}}{'placement'}{'y'} = $y2;
 	$json{'switches'}{$ref->{'sysname'}}{'placement'}{'width'} = $x1 - $x2;
 	$json{'switches'}{$ref->{'sysname'}}{'placement'}{'height'} = $y1 - $y2;
-	$json{'switches'}{$ref->{'sysname'}}{'placement'}{'zorder'} = $ref->{'zorder'};
 }
 $q3->execute();
 while (my $ref = $q3->fetchrow_hashref()) {
@@ -74,5 +73,12 @@ my $q5 = $dbh->prepare ('select ' . $now . ' as time;');
 $q5->execute();
 $json{'time'} = $q5->fetchrow_hashref()->{'time'};
 
+my $q6 = $dbh->prepare('select sysname,extract(epoch from date_trunc(\'second\',time)) as time,state,username,id,comment from switch_comments natural join switches order by time desc');
+$q6->execute();
+while (my $ref = $q6->fetchrow_hashref()) {
+	push @{$json{'switches'}{$ref->{'sysname'}}{'comments'}},$ref;
+}
+
+$json{'username'} = $cgi->remote_user();
 print $cgi->header(-type=>'text/json; charset=utf-8');
 print JSON::XS::encode_json(\%json);

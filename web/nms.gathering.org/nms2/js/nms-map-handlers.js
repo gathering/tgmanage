@@ -225,10 +225,10 @@ function randomizeColors()
 function discoInit()
 {
 	setNightMode(true);
-	setLegend(1,"blue","0");	
-	setLegend(5,"red", "1");
-	setLegend(4,"yellow","2");
-	setLegend(3,"green", "3");
-	setLegend(2,"white","4");
+	setLegend(1,"blue","Y");	
+	setLegend(2,"red", "M");
+	setLegend(3,"yellow","C");
+	setLegend(4,"green", "A");
+	setLegend(5,"white","!");
 }
 

@@ -320,8 +320,14 @@ function hideSwitch()
 {
 		var swtop = document.getElementById("info-switch-parent");
 		var switchele = document.getElementById("info-switch-table");
+		var comments = document.getElementById("info-switch-comments-table");
 		if (switchele != undefined)
 			switchele.parentNode.removeChild(switchele);
+		if (comments != undefined)
+			comments.parentNode.removeChild(comments);
+		commentbox = document.getElementById("commentbox");
+		if (commentbox != undefined)
+			commentbox.parentNode.removeChild(commentbox);
 		swtop.style.display = 'none';
 		nms.switch_showing = "";
 }
@@ -455,8 +461,44 @@ function switchInfo(x)
 		td2.innerHTML = sw["management"]["poll_frequency"];
 		tr.appendChild(td1); tr.appendChild(td2); switchele.appendChild(tr);
 
-
+		
+		comments = document.createElement("table");
+		comments.id = "info-switch-comments-table";
+		comments.border = "1";
+		comments.className = "table col-md-6";
+		var cap = document.createElement("caption");
+		cap.innerText = "Comments";
+		comments.appendChild(cap);
+		
+		tr = document.createElement("tr"); td1 = document.createElement("th"); td2 = document.createElement("th");
+		td3 = document.createElement("th");
+		td1.innerText = "Time";
+		td2.innerText = "User";
+		td3.innerText = "Comment";
+		tr.appendChild(td1); tr.appendChild(td2); tr.appendChild(td3); comments.appendChild(tr);
+		var has_comment = false;
+		for (var c in sw["comments"]) {
+			var comment = sw["comments"][c];
+			has_comment = true;
+			if (comment["state"] == "active" || comment["state"] == "persist") {
+				tr = document.createElement("tr"); td1 = document.createElement("td"); td2 = document.createElement("td");
+				td3 = document.createElement("td");
+				td1.innerText = epochToString(comment["time"]) + " ";
+				td2.innerText = comment["username"] + " ";
+				td3.innerText = comment['comment'];
+				tr.appendChild(td1); tr.appendChild(td2); tr.appendChild(td3); comments.appendChild(tr);
+			}
+		}
+		
 		swpanel.appendChild(switchele);
+		if (has_comment) {
+			swpanel.appendChild(comments);
+		}
+		var commentbox = document.createElement("div");
+		commentbox.id = "commentbox";
+		console.log("x : " + x);
+		commentbox.innerHTML = '<input type="text" placeholder="Comment" id="' + x + '-comment"><button onclick="addComment(\'' + x + '\',document.getElementById(\'' + x + '-comment\').value); document.getElementById(\'' + x + '-comment\').value = \'added. Wait for it....\';">Add comment</button>';
+		swpanel.appendChild(commentbox);
 		swtop.style.display = 'block';
 }
 
@@ -545,6 +587,18 @@ function updatePing()
 	});
 }
 
+function addComment(sw,comment) {
+	var myData = {
+		switch:sw,
+		comment:comment};
+	console.log(myData);
+	$.ajax({
+		type: "POST",
+		url: "/switch-comment.pl",
+		dataType: "text",
+		data:myData
+	});
+}
 /*
  * Update nms.switches_now and nms.switches_then
  */
