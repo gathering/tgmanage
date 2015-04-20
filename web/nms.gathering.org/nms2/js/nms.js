@@ -496,7 +496,6 @@ function switchInfo(x)
 		}
 		var commentbox = document.createElement("div");
 		commentbox.id = "commentbox";
-		console.log("x : " + x);
 		commentbox.innerHTML = '<input type="text" placeholder="Comment" id="' + x + '-comment"><button onclick="addComment(\'' + x + '\',document.getElementById(\'' + x + '-comment\').value); document.getElementById(\'' + x + '-comment\').value = \'added. Wait for it....\';">Add comment</button>';
 		swpanel.appendChild(commentbox);
 		swtop.style.display = 'block';
