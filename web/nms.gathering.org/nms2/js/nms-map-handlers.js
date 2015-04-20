@@ -48,6 +48,11 @@ var handler_disco = {
 	name:"Disco fever"
 };
 
+var handler_comment = {
+	updater:commentUpdater,
+	init:commentInit,
+	name:"Fresh comment spotter"
+};
 /*
  * Update function for uplink map
  * Run periodically when uplink map is active.
@@ -209,6 +214,50 @@ function pingInit()
 	setLegend(5,"#0000ff" ,"No response");	
 }
 
+function commentUpdater()
+{
+	var realnow = Date.now();
+	if (nms.now) {
+		realnow = Date.parse(nms.now);
+	}
+	var now = Math.floor(realnow / 1000);
+	for (var sw in nms.switches_now["switches"]) {
+		var c = "green";
+		var s = nms.switches_now["switches"][sw];
+		if (s["comments"] && s["comments"].length > 0) {
+			var then = 0;
+			c = "yellow";
+			for (var v in s["comments"]) {
+				var then_test = parseInt(s["comments"][v]["time"]);
+				if (then_test > then && then_test <= now)
+					then = then_test;
+			}
+			if (then > (now - (60*15))) {
+				c = "red";
+			} else if (then > (now - (120*60))) {
+				c = "orange";
+			} else if (then < (now - (60*60*24))) {
+				c = "white";
+			}
+			/*
+			 * Special case during time travel: We have
+			 * comments, but are not showing them yet.
+			 */
+			if (then == 0)
+				c = "green";
+		}
+		setSwitchColor(sw, c);
+	}
+}
+
+function commentInit()
+{
+	setLegend(1,"green","0 comments");
+	setLegend(2,"white","1d+ old");
+	setLegend(3,"red", "0 - 15m old");
+	setLegend(4,"orange","15m - 120m old");	
+	setLegend(5,"yellow" ,"2h - 24h old");	
+}
 /*
  * Testing-function to randomize colors of linknets and switches
  */

@@ -1165,6 +1165,8 @@ function detectHandler() {
 		setUpdater(handler_temp);
 	} else if (/#traffic/.exec(url)) {
 		setUpdater(handler_traffic);
+	} else if (/#comment/.exec(url)) {
+		setUpdater(handler_comment);
 	} else if (/#disco/.exec(url)) {
 		setUpdater(handler_disco);
 	} else {
