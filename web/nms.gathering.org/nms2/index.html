@@ -141,15 +141,12 @@
 		      <button class="btn" onclick="document.getElementById('nowPickerBox').style.display = 'none';">Cancel</button>
 		      </div>
 	        </div>
-		<div style="position: absolute; z-index: 120;"
-		class="col-md-3">
+		<div style="position: absolute; z-index: 120;" class="col-md-3">
                 <div id="info-switch-parent" class="panel panel-default col-d-6" style="display: none; backgroun:silver; position: absolute; z-index: 120;">
 			<div class="panel-heading"><h3 class="panel-title"
 			id="info-switch-title"></h3></div>
-			<div class="panel-body">
 			<div id="info-switch-panel-body">
                     <table class="table" id="info-switch-table"></table>
-		    </div>
 		    </div>
                 </div>
 		</div>
@@ -232,7 +229,7 @@
 	    <div class="panel-heading"><h1 class="panel-title">Set layer visibility
 	    <button type="button" class="close" aria-labe="Close" onclick="document.getElementById('layerVisibility').style.display = 'none';" style="float: right;"><span aria-hidden="true">&times;</span></button></h1></div>
 	    <div class="panel-body">
-	    <table class="table">
+	    <table id="visibilityTable" class="table">
 	    <tr><td>Background</td><td>
 	    	<button onclick='hideLayer("bgCanvas");'>Hide</button>
 	    	<button onclick='showLayer("bgCanvas");'>Show</button>

@@ -47,7 +47,8 @@ var nms = {
 		ping:false,
 		map:false,
 		speed:false
-	}
+	},
+	deleteComment:0
 };
 
 
@@ -336,7 +337,6 @@ function hideSwitch()
  */
 function switchInfo(x)
 {
-		var switchele = document.getElementById("info-switch-table");
 		var sw = nms.switches_now["switches"][x];
 		var swtop = document.getElementById("info-switch-parent");
 		var swpanel = document.getElementById("info-switch-panel-body");
@@ -353,10 +353,11 @@ function switchInfo(x)
 			nms.switch_showing = x;
 		}
 		document.getElementById("aboutBox").style.display = "none";
-		switchele = document.createElement("table");
+		var switchele = document.createElement("table");
 		switchele.id = "info-switch-table";
-		switchele.style.zIndex =  100;
 		switchele.className = "table";
+		switchele.classList.add("table");
+		switchele.classList.add("table-condensed");
 		
 		swtitle.innerHTML = x + '<button type="button" class="close" aria-labe="Close" onclick="hideSwitch();" style="float: right;"><span aria-hidden="true">&times;</span></button>';
 		var speed = 0;
@@ -378,17 +379,18 @@ function switchInfo(x)
 			 }
 		}
 
-		tr = document.createElement("tr"); td1 = document.createElement("td"); td2 = document.createElement("td");
+		tr = switchele.insertRow(-1);
+		td1 = tr.insertCell(0);
+		td2 = tr.insertCell(1);
 		td1.innerHTML = "Uplink speed (out , port 44-47)";
 		td2.innerHTML = byteCount(8 * speed) + "b/s";
-		tr.appendChild(td1); tr.appendChild(td2); switchele.appendChild(tr);
 
-		tr = document.createElement("tr"); td1 = document.createElement("td"); td2 = document.createElement("td");
-		td1['data-toggle'] = "popover";
+		tr = switchele.insertRow(-1);
+		td1 = tr.insertCell(0);
+		td2 = tr.insertCell(1);
 		td1.title = "Port 44, 45, 46 and 47 are used as uplinks.";
 		td1.innerHTML = "Uplink speed (in , port 44-47)";
 		td2.innerHTML = byteCount(8 * speed2) + "b/s";
-		tr.appendChild(td1); tr.appendChild(td2); switchele.appendChild(tr);
 
 		speed = 0;
 		for (port in nms.switches_now["switches"][x]["ports"]) {
@@ -401,10 +403,11 @@ function switchInfo(x)
 			 speed += (parseInt(t["ifhcinoctets"]) -parseInt(n["ifhcinoctets"])) / (parseInt(t["time"] - n["time"]));
 		}
 
-		tr = document.createElement("tr"); td1 = document.createElement("td"); td2 = document.createElement("td");
+		tr = switchele.insertRow(-1);
+		td1 = tr.insertCell(0);
+		td2 = tr.insertCell(1);
 		td1.innerHTML = "Total speed (in)";
 		td2.innerHTML = byteCount(8 * speed) + "b/s";
-		tr.appendChild(td1); tr.appendChild(td2); switchele.appendChild(tr);
 
 		speed = 0;
 		for (port in nms.switches_now["switches"][x]["ports"]) {
@@ -417,87 +420,102 @@ function switchInfo(x)
 			 speed += (parseInt(t["ifhcoutoctets"]) -parseInt(n["ifhcoutoctets"])) / (parseInt(t["time"] - n["time"]));
 		}
 
-		tr = document.createElement("tr"); td1 = document.createElement("td"); td2 = document.createElement("td");
+		tr = switchele.insertRow(-1);
+		td1 = tr.insertCell(0);
+		td2 = tr.insertCell(1);
 		td1.innerHTML = "Total speed (out)";
 		td2.innerHTML = byteCount(8 * speed) + "b/s";
-		tr.appendChild(td1); tr.appendChild(td2); switchele.appendChild(tr);
 
-		tr = document.createElement("tr"); td1 = document.createElement("td"); td2 = document.createElement("td");
+		tr = switchele.insertRow(-1);
+		td1 = tr.insertCell(0);
+		td2 = tr.insertCell(1);
 		td1.innerHTML = "Management IP";
 		td2.innerHTML = sw["management"]["ip"];
-		tr.appendChild(td1); tr.appendChild(td2); switchele.appendChild(tr);
 
-		tr = document.createElement("tr"); td1 = document.createElement("td"); td2 = document.createElement("td");
+		tr = switchele.insertRow(-1);
+		td1 = tr.insertCell(0);
+		td2 = tr.insertCell(1);
 		td1.innerHTML = "Latency";
 		if (nms.ping_data && nms.ping_data["switches"] && nms.ping_data["switches"][x]) {
 			td2.innerHTML = nms.ping_data["switches"][x]["latency"];
 		} else {
 			td2.innerHTML = "N/A";
 		}
-		tr.appendChild(td1); tr.appendChild(td2); switchele.appendChild(tr);
 
-		tr = document.createElement("tr"); td1 = document.createElement("td"); td2 = document.createElement("td");
+		tr = switchele.insertRow(-1);
+		td1 = tr.insertCell(0);
+		td2 = tr.insertCell(1);
 		td1.innerHTML = "Temperature";
 		td2.innerHTML = sw["temp"];
-		tr.appendChild(td1); tr.appendChild(td2); switchele.appendChild(tr);
 
-		tr = document.createElement("tr"); td1 = document.createElement("td"); td2 = document.createElement("td");
+		tr = switchele.insertRow(-1);
+		td1 = tr.insertCell(0);
+		td2 = tr.insertCell(1);
 		td1.innerHTML = "Temperature age";
 		td2.innerHTML = sw["temp_time"];
-		tr.appendChild(td1); tr.appendChild(td2); switchele.appendChild(tr);
 
-		tr = document.createElement("tr"); td1 = document.createElement("td"); td2 = document.createElement("td");
+		tr = switchele.insertRow(-1);
+		td1 = tr.insertCell(0);
+		td2 = tr.insertCell(1);
 		td1.innerHTML = "Type";
 		td2.innerHTML = sw["switchtype"];
-		tr.appendChild(td1); tr.appendChild(td2); switchele.appendChild(tr);
 
-		tr = document.createElement("tr"); td1 = document.createElement("td"); td2 = document.createElement("td");
+		tr = switchele.insertRow(-1);
+		td1 = tr.insertCell(0);
+		td2 = tr.insertCell(1);
 		td1.innerHTML = "Last Updated";
 		td2.innerHTML = sw["management"]["last_updated"];
-		tr.appendChild(td1); tr.appendChild(td2); switchele.appendChild(tr);
 
-		tr = document.createElement("tr"); td1 = document.createElement("td"); td2 = document.createElement("td");
+		tr = switchele.insertRow(-1);
+		td1 = tr.insertCell(0);
+		td2 = tr.insertCell(1);
 		td1.innerHTML = "Poll frequency";
 		td2.innerHTML = sw["management"]["poll_frequency"];
-		tr.appendChild(td1); tr.appendChild(td2); switchele.appendChild(tr);
 
 		
 		comments = document.createElement("table");
 		comments.id = "info-switch-comments-table";
-		comments.border = "1";
-		comments.className = "table col-md-6";
+		comments.className = "table table-condensed";
 		var cap = document.createElement("caption");
 		cap.textContent = "Comments";
 		comments.appendChild(cap);
-		
-		tr = document.createElement("tr"); td1 = document.createElement("th"); td2 = document.createElement("th");
-		td3 = document.createElement("th");
-		td1.textContent = "Time";
-		td2.textContent = "User";
-		td3.textContent = "Comment";
-		tr.appendChild(td1); tr.appendChild(td2); tr.appendChild(td3); comments.appendChild(tr);
+	
 		var has_comment = false;
 		for (var c in sw["comments"]) {
 			var comment = sw["comments"][c];
 			has_comment = true;
-			if (comment["state"] == "active" || comment["state"] == "persist") {
-				tr = document.createElement("tr"); td1 = document.createElement("td"); td2 = document.createElement("td");
-				td3 = document.createElement("td");
-				td1.textContent = epochToString(comment["time"]) + " ";
-				td2.textContent = comment["username"] + " ";
-				td3.textContent = comment['comment'];
-				tr.appendChild(td1); tr.appendChild(td2); tr.appendChild(td3); comments.appendChild(tr);
+			if (comment["state"] == "active" || comment["state"] == "persist" || comment["state"] == "inactive") {
+				tr = comments.insertRow(-1);
+				var col;
+				if (comment["state"] == "active")
+					col = "danger";
+				else if (comment["state"] == "inactive")
+					col = "active";
+				else
+					col = "info";
+				tr.className = col;
+				td1 = tr.insertCell(0);
+				td2 = tr.insertCell(1);
+				var txt =  '<div class="btn-group" role="group" aria-label="..."><button type="button" class="btn btn-xs" data-trigger="focus" data-toggle="popover" title="Info" data-content="Comment added ' + epochToString(comment["time"]) + " by user " + comment["username"] + ' and listed as ' + comment["state"] + '">?</button>';
+				txt += '<button type="button" class="btn btn-xs" data-trigger="focus" data-toggle="tooltip" title="Mark as deleted" onclick="commentDelete(' + comment["id"] + ');">X</button>';
+				txt += '<button type="button" class="btn btn-xs" data-trigger="focus" data-toggle="tooltip" title="Mark as inactive/fixed" onclick="commentInactive(' + comment["id"] + ');">V</button>';
+				txt += '<button type="button" class="btn btn-xs" data-trigger="focus" data-toggle="tooltip" title="Mark as persistent" onclick="commentPersist(' + comment["id"] + ');">!</button></div>';
+				td1.innerHTML = txt;
+				td2.textContent = comment['comment'];
 			}
 		}
 		
-		swpanel.appendChild(switchele);
+		swtop.appendChild(switchele);
 		if (has_comment) {
-			swpanel.appendChild(comments);
+			swtop.appendChild(comments);
+			$(function () { $('[data-toggle="popover"]').popover({placement:"top",continer:'body'}) })
 		}
 		var commentbox = document.createElement("div");
 		commentbox.id = "commentbox";
-		commentbox.innerHTML = '<input type="text" placeholder="Comment" id="' + x + '-comment"><button onclick="addComment(\'' + x + '\',document.getElementById(\'' + x + '-comment\').value); document.getElementById(\'' + x + '-comment\').value = \'added. Wait for it....\';">Add comment</button>';
-		swpanel.appendChild(commentbox);
+		commentbox.className = "panel-body";
+		commentbox.style.width = "100%";
+		commentbox.innerHTML = '<div class="form form-inline"><div class="form-group"><input type="text" class="form-control" placeholder="Comment" id="' + x + '-comment"></div><button class="btn btn-default" onclick="addComment(\'' + x + '\',document.getElementById(\'' + x + '-comment\').value); document.getElementById(\'' + x + '-comment\').value = \'added. Wait for it....\';">Add comment</button></div>';
+		swtop.appendChild(commentbox);
 		swtop.style.display = 'block';
 }
 
@@ -586,6 +604,33 @@ function updatePing()
 	});
 }
 
+function commentInactive(id) {
+	commentChange(id,"inactive");
+}
+
+function commentPersist(id) {
+	commentChange(id,"persist");
+}
+function commentDelete(id) {
+	if (id != nms.deleteComment) {
+		nms.deleteComment = id;
+		alert("Click the button again to delete it");
+		return;
+	}
+	commentChange(id,"delete");
+}
+function commentChange(id,state) {
+	var myData = {
+		comment:id,
+		state:state
+	};
+	$.ajax({
+		type: "POST",
+		url: "/comment-change.pl",
+		dataType: "text",
+		data:myData
+	});
+}
 function addComment(sw,comment) {
 	var myData = {
 		switch:sw,

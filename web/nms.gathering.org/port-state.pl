@@ -73,7 +73,7 @@ my $q5 = $dbh->prepare ('select ' . $now . ' as time;');
 $q5->execute();
 $json{'time'} = $q5->fetchrow_hashref()->{'time'};
 
-my $q6 = $dbh->prepare('select sysname,extract(epoch from date_trunc(\'second\',time)) as time,state,username,id,comment from switch_comments natural join switches order by time desc');
+my $q6 = $dbh->prepare('select sysname,extract(epoch from date_trunc(\'second\',time)) as time,state,username,id,comment from switch_comments natural join switches where state != \'delete\' order by time desc');
 $q6->execute();
 while (my $ref = $q6->fetchrow_hashref()) {
 	push @{$json{'switches'}{$ref->{'sysname'}}{'comments'}},$ref;
