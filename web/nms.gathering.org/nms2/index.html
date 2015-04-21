@@ -67,7 +67,7 @@
 				<li><a href="#" onclick="document.getElementById('aboutData').style.display = 'block';">About TG15 data</a></li>
 				<li class="divider"> </li>
                 <li class="dropdown-header">Map scale</li>
-				<li><input type="range" id="scaler" name="points" min="0.5" max="3" step="0.01" onchange="scaleChange()" /></li>
+				<li><input type="range" id="scaler" name="points" min="0.2" max="3" step="0.01" onchange="scaleChange()" /></li>
 				<li><a href="#">Scale: <div id="scaler-text"></div></a></li>
 				<li class="divider"> </li>
 	    			<li><a onclick="document.getElementById('aboutBox').style.display = 'block'; hideSwitch();" style="cursor: pointer;" >About</a></li>
@@ -109,13 +109,17 @@
 		the first day, but because the backend was re-written on
 		day 1/2 and this web app only uses the new API.</p>
 		<p>NMS was set up on March 30th (Monday). Data started
-		pouring in on the 31st. </p>
+		pouring in on the same day. </p>
 		<p>Ping data is available for the entire event with 1
-		second resolution.</p>
+		second resolution. We "lost" data from the 30th because we
+		re-inserted the switches (We have the ping data, but not
+		the mapping between switch ID number and actual
+		switch).</p>
 		<p>DHCP data is available only for the last detected DHCP
 		ack (no history, except extensive text-based logs)</p>
 		<p>Uplink status is available for most of the event, but
-		not exposed here.</p>
+		not exposed here. We only expose traffic-based uplink state
+		here, which, again, is based on the new API.</p>
 		<p>Traffic status was temporarily bugged, but is available
 		from late on day 2.</p>
 		<p>Temperature data is available from day 2.</p>
@@ -166,6 +170,7 @@
 	    </ul>
 	    <h3>Todo list front end:</h3>
 	    <ul>
+	    <li>Fix scrolling.</li>
 	    <li>Polish time travel UI (Allow playing from a given time at a given speed, play/pause buttons, etc)</li>
 	    <li>Toggle auto-scale on/off</li>
 	    <li>Clean up various global variables</li>
