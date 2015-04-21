@@ -61,6 +61,7 @@
                                 <li><a href="#disco" onclick="setUpdater(handler_disco)">DISCO</a></li>
 				<li class="divider"> </li>
                                 <li><a href="#" onclick="toggleNightMode()" title="Add 'nightMode' anywhere in the url to auto-enable">Toggle Night Mode</a></li>
+				<li><a href="#" onclick='showLayer("layerVisibility");'>Set layer visibility</a></li>
 				<li class="divider"> </li>
 				<li><a href="#" onclick="document.getElementById('nowPickerBox').style.display = 'block';">Travel in time</a></li>
 				<li><a href="#" onclick="startReplay();" title="Replay from opening 30 minutes per second">Replay TG</a></li>
@@ -98,7 +99,7 @@
         <div class="row-fluid">
             <div class="span12">
 	    	<div id="aboutData" class="panel panel-default"
-		style="position: fixed; display:none; z-index: 130;">
+		style="position: absolute; display:none; z-index: 130;">
 		<div class="panel-heading"><h3 class="panel-title">About
 		the TG15 data
 		<button type="button" class="close" aria-label="Close" onclick="document.getElementById('aboutData').style.display = 'none';" style="float: right"><span
@@ -131,7 +132,7 @@
 		</div>
 
 		</div>
-	    	<div id="nowPickerBox" class="panel panel-default" style="position: fixed; display:none; z-index: 130;" >	
+	    	<div id="nowPickerBox" class="panel panel-default" style="position: absolute; display:none; z-index: 130;" >	
 			<div class="panel-heading"><h3
 			class="panel-title">Time travel</h3></div>
 			<div class="panel-body">
@@ -140,8 +141,9 @@
 		      <button class="btn" onclick="document.getElementById('nowPickerBox').style.display = 'none';">Cancel</button>
 		      </div>
 	        </div>
-		<div style="position: fixed; z-index: 120;">
-                <div id="info-switch-parent" class="panel panel-default" style="display: none; backgroun:silver; position: fixed; z-index: 120;">
+		<div style="position: absolute; z-index: 120;"
+		class="col-md-3">
+                <div id="info-switch-parent" class="panel panel-default col-d-6" style="display: none; backgroun:silver; position: absolute; z-index: 120;">
 			<div class="panel-heading"><h3 class="panel-title"
 			id="info-switch-title"></h3></div>
 			<div class="panel-body">
@@ -151,7 +153,7 @@
 		    </div>
                 </div>
 		</div>
-	    <div id="aboutBox" class="panel panel-default" style="display: none; position: fixed; z-index: 100;">
+	    <div id="aboutBox" class="panel panel-default" style="display: none; position: absolute; z-index: 100;">
 	    <div class="panel-heading"><h3 class="panel-title">Welcome to NMS
 	    <button type="button" class="close" aria-labe="Close" onclick="document.getElementById('aboutBox').style.display = 'none';" style="float: right;"><span aria-hidden="true">&times;</span></button></h3></div>
 	    <div class="panel-body">
@@ -214,10 +216,10 @@
 	    </div>
 
 	    </div>
-	    <div id="debugTimers" class="panel panel-default" style="display: none; position: fixed; z-index: 100;">
+	    <div id="debugTimers" class="panel panel-default" style="display: none; position: absolute; z-index: 100;">
 	    <div class="panel-heading"><h1 class="panel-title">Debug
 	    timers (e.g.: Break stuff! FAST!)
-	    <button type="button" class="close" aria-labe="Close" onclick="document.getElementById('debugTimers').style.display = 'none';" style="float: right;"><span aria-hidden="true">&times;</span></button></h3></div>
+	    <button type="button" class="close" aria-labe="Close" onclick="document.getElementById('debugTimers').style.display = 'none';" style="float: right;"><span aria-hidden="true">&times;</span></button></h1></div>
 	    <div id="timerTableTop" class="panel-body">
 	    <p>These are internal timers for the NMS frontend. They are
 	    provided mainly to debug the frontend. Setting AJAX-triggering
@@ -226,13 +228,45 @@
 	    <table id="timerTable"> </table>
 	    </div>
 	    </div>
+	    <div id="layerVisibility" class="panel panel-default" style="display: none; position: absolute; z-index: 100;">
+	    <div class="panel-heading"><h1 class="panel-title">Set layer visibility
+	    <button type="button" class="close" aria-labe="Close" onclick="document.getElementById('layerVisibility').style.display = 'none';" style="float: right;"><span aria-hidden="true">&times;</span></button></h1></div>
+	    <div class="panel-body">
+	    <table class="table">
+	    <tr><td>Background</td><td>
+	    	<button onclick='hideLayer("bgCanvas");'>Hide</button>
+	    	<button onclick='showLayer("bgCanvas");'>Show</button>
+	    </td></tr>
+	    <tr><td>Linknets</td><td>
+	    	<button onclick='hideLayer("linkCanvas");'>Hide</button>
+	    	<button onclick='showLayer("linkCanvas");'>Show</button>
+	    </td></tr>
+	    <tr><td>Blur</td><td>
+	    	<button onclick='hideLayer("blurCanvas");'>Hide</button>
+	    	<button onclick='showLayer("blurCanvas");'>Show</button>
+	    </td></tr>
+	    <tr><td>Switches</td><td>
+	    	<button onclick='hideLayer("switchCanvas");'>Hide</button>
+	    	<button onclick='showLayer("switchCanvas");'>Show</button>
+		</td></tr>
+		<tr><td>Text</td><td>
+	    	<button onclick='hideLayer("textCanvas");'>Hide</button>
+	    	<button onclick='showLayer("textCanvas");'>Show</button>
+		</td></tr>
+		<tr><td>Top</td><td>
+	    	<button onclick='hideLayer("topCanvas");'>Hide</button>
+	    	<button onclick='showLayer("topCanvas");'>Show</button>
+		</td></tr>
+		</table>
+	    </div>
+	    </div>
 
-<canvas id="bgCanvas" width="1920" height="1032" style="position: fixed; z-index: 1;"> </canvas>
-<canvas id="linkCanvas" width="1920" height="1032" style="position: fixed; z-index: 10;"> </canvas>
-<canvas id="blurCanvas" width="1920" height="1032" style="position: fixed; z-index: 20;"> </canvas>
-<canvas id="switchCanvas" width="1920" height="1032" style="position: fixed; z-index: 30;"> </canvas>
-<canvas id="textCanvas" width="1920" height="1032" style="position: fixed; z-index: 40;"> </canvas>
-<canvas id="topCanvas" width="1920" height="1032" style="position: fixed; z-index: 50; cursor: pointer;" onclick="canvasClick(event)">
+<canvas id="bgCanvas" width="1920" height="1032" style="position: absolute; z-index: 1;"> </canvas>
+<canvas id="linkCanvas" width="1920" height="1032" style="position: absolute; z-index: 10;"> </canvas>
+<canvas id="blurCanvas" width="1920" height="1032" style="position: absolute; z-index: 20;"> </canvas>
+<canvas id="switchCanvas" width="1920" height="1032" style="position: absolute; z-index: 30;"> </canvas>
+<canvas id="textCanvas" width="1920" height="1032" style="position: absolute; z-index: 40;"> </canvas>
+<canvas id="topCanvas" width="1920" height="1032" style="position: absolute; z-index: 50; cursor: pointer;" onclick="canvasClick(event)">
 </canvas>
 
 <div style="display:none;"><img id="source" src="img/tg15-salkart-full.png" ></div>

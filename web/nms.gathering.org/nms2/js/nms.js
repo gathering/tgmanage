@@ -379,14 +379,14 @@ function switchInfo(x)
 		}
 
 		tr = document.createElement("tr"); td1 = document.createElement("td"); td2 = document.createElement("td");
-		td1.innerHTML = "Uplink speed (out , port 44,45,46,47)";
+		td1.innerHTML = "Uplink speed (out , port 44-47)";
 		td2.innerHTML = byteCount(8 * speed) + "b/s";
 		tr.appendChild(td1); tr.appendChild(td2); switchele.appendChild(tr);
 
 		tr = document.createElement("tr"); td1 = document.createElement("td"); td2 = document.createElement("td");
 		td1['data-toggle'] = "popover";
 		td1.title = "Port 44, 45, 46 and 47 are used as uplinks.";
-		td1.innerHTML = "Uplink speed (in , port 44,45,46,47)";
+		td1.innerHTML = "Uplink speed (in , port 44-47)";
 		td2.innerHTML = byteCount(8 * speed2) + "b/s";
 		tr.appendChild(td1); tr.appendChild(td2); switchele.appendChild(tr);
 
@@ -1228,4 +1228,14 @@ function showTimerDebug() {
 	}
 	tableTop.appendChild(table);
 	document.getElementById('debugTimers').style.display = 'block'; 
+}
+
+function hideLayer(layer) {
+	var l = document.getElementById(layer);
+	l.style.display = "none";
+}
+
+function showLayer(layer) {
+	var l = document.getElementById(layer);
+	l.style.display = "";
 }
