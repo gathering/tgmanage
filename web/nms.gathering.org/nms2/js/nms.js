@@ -467,14 +467,14 @@ function switchInfo(x)
 		comments.border = "1";
 		comments.className = "table col-md-6";
 		var cap = document.createElement("caption");
-		cap.innerText = "Comments";
+		cap.textContent = "Comments";
 		comments.appendChild(cap);
 		
 		tr = document.createElement("tr"); td1 = document.createElement("th"); td2 = document.createElement("th");
 		td3 = document.createElement("th");
-		td1.innerText = "Time";
-		td2.innerText = "User";
-		td3.innerText = "Comment";
+		td1.textContent = "Time";
+		td2.textContent = "User";
+		td3.textContent = "Comment";
 		tr.appendChild(td1); tr.appendChild(td2); tr.appendChild(td3); comments.appendChild(tr);
 		var has_comment = false;
 		for (var c in sw["comments"]) {
@@ -483,9 +483,9 @@ function switchInfo(x)
 			if (comment["state"] == "active" || comment["state"] == "persist") {
 				tr = document.createElement("tr"); td1 = document.createElement("td"); td2 = document.createElement("td");
 				td3 = document.createElement("td");
-				td1.innerText = epochToString(comment["time"]) + " ";
-				td2.innerText = comment["username"] + " ";
-				td3.innerText = comment['comment'];
+				td1.textContent = epochToString(comment["time"]) + " ";
+				td2.textContent = comment["username"] + " ";
+				td3.textContent = comment['comment'];
 				tr.appendChild(td1); tr.appendChild(td2); tr.appendChild(td3); comments.appendChild(tr);
 			}
 		}
