@@ -98,8 +98,9 @@
 
         <div class="row-fluid">
             <div class="span12">
-	    	<div id="aboutData" class="panel panel-default"
+	    <div id="aboutData" class="col-md-4"
 		style="position: absolute; display:none; z-index: 130;">
+	    	<div id="abotData" class="panel panel-default">
 		<div class="panel-heading"><h3 class="panel-title">About
 		the TG15 data
 		<button type="button" class="close" aria-label="Close" onclick="document.getElementById('aboutData').style.display = 'none';" style="float: right"><span
@@ -132,6 +133,7 @@
 		</div>
 
 		</div>
+		</div>
 	    	<div id="nowPickerBox" class="panel panel-default" style="position: absolute; display:none; z-index: 130;" >	
 			<div class="panel-heading"><h3
 			class="panel-title">Time travel</h3></div>
@@ -150,7 +152,9 @@
 		    </div>
                 </div>
 		</div>
-	    <div id="aboutBox" class="panel panel-default" style="display: none; position: absolute; z-index: 100;">
+	    <div id="aboutBox" class="col-md-4" style="display: none;
+	    position: absolute; z-index: 100;">
+	    <div id="abotBox" class="panel panel-default">
 	    <div class="panel-heading"><h3 class="panel-title">Welcome to NMS
 	    <button type="button" class="close" aria-labe="Close" onclick="document.getElementById('aboutBox').style.display = 'none';" style="float: right;"><span aria-hidden="true">&times;</span></button></h3></div>
 	    <div class="panel-body">
@@ -158,18 +162,17 @@
 	    <h3>Cool stuff:</h3>
 	    <ul>
 	    <li>Click a switch for more info</li>
-	    <li>Rewind: You can check out state at a specific time or replay from the beginning of the event</li>
-	    <li>Night mode, now with blur.</li>
+	    <li>Rewind: You can check out state at a specific time or replay from the beginning of the event. Only works for data where we keep time-series (so not for comments)</li>
+	    <li>Night mode, now with blur. Optional disco-mode (that's
+	    mainly for testing, though).</li>
 	    <li>Auto-scaling the viewport/canvas</li>
 	    <li>Total client speed (up right)</li>
 	    <li>Generic(-ish) map handlers: provide a name, init-function
 	    and an update-function and the nms lib does the rest as far as
 	    integration goes.</li>
-	    <li>An about-page that's full of bullet-points!</li>
 	    </ul>
 	    <h3>Todo list front end:</h3>
 	    <ul>
-	    <li>Fix scrolling.</li>
 	    <li>Polish time travel UI (Allow playing from a given time at a given speed, play/pause buttons, etc)</li>
 	    <li>Toggle auto-scale on/off</li>
 	    <li>Clean up various global variables</li>
@@ -181,13 +184,11 @@
 	    updates is overkill for regular operation, but needed for time
 	    travel)</li>
 	    <li>More info on switches: Port state, possibly link time
-	    trends)</li>
+	    trends</li>
 	    <li>Moving switches around (like ping.html + edit)</li>
 	    <li>Split nms.js into multiple components to unclutter the
 	    code</li>
-	    <li>Fix up comment-stuff (specially entry). Add
-	    "active"/"inactive" state to toggle the relevancy of a
-	    comment.</li>
+	    <li>Comments: Fix UTF8 garbligash caused by $dbh-&gt;quote()</li>
 	    <li>More.</li>
 	    </ul>
 	    <h3>Todo for backend:</h3>
@@ -212,6 +213,7 @@
 	    </ul>
 	    </div>
 
+	    </div>
 	    </div>
 	    <div id="debugTimers" class="panel panel-default" style="display: none; position: absolute; z-index: 100;">
 	    <div class="panel-heading"><h1 class="panel-title">Debug
