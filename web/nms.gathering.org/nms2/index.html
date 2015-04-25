@@ -21,91 +21,108 @@
     <!--[if lt IE 9]>
       <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
       <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
-    <![endif]-->
-    <style type="text/css">
-    canvas {
-	    -webkit-touch-callout: none;
-	    -webkit-user-select: none;
-	    -khtml-user-select: none;
-	    -moz-user-select: none;
-	    -ms-user-select: none;
-	    user-select: none;
-            outline: none;
-	    -webkit-tap-highlight-color: rgba(255, 255, 255, 0); /* mobile webkit */
-    }   
-    </style>
+      <![endif]-->
+      <style type="text/css">
+	canvas {
+	  -webkit-touch-callout: none;
+	  -webkit-user-select: none;
+	  -khtml-user-select: none;
+	  -moz-user-select: none;
+	  -ms-user-select: none;
+	  user-select: none;
+	  outline: none;
+	  -webkit-tap-highlight-color: rgba(255, 255, 255, 0); /* mobile webkit */
+	}   
+      </style>
   </head>
 
-<body id="body">
+  <body id="body">
     <nav class="navbar navbar-default navbar-static-top">
       <div class="container-fluid">
-        <div class="navbar-header">
-          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
-            <span class="sr-only">Toggle navigation</span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </button>
-          <a class="navbar-brand" href="#">NMS</a>
-        </div>
-        <div id="navbar" class="navbar-collapse collapse">
-          <ul class="nav navbar-nav">
-            <li class="dropdown">
-              <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Map mode<span class="caret"></span></a>
-              <ul class="dropdown-menu" role="menu">
-                                <li><a href="#ping" onclick="setUpdater(handler_ping)">Ping map</a></li>
-                                <li><a href="#uplink" onclick="setUpdater(handler_uplinks)">Uplink map</a></li>
-                                <li><a href="#temp" onclick="setUpdater(handler_temp)">Temperature map</a></li>
-                                <li><a href="#traffic" onclick="setUpdater(handler_traffic)">Traffic map</a></li>
-                                <li><a href="#comment" onclick="setUpdater(handler_comment)">Comment spotter</a></li>
-                                <li><a href="#disco" onclick="setUpdater(handler_disco)">DISCO</a></li>
-				<li class="divider"> </li>
-                                <li><a href="#" onclick="toggleNightMode()" title="Add 'nightMode' anywhere in the url to auto-enable">Toggle Night Mode</a></li>
-				<li><a href="#" onclick='showLayer("layerVisibility");'>Set layer visibility</a></li>
-				<li class="divider"> </li>
-				<li><a href="#" onclick="document.getElementById('nowPickerBox').style.display = 'block';">Travel in time</a></li>
-				<li><a href="#" onclick="startReplay();" title="Replay from opening 30 minutes per second">Replay TG</a></li>
-				<li><a href="#" onclick="document.getElementById('aboutData').style.display = 'block';">About TG15 data</a></li>
-				<li class="divider"> </li>
-                <li class="dropdown-header">Map scale</li>
-				<li><input type="range" id="scaler" name="points" min="0.2" max="3" step="0.01" onchange="scaleChange()" /></li>
-				<li><a href="#">Scale: <div id="scaler-text"></div></a></li>
-				<li class="divider"> </li>
-	    			<li><a onclick="document.getElementById('aboutBox').style.display = 'block'; hideSwitch();" style="cursor: pointer;" >About</a></li>
-	    			<li><a onclick="showTimerDebug(); hideSwitch();" style="cursor: pointer;" >Debug timers</a></li>
-              </ul>
-	      </li>
-                    <li><p id="updater_name" class="navbar-text"></p></li>
-                    <div class="navbar-form navbar-left">
-		    <div class="form-group">
-		    <button class="btn btn-default" id="legend-1"></button>
-		    <button class="btn btn-default" id="legend-2"></button>
-		    <button class="btn btn-default" id="legend-3"></button>
-		    <button class="btn btn-default" id="legend-4"></button>
-		    <button class="btn btn-default" id="legend-5"></button>
-		    </div>
-		    </div>
-            </li>
-          </ul>
-          <ul class="nav navbar-nav navbar-right">
-            <li><p id="speed" class="navbar-text" title="Client port speed / Total port speed"></p></li>
-          </ul>
-        </div><!--/.nav-collapse -->
+	<div class="navbar-header">
+	  <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+	    <span class="sr-only">Toggle navigation</span>
+	    <span class="icon-bar"></span>
+	    <span class="icon-bar"></span>
+	    <span class="icon-bar"></span>
+	  </button>
+	  <a class="navbar-brand" onclick="toggleLayer('aboutBox'); //document.getElementById('aboutBox').style.display = 'block'; hideSwitch();" style="cursor: pointer;" >NMS</a>
+	</div>
+	<div id="navbar" class="navbar-collapse collapse">
+	  <ul class="nav navbar-nav">
+	    <li class="dropdown">
+	      <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Map mode
+		<span class="caret"></span>
+	      </a>
+	      <ul class="dropdown-menu" role="menu">
+		<li><a href="#ping" onclick="setUpdater(handler_ping)">Ping map</a></li>
+		<li><a href="#uplink" onclick="setUpdater(handler_uplinks)">Uplink map</a></li>
+		<li><a href="#temp" onclick="setUpdater(handler_temp)">Temperature map</a></li>
+		<li><a href="#traffic" onclick="setUpdater(handler_traffic)">Traffic map</a></li>
+		<li><a href="#comment" onclick="setUpdater(handler_comment)">Comment spotter</a></li>
+		<li><a href="#disco" onclick="setUpdater(handler_disco)">DISCO</a></li>
+		<li class="divider"> </li>
+		<li><a href="#" onclick="document.getElementById('nowPickerBox').style.display = 'block';">Travel in time</a></li>
+		<li><a href="#" onclick="startReplay();" title="Replay from opening 30 minutes per second">Replay TG</a></li>
+		<li class="divider"> </li>
+		<li><a onclick="showTimerDebug(); hideSwitch();" style="cursor: pointer;" >Debug timers</a></li>
+	      </ul>
+	    </li>
+	    <li class="dropdown">
+	      <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">View<span class="caret"></span></a>
+	      <ul class="dropdown-menu" role="menu">
+		<li><a href="#" onclick="toggleNightMode()">Toggle Night Mode</a></li>
+		<li><a href="#" onclick="showBlurBox()">Tweak Night Mode blur</a></li>
+		<li><a href="#" onclick='showLayer("layerVisibility");'>Set layer visibility</a></li>
+		<li class="divider"> </li>
+		<li class="dropdown-header">Map scale</li>
+		<li><a href="#"><label id="scaler-text" for='scaler'></label><input type="range" id="scaler" name="points" min="0.2" max="3" step="0.01" onchange="scaleChange()" /></a></li>
+	      </ul>
+	    </li>
+	    <li><p id="updater_name" class="navbar-text"></p></li>
+	    <div class="navbar-form navbar-left">
+	      <div class="form-group">
+		<button class="btn btn-default" id="legend-1"></button>
+		<button class="btn btn-default" id="legend-2"></button>
+		<button class="btn btn-default" id="legend-3"></button>
+		<button class="btn btn-default" id="legend-4"></button>
+		<button class="btn btn-default" id="legend-5"></button>
+	      </div>
+	    </div>
+	    </li>
+	  </ul>
+	  <ul class="nav navbar-nav navbar-right">
+	    <li><p id="speed" class="navbar-text" title="Client port speed / Total port speed"></p></li>
+	    <li class="dropdown">
+	      <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Help
+		<span class="caret"></span>
+	      </a>
+	      <ul class="dropdown-menu" role="menu">
+		<li><a href="#" onclick="toggleLayer('aboutData');">About TG15 data</a></li>
+	  	<li><a href="#" onclick="toggleLayer('aboutBox');" >About NMS</a></li>
+	  	<li><a href="#" onclick="toggleLayer('aboutPerformance');" >About Performance</a></li>
+	  	<li><a href="#" onclick="toggleLayer('aboutKeybindings');" >Keyboard Shortcuts</a></li>
+	      </ul>
+	    </li>
+	  </ul>
+	</div><!--/.nav-collapse -->
       </div>
     </nav>
 
     <div class="container-fluid">
 
-        <div class="row-fluid">
-            <div class="span12">
-	    <div id="aboutData" class="col-md-4"
-		style="position: absolute; display:none; z-index: 130;">
-	    	<div id="abotData" class="panel panel-default">
-		<div class="panel-heading"><h3 class="panel-title">About
-		the TG15 data
-		<button type="button" class="close" aria-label="Close" onclick="document.getElementById('aboutData').style.display = 'none';" style="float: right"><span
-		aria-hidden="true">&times;</span></button></h3></div>
-		<div class="panel-body">
+      <div class="row-fluid">
+	<div class="span12">
+	  <div id="aboutData" class="col-md-4" style="position: absolute; display:none; z-index: 130;">
+	    <div id="abotData" class="panel panel-default">
+	      <div class="panel-heading">
+		<h3 class="panel-title">About the TG15 data
+		  <button type="button" class="close" aria-label="Close" onclick="document.getElementById('aboutData').style.display = 'none';" style="float: right">
+		    <span aria-hidden="true">&times;</span>
+		  </button>
+		</h3>
+	      </div>
+	      <div class="panel-body">
 		<p>The data you see from The Gathering 2015 will seem
 		"broken up". This is not because we don't have data from
 		the first day, but because the backend was re-written on
@@ -130,147 +147,351 @@
 		<p>It is also worth mentioning that things like switch
 		positions are not logged historically, so you see the final
 		position on the map.</p>
-		</div>
-
-		</div>
-		</div>
-	    	<div id="nowPickerBox" class="panel panel-default" style="position: absolute; display:none; z-index: 130;" >	
-			<div class="panel-heading"><h3
-			class="panel-title">Time travel</h3></div>
-			<div class="panel-body">
-		      <input type="text" class="form-control" placeholder="YYYY-MM-DD hh:mm:ss" id="nowPicker" value="" />
-		      <button class="btn btn-default" onclick="changeNow();">Travel</button>
-		      <button class="btn" onclick="document.getElementById('nowPickerBox').style.display = 'none';">Cancel</button>
-		      </div>
-	        </div>
-		<div style="position: absolute; z-index: 120;" class="col-md-3">
-                <div id="info-switch-parent" class="panel panel-default col-d-6" style="display: none; backgroun:silver; position: absolute; z-index: 120;">
-			<div class="panel-heading"><h3 class="panel-title"
-			id="info-switch-title"></h3></div>
-			<div id="info-switch-panel-body">
-                    <table class="table" id="info-switch-table"></table>
-		    </div>
-                </div>
-		</div>
-	    <div id="aboutBox" class="col-md-4" style="display: none;
-	    position: absolute; z-index: 100;">
-	    <div id="abotBox" class="panel panel-default">
-	    <div class="panel-heading"><h3 class="panel-title">Welcome to NMS
-	    <button type="button" class="close" aria-labe="Close" onclick="document.getElementById('aboutBox').style.display = 'none';" style="float: right;"><span aria-hidden="true">&times;</span></button></h3></div>
+	      </div>
+	    </div>
+	  </div>
+	  <div id="aboutPerformance" class="col-md-4" style="position: absolute; display:none; z-index: 130;">
+	    <div class="panel panel-default">
+	      <div class="panel-heading">
+		<h3 class="panel-title">Performance
+		  <button type="button" class="close" aria-label="Close" onclick="document.getElementById('aboutPerformance').style.display = 'none';" style="float: right">
+		    <span aria-hidden="true">&times;</span>
+		  </button>
+		</h3>
+	      </div>
+	      <table class="table">
+		<tr>
+		  <td>Outstanding AJAX requests</td>
+		  <td id="outstandingAJAX"></td>
+		</tr>
+		<tr>
+		  <td>Overflowed AJAX requests</td>
+		  <td id="overflowAJAX"></td>
+		</tr>
+	      </table>
+	      <div class="panel-body">
+		<p>NMS performance is surprisingly complex. It's split into
+		several parts and dealt with differently.</p>
+		<p>Poller performance is a matter of efficiently collecting
+		data and is mostly handled in the Perl code (and ensuring
+		we use sensible database schemas).</p>
+		<p>Backend performance for the GUI is mostly about not
+		killing the database server. We do NOT try to protect
+		against malicious clients directly, since this is a
+		management system not public-facing, but Varnish is used to
+		cache requests. To be able to do that properly, we need use
+		absolute time when reviewing past events (so "2015-04-02
+		17:30:00", not "2 hours ago"). We've also tried to minimize
+		the stupidity in the queries. There's still work to be done
+		here, though, as we need to split up a few large backend
+		requests (port-state.pl).</p>
+		<p>Front-end performance is mostly about drawing things
+		sensibly and not completely bombing the memory usage. And
+		about gracefully handling slow backends  This will affect
+		you. For example, if you are reviewing past events and the
+		DB is struggling, we'll simply skip a backend request if we
+		have too many outstanding requests, that means you may jump
+		from "17:00" to "18:30" instead of going through
+		"17:30" and "18:00" too. This is working as intended. It
+		also means that you can happily spam the forward/backward
+		keyboard bindings to jump 18 hours forward: You'll overflow
+		the extra AJAX requests for individual requests, but you'll
+		land at the right time when you let go. But there could be
+		a 1 second delay (or more if the backend really struggles)
+		since you'll have to rely on the periodic backend requests
+		instead of the explicit ones triggered on hitting a
+		button.</p>
+		<p>Note that the counters on top are updated on a timer,
+		but this timer is set up at the same time as everything
+		else, which means that it's likely to update at the same
+		time as we fire off AJAX requests, so the 'outstanding ajax
+		requests' counter might either show almost constantly 3 or
+		0 depending on what timer happens to fire first. This does
+		NOT mean that NMS has 3 requests all the time, just that
+		we're checking right after we fire off AJAX requests every
+		time.</p>
+		<p>NMS also tries to handle drawing OK, which is why things
+		are split into different HTML5 canvases. Blur and text are
+		particularly expensive, but there's no reason to re-paint
+		that all the time, etc).</p>
+		<p>The basic performance experiments are done on TG15 data
+		using a laptop and a VM with 6GB of memory, so it should
+		hold up quite well on "proper" hardware.</p>
+	      </div>
+	    </div>
+	  </div>
+	  <div id="aboutKeybindings" class="col-md-4" style="position: absolute; display:none; z-index: 130;">
+	    <div class="panel panel-default">
+	      <div class="panel-heading">
+		<h3 class="panel-title">Keyboard Shortcuts
+		  <button type="button" class="close" aria-label="Close" onclick="document.getElementById('aboutKeybindings').style.display = 'none';" style="float: right">
+		    <span aria-hidden="true">&times;</span>
+		  </button>
+		</h3>
+	      </div>
+	      <table class="table table-condensed">
+		<tr>
+		  <th>Key</th>
+		  <th>Description</th>
+		</tr>
+		<tr>
+		  <td>?</td>
+		  <td>Toggle navigation bar</td>
+		</tr>
+		<tr>
+		  <td>n</td>
+		  <td>Toggle night mode</td>
+		</tr>
+		<tr>
+		  <td>1</td>
+		  <td>View Ping map</td>
+		</tr>
+		<tr>
+		  <td>2</td>
+		  <td>View uplink map</td>
+		</tr>
+		<tr>
+		  <td>3</td>
+		  <td>View temperature map</td>
+		</tr>
+		<tr>
+		  <td>4</td>
+		  <td>View uplink traffic map</td>
+		</tr>
+		<tr>
+		  <td>5</td>
+		  <td>View comment spotter map</td>
+		</tr>
+		<tr>
+		  <td>6</td>
+		  <td>View Disco map</td>
+		</tr>
+		<tr>
+		  <td>h</td>
+		  <td>Step 1 hour back in time</td>
+		</tr>
+		<tr>
+		  <td>j</td>
+		  <td>Step 5 minutes back in time</td>
+		</tr>
+		<tr>
+		  <td>k</td>
+		  <td>Step 5 minutes forward in time</td>
+		</tr>
+		<tr>
+		  <td>l</td>
+		  <td>Step 1 hour forward in time</td>
+		</tr>
+		<tr>
+		  <td>p</td>
+		  <td>Toggle playback (1 hour per second)</td>
+		</tr>
+		<tr>
+		  <td>r</td>
+		  <td>Return to real time</td>
+		</tr>
+	      </table>
+	    </div>
+	  </div>
+	  <div id="nowPickerBox" class="panel panel-default" style="position: absolute; display:none; z-index: 130;" >	
+	    <div class="panel-heading">
+	      <h3 class="panel-title">Time travel</h3>
+	    </div>
 	    <div class="panel-body">
-	    
-	    <h3>Cool stuff:</h3>
-	    <ul>
-	    <li>Click a switch for more info</li>
-	    <li>Rewind: You can check out state at a specific time or replay from the beginning of the event. Only works for data where we keep time-series (so not for comments)</li>
-	    <li>Night mode, now with blur. Optional disco-mode (that's
-	    mainly for testing, though).</li>
-	    <li>Auto-scaling the viewport/canvas</li>
-	    <li>Total client speed (up right)</li>
-	    <li>Generic(-ish) map handlers: provide a name, init-function
-	    and an update-function and the nms lib does the rest as far as
-	    integration goes.</li>
-	    </ul>
-	    <h3>Todo list front end:</h3>
-	    <ul>
-	    <li>Polish time travel UI (Allow playing from a given time at a given speed, play/pause buttons, etc)</li>
-	    <li>Toggle auto-scale on/off</li>
-	    <li>Clean up various global variables</li>
-	    <li>Split blur into separate canvas (canvas is there, it's just
-	    not used)</li>
-	    <li>Add DHCP map</li>
-	    <li>Add magic map (combined map of sorts)</li>
-	    <li>Adjust updatePorts() frequency based on necessity (1sec
-	    updates is overkill for regular operation, but needed for time
-	    travel)</li>
-	    <li>More info on switches: Port state, possibly link time
-	    trends</li>
-	    <li>Moving switches around (like ping.html + edit)</li>
-	    <li>Split nms.js into multiple components to unclutter the
-	    code</li>
-	    <li>Comments: Fix UTF8 garbligash caused by $dbh-&gt;quote()</li>
-	    <li>More.</li>
-	    </ul>
-	    <h3>Todo for backend:</h3>
-	    <ul>
-	    <li>IPv6 support</li>
-	    <li>Close SQL injections (IT'S WIDE OPEN BECAUSE WHY NOT THAT'S NEVER A PROBLEM)</li>
-	    <li>Split port-state.pl into multiple appropriate pieces. Right
-	    it mixes heavy time-critical data with less time-critical and
-	    cheap computation.</li>
-	    <li>Consider time log of DHCP (right now it just stores the
-	    most recent timestamp, making time travel impossible)</li>
-	    <li>Fix SNMP-fetcher so it gets ifXTable and at least ifOperStatus from ifTable. Don't request the entire ifXTable if we can avoid it. Possibly other tweaks.</li>
-	    <li>Support for adding switches through an API, not just pure SQL.</li>
-	    <li>Integrate with FAP</li>
-	    <li>Clean up old interfaces</li>
-	    <li>Review various agents/tools</li>
-	    <li>Improve cache headers</li>
-	    <li>Cache invalidation of comments?</li>
-	    <li>Re-test the SQL schema. It's been modified and works fine
-	    on my laptop, but I need to dump it, commit it and test it.</li>
-	    <li>Munin plugin for ports.</li>
-	    </ul>
+	      <input type="text" class="form-control" placeholder="YYYY-MM-DD hh:mm:ss" id="nowPicker" value="" />
+	      <button class="btn btn-default" onclick="changeNow();">Travel</button>
+	      <button class="btn" onclick="document.getElementById('nowPickerBox').style.display = 'none';">Cancel</button>
 	    </div>
-
+	  </div>
+	  <div style="position: absolute; z-index: 120;" class="col-md-4">
+	    <div id="info-switch-parent" class="panel panel-default col-d-6" style="display: none; backgroun:silver; position: absolute; z-index: 120;">
+	      <div class="panel-heading">
+		<h3 class="panel-title" id="info-switch-title"></h3>
+	      </div>
+	      <div id="info-switch-panel-body">
+		<table class="table" id="info-switch-table"></table>
+	      </div>
 	    </div>
+	  </div>
+	  <div id="aboutBox" class="col-md-4" style="display: none; position: absolute; z-index: 100;">
+	    <div id="abotBox" class="panel panel-default">
+	      <div class="panel-heading">
+		<h3 class="panel-title">Welcome to NMS
+		  <button type="button" class="close" aria-labe="Close" onclick="document.getElementById('aboutBox').style.display = 'none';" style="float: right;">
+		    <span aria-hidden="true">&times;</span>
+		  </button>
+		</h3>
+	      </div>
+	      <div class="panel-body">
+		<h3>Cool stuff:</h3>
+		<ul>
+		  <li>Click a switch for more info</li>
+		  <li>Rewind: You can check out state at a specific time or
+		    replay from the beginning of the event. Only works for
+		    data where we keep time-series (so not for
+		  comments)</li>
+		  <li>Press '?' to toggle the menu.</li>
+		  <li>Auto-scaling the viewport/canvas</li>
+		  <li>Total client speed (up right)</li>
+		  <li>Generic(-ish) map handlers: provide a name, init-function
+		    and an update-function and the nms lib does the rest as far as
+		    integration goes.</li>
+		</ul>
+		<h3>Todo list front end:</h3>
+		<ul>
+		  <li>Polish time travel UI (Allow playing from a given time at a given speed, play/pause buttons, etc)</li>
+		  <li>Better "popup" boxes: It's growing out of control.</li>
+		  <li>Toggle auto-scale on/off</li>
+		  <li>Clean up various global variables</li>
+		  <li>Add DHCP map</li>
+		  <li>Adjust updatePorts() frequency based on necessity (1sec
+		    updates is overkill for regular operation, but needed for time
+		    travel)</li>
+		  <li>More info on switches: Port state, possibly link time
+		    trends</li>
+		  <li>Moving switches around (like ping.html + edit)</li>
+		  <li>Split nms.js into multiple components to unclutter the
+		    code</li>
+		  <li>Comments: Fix UTF8 garbligash caused by $dbh-&gt;quote()</li>
+		  <li>Comments: Fix feedback, possibly update the switch-box
+		    too, when comments change.</li>
+		</ul>
+		<h3>Todo for backend:</h3>
+		<ul>
+		  <li>IPv6 support</li>
+		  <li>Provide public API's</li>
+		  <li>Close SQL injections (IT'S WIDE OPEN BECAUSE WHY NOT THAT'S NEVER A PROBLEM)</li>
+		  <li>Split port-state.pl into multiple appropriate pieces. Right
+		    it mixes heavy time-critical data with less time-critical and
+		    cheap computation.</li>
+		  <li>Rip comments out of port-state.pl completely so it's not
+		    bound by the same cache issues and can be reliably
+		    refreshed.</li>
+		  <li>Consider time log of DHCP (right now it just stores the
+		    most recent timestamp, making time travel impossible)</li>
+		  <li>Fix SNMP-fetcher so it gets ifXTable and at least
+		    ifOperStatus from ifTable. Don't request the entire
+		    ifXTable if we can avoid it. Possibly other
+		  tweaks.</li>
+		  <li>Support for adding switches through an API, not just pure SQL.</li>
+		  <li>Integrate with FAP</li>
+		  <li>Clean up old interfaces</li>
+		  <li>Review various agents/tools</li>
+		  <li>Improve cache headers</li>
+		  <li>Cache invalidation of comments?</li>
+		  <li>Re-test the SQL schema. It's been modified and works fine
+		    on my laptop, but I need to dump it, commit it and test it.</li>
+		  <li>Munin plugin for ports.</li>
+		</ul>
+	      </div>
 	    </div>
-	    <div id="debugTimers" class="panel panel-default" style="display: none; position: absolute; z-index: 100;">
-	    <div class="panel-heading"><h1 class="panel-title">Debug
-	    timers (e.g.: Break stuff! FAST!)
-	    <button type="button" class="close" aria-labe="Close" onclick="document.getElementById('debugTimers').style.display = 'none';" style="float: right;"><span aria-hidden="true">&times;</span></button></h1></div>
-	    <div id="timerTableTop" class="panel-body">
+	  </div>
+	  <div id="blurManic" class="panel panel-default" style="display: none; position: absolute; z-index: 100;">
+	    <div class="panel-heading">
+	      <h1 class="panel-title">Blur tweaks
+		<button type="button" class="close" aria-labe="Close" onclick="document.getElementById('blurManic').style.display = 'none';" style="float: right;">
+		  <span aria-hidden="true">&times;</span>
+		</button>
+	      </h1>
+	    </div>
+	    <div class="panel-body">
+	      <div class="form">
+		<div class="form-group">
+		  <label for="shadowBlur">Blur strength</label>
+		  <input type="number" id="shadowBlur" class="form-control">
+		</div>
+		<div class="form-group">
+		  <label for="shadowColor">Blur color</label>
+		  <input type="color" id="shadowColor" class="form-control">
+		</div>
+		<button type="button" class="btn btn-default" onclick="applyBlur();">Apply</button>
+	      </div>
+	    </div>
+	  </div>
+	</div>
+	<div id="debugTimers" class="panel panel-default" style="display: none; position: absolute; z-index: 100;">
+	  <div class="panel-heading">
+	    <h1 class="panel-title">Debug timers (e.g.: Break stuff! FAST!)
+	      <button type="button" class="close" aria-labe="Close" onclick="document.getElementById('debugTimers').style.display = 'none';" style="float: right;">
+		<span aria-hidden="true">&times;</span>
+	      </button>
+	    </h1>
+	  </div>
+	  <div id="timerTableTop" class="panel-body">
 	    <p>These are internal timers for the NMS frontend. They are
 	    provided mainly to debug the frontend. Setting AJAX-triggering
 	    counters to ridiculous numbers is not advised (mainly because
 	    it causes server load).</p>
-	    <table id="timerTable"> </table>
-	    </div>
-	    </div>
-	    <div id="layerVisibility" class="panel panel-default" style="display: none; position: absolute; z-index: 100;">
-	    <div class="panel-heading"><h1 class="panel-title">Set layer visibility
-	    <button type="button" class="close" aria-labe="Close" onclick="document.getElementById('layerVisibility').style.display = 'none';" style="float: right;"><span aria-hidden="true">&times;</span></button></h1></div>
-	    <div class="panel-body">
+	  </div>
+	  <table id="timerTable"> </table>
+	</div>
+	<div id="layerVisibility" class="panel panel-default" style="display: none; position: absolute; z-index: 100;">
+	  <div class="panel-heading">
+	    <h1 class="panel-title">Set layer visibility
+	      <button type="button" class="close" aria-labe="Close" onclick="document.getElementById('layerVisibility').style.display = 'none';" style="float: right;">
+		<span aria-hidden="true">&times;</span>
+	      </button>
+	    </h1>
+	  </div>
+	  <div class="panel-body">
 	    <table id="visibilityTable" class="table">
-	    <tr><td>Background</td><td>
-	    	<button onclick='hideLayer("bgCanvas");'>Hide</button>
-	    	<button onclick='showLayer("bgCanvas");'>Show</button>
-	    </td></tr>
-	    <tr><td>Linknets</td><td>
-	    	<button onclick='hideLayer("linkCanvas");'>Hide</button>
-	    	<button onclick='showLayer("linkCanvas");'>Show</button>
-	    </td></tr>
-	    <tr><td>Blur</td><td>
-	    	<button onclick='hideLayer("blurCanvas");'>Hide</button>
-	    	<button onclick='showLayer("blurCanvas");'>Show</button>
-	    </td></tr>
-	    <tr><td>Switches</td><td>
-	    	<button onclick='hideLayer("switchCanvas");'>Hide</button>
-	    	<button onclick='showLayer("switchCanvas");'>Show</button>
-		</td></tr>
-		<tr><td>Text</td><td>
-	    	<button onclick='hideLayer("textCanvas");'>Hide</button>
-	    	<button onclick='showLayer("textCanvas");'>Show</button>
-		</td></tr>
-		<tr><td>Top</td><td>
-	    	<button onclick='hideLayer("topCanvas");'>Hide</button>
-	    	<button onclick='showLayer("topCanvas");'>Show</button>
-		</td></tr>
-		</table>
-	    </div>
-	    </div>
+	      <tr>
+		<td>Background</td>
+		<td>
+		  <button onclick='hideLayer("bgCanvas");'>Hide</button>
+		  <button onclick='showLayer("bgCanvas");'>Show</button>
+		</td>
+	      </tr>
+	      <tr>
+		<td>Linknets</td>
+		<td>
+		  <button onclick='hideLayer("linkCanvas");'>Hide</button>
+		  <button onclick='showLayer("linkCanvas");'>Show</button>
+		</td>
+	      </tr>
+	      <tr>
+		<td>Blur</td>
+		<td>
+		  <button onclick='hideLayer("blurCanvas");'>Hide</button>
+		  <button onclick='showLayer("blurCanvas");'>Show</button>
+		</td>
+	      </tr>
+	      <tr>
+		<td>Switches</td>
+		<td>
+		  <button onclick='hideLayer("switchCanvas");'>Hide</button>
+		  <button onclick='showLayer("switchCanvas");'>Show</button>
+		</td>
+	      </tr>
+	      <tr>
+		<td>Text</td>
+		<td>
+		  <button onclick='hideLayer("textCanvas");'>Hide</button>
+		  <button onclick='showLayer("textCanvas");'>Show</button>
+		</td>
+	      </tr>
+	      <tr>
+		<td>Timestamp</td>
+		<td>
+		  <button onclick='hideLayer("topCanvas");'>Hide</button>
+		  <button onclick='showLayer("topCanvas");'>Show</button>
+		</td>
+	      </tr>
+	    </table>
+	  </div>
+	</div>
 
-<canvas id="bgCanvas" width="1920" height="1032" style="position: absolute; z-index: 1;"> </canvas>
-<canvas id="linkCanvas" width="1920" height="1032" style="position: absolute; z-index: 10;"> </canvas>
-<canvas id="blurCanvas" width="1920" height="1032" style="position: absolute; z-index: 20;"> </canvas>
-<canvas id="switchCanvas" width="1920" height="1032" style="position: absolute; z-index: 30;"> </canvas>
-<canvas id="textCanvas" width="1920" height="1032" style="position: absolute; z-index: 40;"> </canvas>
-<canvas id="topCanvas" width="1920" height="1032" style="position: absolute; z-index: 50; cursor: pointer;" onclick="canvasClick(event)">
-</canvas>
+	<canvas id="bgCanvas" width="1920" height="1032" style="position: absolute; z-index: 1;"> </canvas>
+	<canvas id="linkCanvas" width="1920" height="1032" style="position: absolute; z-index: 10;"> </canvas>
+	<canvas id="blurCanvas" width="1920" height="1032" style="position: absolute; z-index: 20;"> </canvas>
+	<canvas id="switchCanvas" width="1920" height="1032" style="position: absolute; z-index: 30;"> </canvas>
+	<canvas id="textCanvas" width="1920" height="1032" style="position: absolute; z-index: 40;"> </canvas>
+	<canvas id="topCanvas" width="1920" height="1032" style="position: absolute; z-index: 50;"> </canvas>
+	<canvas id="inputCanvas" width="1920" height="1032" style="position: absolute; z-index: 60; cursor: pointer;" onclick="canvasClick(event)">
+	</canvas>
 
-<div style="display:none;"><img id="source" src="img/tg15-salkart-full.png" ></div>
-            </div>
-        </div>
+	<div style="display:none;"><img id="source" src="img/tg15-salkart-full.png" ></div>
+      </div>
     </div><!--/.fluid-container-->
     <script src="js/jquery.min.js" type="text/javascript"></script>
     <script src="js/bootstrap.min.js" type="text/javascript"></script>
@@ -278,7 +499,7 @@
     <script type="text/javascript" src="js/nms-color-util.js"></script>
     <script type="text/javascript" src="js/nms-map-handlers.js"></script>
     <script type="text/javascript">
-    initNMS();
+initNMS();
     </script>
-</body>
+  </body>
 </html>

@@ -1,11 +1,14 @@
 var nms = {
 	updater:undefined, // Active updater
+	update_time:0, // Client side timestamp for last update
 	switches_now:undefined, // Most recent data
 	switches_then:undefined, // 2 minutes old
 	speed:0, // Current aggregated speed
 	ping_data:undefined, // JSON data for ping history.
 	drawn:false, // Set to 'true' when switches are drawn
 	switch_showing:"", // Which switch we are displaying (if any).
+	repop_switch:false, // True if we need to repopulate the switch info when port state updates (e.g.: added comments);
+	repop_time:false, // Timestamp in case we get a cached result
 	nightMode:false, 
 	/*
 	 * Switch-specific variables. These are currently separate from
@@ -13,6 +16,8 @@ var nms = {
 	 * new data.
 	 */
 	nightBlur:{}, // Have we blurred this switch or not?
+	shadowBlur:10,
+	shadowColor:"#EEEEEE",
 	switch_color:{},  // Color for switch
 	linknet_color:{}, // color for linknet
 	textDrawn:{}, // Have we drawn text for this switch?
@@ -44,13 +49,39 @@ var nms = {
 	timers: {
 		replay:false,
 		ports:false,
-		ping:false,
-		map:false,
-		speed:false
+		ping:false
 	},
-	deleteComment:0
+	menuShowing:true,
+	/*
+	 * This is a list of nms[x] variables that we store in our
+	 * settings-cookie when altered and restore on load.
+	 */
+	settingsList:[
+		'shadowBlur',
+		'shadowColor',
+		'nightMode',
+		'menuShowing',
+		'layerVisibility'
+	],
+	layerVisibility:{},
+	keyBindings:{
+		'?':toggleMenu,
+		'n':toggleNightMode,
+		'1':setMapModeFromN,
+		'2':setMapModeFromN,
+		'3':setMapModeFromN,
+		'4':setMapModeFromN,
+		'5':setMapModeFromN,
+		'6':setMapModeFromN,
+		'h':moveTimeFromKey,
+		'j':moveTimeFromKey,
+		'k':moveTimeFromKey,
+		'l':moveTimeFromKey,
+		'p':moveTimeFromKey,
+		'r':moveTimeFromKey,
+		'default':keyDebug
+	}
 };
-
 
 /*
  * Returns a handler object.
@@ -84,6 +115,7 @@ function nmsTimer(handler, interval, name, description) {
 			this.start();
 	};
 }
+
 
 /*
  * Drawing primitives.
@@ -173,6 +205,9 @@ function initDrawing() {
 	dr['top'] = {};
 	dr['top']['c'] = document.getElementById("topCanvas");
 	dr['top']['ctx'] = dr['top']['c'].getContext('2d');
+	dr['input'] = {};
+	dr['input']['c'] = document.getElementById("inputCanvas");
+	dr['input']['ctx'] = dr['top']['c'].getContext('2d');
 }
 
 /*
@@ -196,6 +231,7 @@ function byteCount(bytes) {
 function toggleNightMode()
 {
 	setNightMode(!nms.nightMode);
+	saveSettings();
 }
 
 /*
@@ -226,7 +262,9 @@ function checkNow(now)
  */
 function stringToEpoch(t)
 {
-	var ret = new Date(Date.parse(t));
+	var foo = t.toString();
+	foo = foo.replace('T',' ');
+	var ret = new Date(Date.parse(foo));
 	return parseInt(parseInt(ret.valueOf()) / 1000);
 }
 
@@ -266,6 +304,7 @@ function epochToString(t)
  */
 function timeReplay()
 {
+	replayTime = stringToEpoch(nms.now);
 	if (replayTime >= tgEnd) {
 		nms.timers.replay.stop();
 		return;
@@ -289,7 +328,7 @@ function timeReplay()
 function startReplay() {
 	nms.timers.replay.stop();
 	resetColors();
-	replayTime = tgStart;
+	nms.now = epochToString(tgStart);
 	timeReplay();
 	nms.timers.replay.start();;
 }
@@ -314,6 +353,21 @@ function changeNow() {
 	}
 }
 
+function stepTime(n)
+{
+	var now;
+	nms.timers.replay.stop();
+	if (nms.now && nms.now != 0)
+		now = parseInt(stringToEpoch(nms.now));
+	else if (nms.switches_now)
+		now = parseInt(stringToEpoch(/^[^.]*/.exec(nms.switches_now.time)));
+	else
+		return;
+	newtime = parseInt(now) + parseInt(n);
+	nms.now = epochToString(parseInt(newtime));
+	updatePorts();
+}
+
 /*
  * Hide switch info-box
  */
@@ -335,7 +389,7 @@ function hideSwitch()
 /*
  * Display info on switch "x" in the info-box
  */
-function switchInfo(x)
+function showSwitch(x)
 {
 		var sw = nms.switches_now["switches"][x];
 		var swtop = document.getElementById("info-switch-parent");
@@ -345,13 +399,8 @@ function switchInfo(x)
 		var td1;
 		var td2;
 	
-		if (nms.switch_showing == x) {
-			hideSwitch();	
-			return;
-		} else {
-			hideSwitch();	
-			nms.switch_showing = x;
-		}
+		hideSwitch();	
+		nms.switch_showing = x;
 		document.getElementById("aboutBox").style.display = "none";
 		var switchele = document.createElement("table");
 		switchele.id = "info-switch-table";
@@ -490,16 +539,19 @@ function switchInfo(x)
 				if (comment["state"] == "active")
 					col = "danger";
 				else if (comment["state"] == "inactive")
-					col = "active";
+					col = false;
 				else
 					col = "info";
 				tr.className = col;
+				tr.id = "commentRow" + comment["id"];
 				td1 = tr.insertCell(0);
 				td2 = tr.insertCell(1);
-				var txt =  '<div class="btn-group" role="group" aria-label="..."><button type="button" class="btn btn-xs" data-trigger="focus" data-toggle="popover" title="Info" data-content="Comment added ' + epochToString(comment["time"]) + " by user " + comment["username"] + ' and listed as ' + comment["state"] + '">?</button>';
-				txt += '<button type="button" class="btn btn-xs" data-trigger="focus" data-toggle="tooltip" title="Mark as deleted" onclick="commentDelete(' + comment["id"] + ');">X</button>';
-				txt += '<button type="button" class="btn btn-xs" data-trigger="focus" data-toggle="tooltip" title="Mark as inactive/fixed" onclick="commentInactive(' + comment["id"] + ');">V</button>';
-				txt += '<button type="button" class="btn btn-xs" data-trigger="focus" data-toggle="tooltip" title="Mark as persistent" onclick="commentPersist(' + comment["id"] + ');">!</button></div>';
+				td1.style.whiteSpace = "nowrap";
+				td1.style.width = "8em";
+				var txt =  '<div class="btn-group" role="group" aria-label="..."><button type="button" class="btn btn-xs btn-default" data-trigger="focus" data-toggle="popover" title="Info" data-content="Comment added ' + epochToString(comment["time"]) + " by user " + comment["username"] + ' and listed as ' + comment["state"] + '"><span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span></button>';
+				txt += '<button type="button" class="btn btn-xs btn-danger" data-trigger="focus" data-toggle="tooltip" title="Mark as deleted" onclick="commentDelete(' + comment["id"] + ');"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span></button>';
+				txt += '<button type="button" class="btn btn-xs btn-success" data-trigger="focus" data-toggle="tooltip" title="Mark as inactive/fixed" onclick="commentInactive(' + comment["id"] + ');"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span></button>';
+				txt += '<button type="button" class="btn btn-xs btn-info" data-trigger="focus" data-toggle="tooltip" title="Mark as persistent" onclick="commentPersist(' + comment["id"] + ');"><span class="glyphicon glyphicon-star" aria-hidden="true"></span></button></div>';
 				td1.innerHTML = txt;
 				td2.textContent = comment['comment'];
 			}
@@ -514,7 +566,7 @@ function switchInfo(x)
 		commentbox.id = "commentbox";
 		commentbox.className = "panel-body";
 		commentbox.style.width = "100%";
-		commentbox.innerHTML = '<div class="form form-inline"><div class="form-group"><input type="text" class="form-control" placeholder="Comment" id="' + x + '-comment"></div><button class="btn btn-default" onclick="addComment(\'' + x + '\',document.getElementById(\'' + x + '-comment\').value); document.getElementById(\'' + x + '-comment\').value = \'added. Wait for it....\';">Add comment</button></div>';
+		commentbox.innerHTML = '<div class="input-group"><input type="text" class="form-control" placeholder="Comment" id="' + x + '-comment"><span class=\"input-group-btn\"><button class="btn btn-default" onclick="addComment(\'' + x + '\',document.getElementById(\'' + x + '-comment\').value); document.getElementById(\'' + x + '-comment\').value = \'\'; document.getElementById(\'' + x + '-comment\').placeholder = \'Comment added. Wait for next refresh.\';">Add comment</button></span></div>';
 		swtop.appendChild(commentbox);
 		swtop.style.display = 'block';
 }
@@ -530,14 +582,28 @@ function setLegend(x,color,name)
 {
 	var el = document.getElementById("legend-" + x);
 	el.style.background = color;
-	el.innerHTML = name;
+	el.title = name;
+	el.textContent = name;
 }
 
+function updateAjaxInfo()
+{
+	var out = document.getElementById('outstandingAJAX');
+	var of = document.getElementById('overflowAJAX');
+	out.textContent = nms.outstandingAjaxRequests;
+	of.textContent = nms.ajaxOverflow;
+}
 /*
  * Run periodically to trigger map updates when a handler is active
  */
 function updateMap()
 {
+	if (!newerSwitches())
+		return;
+	if (!(nms.update_time < (Date.now() - 100) || nms.update_time == 0))
+		return;
+	nms.update_time = Date.now();
+	
 	if (nms.updater != undefined && nms.switches_now && nms.switches_then) {
 		nms.updater();
 	}
@@ -579,6 +645,31 @@ function initialUpdate()
 	}
 }
 
+function resetBlur()
+{
+	nms.nightBlur = {};
+	dr.blur.ctx.clearRect(0,0,canvas.width,canvas.height);
+	drawSwitches();
+}
+
+function applyBlur()
+{
+	var blur = document.getElementById("shadowBlur");
+	var col = document.getElementById("shadowColor");
+	nms.shadowBlur = blur.value;
+	nms.shadowColor = col.value;
+	resetBlur();
+	saveSettings();
+}
+
+function showBlurBox()
+{
+	var blur = document.getElementById("shadowBlur");
+	var col = document.getElementById("shadowColor");
+	blur.value = nms.shadowBlur;
+	col.value = nms.shadowColor;
+	document.getElementById("blurManic").style.display = '';
+}
 /*
  * Update nms.ping_data 
  */
@@ -587,6 +678,7 @@ function updatePing()
 	var now = nms.now ? ("?now=" + nms.now) : "";
 	if (nms.outstandingAjaxRequests > 5) {
 		nms.ajaxOverflow++;
+		updateAjaxInfo();
 		return;
 	}
 	nms.outstandingAjaxRequests++;
@@ -597,50 +689,73 @@ function updatePing()
 		success: function (data, textStatus, jqXHR) {
 			nms.ping_data = JSON.parse(data);
 			initialUpdate();
+			updateMap();
 		},
 		complete: function(jqXHR, textStatus) {
 			nms.outstandingAjaxRequests--;
+			updateAjaxInfo();
 		}
 	});
 }
 
-function commentInactive(id) {
+function commentInactive(id)
+{
 	commentChange(id,"inactive");
 }
 
-function commentPersist(id) {
+function commentPersist(id)
+{
 	commentChange(id,"persist");
 }
-function commentDelete(id) {
-	if (id != nms.deleteComment) {
-		nms.deleteComment = id;
-		alert("Click the button again to delete it");
-		return;
+
+function commentDelete(id)
+{
+	var r = confirm("Really delete comment? (Delted comments are still stored in the database, but never displayed)");
+	if (r == true) {
+		commentChange(id,"delete");
 	}
-	commentChange(id,"delete");
 }
-function commentChange(id,state) {
+
+/*
+ * FIXME: Neither of these two handle failures in any way, shape or form.
+ * Nor do they really give user-feedback. They work, but only by magic.
+ */
+function commentChange(id,state)
+{
 	var myData = {
 		comment:id,
 		state:state
 	};
+	var foo = document.getElementById("commentRow" + id);
+	if (foo) {
+		foo.className = '';
+		foo.style.backgroundColor = "silver";
+	}
 	$.ajax({
 		type: "POST",
 		url: "/comment-change.pl",
 		dataType: "text",
-		data:myData
+		data:myData,
+		success: function (data, textStatus, jqXHR) {
+			nms.repop_switch = true;
+		}
 	});
 }
-function addComment(sw,comment) {
+
+function addComment(sw,comment)
+{
 	var myData = {
 		switch:sw,
-		comment:comment};
-	console.log(myData);
+		comment:comment
+	};
 	$.ajax({
 		type: "POST",
 		url: "/switch-comment.pl",
 		dataType: "text",
-		data:myData
+		data:myData,
+		success: function (data, textStatus, jqXHR) {
+			nms.repop_switch = true;
+		}
 	});
 }
 /*
@@ -651,6 +766,7 @@ function updatePorts()
 	var now = "";
 	if (nms.outstandingAjaxRequests > 5) {
 		nms.ajaxOverflow++;
+		updateAjaxInfo();
 		return;
 	}
 	nms.outstandingAjaxRequests++;
@@ -665,15 +781,26 @@ function updatePorts()
 			nms.switches_now = switchdata;
 			parseIntPlacements();
 			initialUpdate();
+			updateSpeed();
+			updateMap();
+			if (nms.repop_time == false && nms.repop_switch)
+				nms.repop_time = nms.switches_now.time;
+			else if (nms.repop_switch && nms.switch_showing && nms.repop_time != nms.switches_now.time) {
+				showSwitch(nms.switch_showing,true);
+				nms.repop_switch = false;
+				nms.repop_time = false;
+			}
 		},
 		complete: function(jqXHR, textStatus) {
 			nms.outstandingAjaxRequests--;
+			updateAjaxInfo();
 		}
 	});
 	now="";
 	if (nms.now != false)
 		now = "&now=" + nms.now;
 	nms.outstandingAjaxRequests++;
+	updateAjaxInfo();
 	$.ajax({
 		type: "GET",
 		url: "/port-state.pl?time=5m" + now,
@@ -682,13 +809,31 @@ function updatePorts()
 			var  switchdata = JSON.parse(data);
 			nms.switches_then = switchdata;
 			initialUpdate();
+			updateSpeed();
+			updateMap();
 		},
 		complete: function(jqXHR, textStatus) {
 			nms.outstandingAjaxRequests--;
+			updateAjaxInfo();
 		}
 	})
 }
 
+/*
+ * Returns true if we have now and then-data for switches and that the
+ * "now" is actually newer. Useful for basic sanity and avoiding negative
+ * values when rewinding time.
+ */
+function newerSwitches()
+{
+	if (!nms.switches_now || !nms.switches_then)
+		return false;
+	var now_timestamp = stringToEpoch(nms.switches_now.time);
+	var then_timestamp = stringToEpoch(nms.switches_then.time);
+	if (now_timestamp == 0 || then_timestamp == 0 || then_timestamp >= now_timestamp)
+		return false;
+	return true;
+}
 /*
  * Use nms.switches_now and nms.switches_then to update 'nms.speed'.
  *
@@ -703,6 +848,7 @@ function updatePorts()
  * FIXME: Err, yeah, add this to the tail-end of updatePorts instead :D
  *
  */
+
 function updateSpeed()
 {
 	var speed_in = parseInt(0);
@@ -710,6 +856,8 @@ function updateSpeed()
 	var counter=0;
 	var sw;
 	var speedele = document.getElementById("speed");
+	if (!newerSwitches())
+		return;
 	for (sw in nms.switches_now["switches"]) {
 		for (port in nms.switches_now["switches"][sw]["ports"]) {
 			if (!nms.switches_now["switches"][sw]["ports"][port]) {
@@ -763,8 +911,8 @@ function updateSpeed()
  */
 function drawLinknet(i)
 {
-	var c1 = nms.linknet_color[i] && nms.linknet_color[i].c1 ? nms.linknet_color[i].c1 : "blue";
-	var c2 = nms.linknet_color[i] && nms.linknet_color[i].c2 ? nms.linknet_color[i].c2 : "blue";
+	var c1 = nms.linknet_color[i] && nms.linknet_color[i].c1 ? nms.linknet_color[i].c1 : blue;
+	var c2 = nms.linknet_color[i] && nms.linknet_color[i].c2 ? nms.linknet_color[i].c2 : blue;
 	if (nms.switches_now.switches[nms.switches_now.linknets[i].sysname1] && nms.switches_now.switches[nms.switches_now.linknets[i].sysname2]) {
 		connectSwitches(nms.switches_now.linknets[i].sysname1,nms.switches_now.linknets[i].sysname2, c1, c2);
 	}
@@ -810,16 +958,18 @@ function drawSwitch(sw)
 		var box = nms.switches_now['switches'][sw]['placement'];
 		var color = nms.switch_color[sw];
 		if (color == undefined) {
-			color = "blue";
+			color = blue;
 		}
 		dr.switch.ctx.fillStyle = color;
+		/*
+		 * XXX: This is a left-over from before NMS did separate
+		 * canvases, and might be done better elsewhere.
+		 */
 		if (nms.nightMode && nms.nightBlur[sw] != true) {
-			dr.switch.ctx.shadowBlur = 10;
-			dr.switch.ctx.shadowColor = "#00EE00";
+			dr.blur.ctx.shadowBlur = nms.shadowBlur;
+			dr.blur.ctx.shadowColor = nms.shadowColor;
+			drawBoxBlur(box['x'],box['y'],box['width'],box['height']);
 			nms.nightBlur[sw] = true;
-		} else {
-			dr.switch.ctx.shadowBlur = 0;
-			dr.switch.ctx.shadowColor = "#000000";
 		}
 		drawBox(box['x'],box['y'],box['width'],box['height']);
 		dr.switch.ctx.shadowBlur = 0;
@@ -871,18 +1021,20 @@ function drawSwitches()
  */
 function drawNow()
 {
+	if (!nms.switches_now)
+		return;
 	// XXX: Get rid of microseconds that we get from the backend.
 	var now = /^[^.]*/.exec(nms.switches_now.time);
 	dr.top.ctx.font = Math.round(2 * nms.fontSize * canvas.scale) + "px " + nms.fontFace;
 	dr.top.ctx.clearRect(0,0,Math.floor(800 * canvas.scale),Math.floor(100 * canvas.scale));
 	dr.top.ctx.fillStyle = "white";
 	dr.top.ctx.strokeStyle = "black";
-	dr.top.ctx.lineWidth = Math.floor(4 * canvas.scale);
+	dr.top.ctx.lineWidth = Math.floor(2 * canvas.scale);
 	if (dr.top.ctx.lineWidth == 0) {
-		dr.top.ctx.lineWidth = Math.round(4 * canvas.scale);
+		dr.top.ctx.lineWidth = Math.round(2 * canvas.scale);
 	}
-	dr.top.ctx.strokeText(now, 0 + margin.text, 30 * canvas.scale);
-	dr.top.ctx.fillText(now, 0 + margin.text, 30 * canvas.scale);
+	dr.top.ctx.strokeText(now, 0 + margin.text, 25 * canvas.scale);
+	dr.top.ctx.fillText(now, 0 + margin.text, 25 * canvas.scale);
 }
 /*
  * Draw foreground/scene.
@@ -918,6 +1070,7 @@ function setScale()
 	nms.textDrawn = {};
 	drawBG();
 	drawScene();
+	drawNow();
 	
 	document.getElementById("scaler").value = canvas.scale;
 	document.getElementById("scaler-text").innerHTML = (parseFloat(canvas.scale)).toPrecision(3);
@@ -978,7 +1131,10 @@ function scaleChange()
  */
 function switchClick(sw)
 {
-	switchInfo(sw);
+	if (nms.switch_showing == sw)
+		hideSwitch();
+	else
+		showSwitch(sw);
 }
 
 /*
@@ -993,11 +1149,11 @@ function resetColors()
 		return;
 	if (nms.switches_now.linknets) {
 		for (var i in nms.switches_now.linknets) {
-			setLinknetColors(i, "blue","blue");
+			setLinknetColors(i, blue,blue);
 		}
 	}
 	for (var sw in nms.switches_now.switches) {
-		setSwitchColor(sw, "blue");
+		setSwitchColor(sw, blue);
 	}
 }
 
@@ -1058,6 +1214,14 @@ function setNightMode(toggle) {
 	nms.nightMode = toggle;
 	var body = document.getElementById("body");
 	body.style.background = toggle ? "black" : "white";
+	var nav = document.getElementsByTagName("nav")[0];
+	if (toggle) {
+		dr.blur.c.style.display = '';
+		nav.classList.add('navbar-inverse');
+	} else {
+		dr.blur.c.style.display = 'none';
+		nav.classList.remove('navbar-inverse');
+	}
 	setScale();
 }
 /*
@@ -1078,6 +1242,17 @@ function drawBox(x,y,boxw,boxh)
 	dr.switch.ctx.strokeRect(myX,myY, myX2, myY2);
 }
 
+/*
+ * Draw the blur for a box.
+ */
+function drawBoxBlur(x,y,boxw,boxh)
+{
+	var myX = Math.floor(x * canvas.scale);
+	var myY = Math.floor(y * canvas.scale);
+	var myX2 = Math.floor((boxw) * canvas.scale);
+	var myY2 = Math.floor((boxh) * canvas.scale);
+	dr.blur.ctx.fillRect(myX,myY, myX2, myY2);
+}
 /*
  * Draw text on a box - sideways!
  *
@@ -1149,9 +1324,9 @@ function connectSwitches(insw1, insw2,color1, color2) {
 	var sw1 = nms.switches_now.switches[insw1].placement;
 	var sw2 = nms.switches_now.switches[insw2].placement;
 	if (color1 == undefined)
-		color1 = "blue";
+		color1 = blue;
 	if (color2 == undefined)
-		color2 = "blue";
+		color2 = blue;
 	var x0 = Math.floor((sw1.x + sw1.width/2) * canvas.scale);
 	var y0 = Math.floor((sw1.y + sw1.height/2) * canvas.scale);
 	var x1 = Math.floor((sw2.x + sw2.width/2) * canvas.scale);
@@ -1189,14 +1364,10 @@ function initNMS() {
 	nms.timers.ping = new nmsTimer(updatePing, 1000, "Ping updater", "AJAX request to update ping data");
 	nms.timers.ping.start();
 	
-	nms.timers.map = new nmsTimer(updateMap, 1000, "Map handler", "Updates the map using the chosen map handler (ping, uplink, traffic, etc)");
-	nms.timers.map.start();
-	
-	nms.timers.speed = new nmsTimer(updateSpeed, 1000, "Speed updater", "Recompute total speed (no backend requests)");
-	nms.timers.speed.start();
-	
 	nms.timers.replay = new nmsTimer(timeReplay, 1000, "Time machine", "Handler used to change time");
 	detectHandler();
+	setupKeyhandler();
+	restoreSettings();
 }
 
 function detectHandler() {
@@ -1216,9 +1387,6 @@ function detectHandler() {
 	} else {
 		setUpdater(handler_ping);
 	}
-	if (/nightMode/.exec(url)) {
-		toggleNightMode();
-	}
 }
 
 /*
@@ -1227,7 +1395,7 @@ function detectHandler() {
  * Could probably be cleaned up.
  */
 function showTimerDebug() {
-	var tableTop = document.getElementById('timerTableTop');
+	var tableTop = document.getElementById('debugTimers');
 	var table = document.getElementById('timerTable');
 	var tr, td1, td2;
 	if (table)
@@ -1238,38 +1406,29 @@ function showTimerDebug() {
 	table.className = "table";
 	table.classList.add("table");
 	table.classList.add("table-default");
-	table.border = "1";
-	tr = document.createElement("tr");
-	td = document.createElement("th");
+	var header = table.createTHead();
+	tr = header.insertRow(0);
+	td = tr.insertCell(0);
 	td.innerHTML = "Handler";
-	tr.appendChild(td);
-	td = document.createElement("th");
+	td = tr.insertCell(1);
 	td.innerHTML = "Interval (ms)";
-	tr.appendChild(td);
-	td = document.createElement("th");
+	td = tr.insertCell(2);
 	td.innerHTML = "Name";
-	tr.appendChild(td);
-	td = document.createElement("th");
+	td = tr.insertCell(3);
 	td.innerHTML = "Description";
-	tr.appendChild(td);
-	table.appendChild(tr);
 	for (var v in nms.timers) {
-		console.log(v);
-		tr = document.createElement("tr");
-		td = document.createElement("td");
-		td.innerHTML = nms.timers[v].handle;
-		tr.appendChild(td);
-		td = document.createElement("td");
-		td.innerHTML = "<input type=\"text\" id='handlerValue" + v + "' value='" + nms.timers[v].interval + "'>";
-		td.innerHTML += "<button type=\"button\" class=\"btn btn-default\" onclick=\"nms.timers['" + v + "'].setInterval(document.getElementById('handlerValue" + v + "').value);\">Apply</button>";
-		tr.appendChild(td);
-		td = document.createElement("td");
-		td.innerHTML = nms.timers[v].name;
-		tr.appendChild(td);
-		td = document.createElement("td");
-		td.innerHTML = nms.timers[v].description;
-		tr.appendChild(td);
-		table.appendChild(tr);
+		tr = table.insertRow(-1);
+		td = tr.insertCell(0);
+		td.textContent = nms.timers[v].handle;
+		td = tr.insertCell(1);
+		td.style.width = "15em";
+		var tmp = "<div class=\"input-group\"><input type=\"text\" id='handlerValue" + v + "' value='" + nms.timers[v].interval + "' class=\"form-control\"></input>";
+		tmp += "<span class=\"input-group-btn\"><button type=\"button\" class=\"btn btn-default\" onclick=\"nms.timers['" + v + "'].setInterval(document.getElementById('handlerValue" + v + "').value);\">Apply</button></span></div>";
+		td.innerHTML = tmp;
+		td = tr.insertCell(2);
+		td.textContent = nms.timers[v].name;
+		td = tr.insertCell(3);
+		td.textContent = nms.timers[v].description;
 	}
 	tableTop.appendChild(table);
 	document.getElementById('debugTimers').style.display = 'block'; 
@@ -1278,9 +1437,169 @@ function showTimerDebug() {
 function hideLayer(layer) {
 	var l = document.getElementById(layer);
 	l.style.display = "none";
+	if (layer != "layerVisibility")
+		nms.layerVisibility[layer] = false;
+	saveSettings();
 }
 
 function showLayer(layer) {
 	var l = document.getElementById(layer);
 	l.style.display = "";
+	if (layer != "layerVisibility")
+		nms.layerVisibility[layer] = true;
+	saveSettings();
+}
+
+function toggleLayer(layer) {
+	var l = document.getElementById(layer);
+	if (l.style.display == 'none')
+		l.style.display = '';
+	else
+		l.style.display = 'none';
+}
+
+function applyLayerVis()
+{
+	for (var l in nms.layerVisibility) {
+		var layer = document.getElementById(l);
+		if (layer)
+			layer.style.display = nms.layerVisibility[l] ? '' : 'none';
+	}
+}
+
+function setMenu()
+{
+	var nav = document.getElementsByTagName("nav")[0];
+	nav.style.display = nms.menuShowing ? '' : 'none';
+	resizeEvent();
+
+}
+function toggleMenu()
+{
+	nms.menuShowing = ! nms.menuShowing;
+	setMenu();
+	saveSettings();
+}
+
+function setMapModeFromN(e,key)
+{
+	switch(key) {
+		case '1':
+			setUpdater(handler_ping);
+			break;
+		case '2':
+			setUpdater(handler_uplinks);
+			break;
+		case '3':
+			setUpdater(handler_temp);
+			break;
+		case '4':
+			setUpdater(handler_traffic);
+			break;
+		case '5':
+			setUpdater(handler_comment);
+			break;
+		case '6':
+			setUpdater(handler_disco);
+			break;
+	}
+	return true;
+}
+
+function moveTimeFromKey(e,key)
+{
+	switch(key) {
+		case 'h':
+			stepTime(-3600);
+			break;
+		case 'j':
+			stepTime(-300);
+			break;
+		case 'k':
+			stepTime(300);
+			break;
+		case 'l':
+			stepTime(3600);
+			break;
+		case 'p':
+			if(nms.timers.replay.handle)
+				nms.timers.replay.stop();
+			else {
+				timeReplay();
+				nms.timers.replay.start();
+			}
+			break;
+		case 'r':
+			nms.timers.replay.stop();
+			nms.now = false;
+			updatePorts();
+			break;
+	}
+	return true;
+}
+
+var debugEvent;
+function keyDebug(e)
+{
+	console.log(e);
+	debugEvent = e;
+}
+
+function keyPressed(e)
+{
+	if (e.target.nodeName == "INPUT") {
+		return false;
+	}
+	var key = String.fromCharCode(e.keyCode);
+	if (nms.keyBindings[key])
+		return nms.keyBindings[key](e,key);
+	if (nms.keyBindings['default'])
+		return nms.keyBindings['default'](e,key);
+	return false;
+}
+
+function setupKeyhandler()
+{
+	var b = document.getElementsByTagName("body")[0];
+	b.onkeypress = function(e){keyPressed(e);};
+}
+
+
+function getCookie(cname) {
+	var name = cname + "=";
+	var ca = document.cookie.split(';');
+	for(var i=0; i<ca.length; i++) {
+		var c = ca[i];
+		while (c.charAt(0)==' ')
+			c = c.substring(1);
+		if (c.indexOf(name) == 0)
+			return c.substring(name.length,c.length);
+	}
+	return "";
+}
+
+function saveSettings()
+{
+	var foo={};
+	for (var v in nms.settingsList) {
+		foo[nms.settingsList[v]] = nms[nms.settingsList[v]];
+	}
+	document.cookie = 'nms='+btoa(JSON.stringify(foo));
+}
+
+function restoreSettings()
+{
+	var retrieve = JSON.parse(atob(getCookie("nms")));
+	for (var v in retrieve) {
+		nms[v] = retrieve[v];
+	}
+	setScale();
+	setMenu();
+	setNightMode(nms.nightMode);
+	applyLayerVis();
+}
+
+function forgetSettings()
+{
+	document.cookie = 'nms=' + btoa('{}');
 }
