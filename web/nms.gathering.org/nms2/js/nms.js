@@ -79,7 +79,7 @@ var nms = {
 		'l':moveTimeFromKey,
 		'p':moveTimeFromKey,
 		'r':moveTimeFromKey,
-		'default':keyDebug
+		'not-default':keyDebug
 	}
 };
 
