@@ -179,7 +179,7 @@ var margin = {
 var tgStart = stringToEpoch('2015-04-01T09:00:00');
 var tgEnd = stringToEpoch('2015-04-05T12:00:00');
 var replayTime = 0;
-var replayIncrement = 30 * 60;
+var replayIncrement = 60 * 60;
 
 /*
  * Convenience-function to populate the 'dr' structure.
@@ -208,6 +208,9 @@ function initDrawing() {
 	dr['input'] = {};
 	dr['input']['c'] = document.getElementById("inputCanvas");
 	dr['input']['ctx'] = dr['top']['c'].getContext('2d');
+	dr['hidden'] = {};
+	dr['hidden']['c'] = document.getElementById("hiddenCanvas");
+	dr['hidden']['ctx'] = dr['hidden']['c'].getContext('2d');
 }
 
 /*
@@ -311,6 +314,8 @@ function timeReplay()
 	}
 	replayTime = parseInt(replayTime) + parseInt(replayIncrement);
 	nms.now = epochToString(replayTime);
+	updatePorts();
+	updatePing();
 }
 
 /*
@@ -331,6 +336,8 @@ function startReplay() {
 	nms.now = epochToString(tgStart);
 	timeReplay();
 	nms.timers.replay.start();;
+	nms.timers.ping.stop();;
+	nms.timers.ports.stop();;
 }
 
 /*
@@ -346,7 +353,12 @@ function changeNow() {
 		newnow = false;
 	
 	nms.now = newnow;
+	if (newnow) {
+		nms.timers.ping.stop();;
+		nms.timers.ports.stop();;
+	}
 	updatePorts();
+	updatePing();
 	var boxHide = document.getElementById("nowPickerBox");
 	if (boxHide) {
 		boxHide.style.display = "none";
@@ -357,6 +369,8 @@ function stepTime(n)
 {
 	var now;
 	nms.timers.replay.stop();
+	nms.timers.ping.stop();;
+	nms.timers.ports.stop();;
 	if (nms.now && nms.now != 0)
 		now = parseInt(stringToEpoch(nms.now));
 	else if (nms.switches_now)
@@ -366,6 +380,7 @@ function stepTime(n)
 	newtime = parseInt(now) + parseInt(n);
 	nms.now = epochToString(parseInt(newtime));
 	updatePorts();
+	updatePing();
 }
 
 /*
@@ -600,7 +615,11 @@ function updateMap()
 {
 	if (!newerSwitches())
 		return;
-	if (!(nms.update_time < (Date.now() - 100) || nms.update_time == 0))
+	if (!nms.drawn)
+		setScale();
+	if (!nms.drawn)
+		return;
+	if (!nms.ping_data)
 		return;
 	nms.update_time = Date.now();
 	
@@ -634,6 +653,7 @@ function setUpdater(fo)
  */
 function initialUpdate()
 {
+	return;
 	if (nms.ping_data && nms.switches_then && nms.switches_now && nms.updater != undefined && nms.did_update == false ) {
 		resizeEvent();
 		if (!nms.drawn) {
@@ -1059,7 +1079,6 @@ function drawScene()
  */
 function setScale()
 {
-
 	canvas.height =  orig.height * canvas.scale ;
 	canvas.width = orig.width * canvas.scale ;
 	for (var a in dr) {
@@ -1068,6 +1087,7 @@ function setScale()
 	}
 	nms.nightBlur = {};
 	nms.textDrawn = {};
+	drawGradient(nms.gradients);
 	drawBG();
 	drawScene();
 	drawNow();
@@ -1353,8 +1373,6 @@ function connectSwitches(insw1, insw2,color1, color2) {
  */
 function initNMS() {
 	initDrawing();
-	updatePorts();
-	updatePing();
 	window.addEventListener('resize',resizeEvent,true);
 	document.addEventListener('load',resizeEvent,true);
 	
@@ -1364,8 +1382,10 @@ function initNMS() {
 	nms.timers.ping = new nmsTimer(updatePing, 1000, "Ping updater", "AJAX request to update ping data");
 	nms.timers.ping.start();
 	
-	nms.timers.replay = new nmsTimer(timeReplay, 1000, "Time machine", "Handler used to change time");
+	nms.timers.replay = new nmsTimer(timeReplay, 500, "Time machine", "Handler used to change time");
 	detectHandler();
+	updatePorts();
+	updatePing();
 	setupKeyhandler();
 	restoreSettings();
 }
@@ -1532,7 +1552,10 @@ function moveTimeFromKey(e,key)
 		case 'r':
 			nms.timers.replay.stop();
 			nms.now = false;
+			nms.timers.ping.start();;
+			nms.timers.ports.start();;
 			updatePorts();
+			updatePing();
 			break;
 	}
 	return true;

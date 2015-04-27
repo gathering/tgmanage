@@ -110,9 +110,10 @@ function uplinkInit()
 function trafficInit()
 {
 	var m = 1024 * 1024 / 8;
+	drawGradient([lightgreen,green,orange,red]);
 	setLegend(1,colorFromSpeed(0),"0 (N/A)");	
 	setLegend(5,colorFromSpeed(2000 * m) , "2000Mb/s");	
-	setLegend(4,colorFromSpeed(1200 * m),"1200Mb/s");	
+	setLegend(4,colorFromSpeed(1500 * m),"1500Mb/s");	
 	setLegend(3,colorFromSpeed(500 * m),"500Mb/s");	
 	setLegend(2,colorFromSpeed(10 * m),"10Mb/s");	
 }
@@ -149,7 +150,8 @@ function colorFromSpeed(speed)
 	if (speed == 0)
 		return blue;
 	speed = speed < 0 ? 0 : speed;
-	return rgb_from_max2( 100 * (speed / (2 * (1000 * m))));
+	return getColorStop( 1000 * (speed / (2 * (1000 * m))));
+//	return rgb_from_max2( 100 * (speed / (2 * (1000 * m))));
 }
 
 
@@ -164,9 +166,9 @@ function temp_color(t)
 		console.log("Temp_color, but temp is undefined");
 		return blue;
 	}
-	t = parseInt(t) - 20;
-	t = Math.floor((t / 15) * 100);
-	return rgb_from_max(t);
+	t = parseInt(t) - 12;
+	t = Math.floor((t / 23) * 1000);
+	return getColorStop(t);
 }
 
 function tempUpdater()
@@ -183,15 +185,20 @@ function tempUpdater()
 
 function tempInit()
 {
-	setLegend(1,temp_color(20),"20 °C");	
-	setLegend(2,temp_color(22),"22 °C");	
-	setLegend(3,temp_color(27),"27 °C");	
-	setLegend(4,temp_color(31),"31 °C");	
+	drawGradient(["black",blue,lightblue,lightgreen,green,orange,red]);
+	setLegend(1,temp_color(15),"15 °C");	
+	setLegend(2,temp_color(20),"20 °C");	
+	setLegend(3,temp_color(25),"25 °C");	
+	setLegend(4,temp_color(30),"30 °C");	
 	setLegend(5,temp_color(35),"35 °C");	
 }
 
 function pingUpdater()
 {
+	if (!nms.ping_data || !nms.ping_data["switches"]) {
+		resetColors();
+		return;
+	}
 	for (var sw in nms.switches_now["switches"]) {
 		var c = blue;
 		if (nms.ping_data['switches'] && nms.ping_data['switches'][sw])
@@ -211,11 +218,12 @@ function pingUpdater()
 
 function pingInit()
 {
+	drawGradient([green,lightgreen,orange,red]);
 	setLegend(1,gradient_from_latency(1),"1ms");	
 	setLegend(2,gradient_from_latency(30),"30ms");	
 	setLegend(3,gradient_from_latency(60),"60ms");	
 	setLegend(4,gradient_from_latency(100),"100ms");	
-	setLegend(5,blue ,"No response");	
+	setLegend(5,gradient_from_latency(undefined) ,"No response");	
 }
 
 function commentUpdater()
@@ -258,9 +266,9 @@ function commentUpdater()
 function commentInit()
 {
 	setLegend(1,"white","0 comments");
-	setLegend(2,blue,"Persistent comments");
-	setLegend(3,red, "New comments");
-	setLegend(4,orange,"Active comments");	
+	setLegend(2,blue,"Persistent");
+	setLegend(3,red, "New");
+	setLegend(4,orange,"Active");	
 	setLegend(5,green ,"Old/inactive only");	
 }
 /*

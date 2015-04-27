@@ -17,55 +17,11 @@ var red = "#d9534f";
 
 function gradient_from_latency(latency_ms, latency_secondary_ms)
 {
-	if (latency_secondary_ms === undefined) {
-		return rgb_from_latency(latency_ms);
-	}
-	return 'linear-gradient(' +
-		rgb_from_latency(latency_ms) + ', ' +
-		rgb_from_latency(latency_secondary_ms) + ')';
-}
-
-function rgb_from_latency(latency_ms)
-{
-	if (latency_ms === null || latency_ms === undefined) {
+	if (latency_ms == undefined)
 		return blue;
-	}
-
-	var l = latency_ms / 50.0;
-	if (l >= 2.0) {
-		return 'rgb(255, 0, 0)';
-	} else if (l >= 1.0) {
-		l = 2.0 - l;
-		l = Math.pow(l, 1.0/2.2);
-		l = Math.floor(l * 205.0);
-		return 'rgb(255, ' + l + ', 0)';
-	} else {
-		l = Math.pow(l, 1.0/2.2);
-		l = Math.floor(l * 255.0);
-		return 'rgb(' + l + ', 205, 0)';
-	}
+	return getColorStop(parseInt(latency_ms) * 10);
 }
 
-/*
- * Give us a color from blue (0) to red (100).
- */
-function rgb_from_max(x)
-{
-	x = x/100;
-	var colorred = 255 * x;
-	var colorblue = 255 - colorred;
-
-	return 'rgb(' + Math.floor(colorred) + ", 0, " + Math.floor(colorblue) + ')';
-}
-
-function rgb_from_max2(x)
-{
-	x = x/100;
-	var colorred = 255 * x;
-	var colorgreen = 250 - colorred;
-
-	return 'rgb(' + Math.floor(colorred) + "," + Math.floor(colorgreen) + ', 0 )';
-}
 /*
  * Return a random-ish color (for testing)
  */
@@ -76,3 +32,60 @@ function getRandomColor()
 	return colors[i];	
 }
 
+/*
+ * Set up the hidden gradient canvas, using an array as input.
+ * 
+ * This gives us a flexible way to get gradients between any number of
+ * colors (green to red, or blue to green to orange to red to white to pink
+ * to black and so on).
+ *
+ * Typically called when setting up a map handler. Currently "single
+ * tenant", since there's just one canvas.
+ *
+ * XXX: We have to store the gradients in nms.* and restore this when we
+ * resize for the moment, because this canvas is also re-sized (which isn't
+ * really necessary, but avoids special handling).
+ */
+function drawGradient(gradients)
+{
+	var gradient = dr.hidden.ctx.createLinearGradient(0,0,1000,0);
+	var stops = gradients.length - 1;
+	nms.gradients = gradients;
+	for (var color in gradients) {
+		var i = color / stops;
+		gradient.addColorStop(i, gradients[color]);
+	}
+	dr.hidden.ctx.beginPath();
+	dr.hidden.ctx.strokeStyle = gradient;
+	dr.hidden.ctx.moveTo(0,0);
+	dr.hidden.ctx.lineTo(1000,0);
+	dr.hidden.ctx.lineWidth = 10;
+	dr.hidden.ctx.closePath();
+	dr.hidden.ctx.stroke();
+	dr.hidden.ctx.moveTo(0,0);
+}
+
+/*
+ * Get the color of a gradient, range is from 0 to 999 (inclusive).
+ */
+function getColorStop(x) {
+	x = parseInt(x);
+	if (x > 999)
+		x = 999;
+	if (x < 0)
+		x = 0;
+	return getColor(x,0);
+}
+
+/*
+ * Get the color on the hidden canvas at a specific point. Could easily be
+ * made generic.
+ */
+function getColor(x,y) {
+	var imageData = dr.hidden.ctx.getImageData(x, y, 1, 1);
+	var data = imageData.data;
+	if (data.length < 4)
+		return false;
+	var ret = 'rgb(' + data[0] + ',' + data[1] + ',' + data[2] + ')';
+	return ret;
+}
