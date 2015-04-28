@@ -21,38 +21,53 @@
 var handler_uplinks = {
 	updater:uplinkUpdater,
 	init:uplinkInit,
+	tag:"uplink",
 	name:"Uplink map"
 };
 
 var handler_temp = {
 	updater:tempUpdater,
 	init:tempInit,
+	tag:"temp",
 	name:"Temperature map"
 };
 
 var handler_ping = {
 	updater:pingUpdater,
 	init:pingInit,
+	tag:"ping",
 	name:"IPv4 Ping map"
 };
 
 var handler_traffic = {
 	updater:trafficUpdater,
 	init:trafficInit,
+	tag:"traffic",
 	name:"Uplink traffic map"
 };
 
 var handler_disco = {
 	updater:randomizeColors,
 	init:discoInit,
+	tag:"disco",
 	name:"Disco fever"
 };
 
 var handler_comment = {
 	updater:commentUpdater,
 	init:commentInit,
+	tag:"comment",
 	name:"Fresh comment spotter"
 };
+
+var handlers = [
+	handler_uplinks,
+	handler_temp,
+	handler_ping,
+	handler_traffic,
+	handler_disco,
+	handler_comment
+	];
 
 /*
  * Update function for uplink map

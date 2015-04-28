@@ -613,6 +613,18 @@ function updateAjaxInfo()
  */
 function updateMap()
 {
+	/*
+	 * XXX: This a bit hacky: There are a bunch of links that use
+	 * href="#foo" but probably shouldn't. This breaks refresh since we
+	 * base this on the location hash. To circumvent that issue
+	 * somewhat, we just update the location hash if it's not
+	 * "correct".
+	 */
+	if (nms.updater) {
+		if (document.location.hash != ('#' + nms.updater.tag)) {
+			document.location.hash = nms.updater.tag;
+		}
+	}
 	if (!newerSwitches())
 		return;
 	if (!nms.drawn)
@@ -624,7 +636,7 @@ function updateMap()
 	nms.update_time = Date.now();
 	
 	if (nms.updater != undefined && nms.switches_now && nms.switches_then) {
-		nms.updater();
+		nms.updater.updater();
 	}
 	drawNow();
 }
@@ -637,12 +649,13 @@ function setUpdater(fo)
 	nms.updater = undefined;
 	resetColors();
 	fo.init();
-	nms.updater = fo.updater;
+	nms.updater = fo;
 	var foo = document.getElementById("updater_name");
 	foo.innerHTML = fo.name + "   ";
+	document.location.hash = fo.tag;
 	initialUpdate();
 	if (nms.ping_data && nms.switches_then && nms.switches_now) {
-		nms.updater();
+		nms.updater.updater();
 	}
 }
 
@@ -660,7 +673,7 @@ function initialUpdate()
 			drawSwitches();
 			drawLinknets();
 		}
-		nms.updater();
+		nms.updater.updater();
 		nms.did_update = true;
 	}
 }
@@ -1087,7 +1100,8 @@ function setScale()
 	}
 	nms.nightBlur = {};
 	nms.textDrawn = {};
-	drawGradient(nms.gradients);
+	if (nms.gradients)
+		drawGradient(nms.gradients);
 	drawBG();
 	drawScene();
 	drawNow();
@@ -1392,21 +1406,13 @@ function initNMS() {
 
 function detectHandler() {
 	var url = document.URL;
-	if (/#ping/.exec(url)) {
-		setUpdater(handler_ping);
-	}else if (/#uplink/.exec(url)) {
-		setUpdater(handler_uplinks);
-	} else if (/#temp/.exec(url)) {
-		setUpdater(handler_temp);
-	} else if (/#traffic/.exec(url)) {
-		setUpdater(handler_traffic);
-	} else if (/#comment/.exec(url)) {
-		setUpdater(handler_comment);
-	} else if (/#disco/.exec(url)) {
-		setUpdater(handler_disco);
-	} else {
-		setUpdater(handler_ping);
+	for (var i in handlers) {
+		if (('#' + handlers[i].tag) == document.location.hash) {
+			setUpdater(handlers[i]);
+			return;
+		}
 	}
+	setUpdater(handler_ping);
 }
 
 /*
