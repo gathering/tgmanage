@@ -62,8 +62,8 @@
 		<li><a href="#comment" onclick="setUpdater(handler_comment)">Comment spotter</a></li>
 		<li><a href="#disco" onclick="setUpdater(handler_disco)">DISCO</a></li>
 		<li class="divider"> </li>
-		<li><a href="#" onclick="document.getElementById('nowPickerBox').style.display = 'block';">Travel in time</a></li>
-		<li><a href="#" onclick="startReplay();" title="Replay from opening 30 minutes per second">Replay TG</a></li>
+		<li><a href="#" onclick="toggleLayer('nowPickerBox');document.getElementById('nowPicker').focus();">Travel in time</a></li>
+		<li><a href="#" onclick="startReplay();" title="Replay from opening 120 minutes per second">Replay TG</a></li>
 		<li class="divider"> </li>
 		<li><a onclick="showTimerDebug(); hideSwitch();" style="cursor: pointer;" >Debug timers</a></li>
 	      </ul>
@@ -293,14 +293,23 @@
 	      </table>
 	    </div>
 	  </div>
-	  <div id="nowPickerBox" class="panel panel-default" style="position: absolute; display:none; z-index: 130;" >	
-	    <div class="panel-heading">
-	      <h3 class="panel-title">Time travel</h3>
-	    </div>
-	    <div class="panel-body">
-	      <input type="text" class="form-control" placeholder="YYYY-MM-DD hh:mm:ss" id="nowPicker" value="" />
-	      <button class="btn btn-default" onclick="changeNow();">Travel</button>
-	      <button class="btn" onclick="document.getElementById('nowPickerBox').style.display = 'none';">Cancel</button>
+	  <div id="nowPickerBox" style="position: absolute; display: none; z-index: 130;" class="col-md-4">
+	    <div class="panel panel-default"> 
+	      <div class="panel-heading">
+		<h3 class="panel-title">Time travel
+		  <button type="button" class="close" aria-labe="Close" onclick="document.getElementById('nowPickerBox').style.display = 'none';" style="float: right;">
+		    <span aria-hidden="true">&times;</span>
+		  </button>
+		</h3>
+	      </div>
+	      <div class="panel-body">
+		<div class="input-group">
+		  <input type="text" class="form-control" placeholder="YYYY-MM-DD hh:mm:ss" id="nowPicker">
+		  <span class="input-group-btn">
+		    <button class="btn btn-default" onclick="changeNow();">Travel</button>
+		  </span>
+		</div>
+	      </div>
 	    </div>
 	  </div>
 	  <div style="position: absolute; z-index: 120;" class="col-md-4">
@@ -343,23 +352,21 @@
 		  <li>Better "popup" boxes: It's growing out of control.</li>
 		  <li>Toggle auto-scale on/off</li>
 		  <li>Clean up various global variables</li>
+		  <li>Create name spaces in nms.*: It's just barely better
+		  than global stuff now.</li>
 		  <li>Add DHCP map</li>
-		  <li>Adjust updatePorts() frequency based on necessity (1sec
-		    updates is overkill for regular operation, but needed for time
-		    travel)</li>
 		  <li>More info on switches: Port state, possibly link time
 		    trends</li>
 		  <li>Moving switches around (like ping.html + edit)</li>
 		  <li>Split nms.js into multiple components to unclutter the
 		    code</li>
 		  <li>Comments: Fix UTF8 garbligash caused by $dbh-&gt;quote()</li>
-		  <li>Comments: Fix feedback, possibly update the switch-box
-		    too, when comments change.</li>
 		</ul>
 		<h3>Todo for backend:</h3>
 		<ul>
 		  <li>IPv6 support</li>
 		  <li>Provide public API's</li>
+		  <li>Investigate a json tree filter/massager</li>
 		  <li>Close SQL injections (IT'S WIDE OPEN BECAUSE WHY NOT THAT'S NEVER A PROBLEM)</li>
 		  <li>Split port-state.pl into multiple appropriate pieces. Right
 		    it mixes heavy time-critical data with less time-critical and
@@ -378,7 +385,7 @@
 		  <li>Clean up old interfaces</li>
 		  <li>Review various agents/tools</li>
 		  <li>Improve cache headers</li>
-		  <li>Cache invalidation of comments?</li>
+		  <li>Cache invalidation of comments? (Probably not needed)</li>
 		  <li>Re-test the SQL schema. It's been modified and works fine
 		    on my laptop, but I need to dump it, commit it and test it.</li>
 		  <li>Munin plugin for ports.</li>
