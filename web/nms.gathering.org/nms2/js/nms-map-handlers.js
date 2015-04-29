@@ -46,6 +46,13 @@ var handler_traffic = {
 	name:"Uplink traffic map"
 };
 
+var handler_traffic_tot = {
+	updater:trafficTotUpdater,
+	init:trafficTotInit,
+	tag:"traffictot",
+	name:"Switch traffic map"
+};
+
 var handler_disco = {
 	updater:randomizeColors,
 	init:discoInit,
@@ -66,7 +73,8 @@ var handlers = [
 	handler_ping,
 	handler_traffic,
 	handler_disco,
-	handler_comment
+	handler_comment,
+	handler_traffic_tot
 	];
 
 /*
@@ -159,14 +167,48 @@ function trafficUpdater()
 	}
 }
 
-function colorFromSpeed(speed)
+/*
+ * Init-function for uplink map
+ */
+function trafficTotInit()
 {
 	var m = 1024 * 1024 / 8;
+	drawGradient([lightgreen,green,orange,red]);
+	setLegend(1,colorFromSpeed(0),"0 (N/A)");	
+	setLegend(5,colorFromSpeed(5000 * m,5) , "5000Mb/s");	
+	setLegend(4,colorFromSpeed(3000 * m,5),"3000Mb/s");	
+	setLegend(3,colorFromSpeed(1000 * m,5),"1000Mb/s");	
+	setLegend(2,colorFromSpeed(100 * m,5),"100Mb/s");	
+}
+
+function trafficTotUpdater()
+{
+	if (!nms.switches_now["switches"])
+		return;
+	for (sw in nms.switches_now["switches"]) {
+		var speed = 0;
+		for (port in nms.switches_now["switches"][sw]["ports"]) {
+			if (!nms.switches_then["switches"][sw] ||
+			    !nms.switches_then["switches"][sw]["ports"] ||
+			    !nms.switches_then["switches"][sw]["ports"][port])
+				continue;
+			var t = nms.switches_then["switches"][sw]["ports"][port];
+			var n = nms.switches_now["switches"][sw]["ports"][port];
+			speed += (parseInt(t["ifhcoutoctets"]) -parseInt(n["ifhcoutoctets"])) / (parseInt(t["time"] - n["time"]));
+		}
+		setSwitchColor(sw,colorFromSpeed(speed,5));
+	}
+}
+
+function colorFromSpeed(speed,factor)
+{
+	var m = 1024 * 1024 / 8;
+	if (factor == undefined)
+		factor = 2;
 	if (speed == 0)
 		return blue;
 	speed = speed < 0 ? 0 : speed;
-	return getColorStop( 1000 * (speed / (2 * (1000 * m))));
-//	return rgb_from_max2( 100 * (speed / (2 * (1000 * m))));
+	return getColorStop( 1000 * (speed / (factor * (1000 * m))));
 }
 
 

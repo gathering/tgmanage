@@ -73,6 +73,7 @@ var nms = {
 		'4':setMapModeFromN,
 		'5':setMapModeFromN,
 		'6':setMapModeFromN,
+		'7':setMapModeFromN,
 		'h':moveTimeFromKey,
 		'j':moveTimeFromKey,
 		'k':moveTimeFromKey,
@@ -1526,6 +1527,9 @@ function setMapModeFromN(e,key)
 			setUpdater(handler_comment);
 			break;
 		case '6':
+			setUpdater(handler_traffic_tot);
+			break;
+		case '7':
 			setUpdater(handler_disco);
 			break;
 	}
