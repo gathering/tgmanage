@@ -17,7 +17,7 @@ print <<"EOF";
     <map name="switches">
 EOF
 
-my $q = $dbh->prepare("SELECT * FROM switches NATURAL JOIN placements WHERE switchtype = 'dlink3100'");
+my $q = $dbh->prepare("SELECT * FROM switches NATURAL JOIN placements WHERE switchtype = 'ex2200'");
 $q->execute();
 while (my $ref = $q->fetchrow_hashref()) {
 	$ref->{'placement'} =~ /\((\d+),(\d+)\),\((\d+),(\d+)\)/;
