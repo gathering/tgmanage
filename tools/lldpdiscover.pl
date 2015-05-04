@@ -6,7 +6,7 @@ use strict;
 use warnings;
 use Data::Dumper;
 
-use lib 'tgmanage/include';
+use lib '../include';
 use nms;
 
 # Actual assets detected, indexed by chassis ID
@@ -19,12 +19,13 @@ my @chassis_ids_to_check;
 # If we are given one switch on the command line, add that and then exit.
 my ($cmdline_ip, $cmdline_community) = @ARGV;
 if (defined($cmdline_ip) && defined($cmdline_community)) {
+	my $chassis_id;
 	eval {
 		# Special-case for the first switch is to fetch chassis id
 		# directly. Everything else is fetched from a neighbour
 		# table.
 		my $session = nms::snmp_open_session($cmdline_ip, $cmdline_community);
-		my $chassis_id = get_lldp_chassis_id($session);
+		$chassis_id = get_lldp_chassis_id($session);
 		$assets{$chassis_id}{'community'} = $cmdline_community;
 		@{$assets{$chassis_id}{'v4mgmt'}} = ($cmdline_ip);
 		@{$assets{$chassis_id}{'v6mgmt'}} = ();
@@ -53,11 +54,12 @@ if (defined($cmdline_ip) && defined($cmdline_community)) {
 		}
 	}
 	print JSON::XS::encode_json(\%assets);
+	# Creates corrupt output, hooray.
+#	print JSON::XS->new->pretty(1)->encode(\%assets);
 	exit;
 } else {
 	print "RTFSC\n";
 }
-
 # Filter out stuff we don't scan. Return true if we care about it.
 # XXX: Several of these things are temporary to test (e.g.: AP).
 sub filter {
