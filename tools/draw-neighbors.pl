@@ -10,11 +10,12 @@ while (<STDIN>) {
 
 my %assets = %{JSON::XS::decode_json($in)};
 
-print "Drawing family tree from JSON:\n\n";
+print "digraph test {\n";
 while (my ($key, $value) = each %assets) {
 	print_tree ($key,0,undef);
-	last;
 }
+print "}\n";
+
 sub print_tree
 {
 	my ($chassis_id,$indent,$parent,$max) = @_;
@@ -24,13 +25,11 @@ sub print_tree
 	if ($indent > 50) {
 		die "Possible loop detected.";
 	}
-	for (my $i = 0; $i < $indent; $i++) {
-		print "\t";
-	}
-	print " - " . $assets{$chassis_id}{sysName} . "\n";
+	print " \"$assets{$chassis_id}{sysName}\" -> {";
+	my @n;
 	while (my ($key, $value) = each %{$assets{$chassis_id}{neighbors}}) {
-		if ($key ne $parent) {
-			print_tree($key,$indent+1,$chassis_id);
-		}
+		push @n, "\"$assets{$key}{sysName}\"";
 	}
+	print join(",",@n) . "}\n";
 }
+
