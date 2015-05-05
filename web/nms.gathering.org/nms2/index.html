@@ -46,12 +46,11 @@
 	    <span class="icon-bar"></span>
 	    <span class="icon-bar"></span>
 	  </button>
-	  <a class="navbar-brand" onclick="toggleLayer('aboutBox'); //document.getElementById('aboutBox').style.display = 'block'; hideSwitch();" style="cursor: pointer;" >NMS</a>
 	</div>
 	<div id="navbar" class="navbar-collapse collapse">
 	  <ul class="nav navbar-nav">
 	    <li class="dropdown">
-	      <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Map mode
+	      <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Menu
 		<span class="caret"></span>
 	      </a>
 	      <ul class="dropdown-menu" role="menu">
@@ -66,45 +65,36 @@
 		<li><a href="#" onclick="toggleLayer('nowPickerBox');document.getElementById('nowPicker').focus();">Travel in time</a></li>
 		<li><a href="#" onclick="startReplay();" title="Replay from opening 120 minutes per second">Replay TG</a></li>
 		<li class="divider"> </li>
-		<li><a onclick="showTimerDebug(); hideSwitch();" style="cursor: pointer;" >Debug timers</a></li>
-	      </ul>
-	    </li>
-	    <li class="dropdown">
-	      <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">View<span class="caret"></span></a>
-	      <ul class="dropdown-menu" role="menu">
+		<li class="dropdown-header">View</li>
 		<li><a href="#" onclick="toggleNightMode()">Toggle Night Mode</a></li>
 		<li><a href="#" onclick="showBlurBox()">Tweak Night Mode blur</a></li>
 		<li><a href="#" onclick='showLayer("layerVisibility");'>Set layer visibility</a></li>
 		<li class="divider"> </li>
 		<li class="dropdown-header">Map scale</li>
 		<li><a href="#"><label id="scaler-text" for='scaler'></label><input type="range" id="scaler" name="points" min="0.2" max="3" step="0.01" onchange="scaleChange()" /></a></li>
+		<li class="divider"> </li>
+		<li class="dropdown-header">Help</li>
+		<li><a href="#" onclick="toggleLayer('aboutData');">About TG15 data</a></li>
+	  	<li><a href="#" onclick="toggleLayer('aboutBox');" >About NMS</a></li>
+	  	<li><a href="#" onclick="toggleLayer('aboutPerformance');" >About Performance</a></li>
+	  	<li><a href="#" onclick="toggleLayer('aboutKeybindings');" >Keyboard Shortcuts</a></li>
+		<li><a onclick="showTimerDebug(); hideSwitch();" style="cursor: pointer;" >Debug timers</a></li>
 	      </ul>
 	    </li>
 	    <li><p id="updater_name" class="navbar-text"></p></li>
 	    <div class="navbar-form navbar-left">
 	      <div class="form-group">
-		<button class="btn btn-default" id="legend-1"></button>
-		<button class="btn btn-default" id="legend-2"></button>
-		<button class="btn btn-default" id="legend-3"></button>
-		<button class="btn btn-default" id="legend-4"></button>
-		<button class="btn btn-default" id="legend-5"></button>
+		<button class="btn btn-default btn-xs" id="legend-1"></button>
+		<button class="btn btn-default btn-xs" id="legend-2"></button>
+		<button class="btn btn-default btn-xs" id="legend-3"></button>
+		<button class="btn btn-default btn-xs" id="legend-4"></button>
+		<button class="btn btn-default btn-xs" id="legend-5"></button>
 	      </div>
 	    </div>
 	    </li>
 	  </ul>
 	  <ul class="nav navbar-nav navbar-right">
 	    <li><p id="speed" class="navbar-text" title="Client port speed / Total port speed"></p></li>
-	    <li class="dropdown">
-	      <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Help
-		<span class="caret"></span>
-	      </a>
-	      <ul class="dropdown-menu" role="menu">
-		<li><a href="#" onclick="toggleLayer('aboutData');">About TG15 data</a></li>
-	  	<li><a href="#" onclick="toggleLayer('aboutBox');" >About NMS</a></li>
-	  	<li><a href="#" onclick="toggleLayer('aboutPerformance');" >About Performance</a></li>
-	  	<li><a href="#" onclick="toggleLayer('aboutKeybindings');" >Keyboard Shortcuts</a></li>
-	      </ul>
-	    </li>
 	  </ul>
 	</div><!--/.nav-collapse -->
       </div>

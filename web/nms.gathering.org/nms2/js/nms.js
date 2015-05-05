@@ -932,8 +932,8 @@ function updateSpeed()
 	nms.speed = speed_in;
 	nms.speed_full = speed_full;
 	if (speedele) {
-		speedele.innerHTML = byteCount(8 * parseInt(nms.speed)) + "bit/s";
-		speedele.innerHTML += " / " + byteCount(8 * parseInt(nms.speed_full)) + "bit/s";
+		speedele.innerHTML = byteCount(8 * parseInt(nms.speed)) + "b/s";
+		speedele.innerHTML += " / " + byteCount(8 * parseInt(nms.speed_full)) + "b/s";
 
 	}
 }
@@ -1096,6 +1096,11 @@ function setScale()
 	canvas.height =  orig.height * canvas.scale ;
 	canvas.width = orig.width * canvas.scale ;
 	for (var a in dr) {
+		/*
+		 * Resizing this to a too small size breaks gradients on smaller screens.
+		 */
+		if (a == 'hidden')
+			continue;
 		dr[a].c.height = canvas.height;
 		dr[a].c.width = canvas.width;
 	}
@@ -1397,7 +1402,7 @@ function initNMS() {
 	nms.timers.ping = new nmsTimer(updatePing, 1000, "Ping updater", "AJAX request to update ping data");
 	nms.timers.ping.start();
 	
-	nms.timers.replay = new nmsTimer(timeReplay, 500, "Time machine", "Handler used to change time");
+	nms.timers.replay = new nmsTimer(timeReplay, 1000, "Time machine", "Handler used to change time");
 	detectHandler();
 	updatePorts();
 	updatePing();
