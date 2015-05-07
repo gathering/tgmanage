@@ -7,6 +7,8 @@ var nms = {
 	ping_data:undefined, // JSON data for ping history.
 	drawn:false, // Set to 'true' when switches are drawn
 	switch_showing:"", // Which switch we are displaying (if any).
+	switchInfo:{},
+	switchInfoDrawn:{},
 	repop_switch:false, // True if we need to repopulate the switch info when port state updates (e.g.: added comments);
 	repop_time:false, // Timestamp in case we get a cached result
 	nightMode:false, 
@@ -23,7 +25,8 @@ var nms = {
 	textDrawn:{}, // Have we drawn text for this switch?
 	now:false, // Date we are looking at (false for current date).
 	fontSize:16, // This is scaled too, but 16 seems to make sense.
-	fontFace:"Arial Black",
+	fontFace:"Verdana",
+	fontLineFactor:3,
 	/*
 	 * This is used to track outbound AJAX requests and skip updates if
 	 * we have too many outstanding requests. The ajaxOverflow is a
@@ -203,6 +206,9 @@ function initDrawing() {
 	dr['text'] = {};
 	dr['text']['c'] = document.getElementById("textCanvas");
 	dr['text']['ctx'] = dr['text']['c'].getContext('2d');
+	dr['textInfo'] = {};
+	dr['textInfo']['c'] = document.getElementById("textInfoCanvas");
+	dr['textInfo']['ctx'] = dr['textInfo']['c'].getContext('2d');
 	dr['top'] = {};
 	dr['top']['c'] = document.getElementById("topCanvas");
 	dr['top']['ctx'] = dr['top']['c'].getContext('2d');
@@ -649,6 +655,7 @@ function setUpdater(fo)
 {
 	nms.updater = undefined;
 	resetColors();
+	resetTextInfo();
 	fo.init();
 	nms.updater = fo;
 	var foo = document.getElementById("updater_name");
@@ -1008,10 +1015,11 @@ function drawSwitch(sw)
 		drawBox(box['x'],box['y'],box['width'],box['height']);
 		dr.switch.ctx.shadowBlur = 0;
 		if (!nms.textDrawn[sw]) {
-			if ((box['width'] + 10 )< box['height'])
-				drawSideways(sw,box['x'],box['y'],box['width'],box['height']);
-			else
-				drawRegular(sw,box['x'],box['y'],box['width'],box['height']);
+			if ((box['width'] + 10 )< box['height']) {
+				drawSideways(dr.text.ctx, sw,box['x'],box['y'],box['width'],box['height']);
+			} else {
+				drawRegular(dr.text.ctx,sw,box['x'],box['y'],box['width'],box['height']);
+			}
 			
 			nms.textDrawn[sw] = true;
 		}
@@ -1046,6 +1054,15 @@ function drawSwitches()
 	}
 	nms.drawn = true;
 }
+function drawSwitchInfo()
+{
+	if (!nms.switches_now || !nms.switches_now.switches)
+		return;
+	for (var sw in nms.switchInfo) {
+		switchInfoText(sw, nms.switchInfo[sw]);
+	}
+	nms.drawn = true;
+}
 
 /*
  * Draw current time-window
@@ -1063,9 +1080,9 @@ function drawNow()
 	dr.top.ctx.clearRect(0,0,Math.floor(800 * canvas.scale),Math.floor(100 * canvas.scale));
 	dr.top.ctx.fillStyle = "white";
 	dr.top.ctx.strokeStyle = "black";
-	dr.top.ctx.lineWidth = Math.floor(2 * canvas.scale);
+	dr.top.ctx.lineWidth = Math.floor(nms.fontLineFactor * canvas.scale);
 	if (dr.top.ctx.lineWidth == 0) {
-		dr.top.ctx.lineWidth = Math.round(2 * canvas.scale);
+		dr.top.ctx.lineWidth = Math.round(nms.fontLineFactor * canvas.scale);
 	}
 	dr.top.ctx.strokeText(now, 0 + margin.text, 25 * canvas.scale);
 	dr.top.ctx.fillText(now, 0 + margin.text, 25 * canvas.scale);
@@ -1083,8 +1100,10 @@ function drawNow()
 function drawScene()
 {
 	dr.text.ctx.font = Math.floor(nms.fontSize * canvas.scale) + "px " + nms.fontFace;
+	dr.textInfo.ctx.font = Math.floor(nms.fontSize * canvas.scale) + "px " + nms.fontFace;
 	drawLinknets();
 	drawSwitches();
+	drawSwitchInfo();
 }
 
 /*
@@ -1106,6 +1125,7 @@ function setScale()
 	}
 	nms.nightBlur = {};
 	nms.textDrawn = {};
+	nms.switchInfoDrawn = {};
 	if (nms.gradients)
 		drawGradient(nms.gradients);
 	drawBG();
@@ -1197,6 +1217,15 @@ function resetColors()
 	}
 }
 
+function resetTextInfo()
+{
+	if (!nms.switches_now)
+		return;
+	for (var sw in nms.switches_now.switches) {
+		switchInfoText(sw, undefined);
+	}
+
+}
 /*
  * onclick handler for the canvas.
  *
@@ -1264,6 +1293,26 @@ function setNightMode(toggle) {
 	}
 	setScale();
 }
+
+function switchInfoText(sw, text)
+{
+	var box = nms.switches_now['switches'][sw]['placement'];
+	var c = canvas.scale;
+	if (nms.switchInfo[sw] == text && nms.switchInfoDrawn[sw]) {
+		return;
+	}
+	nms.switchInfo[sw] = text;
+	nms.switchInfoDrawn[sw] = true;
+	dr.textInfo.ctx.clearRect(c* box['x'], c*box['y'], c*box['width'], c*box['height']);
+	if (text != undefined && text != "") {
+		if ((box['width'] + 10 )< box['height']) {
+			drawSideways(dr.textInfo.ctx, text,box['x'],box['y'],box['width'],box['height'],"end");
+		} else {
+			drawRegular(dr.textInfo.ctx, text,box['x'],box['y'],box['width'],box['height'],"end");
+		}
+	}
+}
+
 /*
  * Draw a box (e.g.: switch).
  */
@@ -1274,9 +1323,9 @@ function drawBox(x,y,boxw,boxh)
 	var myX2 = Math.floor((boxw) * canvas.scale);
 	var myY2 = Math.floor((boxh) * canvas.scale);
 	dr.switch.ctx.fillRect(myX,myY, myX2, myY2);
-	dr.switch.ctx.lineWidth = Math.floor(0.5 * canvas.scale);
+	dr.switch.ctx.lineWidth = Math.floor(1.0 * canvas.scale);
 	if (canvas.scale < 1.0) {
-		dr.switch.ctx.lineWidth = 0.5;
+		dr.switch.ctx.lineWidth = 1.0;
 	}
 	dr.switch.ctx.strokeStyle = "#000000";
 	dr.switch.ctx.strokeRect(myX,myY, myX2, myY2);
@@ -1298,19 +1347,25 @@ function drawBoxBlur(x,y,boxw,boxh)
  *
  * XXX: This is pretty nasty and should also probably take a box as input.
  */
-function drawSideways(text,x,y,w,h)
+function drawSideways(ctx,text,x,y,w,h,align)
 {
-	dr.text.ctx.rotate(Math.PI * 3 / 2);
-	dr.text.ctx.fillStyle = "white";
-	dr.text.ctx.strokeStyle = "black";
-	dr.text.ctx.lineWidth = Math.floor(3 * canvas.scale);
-	if (dr.text.ctx.lineWidth == 0) {
-		dr.text.ctx.lineWidth = Math.round(3 * canvas.scale);
+	ctx.rotate(Math.PI * 3 / 2);
+	ctx.fillStyle = "white";
+	ctx.strokeStyle = "black";
+	if (align == "end") {
+		ctx.textAlign = align;
+		y = y-h + margin.text*2;
+	} else {
+		ctx.textAlign = "start";
 	}
-	dr.text.ctx.strokeText(text, - canvas.scale * (y + h - margin.text),canvas.scale * (x + w - margin.text) );
-	dr.text.ctx.fillText(text, - canvas.scale * (y + h - margin.text),canvas.scale * (x + w - margin.text) );
+	ctx.lineWidth = Math.floor(nms.fontLineFactor * canvas.scale);
+	if (ctx.lineWidth == 0) {
+		ctx.lineWidth = Math.round(nms.fontLineFactor * canvas.scale);
+	}
+	ctx.strokeText(text, - canvas.scale * (y + h - margin.text),canvas.scale * (x + w - margin.text) );
+	ctx.fillText(text, - canvas.scale * (y + h - margin.text),canvas.scale * (x + w - margin.text) );
 
-	dr.text.ctx.rotate(Math.PI / 2);
+	ctx.rotate(Math.PI / 2);
 }
 
 /*
@@ -1341,16 +1396,22 @@ function invertCanvas() {
  *
  * XXX: Both should be renamed to have 'text' or something in them
  */
-function drawRegular(text,x,y,w,h) {
+function drawRegular(ctx,text,x,y,w,h,align) {
 
-	dr.text.ctx.fillStyle = "white";
-	dr.text.ctx.strokeStyle = "black";
-	dr.text.ctx.lineWidth = Math.floor(3 * canvas.scale);
-	if (dr.text.ctx.lineWidth == 0) {
-		dr.text.ctx.lineWidth = Math.round(3 * canvas.scale);
+	ctx.fillStyle = "white";
+	ctx.strokeStyle = "black";
+	ctx.lineWidth = Math.floor(nms.fontLineFactor * canvas.scale);
+	if (align == "end") {
+		ctx.textAlign = align;
+		x = x+w - margin.text*2;
+	} else {
+		ctx.textAlign = "start";
 	}
-	dr.text.ctx.strokeText(text, (x + margin.text) * canvas.scale, (y + h - margin.text) * canvas.scale);
-	dr.text.ctx.fillText(text, (x + margin.text) * canvas.scale, (y + h - margin.text) * canvas.scale);
+	if (ctx.lineWidth == 0) {
+		ctx.lineWidth = Math.round(nms.fontLineFactor * canvas.scale);
+	}
+	ctx.strokeText(text, (x + margin.text) * canvas.scale, (y + h - margin.text) * canvas.scale);
+	ctx.fillText(text, (x + margin.text) * canvas.scale, (y + h - margin.text) * canvas.scale);
 }
 
 /*

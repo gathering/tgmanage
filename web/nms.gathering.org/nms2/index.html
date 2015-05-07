@@ -484,6 +484,13 @@
 		</td>
 	      </tr>
 	      <tr>
+		<td>TextInfo</td>
+		<td>
+		  <button onclick='hideLayer("textInfoCanvas");'>Hide</button>
+		  <button onclick='showLayer("textInfoCanvas");'>Show</button>
+		</td>
+	      </tr>
+	      <tr>
 		<td>Timestamp</td>
 		<td>
 		  <button onclick='hideLayer("topCanvas");'>Hide</button>
@@ -499,6 +506,7 @@
 	<canvas id="blurCanvas" width="1920" height="1032" style="position: absolute; z-index: 20;"> </canvas>
 	<canvas id="switchCanvas" width="1920" height="1032" style="position: absolute; z-index: 30;"> </canvas>
 	<canvas id="textCanvas" width="1920" height="1032" style="position: absolute; z-index: 40;"> </canvas>
+	<canvas id="textInfoCanvas" width="1920" height="1032" style="position: absolute; z-index: 45;"> </canvas>
 	<canvas id="topCanvas" width="1920" height="1032" style="position: absolute; z-index: 50;"> </canvas>
 	<canvas id="inputCanvas" width="1920" height="1032" style="position: absolute; z-index: 60; cursor: pointer;" onclick="canvasClick(event)">
 	</canvas>
