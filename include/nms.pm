@@ -25,6 +25,7 @@ BEGIN {
 	# cd /usr/share/mibs/site
 	# wget -O- ftp://ftp.cisco.com/pub/mibs/v2/v2.tar.gz | sudo tar --strip-components=3 -zxvvf -
 	SNMP::initMib();
+	SNMP::addMibDirs("../mibs");
 	SNMP::loadModules('SNMPv2-MIB');
 	SNMP::loadModules('ENTITY-MIB');
 	SNMP::loadModules('IF-MIB');
