@@ -1,5 +1,28 @@
 #! /usr/bin/perl
-use DBI;
+# 
+# Basic tool to discover your neighbourhood systems, using LLDP, as seen
+# through SNMP.
+#
+# Usage: ./lldpdiscover.pl <ip> <community>
+#
+# This will connect to <ip> and poll it for SNMP-data, then add that to an
+# asset database. After that's done, we parse the LLDP neighbor table
+# provided over SNMP and add those systems to assets, then try to probe
+# THEM with SNMP, using the same community, and so on.
+#
+# If the entire internet exposed LLDP and SNMP in a public domain, we could
+# theoretically map the whole shebang.
+#
+# Note that leaf nodes do NOT need to reply to SNMP to be added, but
+# without SNMP, there'll obviously be some missing data.
+#
+# The output is a JSON blob of all assets, indexed by chassis id. It also
+# includes a neighbor table for each asset which can be used to generate a
+# map (See dotnet.sh or draw-neighbors.pl for examples). It can also be
+# used to add the assets to NMS.
+#
+# A sensible approach might be to run this periodically, store the results
+# to disk, then have multiple tools parse the results.
 use POSIX;
 use Time::HiRes;
 use strict;
@@ -74,6 +97,9 @@ sub filter {
 	if ($caps{'cap_enabled_telephone'}) {
 		return 0;
 	}
+	if (!defined($sysdesc)) {
+		return 1;
+	}
 	if ($sysdesc =~ /\b(C1530|C3600|C3700)\b/) {
 		return 0;
 	}
@@ -98,6 +124,9 @@ sub discover_lldp_neighbors {
 	while (my ($key, $value) = each %{$assets{$local_id}{snmp_parsed}{lldpRemTable}}) {
 		my $chassis_id = $value->{'lldpRemChassisId'};
 		my $sysname = $value->{'lldpRemSysName'};
+		if (!defined($sysname)) {
+			$sysname = $chassis_id;
+		}
 
 		# Do not try to poll servers.
 		if (!filter(\%{$value})) {
@@ -130,13 +159,30 @@ sub discover_lldp_neighbors {
 		} elsif (scalar @v4addrs > 0) {
 			$addr = $v4addrs[0];
 		} else {
-			warn "Could not find a management address for chassis ID $chassis_id (sysname=$sysname, lldpRemIndex=$key)";
-			next;
+			mylog( "Could not find a management address for chassis ID $chassis_id (sysname=$sysname, lldpRemIndex=$key)");
+			# We still want to add these weirdo-things, but
+			# they wont do much good except fill the map.
 		}
 
-		mylog("Found $sysname ($local_sysname -> $sysname ($addr))");
+		mylog("Found $sysname ($local_sysname -> $sysname )");
 		$sysname =~ s/\..*$//;
-		$assets{$chassis_id}{'sysName'} = $sysname;
+		if (defined($assets{$chassis_id}{'sysName'})) {
+			mylog("Duplicate $sysname: \"$sysname\" vs \"$assets{$chassis_id}{'sysName'}\"");
+			if ($assets{$chassis_id}{'sysName'} eq "") {
+				$assets{$chassis_id}{'sysName'} = $sysname;
+			}
+		} else {
+			$assets{$chassis_id}{'sysName'} = $sysname;
+		}
+
+		# FIXME: We should handle duplicates better and for more
+		# than just sysname. These happen every time we are at
+		# least one tier down (given A->{B,C,D,E}, switch B, C, D
+		# and E will all know about A, thus trigger this). We also
+		# want to _add_ information only, since two nodes might
+		# know about the same switch, but one might have incomplete
+		# information (as is the case when things start up).
+
 		# We simply guess that the community is the same as ours.
 		$assets{$chassis_id}{'community'} = $community;
 		@{$assets{$chassis_id}{'v4mgmt'}} = @v4addrs;
@@ -156,6 +202,9 @@ sub mylog {
 }
 
 # Get raw SNMP data for an ip/community.
+# FIXME: This should be seriously improved. Three get()'s and four
+# gettables could definitely be streamlined, but then again, I doubt it
+# matters much unless we start running this tool constantly.
 sub get_snmp_data {
 	my ($ip, $community) = @_;
 	my %ret = ();
@@ -220,7 +269,8 @@ sub parse_snmp
 }
 
 # Add a chassis_id to the list to be checked, but only if it isn't there.
-# I'm sure there's some better way to do this, but meh, perl.
+# I'm sure there's some better way to do this, but meh, perl. Doesn't even
+# have half-decent prototypes.
 sub check_neigh {
 	my $n = $_[0];
 	for my $v (@chassis_ids_to_check) {
@@ -232,7 +282,6 @@ sub check_neigh {
 	return 1;
 }
 
-#
 # We've got a switch. Populate it with SNMP data (if we can).
 sub add_switch {
 	my $chassis_id = shift;
@@ -251,6 +300,9 @@ sub add_switch {
 
 	}
 	return if (!defined($snmp));
+	my $sysname = $snmp->{sysName};
+	$sysname =~ s/\..*$//;
+	$assets{$chassis_id}{'sysName'} = $sysname;
 	$assets{$chassis_id}{'mgmt'} = $addr;
 	$assets{$chassis_id}{'snmp'} = $snmp;
 	$assets{$chassis_id}{'snmp_parsed'} = parse_snmp($snmp);

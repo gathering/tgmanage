@@ -10,7 +10,7 @@ while (<STDIN>) {
 
 my %assets = %{JSON::XS::decode_json($in)};
 
-print "digraph test {\n";
+print "strict graph network {\n";
 while (my ($key, $value) = each %assets) {
 	print_tree ($key,0,undef);
 }
@@ -25,11 +25,11 @@ sub print_tree
 	if ($indent > 50) {
 		die "Possible loop detected.";
 	}
-	print " \"$assets{$chassis_id}{sysName}\" -> {";
+	print " \"$assets{$chassis_id}{sysName}\" -- {";
 	my @n;
 	while (my ($key, $value) = each %{$assets{$chassis_id}{neighbors}}) {
 		push @n, "\"$assets{$key}{sysName}\"";
 	}
-	print join(",",@n) . "}\n";
+	print join(",",@n) . "};\n";
 }
 
