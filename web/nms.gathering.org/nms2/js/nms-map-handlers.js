@@ -232,11 +232,14 @@ function tempUpdater()
 {
 	for (sw in nms.switches_now["switches"]) {
 		var t = "white";
+		var temp = "";
 		if (nms.switches_now["switches"][sw]["temp"]) {
 			t = temp_color(nms.switches_now["switches"][sw]["temp"]);
+			temp = nms.switches_now["switches"][sw]["temp"] + "°C";
 		}
 		
 		setSwitchColor(sw, t);
+		switchInfoText(sw, temp);
 	}
 }
 
