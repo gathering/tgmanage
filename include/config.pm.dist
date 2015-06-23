@@ -10,6 +10,9 @@ our $db_host = "gerald.tg15.gathering.org";
 our $db_username = "nms";
 our $db_password = "<removed>";
 
+# NMS hash used for public NMS obfuscation of interface names
+our $nms_hash = "<removed>";
+
 # DHCP-servers
 our $dhcp_server1 = "185.12.59.66"; # primary
 our $dhcp_server2 = "185.12.59.2"; # secondary

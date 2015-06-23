@@ -13,18 +13,21 @@ my $cgi = CGI->new;
 my $dbh = nms::db_connect();
 my $cin = $cgi->param('time');
 my $now = "now()";
-if ($cgi->param('now') != undef) {
+if (defined($cgi->param('now'))) {
 	$now = "'" . $cgi->param('now') . "'::timestamp ";
 }
 
 my $when =" time > " . $now . " - '5m'::interval and time < " . $now . " ";
 my %json = ();
-
+my $ifname = "ifname";
+if (defined($cgi->param('public'))) {
+	$ifname = "regexp_replace(ifname, 'ge-0/0/(([0-3][0-9])|(4[0-3])|([0-9]))\$',concat('ge-participant',sha1_hmac(ifname::bytea,'".$nms::config::nms_hash."'::bytea))) as ifname";
+}
 if (defined($cin)) {
 	$when = " time < " . $now . " - '$cin'::interval and time > ". $now . " - ('$cin'::interval + '5m'::interval) ";
 }
 
-my $query = 'select sysname,extract(epoch from date_trunc(\'second\',time)) as time, ifname,ifhighspeed,ifhcinoctets,ifhcoutoctets from polls natural join switches where time in  (select max(time) from polls where ' . $when . ' group by switch,ifname);';
+my $query = 'select sysname,extract(epoch from date_trunc(\'second\',time)) as time, '.$ifname.',ifhighspeed,ifhcinoctets,ifhcoutoctets from polls natural join switches where time in  (select max(time) from polls where ' . $when . ' group by switch,ifname);';
 my $q = $dbh->prepare($query);
 $q->execute();
 
