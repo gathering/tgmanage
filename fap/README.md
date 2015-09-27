@@ -11,6 +11,11 @@ Licensed under the GNU GPL, version 2. See the included COPYING file.
 ## Usage
 Launch the python scripts for fap from tgmanage directory.
 
+    apt-get install apache2 php5 python3 python3-psycopg2 php5-pgsql
+    a2enmod cgi
+    a2enmod rewrite
+    
+
 
 ### HTTPD
     j@lappie:~/git/tgmanage$ sudo python3 fap/httpd/server_http.py
