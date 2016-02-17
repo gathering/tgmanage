@@ -322,7 +322,7 @@ string distro_name(unsigned distro)
 string port_name(unsigned distro, unsigned portnum)
 {
 	char buf[16];
-	int distros[] = { 0, 1, 2 }; // must equal number of times called, defines name of port/member of stack
+	int distros[] = { 0, 1, 2 }; // must equal the number of switches in distro-stack
 	sprintf(buf, "ge-%u/0/%u", distros[portnum / 48], (portnum % 48));
 	return buf;
 }
