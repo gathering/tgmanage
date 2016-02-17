@@ -26,7 +26,7 @@
 #include <queue>
 
 #define NUM_DISTRO 8
-#define NUM_ROWS 45
+#define NUM_ROWS 43
 #define SWITCHES_PER_ROW 4
 #define PORTS_PER_DISTRO 38
 
@@ -39,8 +39,8 @@
 // 5.5m between the two half rows
 #define HORIZ_GAP_COST 55
 
-#define FIRST_SUBNET_ADDRESS "88.92.1.0"
-#define FIRST_MGMT_ADDRESS "88.92.52.0"
+#define FIRST_SUBNET_ADDRESS "88.92.0.0"
+#define FIRST_MGMT_ADDRESS "88.92.54.0"
 #define SUBNET_SIZE 26
 #define IPV6_PREFIX "2a06:5840:"
 
@@ -135,7 +135,8 @@ struct CompareByCost {
 };
 
 const unsigned horiz_cost[SWITCHES_PER_ROW] = {
-	216, 72, 72, 216  // Gap costs are added separately.
+	216, 72, 72, 216  // first switch from the middle; 7.2m, the outer; 21.6m
+	//288, 0, 0, 288  // AP's at the end of rows, and in the middle
 };
 
 struct VerticalGap {
@@ -321,7 +322,7 @@ string distro_name(unsigned distro)
 string port_name(unsigned distro, unsigned portnum)
 {
 	char buf[16];
-	int distros[] = { 0, 1, 2, 3 };
+	int distros[] = { 0, 1, 2 }; // must equal number of times called, defines name of port/member of stack
 	sprintf(buf, "ge-%u/0/%u", distros[portnum / 48], (portnum % 48));
 	return buf;
 }
@@ -694,13 +695,15 @@ int Planner::do_work(int distro_placements[NUM_DISTRO])
 
 		distro_mgmt_ip[distro] = htonl(ntohl(distro_mgmt_ip[distro]) + 1);
 
-		fprintf(patchlist, "e%u-%u %s %s %s %s %s\n",
+		fprintf(patchlist, "e%u-%u %s %s %s %s\n",
 			switches[i].row * 2 - 1, switches[i].num + 1,
 			distro_name(distro).c_str(),
 			port_name(distro, port_num).c_str(),
 			port_name(distro, port_num + 48).c_str(),
-			port_name(distro, port_num + 96).c_str(),
-			port_name(distro, port_num + 144).c_str());
+			port_name(distro, port_num + 96).c_str()
+			// if we have 4 switches in a distro-stack
+			//port_name(distro, port_num + 144).c_str()
+			);
 
 		in_addr mgmt_ip4;
 		in_addr subnet_addr4;
