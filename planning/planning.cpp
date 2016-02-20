@@ -5,7 +5,7 @@
 // Given D distro switches and N access switches, complexity is approx. O(dn³)
 // (runs n iterations, each iteration is O(VE), V is O(n), E is O(dn))).
 //
-// g++ -std=gnu++11 -Wall -g -O3 -fopenmp -DOUTPUT_FILES=1 -o planning planning.cpp && ./planning -4 10 -11 18 27 -28 -36 37
+// g++ -std=gnu++11 -Wall -g -O3 -fopenmp -DOUTPUT_FILES=1 -o planning planning.cpp && ./planning -3 8 -9 16 25 -26 -32 35
 
 #include <stdio.h>
 #include <math.h>
@@ -26,18 +26,23 @@
 #include <queue>
 
 #define NUM_DISTRO 8
-#define NUM_ROWS 42
+#define NUM_ROWS 43
 #define SWITCHES_PER_ROW 4
 #define PORTS_PER_DISTRO 38
 
 #define TRUNCATE_METRIC 1
 #define EXTENSION_COST 70
-#define HORIZ_GAP_COST 10000000
 
-#define FIRST_SUBNET_ADDRESS "151.216.129.0"
-#define FIRST_MGMT_ADDRESS "151.216.180.0"
+// 3.6m from row to row (2.4m gap + 1.2m boards).
+#define ROW_DISTANCE_COST 36
+
+// 5.5m between the two half rows
+#define HORIZ_GAP_COST 55
+
+#define FIRST_SUBNET_ADDRESS "88.92.0.0"
+#define FIRST_MGMT_ADDRESS "88.92.54.0"
 #define SUBNET_SIZE 26
-#define IPV6_PREFIX "2a02:ed02:"
+#define IPV6_PREFIX "2a06:5840:"
 
 #define _INF 99999
 
@@ -130,19 +135,22 @@ struct CompareByCost {
 };
 
 const unsigned horiz_cost[SWITCHES_PER_ROW] = {
-	216, 72, 72, 216  // Gap costs are added separately.
+	216, 72, 72, 216  // first switch from the middle; 7.2m, the outer; 21.6m
+	//288, 0, 0, 288  // AP's at the end of rows, and in the middle
 };
 
 struct VerticalGap {
 	unsigned after_row_num;
 	unsigned extra_cost;
 };
-// 3, 4m, 4m, 4m gaps (0.6m, 1.6m, 1.6m, 1.6m extra).
+// Mid-row to mid-row is 3.6m
+// After row 12: 4.6m+0.1m slack = 2.3m cost
+// After row 20: 4.0m+0.1m slack = 1.7m cost
+// After row 29: 3.6m+0.1m slack = 1.3m cost
 vector<VerticalGap> vertical_gaps = {
-	{ 8, 17 },
-	{ 14, 17 },
-	{ 22, 17 },
-	{ 31, 17 },
+	{ 12, 23 },
+	{ 20, 17 },
+	{ 29, 13 },
 };
 
 class Planner {
@@ -179,17 +187,17 @@ unsigned Planner::find_distance(Switch from_where, int distro)
 		int bridge_row = distro_placements[NUM_DISTRO - 1];
 
 		// Go to the bridge...
-		base_cost += 36 * abs(int(from_where.row) - bridge_row);
+		base_cost += ROW_DISTANCE_COST * abs(int(from_where.row) - bridge_row);
 
 		// Cross it (5.0m horizontal gap)...
-		base_cost += 50;
-                base_cost += 1000000; //We don't like horisontal gaps
+		base_cost += HORIZ_GAP_COST;
+                base_cost += _INF; // We don't like horisontal gaps
 
 		// ...and away from the bridge again.
-		base_cost += 36 * abs(int(dp) - bridge_row);
+		base_cost += ROW_DISTANCE_COST * abs(int(dp) - bridge_row);
 	} else {
 		// 3.6m from row to row (2.4m gap + 1.2m boards).
-		base_cost += 36 * abs(int(from_where.row) - int(dp));
+		base_cost += ROW_DISTANCE_COST * abs(int(from_where.row) - int(dp));
 	}
 
 	for (const VerticalGap& gap : vertical_gaps) {
@@ -236,26 +244,29 @@ Inventory Planner::find_inventory(Switch from_where, int distro)
 		inv.num_10m = _INF;
 	}
 
+	// distro0-2 shouldn't cross the mid
 	if ((distro_placements[distro] >= 0) == (from_where.num >= 2)) {
 		inv.horiz_gap_crossings = 1;
 	}
 
-	// The gap between Game and Sector 8 is unsurmountable.
-	if ((abs(distro_placements[distro]) <= 8) == (from_where.row >= 9) &&
+	// Don't cross row 6/7 on the east side
+	if ((abs(distro_placements[distro]) <= 6) == (from_where.row >= 7) &&
 	    distro_placements[distro] < 0) {
 		inv.vert_chasm_crossings = 1;
 	}
 
-	// So is the gap over the scene.
-	if ((abs(distro_placements[distro]) <= 14) == (from_where.row >= 15)) {
+	// Gap over the scene
+	if ((abs(distro_placements[distro]) <= 12) == (from_where.row >= 13)) {
 		inv.vert_chasm_crossings = 1;
 	}
 
-	// Gaps between sectors
-	if ((abs(distro_placements[distro]) <= 22) == (from_where.row >= 23)) {
+	// Gaps between fire gates
+	if ((abs(distro_placements[distro]) <= 20) == (from_where.row >= 21)) {
 		inv.vert_chasm_crossings = 1;
 	}
-	if ((abs(distro_placements[distro]) <= 31) == (from_where.row >= 32)) {
+	
+	// Gaps between fire gates
+	if ((abs(distro_placements[distro]) <= 29) == (from_where.row >= 30)) {
 		inv.vert_chasm_crossings = 1;
 	}
 
@@ -278,16 +289,6 @@ unsigned Planner::find_cost(Switch from_where, int distro)
 #else
 	cost = find_distance(from_where, distro);
 	// cost = ((distance + 90) / 100) * 100;
-#endif
-
-#if 0
-	// We really, really do not want to cross the gap on the north side.
-	// (now handled in bridge cost)
-	if (from_where.row <= 30) {
-		cost += _INF * inv.horiz_gap_crossings;
-	} else {
-		cost += HORIZ_GAP_COST * inv.horiz_gap_crossings;
-	}
 #endif
 
 	// Also, the gap between Game and Sector 8 is unsurmountable.
@@ -321,7 +322,7 @@ string distro_name(unsigned distro)
 string port_name(unsigned distro, unsigned portnum)
 {
 	char buf[16];
-	int distros[] = { 0, 1, 2, 3 };
+	int distros[] = { 0, 1, 2 }; // must equal the number of switches in distro-stack
 	sprintf(buf, "ge-%u/0/%u", distros[portnum / 48], (portnum % 48));
 	return buf;
 }
@@ -346,61 +347,43 @@ void Planner::init_switches()
 {
 	switches.clear();
 	for (unsigned i = 1; i <= NUM_ROWS; ++i) {
-		// Sector 9 and 10
-		if (i == 1) {
-			switches.push_back(Switch(i, 2));		
-		}
-
-		if (i == 2) {
+		if (i >= 1 && i <= 2) {
 			switches.push_back(Switch(i, 2));
 			switches.push_back(Switch(i, 3));
 		}
 
-		if (i >= 3 && i <= 5) {
+		if (i == 3) {
 			switches.push_back(Switch(i, 1));
 			switches.push_back(Switch(i, 2));
 			switches.push_back(Switch(i, 3));
 		}
 
-		if (i >= 6 && i <= 8) {
+		if (i >= 4 && i <= 12) {
 			switches.push_back(Switch(i, 0));
 			switches.push_back(Switch(i, 1));
 			switches.push_back(Switch(i, 2));
 			switches.push_back(Switch(i, 3));
 		}
 
-		// Sectors 7 and 8.
-		if (i >= 9 && i <= 14) {
+		if (i >= 13 && i <= 20) {
+			switches.push_back(Switch(i, 0));
+			switches.push_back(Switch(i, 1));
+		}
+
+		if (i >= 21 && i <= 34) {
 			switches.push_back(Switch(i, 0));
 			switches.push_back(Switch(i, 1));
 			switches.push_back(Switch(i, 2));
 			switches.push_back(Switch(i, 3));
 		}
 
-		// Sector 5.
-		if (i >= 15 && i <= 22) {
+		if (i >= 35 && i <= 41) {
 			switches.push_back(Switch(i, 0));
 			switches.push_back(Switch(i, 1));
 		}
 
-		// Sectors 3 and 4.
-		if (i >= 23 && i <= 30) {
-			switches.push_back(Switch(i, 0));
+		if (i >= 42 && i <= 43) {
 			switches.push_back(Switch(i, 1));
-			switches.push_back(Switch(i, 2));
-			switches.push_back(Switch(i, 3));
-		}
-
-		// Sector 1.
-		if (i >= 31 && i <= 42) {
-			switches.push_back(Switch(i, 0));
-			switches.push_back(Switch(i, 1));
-		}
-
-		// Sector 2.
-		if (i >= 31 && i <= 40) {
-			switches.push_back(Switch(i, 2));
-			switches.push_back(Switch(i, 3));
 		}
 	}
 }
@@ -712,13 +695,15 @@ int Planner::do_work(int distro_placements[NUM_DISTRO])
 
 		distro_mgmt_ip[distro] = htonl(ntohl(distro_mgmt_ip[distro]) + 1);
 
-		fprintf(patchlist, "e%u-%u %s %s %s %s %s\n",
+		fprintf(patchlist, "e%u-%u %s %s %s %s\n",
 			switches[i].row * 2 - 1, switches[i].num + 1,
 			distro_name(distro).c_str(),
 			port_name(distro, port_num).c_str(),
 			port_name(distro, port_num + 48).c_str(),
-			port_name(distro, port_num + 96).c_str(),
-			port_name(distro, port_num + 144).c_str());
+			port_name(distro, port_num + 96).c_str()
+			// if we have 4 switches in a distro-stack
+			//port_name(distro, port_num + 144).c_str()
+			);
 
 		in_addr mgmt_ip4;
 		in_addr subnet_addr4;
@@ -812,7 +797,9 @@ try_again:
 int main(int argc, char **argv)
 {
 	int distro_placements[NUM_DISTRO];
-#if 0
+	
+// Set to 1 if defined switch-placements are to be "enforced"	
+#if 1
 	for (int i = 0; i < NUM_DISTRO; ++i) {
 		distro_placements[i] = atoi(argv[i + 1]);
 	}
