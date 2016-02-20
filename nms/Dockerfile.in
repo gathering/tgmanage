@@ -53,3 +53,6 @@ RUN apt-get -y install libcapture-tiny-perl libcgi-pm-perl libcommon-sense-perl 
 
 RUN cd /root/tgmanage/ && tools/get_mibs.sh
 
+@template nms-db
+FROM nms-base
+RUN apt-get install -y postgresql-doc-9.4 postgresql-9.4
