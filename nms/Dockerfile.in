@@ -4,7 +4,7 @@ FROM debian:jessie
 
 ENV container docker
 MAINTAINER "Kristian" <kly@kly.no>
-RUN systemctl set-default basic.target
+#RUN systemctl set-default basic.target
 RUN apt-get update && apt-get -y install	\
 	 wget					\
 	 vim					\
@@ -44,6 +44,7 @@ ADD .vimrc /root/.vimrc
 RUN rm /etc/apt/apt.conf.d/docker-clean
 RUN systemctl mask dev-hugepages.mount sys-fs-fuse-connections.mount
 RUN git clone https://github.com/tech-server/tgmanage.git root/tgmanage
+RUN systemctl disable systemd-logind.service
 
 CMD ["/sbin/init"]
 
@@ -52,7 +53,18 @@ FROM nms-base
 RUN apt-get -y install libcapture-tiny-perl libcgi-pm-perl libcommon-sense-perl libdata-dumper-simple-perl libdbi-perl libdigest-perl libgd-perl libgeo-ip-perl libhtml-parser-perl libhtml-template-perl libimage-magick-perl libimage-magick-q16-perl libjson-perl libjson-xs-perl libnetaddr-ip-perl libnet-cidr-perl libnet-ip-perl libnet-openssh-perl libnet-oping-perl libnet-rawip-perl libnet-telnet-cisco-perl libnet-telnet-perl libsnmp-perl libsocket6-perl libsocket-perl libswitch-perl libtimedate-perl perl perl-base perl-modules
 
 RUN cd /root/tgmanage/ && tools/get_mibs.sh
+RUN apt-get -y install apache2
+RUN sed -i 's/Listen 80/Listen 8080/g' /etc/apache2/ports.conf
+RUN a2dissite 000-default
+RUN cd /root/tgmanage/ && git pull
+RUN ln -s /root/tgmanage/web/etc/apache2/nms.tg16.gathering.org.conf /etc/apache2/sites-enabled/
+RUN ln -s /root/tgmanage/web/etc/varnish/nms.vcl
+RUN systemctl enable apache2
+RUN apt-get -y install varnish
+RUN systemctl enable varnish
+
 
 @template nms-db
 FROM nms-base
 RUN apt-get install -y postgresql-doc-9.4 postgresql-9.4
+
