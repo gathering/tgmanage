@@ -1,24 +1,20 @@
 #! /usr/bin/perl
-use CGI qw(fatalsToBrowser);
-use DBI;
+# vim:ts=8:sw=8
 use lib '../../include';
 use utf8;
 use nms;
+use nms::web;
 use strict;
 use warnings;
-use Data::Dumper;
 
-my $cgi = CGI->new;
+my $id = db_safe_quote('comment');
+my $state = db_safe_quote('state');
 
-my $dbh = nms::db_connect();
-
-my $id = $dbh->quote($cgi->param('comment') || die );
-my $state= $dbh->quote($cgi->param('state') || die);
-
-
-my $q = $dbh->prepare("UPDATE switch_comments SET state = " . $state . " WHERE id = " . $id . ";");
+my $q = $nms::web::dbh->prepare("UPDATE switch_comments SET state = " . $state . " WHERE id = " . $id . ";");
 $q->execute();
 
-print $cgi->header(-type=>'text/json; charset=utf-8');
-print "{ 'state': 'ok' }";
+$nms::web::cc{'max-age'} = '0';
+$nms::web::cc{'stale-while-revalidate'} = '0';
+$nms::web::json{'state'} = 'ok';
 
+finalize_output();

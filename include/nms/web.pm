@@ -1,6 +1,8 @@
 #! /usr/bin/perl
+# vim:ts=8:sw=8
 use strict;
 use warnings;
+use utf8;
 use CGI qw(fatalsToBrowser);
 use DBI;
 use Data::Dumper;
@@ -9,14 +11,14 @@ use nms;
 package nms::web;
 
 use base 'Exporter';
-our @EXPORT = qw(finalize_output json cgi dbh);
+our @EXPORT = qw(finalize_output json cgi dbh db_safe_quote);
 our $cgi;
-our %json = ();
+our %json;
 our $dbh;
 our $now;
 our $when;
 our $ifname;
-our %cc = ();
+our %cc;
 
 # Print cache-control from %cc
 sub printcc {
@@ -29,13 +31,26 @@ sub printcc {
 	print 'Cache-Control: ' . $line . "\n";
 }
 
+sub db_safe_quote {
+	my $word = $_[0];
+	my $term = $cgi->param($word);
+	if (!defined($term)) {
+		if(defined($_[1])) {
+			$term = $_[1];
+		} else {
+			die "Missing CGI param $word";
+		}
+	}
+	return $dbh->quote($term) || die;
+}
+
 # returns a valid $when statement
 # Also sets cache-control headers if time is overridden
 sub setwhen {
 	my $when;
 	$now = "now()";
 	if (defined($cgi->param('now'))) {
-		$now = "'" . $cgi->param('now') . "'::timestamp ";
+		$now = db_safe_quote('now') . "::timestamp ";
 		$cc{'max-age'} = "3600";
 	}
 	$when = " time > " . $now . " - '5m'::interval and time < " . $now . " ";
