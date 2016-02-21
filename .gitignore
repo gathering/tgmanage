@@ -8,7 +8,6 @@ web/nms-public.gathering.org/ping.json
 web/nms-public.gathering.org/speedometer.json
 web/nms-public.gathering.org/switches.json
 web/nms.gathering.org/.htaccess
-web/nms.gathering.org/img/
 working-area/
 include/config.pm
 include/tgmanage.cfg.sh
