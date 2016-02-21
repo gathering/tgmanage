@@ -85,7 +85,7 @@ BEGIN {
 	$cgi = CGI->new;
 
 	$cc{'stale-while-revalidate'} = "3600";
-	$cc{'max-age'} = "5";
+	$cc{'max-age'} = "20";
 
 	$dbh = nms::db_connect();
 	# FIXME: Shouldn't be magic.
