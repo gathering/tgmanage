@@ -82,25 +82,37 @@ RUN apt-get -y install			\
 	perl-base			\
 	perl-modules			\
 	varnish				\
-	apache2				\
+	apache2	
 
 RUN cd /srv/tgmanage/ && tools/get_mibs.sh
 
-RUN sed -i 's/Listen 80/Listen 8080/g' /etc/apache2/ports.conf
+# Apache shait
 RUN a2dissite 000-default
+RUN a2enmod cgi
+RUN sed -i 's/Listen 80/Listen 8080/g' /etc/apache2/ports.conf
 RUN ln -s /srv/tgmanage/web/etc/apache2/nms.tg16.gathering.org.conf /etc/apache2/sites-enabled/
-
+#(no, not for production, it's just demo:demo during development)
+RUN echo 'demo:$apr1$IKrQYF6x$0zmRciLR7Clc2tEEosyHV.' > /srv/tgmanage/web/.htpasswd
 RUN systemctl enable apache2
 
+# Varnish shait
 RUN rm /etc/varnish/default.vcl
 RUN ln -s /srv/tgmanage/web/etc/varnish/nms.vcl /etc/varnish/default.vcl
 RUN sed -i 's/6081/80/' /lib/systemd/system/varnish.service
-RUN echo 'demo:$apr1$IKrQYF6x$0zmRciLR7Clc2tEEosyHV.' > /srv/tgmanage/web/.htpasswd
-RUN a2enmod cgi
 RUN systemctl enable varnish
 
+ADD config.pm /srv/tgmanage/include/
 
 @template nms-db
 FROM nms-base
 RUN apt-get install -y postgresql-doc-9.4 postgresql-9.4
+ADD nms-dump.sql.gz /
+ADD postgresql.conf /etc/postgresql/9.4/main/
+ADD pg_hba.conf /etc/postgresql/9.4/main/
+RUN chown -R postgres:postgres /etc/postgresql/
+RUN chmod a+r /etc/postgresql/9.4/main/*conf
+RUN service postgresql start && su postgres -c "psql --command=\"CREATE ROLE nms PASSWORD 'md5f6f0a94af5ec8b6001e41b8f06fd22d8' NOSUPERUSER NOCREATEDB NOCREATEROLE INHERIT LOGIN;\"" && su postgres -c "createdb -O nms nms" && service postgresql stop
+RUN service postgresql start && su postgres -c "gunzip < /nms-dump.sql.gz | psql nms" && service postgresql stop
+EXPOSE 5432
+
 
