@@ -725,7 +725,7 @@ function updatePing()
 	nms.outstandingAjaxRequests++;
 	$.ajax({
 		type: "GET",
-		url: "/ping-json2.pl" + now,
+		url: "/ping.pl" + now,
 		dataType: "text",
 		success: function (data, textStatus, jqXHR) {
 			nms.ping_data = JSON.parse(data);
@@ -791,7 +791,7 @@ function addComment(sw,comment)
 	};
 	$.ajax({
 		type: "POST",
-		url: "/switch-comment.pl",
+		url: "/comment-add.pl",
 		dataType: "text",
 		data:myData,
 		success: function (data, textStatus, jqXHR) {
@@ -839,12 +839,12 @@ function updatePorts()
 	});
 	now="";
 	if (nms.now != false)
-		now = "&now=" + nms.now;
+		now = "?now=" + nms.now;
 	nms.outstandingAjaxRequests++;
 	updateAjaxInfo();
 	$.ajax({
 		type: "GET",
-		url: "/port-state.pl?time=5m" + now,
+		url: "/port-state.pl" + now,
 		dataType: "text",
 		success: function (data, textStatus, jqXHR) {
 			var  switchdata = JSON.parse(data);
@@ -1688,7 +1688,12 @@ function saveSettings()
 
 function restoreSettings()
 {
-	var retrieve = JSON.parse(atob(getCookie("nms")));
+	try {
+		var retrieve = JSON.parse(atob(getCookie("nms")));
+	} catch(e) { 
+		console.log("nothing saved");
+	}
+
 	for (var v in retrieve) {
 		nms[v] = retrieve[v];
 	}
