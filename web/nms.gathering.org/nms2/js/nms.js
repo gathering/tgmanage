@@ -253,7 +253,7 @@ function checkNow(now)
 {
 	if (Date.parse(now)) {
 		var d = new Date(Date.parse(now));
-		var str = d.getFullYear() + "-" + (parseInt(d.getMonth())+1) + "-" + d.getDate() + " ";
+		var str = d.getFullYear() + "-" + (parseInt(d.getMonth())+1) + "-" + d.getDate() + "T";
 		str += d.getHours() + ":" + d.getMinutes() + ":" + d.getSeconds();
 		return str;
 
@@ -273,7 +273,7 @@ function checkNow(now)
 function stringToEpoch(t)
 {
 	var foo = t.toString();
-	foo = foo.replace('T',' ');
+//	foo = foo.replace('T',' ');
 	var ret = new Date(Date.parse(foo));
 	return parseInt(parseInt(ret.valueOf()) / 1000);
 }
