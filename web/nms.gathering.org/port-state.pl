@@ -1,4 +1,6 @@
 #! /usr/bin/perl
+# vim:ts=8:sw=8
+
 use CGI qw(fatalsToBrowser);
 use DBI;
 use lib '../../include';
@@ -9,23 +11,55 @@ use Data::Dumper;
 
 my $cgi = CGI->new;
 
+my %cc = ();
+$cc{'stale-while-revalidate'} = "3600";
+$cc{'max-age'} = "5";
 
-my $dbh = nms::db_connect();
-my $cin = $cgi->param('time');
-my $now = "now()";
-if (defined($cgi->param('now'))) {
-	$now = "'" . $cgi->param('now') . "'::timestamp ";
+# Print cache-control from %cc
+sub printcc {
+	my $line = "";
+	my $first = "";
+	foreach my $tmp (keys(%cc)) {
+		$line .= $first . $tmp . "=" . $cc{$tmp};
+		$first = ", ";
+	}
+	print 'Cache-Control: ' . $line . "\n";
 }
 
-my $when =" time > " . $now . " - '5m'::interval and time < " . $now . " ";
+# FIXME: Shouldn't be magic.
+# Only used for setting time in result from DB time.
+# FIXME: Clarification, this _has_ to be set before setwhen is run,
+# since it secretly overrides it.
+my $now;
+
+# returns a valid $when statement
+# Also sets cache-control headers if time is overridden
+sub setwhen {
+	my $when;
+	$now = "now()";
+	if (defined($cgi->param('now'))) {
+		$now = "'" . $cgi->param('now') . "'::timestamp ";
+		$cc{'max-age'} = "3600";
+	}
+	$when = " time > " . $now . " - '5m'::interval and time < " . $now . " ";
+	return $when;
+}
+
+# Sets the ifname. If we are logged in, it's simply set to "ifname", otherwise
+# it's hashed for anonymization.
+sub  obfuscateifname {
+	my $ifname = "ifname";
+	if (defined($cgi->param('public'))) {
+		$ifname = "regexp_replace(ifname, 'ge-0/0/(([0-3][0-9])|(4[0-3])|([0-9]))\$',concat('ge-participant',sha1_hmac(ifname::bytea,'".$nms::config::nms_hash."'::bytea))) as ifname";
+	}
+	return $ifname;
+}
+
+
 my %json = ();
-my $ifname = "ifname";
-if (defined($cgi->param('public'))) {
-	$ifname = "regexp_replace(ifname, 'ge-0/0/(([0-3][0-9])|(4[0-3])|([0-9]))\$',concat('ge-participant',sha1_hmac(ifname::bytea,'".$nms::config::nms_hash."'::bytea))) as ifname";
-}
-if (defined($cin)) {
-	$when = " time < " . $now . " - '$cin'::interval and time > ". $now . " - ('$cin'::interval + '5m'::interval) ";
-}
+my $dbh = nms::db_connect();
+my $when = setwhen;
+my $ifname = obfuscateifname;
 
 my $query = 'select sysname,extract(epoch from date_trunc(\'second\',time)) as time, '.$ifname.',ifhighspeed,ifhcinoctets,ifhcoutoctets from polls natural join switches where time in  (select max(time) from polls where ' . $when . ' group by switch,ifname);';
 my $q = $dbh->prepare($query);
@@ -38,7 +72,6 @@ while (my $ref = $q->fetchrow_hashref()) {
 	}
 	$json{'switches'}{$ref->{'sysname'}}{'ports'}{$ref->{'ifname'}}{'time'} = $ref->{'time'};
 }
-#print Dumper(%json);
 
 my $q2 = $dbh->prepare('select switch,sysname,placement,ip,switchtype,poll_frequency,community,last_updated from switches natural join placements');
 my $q3 = $dbh->prepare('select distinct on (switch) switch,temp,time,sysname from switch_temp natural join switches where ' . $when . ' order by switch,time desc');
@@ -73,11 +106,7 @@ while (my $ref = $q4->fetchrow_hashref()) {
 }
 
 my $q5;
-if (defined($cin)) {
-  $q5 = $dbh->prepare ('select (' . $now . ' - \'' .  $cin . '\'::interval) as time;');
-} else {
-  $q5 = $dbh->prepare ('select ' . $now . ' as time;');
-}
+$q5 = $dbh->prepare ('select ' . $now . ' as time;');
 $q5->execute();
 $json{'time'} = $q5->fetchrow_hashref()->{'time'};
 
@@ -88,5 +117,7 @@ while (my $ref = $q6->fetchrow_hashref()) {
 }
 
 $json{'username'} = $cgi->remote_user();
+printcc;
+
 print $cgi->header(-type=>'text/json; charset=utf-8');
 print JSON::XS::encode_json(\%json);
