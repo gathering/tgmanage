@@ -3,7 +3,6 @@
 use strict;
 use warnings;
 use utf8;
-use CGI qw(fatalsToBrowser);
 use DBI;
 use Data::Dumper;
 use JSON;
@@ -11,15 +10,20 @@ use nms;
 package nms::web;
 
 use base 'Exporter';
-our @EXPORT = qw(finalize_output json cgi dbh db_safe_quote);
-our $cgi;
+our %get_params;
 our %json;
+our @EXPORT = qw(finalize_output json dbh db_safe_quote %get_params get_input %json);
 our $dbh;
 our $now;
 our $when;
 our $ifname;
 our %cc;
 
+sub get_input {
+	my $in = "";
+	while(<STDIN>) { $in .= $_; }
+	return $in;
+}
 # Print cache-control from %cc
 sub printcc {
 	my $line = "";
@@ -33,7 +37,7 @@ sub printcc {
 
 sub db_safe_quote {
 	my $word = $_[0];
-	my $term = $cgi->param($word);
+	my $term = $get_params{$word};
 	if (!defined($term)) {
 		if(defined($_[1])) {
 			$term = $_[1];
@@ -49,7 +53,7 @@ sub db_safe_quote {
 sub setwhen {
 	my $when;
 	$now = "now()";
-	if (defined($cgi->param('now'))) {
+	if (defined($get_params{'now'})) {
 		$now = db_safe_quote('now') . "::timestamp ";
 		$cc{'max-age'} = "3600";
 	}
@@ -61,7 +65,7 @@ sub setwhen {
 # it's hashed for anonymization.
 sub  obfuscateifname {
 	my $ifname = "ifname";
-	if (defined($cgi->param('public'))) {
+	if (defined($get_params{'public'})) {
 		$ifname = "regexp_replace(ifname, 'ge-0/0/(([0-3][0-9])|(4[0-3])|([0-9]))\$',concat('ge-participant',sha1_hmac(ifname::bytea,'".$nms::config::nms_hash."'::bytea))) as ifname";
 	}
 	return $ifname;
@@ -73,21 +77,26 @@ sub finalize_output {
 	$query->execute();
 
 	$json{'time'} = $query->fetchrow_hashref()->{'time'};
-	$json{'username'} = $cgi->remote_user();
 	printcc;
 
-	print $cgi->header(-type=>'text/json; charset=utf-8');
+	print "Content-Type: text/jso; charset=utf-8\n\n";
 	print JSON::XS::encode_json(\%json);
 	print "\n";
 }
 
-BEGIN {
-	$cgi = CGI->new;
+sub populate_params {
+	foreach my $hdr (split("&",$ENV{'QUERY_STRING'} || "")) {
+		my ($key, $value) = split("=",$hdr,"2");
+		$get_params{$key} = $value;
+	}
+}
 
+BEGIN {
 	$cc{'stale-while-revalidate'} = "3600";
 	$cc{'max-age'} = "20";
 
 	$dbh = nms::db_connect();
+	populate_params();
 	# FIXME: Shouldn't be magic.
 	# Only used for setting time in result from DB time.
 	# FIXME: Clarification, this _has_ to be set before setwhen is run,
