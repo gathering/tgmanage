@@ -9,8 +9,9 @@ use strict;
 use warnings;
 use Data::Dumper;
 use lib '../include';
+use JSON;
 use nms::util;
 
 my %switches = parse_switches_txt(*STDIN);
 
-print Dumper(\%switches);
+print JSON::XS::encode_json(\%switches);
