@@ -14,16 +14,31 @@ use Data::Dumper;
 $nms::web::cc{'max-age'} = "0";
 
 my $in = get_input();
-my %tmp = %{JSON::XS::decode_json($in)};
+my @tmp = @{JSON::XS::decode_json($in)};
 
-my $query = "INSERT INTO SWITCHES (ip, sysname, switchtype) VALUES('"
-	. $tmp{'mgtmt4'} . "','"
-	. $tmp{'name'} . "','ex2200');";
+my @added;
+my @dups;
 
-$json{'sql'} = $query;
+my $sth = $nms::web::dbh->prepare("SELECT sysname FROM switches WHERE sysname=?");
+my $insert = $nms::web::dbh->prepare("INSERT INTO SWITCHES (ip, sysname, switchtype) VALUES(?,?,'ex2200');");
 
-my $q = $nms::web::dbh->prepare($query);
-$q->execute() || die "foo";
+foreach my $tmp2 (@tmp) {
+	my %switch = %{$tmp2};
+	my $affected = 0;
 
+	$sth->execute( $switch{'sysname'});
+	while ( my @row = $sth->fetchrow_array ) {
+		$affected += 1;
+	}
+
+	if ($affected == 0) {
+		$insert->execute($switch{'mgtmt4'}, $switch{'sysname'});
+		push @added, $switch{'sysname'};
+	} else {
+		push @dups, $switch{'sysname'};
+	}
+}
+$json{'switches_addded'} = \@added;
+$json{'switches_duplicate'} = \@dups;
 
 finalize_output();
