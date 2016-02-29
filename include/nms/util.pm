@@ -12,7 +12,7 @@ sub parse_switch {
 	my ($switch, $subnet4, $subnet6, $mgtmt4, $mgtmt6, $lolid, $distro) = split(/ /);
 	my %foo = guess_placement($switch);
 	my %ret = (
-		'name' => "$switch",
+		'sysname' => "$switch",
 		'subnet4' => "$subnet4",
 		'subnet6' => "$subnet6",
 		'mgtmt4' => "$mgtmt4",
@@ -20,7 +20,7 @@ sub parse_switch {
 		'lolid' => "$lolid",
 		'distro' => "$distro"
 	);
-	%{$ret{'placement_guess'}} = guess_placement($switch);
+	%{$ret{'placement'}} = guess_placement($switch);
 	return %ret;
 }
 
@@ -28,26 +28,26 @@ sub parse_switch {
 # (e.g.: parse_switches_txt(*STDIN) or parse_switches_txt(whatever).
 sub parse_switches_txt {
 	my $fh = $_[0];
-	my %switches = ();
+	my @switches;
 	while(<$fh>) {
 		chomp;
 		my %switch = parse_switch($_);
-		%{$switches{$switch{'name'}}} = %switch;
+		push @switches, {%switch};
 	}
-	return %switches;
+	return @switches;
 }
 
 # Parses switches in switches.txt format given as $_[0].
 # E.g: parse_switches("e1-3 88.92.0.0/26 2a06:5840:0a::/64 88.92.54.2/26 2a06:5840:54a::2/64 1013 distro0")
 sub parse_switches {
-	my %switches = ();
+	my @switches;
 	my $txt = $_[0];
 	foreach (split("\n",$txt)) {
 		chomp;
 		my %switch = parse_switch($_);
-		%{$switches{$switch{'name'}}} = %switch;
+		push @switches, {%switch};
 	}
-	return %switches;
+	return @switches;
 }
 
 # Guesses placement from name to get a starting point

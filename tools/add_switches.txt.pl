@@ -12,6 +12,6 @@ use lib '../include';
 use JSON;
 use nms::util;
 
-my %switches = parse_switches_txt(*STDIN);
+my @switches = parse_switches_txt(*STDIN);
 
-print JSON::XS::encode_json(\%switches);
+print JSON::XS::encode_json(\@switches);
