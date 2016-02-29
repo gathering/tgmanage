@@ -5,24 +5,24 @@ FROM debian:jessie
 ENV container docker
 MAINTAINER "Kristian" <kly@kly.no>
 #RUN systemctl set-default basic.target
-RUN apt-get update && apt-get -y install	\
+RUN apt-get update && apt-get -y install \
 	 wget					\
 	 vim					\
 	 man					\
-	 build-essential			\
+	 build-essential		\
 	 net-tools				\
-	 bash-completion			\
+	 bash-completion		\
 	 git-core				\
 	 autoconf				\
 	 netcat					\
-	 libwww-perl				\
-	 libmicrohttpd-dev			\
-	 libcurl4-gnutls-dev			\
-	 libedit-dev				\
-	 libpcre3-dev				\
-	 libncurses5-dev			\
-	 python-demjson				\
-	 python-docutils			\
+	 libwww-perl			\
+	 libmicrohttpd-dev		\
+	 libcurl4-gnutls-dev	\
+	 libedit-dev			\
+	 libpcre3-dev			\
+	 libncurses5-dev		\
+	 python-demjson			\
+	 python-docutils		\
 	 libtool				\
 	 nodejs					\
 	 httpie					\
@@ -51,37 +51,37 @@ CMD ["/sbin/init"]
 FROM nms-base
 RUN apt-get -y install			\
 	libcapture-tiny-perl		\
-	libcgi-pm-perl			\
+	libcgi-pm-perl              \
 	libcommon-sense-perl		\
 	libdata-dumper-simple-perl	\
-	libdbd-pg-perl			\
-	libdbi-perl			\
-	libdigest-perl			\
-	libgd-perl			\
-	libgeo-ip-perl			\
-	libhtml-parser-perl		\
+	libdbd-pg-perl			    \
+	libdbi-perl			        \
+	libdigest-perl			    \
+	libgd-perl			        \
+	libgeo-ip-perl			    \
+	libhtml-parser-perl		    \
 	libhtml-template-perl		\
 	libimage-magick-perl		\
 	libimage-magick-q16-perl	\
-	libjson-perl			\
-	libjson-xs-perl			\
-	libnetaddr-ip-perl		\
-	libnet-cidr-perl		\
-	libnet-ip-perl			\
-	libnet-openssh-perl		\
-	libnet-oping-perl		\
-	libnet-rawip-perl		\
+	libjson-perl			    \
+	libjson-xs-perl			    \
+	libnetaddr-ip-perl		    \
+	libnet-cidr-perl		    \
+	libnet-ip-perl			    \
+	libnet-openssh-perl		    \
+	libnet-oping-perl		    \
+	libnet-rawip-perl		    \
 	libnet-telnet-cisco-perl	\
-	libnet-telnet-perl		\
-	libsnmp-perl			\
-	libsocket6-perl			\
-	libsocket-perl			\
-	libswitch-perl			\
-	libtimedate-perl		\
-	perl				\
-	perl-base			\
-	perl-modules			\
-	varnish				\
+	libnet-telnet-perl		    \
+	libsnmp-perl			    \
+	libsocket6-perl			    \
+	libsocket-perl			    \
+	libswitch-perl			    \
+	libtimedate-perl		    \
+	perl				        \
+	perl-base			        \
+	perl-modules			    \
+	varnish				        \
 	apache2	
 
 RUN cd /srv/tgmanage/ && tools/get_mibs.sh
