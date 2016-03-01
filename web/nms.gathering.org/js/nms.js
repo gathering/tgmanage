@@ -676,6 +676,8 @@ function updateSwitches(switchdata,target) {
 
 	if(switchdata.switches != undefined) {
 		for(var sw in switchdata.switches) {
+			if(switchdata.switches[sw]['management'] != undefined)
+				updateSwitchProperty(sw,'management',switchdata.switches[sw]['management'],target);
 			if(switchdata.switches[sw]['ports'] != undefined)
 				updateSwitchProperty(sw,'ports',switchdata.switches[sw]['ports'],target);
 			if(switchdata.switches[sw]['temp'] != undefined)
