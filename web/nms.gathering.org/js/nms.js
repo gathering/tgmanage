@@ -1,8 +1,8 @@
 var nms = {
 	updater:undefined, // Active updater
 	update_time:0, // Client side timestamp for last update
-	switches_now:undefined, // Most recent data
-	switches_then:undefined, // 2 minutes old
+	switches_now:{switches:{}}, // Most recent data
+	switches_then:{switches:{}}, // 2 minutes old
 	speed:0, // Current aggregated speed
 	ping_data:undefined, // JSON data for ping history.
 	drawn:false, // Set to 'true' when switches are drawn
@@ -667,6 +667,36 @@ function setUpdater(fo)
 	}
 }
 
+/*
+ * Helper function for updating switch-data without overwriting existing
+ * data with non-existent data
+ */
+function updateSwitches(switchdata,target) {
+	target['time'] = switchdata['time'] //Assume we always get time
+
+	if(switchdata.switches != undefined) {
+		for(var sw in switchdata.switches) {
+			if(switchdata.switches[sw]['ports'] != undefined)
+				updateSwitchProperty(sw,'ports',switchdata.switches[sw]['ports'],target);
+			if(switchdata.switches[sw]['temp'] != undefined)
+				updateSwitchProperty(sw,'temp',switchdata.switches[sw]['temp'],target);
+			if(switchdata.switches[sw]['temp_time'] != undefined)
+				updateSwitchProperty(sw,'temp_time',switchdata.switches[sw]['temp_time'],target);
+			if(switchdata.switches[sw]['placement'] != undefined)
+				updateSwitchProperty(sw,'placement',switchdata.switches[sw]['placement'],target);
+		}
+	}
+}
+/*
+ * Helper function for updating a limited subset of switch properties,
+ * while the current state of the switch data is unknown.
+ */
+function updateSwitchProperty(sw,property,data,target) {
+	if(target.switches[sw] == undefined)
+		target.switches[sw] = {};
+
+	target.switches[sw][property] = data;
+}
 
 /*
  * Convenience function to avoid waiting for pollers when data is available
@@ -819,8 +849,7 @@ function updatePorts()
 		dataType: "text",
 		success: function (data, textStatus, jqXHR) {
 			var  switchdata = JSON.parse(data);
-			nms.switches_now = switchdata;
-			parseIntPlacements();
+			updateSwitches(switchdata,nms.switches_now);
 			initialUpdate();
 			updateSpeed();
 			updateMap();
@@ -831,6 +860,20 @@ function updatePorts()
 				nms.repop_switch = false;
 				nms.repop_time = false;
 			}
+		},
+		complete: function(jqXHR, textStatus) {
+			nms.outstandingAjaxRequests--;
+			updateAjaxInfo();
+		}
+	});
+	$.ajax({
+		type: "GET",
+		url: "/switches.pl"+ now ,
+		dataType: "text",
+		success: function (data, textStatus, jqXHR) {
+			var switchdata = JSON.parse(data);
+			updateSwitches(switchdata,nms.switches_now);
+			parseIntPlacements();
 		},
 		complete: function(jqXHR, textStatus) {
 			nms.outstandingAjaxRequests--;
@@ -848,7 +891,7 @@ function updatePorts()
 		dataType: "text",
 		success: function (data, textStatus, jqXHR) {
 			var  switchdata = JSON.parse(data);
-			nms.switches_then = switchdata;
+			updateSwitches(switchdata,nms.switches_then);
 			initialUpdate();
 			updateSpeed();
 			updateMap();
@@ -867,7 +910,7 @@ function updatePorts()
  */
 function newerSwitches()
 {
-	if (!nms.switches_now || !nms.switches_then)
+	if (nms.switches_now.time == undefined || nms.switches_then.time == undefined)
 		return false;
 	var now_timestamp = stringToEpoch(nms.switches_now.time);
 	var then_timestamp = stringToEpoch(nms.switches_then.time);
