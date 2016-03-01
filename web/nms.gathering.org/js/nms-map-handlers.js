@@ -163,7 +163,8 @@ function trafficUpdater()
 				 speed += (parseInt(t["ifhcinoctets"]) -parseInt(n["ifhcinoctets"])) / (parseInt(t["time"] - n["time"]));
 			 }
 		}
-		setSwitchColor(sw,colorFromSpeed(speed));
+                if(!isNaN(speed))
+                        setSwitchColor(sw,colorFromSpeed(speed));
 	}
 }
 
