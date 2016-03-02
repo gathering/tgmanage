@@ -1,3 +1,5 @@
+web/.htpasswd
+web/.htpasswd.munin
 web/stream.gathering.org/hls
 web/stream.gathering.org/chiobe
 web/nms-public.gathering.org/nettkart-dhcp.png
@@ -12,12 +14,10 @@ working-area/
 include/config.pm
 include/tgmanage.cfg.sh
 planning/planning
-web/.htpasswd
-web/.htpasswd.munin
 fap/tools/generate_distro_config_ae_event-options/
-*.swp
+nms/build/
 
-# Stupid system files
+# OS-crap
 .DS_Store
 .DS_Store?
 ._*
@@ -25,4 +25,19 @@ fap/tools/generate_distro_config_ae_event-options/
 .Trashes
 ehthumbs.db
 Thumbs.db
-.idea/
+desktop.ini
+*.swp
+*.swo
+.vimrc
+**/*~
+**/*.bak
+**/*.sw[abcdefghijklmnop]
+
+# IDE-stuff
+.classpath
+.project
+.settings
+.idea
+.metadata
+*.iml
+*.ipr
