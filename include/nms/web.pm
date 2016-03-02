@@ -61,6 +61,13 @@ sub setwhen {
 	return $when;
 }
 
+sub ispublic() {
+	if (defined($get_params{'public'}) || $ENV{'REMOTE_USER'} eq "public") {
+		return 1;
+	} else {
+		return 0;
+	}
+}
 # Sets the ifname. If we are logged in, it's simply set to "ifname", otherwise
 # it's hashed for anonymization.
 sub  obfuscateifname {
