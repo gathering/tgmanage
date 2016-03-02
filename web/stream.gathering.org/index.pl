@@ -1,4 +1,4 @@
-#!/usr/bin/perl -I /root/tgmanage/web/streamlib
+#!/usr/bin/perl -I /root/tgmanage/web/stream.gathering.org/streamlib
 use warnings;
 use strict;
 use CGI;

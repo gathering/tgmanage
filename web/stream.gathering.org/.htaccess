@@ -1,0 +1,4 @@
+# Deny access to streamlib from web browser
+RewriteEngine On
+RewriteBase /
+RewriteRule ^streamlib.* - [F,L]
