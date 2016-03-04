@@ -1,6 +1,6 @@
 #! /usr/bin/perl
 # vim:ts=8:sw=8
-use lib '../../include';
+use lib '../../../../include';
 use utf8;
 use nms::web;
 use strict;

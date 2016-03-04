@@ -757,7 +757,7 @@ function updatePing()
 	nms.outstandingAjaxRequests++;
 	$.ajax({
 		type: "GET",
-		url: "/ping.pl" + now,
+		url: "/api/public/ping" + now,
 		dataType: "text",
 		success: function (data, textStatus, jqXHR) {
 			nms.ping_data = JSON.parse(data);
@@ -806,7 +806,7 @@ function commentChange(id,state)
 	}
 	$.ajax({
 		type: "POST",
-		url: "/comment-change.pl",
+		url: "/api/private/comment-change",
 		dataType: "text",
 		data:myData,
 		success: function (data, textStatus, jqXHR) {
@@ -823,7 +823,7 @@ function addComment(sw,comment)
 	};
 	$.ajax({
 		type: "POST",
-		url: "/comment-add.pl",
+		url: "/api/private/comment-add",
 		dataType: "text",
 		data:myData,
 		success: function (data, textStatus, jqXHR) {
@@ -847,7 +847,7 @@ function updatePorts()
 		now = "?now=" + nms.now;
 	$.ajax({
 		type: "GET",
-		url: "/port-state.pl"+ now ,
+		url: "/api/private/port-state"+ now ,
 		dataType: "text",
 		success: function (data, textStatus, jqXHR) {
 			var  switchdata = JSON.parse(data);
@@ -870,7 +870,7 @@ function updatePorts()
 	});
 	$.ajax({
 		type: "GET",
-		url: "/switches.pl"+ now ,
+		url: "/api/public/switches"+ now ,
 		dataType: "text",
 		success: function (data, textStatus, jqXHR) {
 			var switchdata = JSON.parse(data);
@@ -889,7 +889,7 @@ function updatePorts()
 	updateAjaxInfo();
 	$.ajax({
 		type: "GET",
-		url: "/port-state.pl" + now,
+		url: "/api/private/port-state" + now,
 		dataType: "text",
 		success: function (data, textStatus, jqXHR) {
 			var  switchdata = JSON.parse(data);

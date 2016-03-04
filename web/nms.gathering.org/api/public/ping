@@ -1,5 +1,5 @@
 #! /usr/bin/perl
-use lib '../../include';
+use lib '../../../../include';
 use nms::web;
 
 my $q = $nms::web::dbh->prepare("SELECT DISTINCT ON (sysname) time,sysname, latency_ms FROM ping NATURAL JOIN switches WHERE time in (select max(time) from ping where " . $nms::web::when . " group by switch)");
