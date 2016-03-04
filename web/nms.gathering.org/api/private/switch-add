@@ -20,7 +20,7 @@ my @added;
 my @dups;
 
 my $sth = $nms::web::dbh->prepare("SELECT sysname FROM switches WHERE sysname=?");
-my $insert = $nms::web::dbh->prepare("INSERT INTO SWITCHES (ip, sysname, switchtype) VALUES(?,?,'ex2200');");
+my $insert = $nms::web::dbh->prepare("INSERT INTO SWITCHES (ip, sysname, switchtype,placement) VALUES(?,?,'ex2200',?);");
 
 foreach my $tmp2 (@tmp) {
 	my %switch = %{$tmp2};
@@ -32,7 +32,14 @@ foreach my $tmp2 (@tmp) {
 	}
 
 	if ($affected == 0) {
-		$insert->execute($switch{'mgtmt4'}, $switch{'sysname'});
+		my ($x1,$x2,$y1,$y2);
+		$x1 = $switch{'placement'}{'x1'};
+		$y1 = $switch{'placement'}{'y1'};
+		$x2 = $switch{'placement'}{'xx'};
+		$y2 = $switch{'placement'}{'yy'};
+		my $place = "(($x1,$y1),($x2,$y2))";
+		$json{'foo'} = $place . "foo";
+		$insert->execute($switch{'mgtmt4'}, $switch{'sysname'},$place);
 		push @added, $switch{'sysname'};
 	} else {
 		push @dups, $switch{'sysname'};

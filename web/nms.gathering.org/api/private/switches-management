@@ -12,16 +12,12 @@ use Data::Dumper;
 
 $nms::web::cc{'max-age'} = "60";
 
-my $q2 = $nms::web::dbh->prepare('select switch,sysname,placement,ip,switchtype,poll_frequency,community,last_updated from switches natural join placements');
+my $q2 = $nms::web::dbh->prepare('select sysname,ip,switchtype,poll_frequency,community,last_updated from switches ');
 
 $q2->execute();
 while (my $ref = $q2->fetchrow_hashref()) {
 	my $sysname = $ref->{'sysname'};
-	$nms::web::json{'switches'}{$ref->{'sysname'}}{'switchtype'} = $ref->{'switchtype'};
-	$nms::web::json{'switches'}{$ref->{'sysname'}}{'management'}{'ip'} = $ref->{'ip'};
-	$nms::web::json{'switches'}{$ref->{'sysname'}}{'management'}{'poll_frequency'} = $ref->{'poll_frequency'};
-	$nms::web::json{'switches'}{$ref->{'sysname'}}{'management'}{'community'} = $ref->{'community'};
-	$nms::web::json{'switches'}{$ref->{'sysname'}}{'management'}{'last_updated'} = $ref->{'last_updated'};
+	$nms::web::json{'switches'}{$ref->{'sysname'}} = $ref;
 }
 
 my $q4 = $nms::web::dbh->prepare('select linknet, (select sysname from switches where switch = switch1) as sysname1, addr1, (select sysname from switches where switch = switch2) as sysname2,addr2 from linknets');
