@@ -249,12 +249,12 @@ function toggleNightMode()
  *
  * Should probably just use stringToEpoch() instead, but alas, not yet.
  */
-function checkNow(now)
+function parseNow(now)
 {
 	if (Date.parse(now)) {
 		var d = new Date(Date.parse(now));
-		var str = d.getFullYear() + "-" + (parseInt(d.getMonth())+1) + "-" + d.getDate() + "T";
-		str += d.getHours() + ":" + d.getMinutes() + ":" + d.getSeconds();
+		var str = d.getFullYear() + "-" + ("00" + (parseInt(d.getMonth())+1)).slice(-2) + "-" + ("00" + d.getDate()).slice(-2) + "T";
+		str += ("00" + d.getHours()).slice(-2) + ":" + ("00" + d.getMinutes()).slice(-2) + ":" + ("00" + d.getSeconds()).slice(-2);
 		return str;
 
 	}
@@ -348,22 +348,29 @@ function startReplay() {
 }
 
 /*
- * Used to move to a specific time, but not replay.
+ * Used to move to a specific time
  */
-function changeNow() {
-	 var newnow = checkNow(document.getElementById("nowPicker").value);
-	if (!newnow) {
-		alert('Bad date-field in time travel field');
-		return;
-	}
+function changeNow(newnow,playing) {
 	if (newnow == "")
 		newnow = false;
+  if (playing == "")
+    playing = false;
+
+  if(newnow) 
+    newnow = parseNow(newnow);
 	
+  nms.timers.replay.stop();
 	nms.now = newnow;
-	if (newnow) {
-		nms.timers.ping.stop();;
-		nms.timers.ports.stop();;
-	}
+	resetColors();
+
+	if (!playing) {
+		nms.timers.ping.stop();
+		nms.timers.ports.stop();
+	} else {
+    nms.timers.ping.start();
+    nms.timers.ports.start();
+  }
+
 	updatePorts();
 	updatePing();
 	var boxHide = document.getElementById("nowPickerBox");
@@ -1751,4 +1758,28 @@ function restoreSettings()
 function forgetSettings()
 {
 	document.cookie = 'nms=' + btoa('{}');
+}
+
+/*
+ * Time travel gui
+ */
+function startNowPicker(now) {
+  $('#nowPicker').datetimepicker('destroy');
+  $('#nowPicker').datetimepicker({
+    value: now,
+    mask:false,
+    inline:true,
+    todayButton: false,
+    validateOnBlur:false,
+    maxDate:'+1970/01/01',
+    onSelectDate: function(ct,$i){
+      document.getElementById('nowPicker').dataset.iso = parseNow(ct);
+    },
+    onSelectTime: function(ct,$i){
+      document.getElementById('nowPicker').dataset.iso = parseNow(ct);
+    },
+    onGenerate: function(ct,$i){
+      document.getElementById('nowPicker').dataset.iso = parseNow(ct);
+    }
+  });
 }
