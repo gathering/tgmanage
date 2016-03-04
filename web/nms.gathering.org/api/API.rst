@@ -19,12 +19,15 @@ Currently error handling sucks.
 This document is in no way complete, but it's a start. It will be updated
 as time permits and API's stabilize.
 
-/appi/private/comment-add
--------------------------
+Private
+.......
+
+/api/private/comment-add
+------------------------
 
 Methods: POST
 
- -- Add a comment
+Add a comment
 
 /api/private/comment-change
 ---------------------------
@@ -38,7 +41,41 @@ deleted, making sure they are never shown.
 ---------------------
 
 Methods: GET
+
 Update frequency: on user input
+
+Lists comments.
+
+/api/private/port-state
+-----------------------
+
+Methods: GET
+
+Update frequency: Every few seconds, based on SNMP data.
+
+Returns detailed per-port statistics. Being somewhat reorganized but will
+remain highly relevant.
+
+/api/private/switches-management
+--------------------------------
+
+Methods: GET
+
+Update frequency: Infrequent (on topology/config changes)
+
+List management information for switches.
+
+/api/private/switch-add
+-----------------------
+
+Methods: POST
+
+Add switches, supports same format as tools/add_switches.txt.pl
+
+Accepts an array of switches.
+
+Public
+......
 
 /api/public/ping
 ----------------
@@ -51,26 +88,6 @@ Used to report linknet latency.
 The switch latency is being integrated into switch-state.pl and linknet
 latency will similarly be moved.
 
-/api/private/port-state
------------------------
-
-Methods: GET
-Update frequency: Every few seconds, based on SNMP data.
-
-Private.
-
-Returns detailed per-port statistics. Being somewhat reorganized but will
-remain highly relevant.
-
-/api/private/switch-add
------------------------
-
-Methods: POST
-
-Add switches, supports same format as tools/add_switches.txt.pl
-
-Accepts an array of switches.
-
 /api/public/switches
 --------------------
 
@@ -81,14 +98,6 @@ List all switches and map positions.
 
 Used to draw switches on a map and provide static information.
 
-/api/public/switches-management
--------------------------------
-
-Methods: GET
-Update frequency: Infrequent (on topology/config changes)
-
-List management information for switches.
-
 /api/public/switch-state
 ------------------------
 
@@ -97,5 +106,3 @@ Update frequency: Every second
 
 Provides state for each switch, including total port speed, uplink port
 speed, latency and temperature.
-
-100% public.
