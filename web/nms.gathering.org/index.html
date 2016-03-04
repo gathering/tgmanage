@@ -17,6 +17,9 @@
     <!-- Custom styles for this template -->
     <link href="css/navbar-static-top.css" rel="stylesheet">
 
+    <!-- Date-picker styles -->
+    <link href="css/jquery.datetimepicker.css" rel="stylesheet">
+
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
     <!--[if lt IE 9]>
       <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
@@ -62,7 +65,7 @@
 		<li><a href="#traffictot" onclick="setUpdater(handler_traffic_tot)">Total switch traffic</a></li>
 		<li><a href="#disco" onclick="setUpdater(handler_disco)">DISCO</a></li>
 		<li class="divider"> </li>
-		<li><a href="#" onclick="toggleLayer('nowPickerBox');document.getElementById('nowPicker').focus();">Travel in time</a></li>
+		<li><a href="#" onclick="toggleLayer('nowPickerBox');startNowPicker();">Travel in time</a></li>
 		<li><a href="#" onclick="startReplay();" title="Replay from opening 120 minutes per second">Replay TG</a></li>
 		<li class="divider"> </li>
 		<li class="dropdown-header">View</li>
@@ -288,33 +291,39 @@
 	      </table>
 	    </div>
 	  </div>
-	  <div id="nowPickerBox" style="position: absolute; display: none; z-index: 130;" class="col-md-4">
+	  <div id="nowPickerBox" style="position: absolute; display: none; z-index: 130;" class="col-sm-6 col-md-5">
 	    <div class="panel panel-default"> 
 	      <div class="panel-heading">
-		<h3 class="panel-title">Time travel
-		  <button type="button" class="close" aria-labe="Close" onclick="document.getElementById('nowPickerBox').style.display = 'none';" style="float: right;">
-		    <span aria-hidden="true">&times;</span>
-		  </button>
-		</h3>
+          <h3 class="panel-title">Time travel
+            <button type="button" class="close" aria-labe="Close" onclick="document.getElementById('nowPickerBox').style.display = 'none';" style="float: right;">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </h3>
 	      </div>
-	      <div class="panel-body">
-		<p>Some features do not have time travel support (comment
-		spotting and DHCP map at the moment). We also lack
-		compatible SNMP data for the first day or so, so you'll
-		only have ping data for the first day of TG15.</p>
-		<p>It could take some time to load a specific point in time
-		for the first time. See "About performance" under the help
-		menu for more information.</p>
-		<p>You can also step backwards and forwards in time, stop
-		and start replay and go back to real time using keyboard
-		shortcuts. See the help menu for an overview of keyboard
-		shortcuts.</p>
-		<div class="input-group">
-		  <input type="text" class="form-control" placeholder="YYYY-MM-DDThh:mm:ss" id="nowPicker">
-		  <span class="input-group-btn">
-		    <button class="btn btn-default" onclick="changeNow();">Travel</button>
-		  </span>
-		</div>
+	      <div class="panel-body row">
+          <div class="col-sm-12">
+            <div class="form-group">
+              <input type="text" class="form-control" placeholder="YYYY-MM-DDThh:mm:ss" id="nowPicker">
+              <div class="button-group">
+                <button class="btn btn-primary" onclick="changeNow(document.getElementById('nowPicker').dataset.iso,false);">Travel</button>
+                <button class="btn btn-danger" onclick="startNowPicker(Date.now());changeNow(false,true);">Back to reality</button>
+                <button class="btn btn-info" data-toggle="button" onclick="toggleLayer('nowPickerInfo');">Info</button>
+              </div>
+            </div>
+          </div>
+          <div id="nowPickerInfo" class="col-sm-12" style="display:none;">
+            <p>Some features do not have time travel support (comment
+            spotting and DHCP map at the moment). We also lack
+            compatible SNMP data for the first day or so, so you'll
+            only have ping data for the first day of TG15.</p>
+            <p>It could take some time to load a specific point in time
+            for the first time. See "About performance" under the help
+            menu for more information.</p>
+            <p>You can also step backwards and forwards in time, stop
+            and start replay and go back to real time using keyboard
+            shortcuts. See the help menu for an overview of keyboard
+            shortcuts.</p>
+          </div>
 	      </div>
 	    </div>
 	  </div>
@@ -520,6 +529,7 @@
     <script type="text/javascript" src="js/nms.js"></script>
     <script type="text/javascript" src="js/nms-color-util.js"></script>
     <script type="text/javascript" src="js/nms-map-handlers.js"></script>
+    <script src="js/jquery.datetimepicker.full.js" type="text/javascript"></script>
     <script type="text/javascript">
 initNMS();
     </script>
