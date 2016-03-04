@@ -16,7 +16,6 @@ our @EXPORT = qw(finalize_output json dbh db_safe_quote %get_params get_input %j
 our $dbh;
 our $now;
 our $when;
-our $ifname;
 our %cc;
 
 sub get_input {
@@ -61,23 +60,6 @@ sub setwhen {
 	return $when;
 }
 
-sub ispublic() {
-	if (defined($get_params{'public'}) || $ENV{'REMOTE_USER'} eq "public") {
-		return 1;
-	} else {
-		return 0;
-	}
-}
-# Sets the ifname. If we are logged in, it's simply set to "ifname", otherwise
-# it's hashed for anonymization.
-sub  obfuscateifname {
-	my $ifname = "ifname";
-	if (defined($get_params{'public'})) {
-		$ifname = "regexp_replace(ifname, 'ge-0/0/(([0-3][0-9])|(4[0-3])|([0-9]))\$',concat('ge-participant',sha1_hmac(ifname::bytea,'".$nms::config::nms_hash."'::bytea))) as ifname";
-	}
-	return $ifname;
-}
-
 sub finalize_output {
 	my $query;
 	$query = $dbh->prepare ('select ' . $now . ' as time;');
@@ -104,11 +86,6 @@ BEGIN {
 
 	$dbh = nms::db_connect();
 	populate_params();
-	# FIXME: Shouldn't be magic.
-	# Only used for setting time in result from DB time.
-	# FIXME: Clarification, this _has_ to be set before setwhen is run,
-	# since it secretly overrides it.
 	$when = setwhen();
-	$ifname = obfuscateifname();
 }
 1;

@@ -6,7 +6,7 @@ use nms::web;
 use strict;
 use warnings;
 
-my $query = 'select sysname,extract(epoch from date_trunc(\'second\',time)) as time, '.$nms::web::ifname.',ifhighspeed,ifhcinoctets,ifhcoutoctets from polls natural join switches where time in  (select max(time) from polls where ' . $nms::web::when . ' group by switch,ifname);';
+my $query = 'select sysname,extract(epoch from date_trunc(\'second\',time)) as time, ifname,ifhighspeed,ifhcinoctets,ifhcoutoctets from polls natural join switches where time in  (select max(time) from polls where ' . $nms::web::when . ' group by switch,ifname);';
 my $q = $nms::web::dbh->prepare($query);
 $q->execute();
 
