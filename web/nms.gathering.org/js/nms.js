@@ -1785,6 +1785,8 @@ function forgetSettings()
  */
 function startNowPicker(now) {
   $('#nowPicker').datetimepicker('destroy');
+  if(!now && nms.now)
+    now = nms.now;
   $('#nowPicker').datetimepicker({
     value: now,
     mask:false,
