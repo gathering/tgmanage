@@ -66,7 +66,7 @@
 		<li><a href="#disco" onclick="setUpdater(handler_disco)">DISCO</a></li>
 		<li class="divider"> </li>
 		<li><a href="#" onclick="toggleLayer('nowPickerBox');startNowPicker();">Travel in time</a></li>
-		<li><a href="#" onclick="startReplay();" title="Replay from opening 120 minutes per second">Replay TG</a></li>
+		<li><a href="#" onclick="nms.playback.startReplay('2015-04-01T09:00:00','2015-04-05T12:00:00');" title="Replay from opening 120 minutes per second">Replay TG</a></li>
 		<li class="divider"> </li>
 		<li class="dropdown-header">View</li>
 		<li><a href="#" onclick="toggleNightMode()">Toggle Night Mode</a></li>
@@ -305,8 +305,8 @@
             <div class="form-group">
               <input type="text" class="form-control" placeholder="YYYY-MM-DDThh:mm:ss" id="nowPicker">
               <div class="button-group">
-                <button class="btn btn-primary" onclick="changeNow(document.getElementById('nowPicker').dataset.iso,false);">Travel</button>
-                <button class="btn btn-danger" onclick="startNowPicker(Date.now());changeNow(false,true);">Back to reality</button>
+                <button class="btn btn-primary" onclick="nms.playback.setNow(document.getElementById('nowPicker').dataset.iso,false);hideLayer('nowPickerBox');">Travel</button>
+                <button class="btn btn-danger" onclick="startNowPicker(Date.now());nms.playback.setNow(false,true);">Back to reality</button>
                 <button class="btn btn-info" data-toggle="button" onclick="toggleLayer('nowPickerInfo');">Info</button>
               </div>
             </div>

@@ -14,6 +14,7 @@ var green = "#5cb85c";
 var teal = "#5bc0de"; // Or whatever the hell that is
 var orange = "#f0ad4e";
 var red = "#d9534f";
+var white = "#ffffff";
 
 function gradient_from_latency(latency_ms, latency_secondary_ms)
 {

@@ -84,7 +84,16 @@ var nms = {
 		'p':moveTimeFromKey,
 		'r':moveTimeFromKey,
 		'not-default':keyDebug
-	}
+	},
+  /*
+   * Playback controllers and variables
+   */
+  playback:{
+    startTime: undefined,
+    stopTime: undefined,
+    replayTime: 0,
+    replayIncrement: 60 * 60
+  }
 };
 
 /*
@@ -169,21 +178,6 @@ var margin = {
 	y:20,
 	text:3
 };
-
-/*
- * All of these should be moved into nms.*
- *
- * tgStart/tgEnd are "constants".
- * replayTime is the current time as far as the replay-function is. This
- * should be merged with nms.now.
- *
- * replayIncrement is how many seconds to add for each replay timer tick
- * (e.g.: 30 minutes added for every 1 second display-time).
- */
-var tgStart = stringToEpoch('2015-04-01T09:00:00');
-var tgEnd = stringToEpoch('2015-04-05T12:00:00');
-var replayTime = 0;
-var replayIncrement = 60 * 60;
 
 /*
  * Convenience-function to populate the 'dr' structure.
@@ -307,76 +301,89 @@ function epochToString(t)
 }
 	
 /*
- * Move 'nms.now' forward in time, unless we're at the end of the event.
+ * Move 'nms.now' forward in time, unless we're are after stopTime.
  *
  * This is run on a timer (nms.timers.replay) every second when we are
  * replaying.
  */
 function timeReplay()
 {
-	replayTime = stringToEpoch(nms.now);
-	if (replayTime >= tgEnd) {
+	nms.playback.replayTime = stringToEpoch(nms.now);
+	if (nms.playback.replayTime >= nms.playback.stopTime) {
 		nms.timers.replay.stop();
 		return;
 	}
-	replayTime = parseInt(replayTime) + parseInt(replayIncrement);
-	nms.now = epochToString(replayTime);
+	nms.playback.replayTime = parseInt(nms.playback.replayTime) + parseInt(nms.playback.replayIncrement);
+	nms.now = epochToString(nms.playback.replayTime);
 	updatePorts();
 	updatePing();
 }
 
 /*
- * Start replaying the event.
+ * Start replaying historical data.
  *
- * I want this to be more generic:
- *  - Set time
- *  - Set end-time
- *  - Start/stop/pause
- *  - Set speed increment
+ * Todo:
+ * Currently playback of historical data is handled separately from normal
+ * playback. I recon we can simplify and combine both in generic play, pause,
+ * jump, etc. methods that can easily be controlled from the UI-side.
  *
- * Once the lib supports this, I can move 'tgStart' and 'tgEnd' to the GUI
- * and just provide them as default values or templates.
+ * To do this we could remove the separate replay timer, and implement basic stopTime
+ * checks to the other playback functions.
+ *
  */
-function startReplay() {
-	nms.timers.replay.stop();
-	resetColors();
-	nms.now = epochToString(tgStart);
-	timeReplay();
-	nms.timers.replay.start();;
-	nms.timers.ping.stop();;
-	nms.timers.ports.stop();;
-}
+nms.playback.startReplay = function(startTime,stopTime) {
+  if(!startTime || !stopTime)
+    return false;
+  nms.timers.replay.stop();
 
+  nms.playback.startTime = stringToEpoch(startTime);
+  nms.playback.stopTime = stringToEpoch(stopTime);
+  resetColors();
+  nms.now = epochToString(nms.playback.startTime);
+  timeReplay();
+  nms.timers.replay.start();
+  nms.timers.ping.stop();
+  nms.timers.ports.stop();
+}
 /*
- * Used to move to a specific time
+ * Pause playback
  */
-function changeNow(newnow,playing) {
-	if (newnow == "")
-		newnow = false;
+nms.playback.pause = function() {
+  nms.timers.replay.stop();
+  nms.timers.ping.stop();
+  nms.timers.ports.stop();
+}
+/*
+ * Start playback
+ */
+nms.playback.play = function() {
+  nms.timers.ping.start();
+  nms.timers.ports.start();
+}
+/*
+ * Jump to place in time
+ */
+nms.playback.setNow = function(now,playing) {
+  nms.playback.pause();
+
+  if (now == "")
+    now = false;
   if (playing == "")
     playing = false;
 
-  if(newnow) 
-    newnow = parseNow(newnow);
-	
-  nms.timers.replay.stop();
-	nms.now = newnow;
-	resetColors();
+  if(now) 
+    now = parseNow(now);
 
-	if (!playing) {
-		nms.timers.ping.stop();
-		nms.timers.ports.stop();
-	} else {
-    nms.timers.ping.start();
-    nms.timers.ports.start();
+  resetSwitchStates();
+  nms.now = now;
+  nms.updater.updater();
+
+  if (playing) {
+    nms.playback.play();
   }
 
-	updatePorts();
-	updatePing();
-	var boxHide = document.getElementById("nowPickerBox");
-	if (boxHide) {
-		boxHide.style.display = "none";
-	}
+  updatePorts();
+  updatePing();
 }
 
 function stepTime(n)
@@ -701,10 +708,23 @@ function updateSwitches(switchdata,target) {
  * while the current state of the switch data is unknown.
  */
 function updateSwitchProperty(sw,property,data,target) {
-	if(target.switches[sw] == undefined)
-		target.switches[sw] = {};
+  if(target.switches[sw] == undefined)
+    target.switches[sw] = {};
 
-	target.switches[sw][property] = data;
+  target.switches[sw][property] = data;
+}
+
+/*
+ * Helper function for reseting switch state data (and keeping more permanent data)
+ */
+function resetSwitchStates() {
+  for (var sw in nms.switches_now.switches) {
+    for (var property in nms.switches_now.switches[sw]) {
+      if (['ports','temp','temp_time'].indexOf(property) > -1) {
+        nms.switches_now.switches[sw][property] = undefined;
+      }
+    }
+  }
 }
 
 /*
