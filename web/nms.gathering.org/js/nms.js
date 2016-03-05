@@ -365,18 +365,9 @@ nms.playback.play = function() {
  */
 nms.playback.setNow = function(now,playing) {
   nms.playback.pause();
-
-  if (now == "")
-    now = false;
-  if (playing == "")
-    playing = false;
-
-  if(now) 
-    now = parseNow(now);
-
   resetSwitchStates();
+  now = parseNow(now);
   nms.now = now;
-  nms.updater.updater();
 
   if (playing) {
     nms.playback.play();
@@ -384,6 +375,7 @@ nms.playback.setNow = function(now,playing) {
 
   updatePorts();
   updatePing();
+  nms.updater.updater();
 }
 
 function stepTime(n)
