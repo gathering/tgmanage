@@ -50,7 +50,7 @@ var nms = {
 	 * drop-down.
 	 */
 	timers: {
-		replay:false,
+		playback:false,
 		ports:false,
 		ping:false
 	},
@@ -89,8 +89,9 @@ var nms = {
    * Playback controllers and variables
    */
   playback:{
-    startTime: undefined,
-    stopTime: undefined,
+    startTime: false,
+    stopTime: false,
+    playing: false,
     replayTime: 0,
     replayIncrement: 60 * 60
   }
@@ -307,25 +308,6 @@ function epochToString(t)
 
 	return str;
 }
-	
-/*
- * Move 'nms.now' forward in time, unless we're are after stopTime.
- *
- * This is run on a timer (nms.timers.replay) every second when we are
- * replaying.
- */
-function timeReplay()
-{
-	nms.playback.replayTime = stringToEpoch(nms.now);
-	if (nms.playback.replayTime >= nms.playback.stopTime) {
-		nms.timers.replay.stop();
-		return;
-	}
-	nms.playback.replayTime = parseInt(nms.playback.replayTime) + parseInt(nms.playback.replayIncrement);
-	nms.now = epochToString(nms.playback.replayTime);
-	updatePorts();
-	updatePing();
-}
 function localEpochToString(t) {
   var d = new Date(parseInt(t) * parseInt(1000));
   var timezoneOffset = d.getTimezoneOffset() * -60;
@@ -333,83 +315,111 @@ function localEpochToString(t) {
 
   return epochToString(t);
 }
-	
+
 /*
  * Start replaying historical data.
- *
- * Todo:
- * Currently playback of historical data is handled separately from normal
- * playback. I recon we can simplify and combine both in generic play, pause,
- * jump, etc. methods that can easily be controlled from the UI-side.
- *
- * To do this we could remove the separate replay timer, and implement basic stopTime
- * checks to the other playback functions.
- *
  */
 nms.playback.startReplay = function(startTime,stopTime) {
   if(!startTime || !stopTime)
     return false;
-  nms.timers.replay.stop();
 
+  nms.playback.pause();
   nms.playback.startTime = stringToEpoch(startTime);
   nms.playback.stopTime = stringToEpoch(stopTime);
-  resetColors();
   nms.now = epochToString(nms.playback.startTime);
-  timeReplay();
-  nms.timers.replay.start();
-  nms.timers.ping.stop();
-  nms.timers.ports.stop();
+  nms.playback.play();
 }
 /*
  * Pause playback
  */
 nms.playback.pause = function() {
-  nms.timers.replay.stop();
-  nms.timers.ping.stop();
-  nms.timers.ports.stop();
+  nms.timers.playback.stop();
+  nms.playback.playing = false;
 }
 /*
  * Start playback
  */
 nms.playback.play = function() {
-  nms.timers.ping.start();
-  nms.timers.ports.start();
+  nms.playback.tick();
+  nms.timers.playback.start();
+  nms.playback.playing = true;
+}
+/*
+ * Toggle playback
+ */
+nms.playback.toggle = function() {
+  if(nms.playback.playing) {
+    nms.playback.pause();
+  } else {
+    nms.playback.play();
+  }
 }
 /*
  * Jump to place in time
  */
-nms.playback.setNow = function(now,playing) {
-  nms.playback.pause();
+nms.playback.setNow = function(now) {
   resetSwitchStates();
   now = parseNow(now);
   nms.now = now;
 
-  if (playing) {
-    nms.playback.play();
+  nms.playback.stopTime = false;
+  nms.playback.startTime = false;
+  nms.playback.tick();
+}
+/*
+ * Step forwards or backwards in timer
+ */
+nms.playback.stepTime = function(n)
+{
+  now = getNowEpoch();
+  newtime = parseInt(now) + parseInt(n);
+  nms.now = epochToString(parseInt(newtime));
+
+  if(!nms.playback.playing)
+    nms.playback.tick();
+}
+/*
+ * Ticker to trigger updates, and advance time if replaying
+ *
+ * This is run on a timer (nms.timers.tick) every second while unpaused
+ */
+nms.playback.tick = function()
+{
+  nms.playback.replayTime = getNowEpoch();
+
+  // If outside start-/stopTime, remove limits and pause playback
+  if (nms.playback.stopTime && (nms.playback.replayTime >= nms.playback.stopTime || nms.playback.replayTime < nms.playback.startTime)) {
+    nms.playback.stopTime = false;
+    nms.playback.startTime = false;
+    nms.playback.pause();
+    return;
   }
 
+  // If past actual datetime, go live
+  if (nms.playback.replayTime > parseInt(Date.now() / 1000)) {
+    nms.now = false;
+  }
+
+  // If we are still replaying, advance time
+  if(nms.now !== false && nms.playback.playing) {
+    nms.playback.stepTime(nms.playback.replayIncrement);
+  }
+
+  // Update data and force redraw
   updatePorts();
   updatePing();
   nms.updater.updater();
 }
-
-function stepTime(n)
-{
-	var now;
-	nms.timers.replay.stop();
-	nms.timers.ping.stop();;
-	nms.timers.ports.stop();;
-	if (nms.now && nms.now != 0)
-		now = parseInt(stringToEpoch(nms.now));
-	else if (nms.switches_now)
-		now = parseInt(stringToEpoch(/^[^.]*/.exec(nms.switches_now.time)));
-	else
-		return;
-	newtime = parseInt(now) + parseInt(n);
-	nms.now = epochToString(parseInt(newtime));
-	updatePorts();
-	updatePing();
+/*
+ * Helper function for safely getting a valid now-epoch
+ */
+function getNowEpoch() {
+  if (nms.now && nms.now != 0)
+    return stringToEpoch(nms.now);
+  else
+    return parseInt(Date.now() / 1000);
 }
+
 
 /*
  * Hide switch info-box
@@ -1537,15 +1547,13 @@ function initNMS() {
 	document.addEventListener('load',resizeEvent,true);
 	
 	nms.timers.ports = new nmsTimer(updatePorts, 1000, "Port updater", "AJAX request to update port data (traffic, etc)");
-	nms.timers.ports.start();
-
-	nms.timers.ping = new nmsTimer(updatePing, 1000, "Ping updater", "AJAX request to update ping data");
-	nms.timers.ping.start();
 	
-	nms.timers.replay = new nmsTimer(timeReplay, 1000, "Time machine", "Handler used to change time");
+	nms.timers.ping = new nmsTimer(updatePing, 1000, "Ping updater", "AJAX request to update ping data");
+	
+	nms.timers.playback = new nmsTimer(nms.playback.tick, 1000, "Playback ticker", "Handler used to advance time");
+	
 	detectHandler();
-	updatePorts();
-	updatePing();
+	nms.playback.play();
 	setupKeyhandler();
 	restoreSettings();
 }
@@ -1685,32 +1693,23 @@ function moveTimeFromKey(e,key)
 {
 	switch(key) {
 		case 'h':
-			stepTime(-3600);
+			nms.playback.stepTime(-3600);
 			break;
 		case 'j':
-			stepTime(-300);
+			nms.playback.stepTime(-300);
 			break;
 		case 'k':
-			stepTime(300);
+			nms.playback.stepTime(300);
 			break;
 		case 'l':
-			stepTime(3600);
+			nms.playback.stepTime(3600);
 			break;
 		case 'p':
-			if(nms.timers.replay.handle)
-				nms.timers.replay.stop();
-			else {
-				timeReplay();
-				nms.timers.replay.start();
-			}
+			nms.playback.toggle();
 			break;
 		case 'r':
-			nms.timers.replay.stop();
-			nms.now = false;
-			nms.timers.ping.start();;
-			nms.timers.ports.start();;
-			updatePorts();
-			updatePing();
+			nms.playback.setNow();
+			nms.playback.play();
 			break;
 	}
 	return true;
@@ -1790,25 +1789,28 @@ function forgetSettings()
 /*
  * Time travel gui
  */
+var datepicker;
 function startNowPicker(now) {
+  $.datetimepicker.setLocale('no');
   $('#nowPicker').datetimepicker('destroy');
   if(!now && nms.now)
     now = nms.now;
-  $('#nowPicker').datetimepicker({
+  datepicker = $('#nowPicker').datetimepicker({
     value: now,
     mask:false,
     inline:true,
     todayButton: false,
     validateOnBlur:false,
+    dayOfWeekStart:1,
     maxDate:'+1970/01/01',
     onSelectDate: function(ct,$i){
-      document.getElementById('nowPicker').dataset.iso = parseNow(ct);
+      document.getElementById('nowPicker').dataset.iso = localEpochToString(ct.valueOf()/1000);
     },
     onSelectTime: function(ct,$i){
-      document.getElementById('nowPicker').dataset.iso = parseNow(ct);
+      document.getElementById('nowPicker').dataset.iso = localEpochToString(ct.valueOf()/1000);
     },
     onGenerate: function(ct,$i){
-      document.getElementById('nowPicker').dataset.iso = parseNow(ct);
+      document.getElementById('nowPicker').dataset.iso = localEpochToString(ct.valueOf()/1000);
     }
   });
 }
