@@ -246,7 +246,10 @@ function toggleNightMode()
 function parseNow(now)
 {
 	if (Date.parse(now)) {
-		var d = new Date(Date.parse(now));
+		// Adjust for timezone when converting from epoch (UTC) to string (local)
+		var d = new Date(now);
+		var timezoneOffset = d.getTimezoneOffset() * -60000;
+		var d = new Date(Date.parse(now) - timezoneOffset);
 		var str = d.getFullYear() + "-" + ("00" + (parseInt(d.getMonth())+1)).slice(-2) + "-" + ("00" + d.getDate()).slice(-2) + "T";
 		str += ("00" + d.getHours()).slice(-2) + ":" + ("00" + d.getMinutes()).slice(-2) + ":" + ("00" + d.getSeconds()).slice(-2);
 		return str;
@@ -279,6 +282,11 @@ function stringToEpoch(t)
  */
 function epochToString(t)
 {
+	// Adjust for timezone when converting from epoch (UTC) to string (local)
+	var d = new Date(parseInt(t) * parseInt(1000));
+	var timezoneOffset = d.getTimezoneOffset() * -60;
+	t = t - timezoneOffset;
+
 	var d = new Date(parseInt(t) * parseInt(1000));
 	var str = d.getFullYear() + "-";
 	if (parseInt(d.getMonth()) < 9)
@@ -318,7 +326,14 @@ function timeReplay()
 	updatePorts();
 	updatePing();
 }
+function localEpochToString(t) {
+  var d = new Date(parseInt(t) * parseInt(1000));
+  var timezoneOffset = d.getTimezoneOffset() * -60;
+  t = t + timezoneOffset;
 
+  return epochToString(t);
+}
+	
 /*
  * Start replaying historical data.
  *
