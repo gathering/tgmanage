@@ -1,6 +1,7 @@
 var nms = {
 	updater:undefined, // Active updater
 	update_time:0, // Client side timestamp for last update
+	switches_management:{switches:{}},
 	switches_now:{switches:{}}, // Most recent data
 	switches_then:{switches:{}}, // 2 minutes old
 	speed:0, // Current aggregated speed
@@ -441,10 +442,13 @@ function hideSwitch()
 }
 /*
  * Display info on switch "x" in the info-box
+ *
+ * FIXME: THIS IS A MONSTROSITY.
  */
 function showSwitch(x)
 {
 		var sw = nms.switches_now["switches"][x];
+		var swm = nms.switches_management["switches"][x];
 		var swtop = document.getElementById("info-switch-parent");
 		var swpanel = document.getElementById("info-switch-panel-body");
 		var swtitle = document.getElementById("info-switch-title");
@@ -528,53 +532,21 @@ function showSwitch(x)
 		td1.innerHTML = "Total speed (out)";
 		td2.innerHTML = byteCount(8 * speed) + "b/s";
 
-		tr = switchele.insertRow(-1);
-		td1 = tr.insertCell(0);
-		td2 = tr.insertCell(1);
-		td1.innerHTML = "Management IP";
-		td2.innerHTML = sw["management"]["ip"];
-
-		tr = switchele.insertRow(-1);
-		td1 = tr.insertCell(0);
-		td2 = tr.insertCell(1);
-		td1.innerHTML = "Latency";
-		if (nms.ping_data && nms.ping_data["switches"] && nms.ping_data["switches"][x]) {
-			td2.innerHTML = nms.ping_data["switches"][x]["latency"];
-		} else {
-			td2.innerHTML = "N/A";
+		for (v in sw) { 
+			tr = switchele.insertRow(-1);
+			td1 = tr.insertCell(0);
+			td2 = tr.insertCell(1);
+			td1.innerHTML = v;
+			td2.innerHTML = sw[v];
+		}
+		for (v in swm) { 
+			tr = switchele.insertRow(-1);
+			td1 = tr.insertCell(0);
+			td2 = tr.insertCell(1);
+			td1.innerHTML = v;
+			td2.innerHTML = swm[v];
 		}
 
-		tr = switchele.insertRow(-1);
-		td1 = tr.insertCell(0);
-		td2 = tr.insertCell(1);
-		td1.innerHTML = "Temperature";
-		td2.innerHTML = sw["temp"];
-
-		tr = switchele.insertRow(-1);
-		td1 = tr.insertCell(0);
-		td2 = tr.insertCell(1);
-		td1.innerHTML = "Temperature age";
-		td2.innerHTML = sw["temp_time"];
-
-		tr = switchele.insertRow(-1);
-		td1 = tr.insertCell(0);
-		td2 = tr.insertCell(1);
-		td1.innerHTML = "Type";
-		td2.innerHTML = sw["switchtype"];
-
-		tr = switchele.insertRow(-1);
-		td1 = tr.insertCell(0);
-		td2 = tr.insertCell(1);
-		td1.innerHTML = "Last Updated";
-		td2.innerHTML = sw["management"]["last_updated"];
-
-		tr = switchele.insertRow(-1);
-		td1 = tr.insertCell(0);
-		td2 = tr.insertCell(1);
-		td1.innerHTML = "Poll frequency";
-		td2.innerHTML = sw["management"]["poll_frequency"];
-
-		
 		comments = document.createElement("table");
 		comments.id = "info-switch-comments-table";
 		comments.className = "table table-condensed";
@@ -875,6 +847,36 @@ function addComment(sw,comment)
 		}
 	});
 }
+
+/*
+ * Update nms.switches_management
+ *
+ * FIXME: This isn't actually called from anywhere, only console at the
+ * moment.
+ */
+function updateSwitchManagement()
+{
+	if (nms.outstandingAjaxRequests > 5) {
+		nms.ajaxOverflow++;
+		updateAjaxInfo();
+		return;
+	}
+	nms.outstandingAjaxRequests++;
+	$.ajax({
+		type: "GET",
+		url: "/api/private/switches-management" ,
+		dataType: "text",
+		success: function (data, textStatus, jqXHR) {
+			var  switchdata = JSON.parse(data);
+			nms.switches_management = switchdata;
+		},
+		complete: function(jqXHR, textStatus) {
+			nms.outstandingAjaxRequests--;
+			updateAjaxInfo();
+		}
+	});
+}
+
 /*
  * Update nms.switches_now and nms.switches_then
  */
@@ -912,6 +914,7 @@ function updatePorts()
 			updateAjaxInfo();
 		}
 	});
+	nms.outstandingAjaxRequests++;
 	$.ajax({
 		type: "GET",
 		url: "/api/public/switches"+ now ,
