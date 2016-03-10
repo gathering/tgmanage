@@ -7,6 +7,8 @@ use DBI;
 use Data::Dumper;
 use JSON;
 use nms;
+use Digest::SHA qw(sha512_base64);
+use FreezeThaw qw(freeze);
 package nms::web;
 
 use base 'Exporter';
@@ -62,10 +64,12 @@ sub setwhen {
 
 sub finalize_output {
 	my $query;
+	my $hash = Digest::SHA::sha512_base64(FreezeThaw::freeze(%json));
 	$query = $dbh->prepare ('select ' . $now . ' as time;');
 	$query->execute();
 
 	$json{'time'} = $query->fetchrow_hashref()->{'time'};
+	$json{'hash'} = $hash;
 	printcc;
 
 	print "Content-Type: text/jso; charset=utf-8\n\n";

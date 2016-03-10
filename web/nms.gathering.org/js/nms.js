@@ -1,9 +1,12 @@
 var nms = {
+	stats:{}, // Various internal stats
 	updater:undefined, // Active updater
 	update_time:0, // Client side timestamp for last update
 	switches_management:{switches:{}},
 	switches_now:{switches:{}}, // Most recent data
 	switches_then:{switches:{}}, // 2 minutes old
+	comments:{}, // Switch comments
+	poller:{hashes:{},time:{}}, // Tracks generic poller hashes/timestamps
 	speed:0, // Current aggregated speed
 	ping_data:undefined, // JSON data for ping history.
 	drawn:false, // Set to 'true' when switches are drawn
@@ -448,7 +451,7 @@ function hideSwitch()
 function showSwitch(x)
 {
 		var sw = nms.switches_now["switches"][x];
-		var swm = nms.switches_management["switches"][x];
+		var swm = nms.switches_management[x];
 		var swtop = document.getElementById("info-switch-parent");
 		var swpanel = document.getElementById("info-switch-panel-body");
 		var swtitle = document.getElementById("info-switch-title");
@@ -555,8 +558,12 @@ function showSwitch(x)
 		comments.appendChild(cap);
 	
 		var has_comment = false;
-		for (var c in sw["comments"]) {
-			var comment = sw["comments"][c];
+		if (nms.comments[x] == undefined) {
+			nms.comments[x] = {};
+			nms.comments[x]["comments"] = [];
+		}
+		for (var c in nms.comments[x]["comments"]) {
+			var comment = nms.comments[x]["comments"][c];
 			has_comment = true;
 			if (comment["state"] == "active" || comment["state"] == "persist" || comment["state"] == "inactive") {
 				tr = comments.insertRow(-1);
@@ -837,6 +844,7 @@ function addComment(sw,comment)
 		switch:sw,
 		comment:comment
 	};
+	myData = JSON.stringify(myData);
 	$.ajax({
 		type: "POST",
 		url: "/api/private/comment-add",
@@ -849,26 +857,64 @@ function addComment(sw,comment)
 }
 
 /*
- * Update nms.switches_management
+ * FIXME: Not at all done.
  *
- * FIXME: This isn't actually called from anywhere, only console at the
- * moment.
+ * genericUpdater() should be something one registers for, then it
+ * automatically picks up intervals based on max-age from the backend, and
+ * allows forced updates (E.g.: force polling comments after a comment is
+ * added, force polling switches after switches has been changed).
+ *
  */
-function updateSwitchManagement()
-{
+function doMiscUpdates() {
+	genericUpdater("comments","comments", "/api/private/comments");
+	genericUpdater("switches_management", "switches", "/api/private/switches-management");
+}
+
+function nmsStatsInc(stat) {
+	if (nms.stats[stat] == undefined)
+		nms.stats[stat] = 0;
+	nms.stats[stat]++;
+}
+/*
+ * Updates nms[name] with data fetched from remote target in variable
+ * "remotename". If a callback is provided, it is called with argument meh.
+ *
+ * This also populates nms.pollers[name] with the server-provided hash.
+ * Only if a change is detected is the callback issued.
+ */
+function genericUpdater(name, remotename, target, cb, meh) {
 	if (nms.outstandingAjaxRequests > 5) {
 		nms.ajaxOverflow++;
 		updateAjaxInfo();
 		return;
 	}
 	nms.outstandingAjaxRequests++;
+	var now = "";
+	if (nms.now != false)
+		now = "now=" + nms.now;
+	if (now != "") {
+		if (target.match("\\?"))
+			now = "&" + now;
+		else
+			now = "?" + now;
+	}
+
 	$.ajax({
 		type: "GET",
-		url: "/api/private/switches-management" ,
+		url: target + now,
 		dataType: "text",
 		success: function (data, textStatus, jqXHR) {
-			var  switchdata = JSON.parse(data);
-			nms.switches_management = switchdata;
+			var  indata = JSON.parse(data);
+			if (nms.poller.hashes[name] != indata['hash']) {
+				nms[name] = indata[remotename];
+				nms.poller.hashes[name] = indata['hash'];
+				nms.poller.time[name] = indata['time'];
+				if (cb != undefined) {
+					cb(meh);
+				}
+			} else {
+				nmsStatsInc("identicalFetches");
+			}
 		},
 		complete: function(jqXHR, textStatus) {
 			nms.outstandingAjaxRequests--;
