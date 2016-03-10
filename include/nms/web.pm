@@ -12,7 +12,7 @@ package nms::web;
 use base 'Exporter';
 our %get_params;
 our %json;
-our @EXPORT = qw(finalize_output json dbh db_safe_quote %get_params get_input %json);
+our @EXPORT = qw(finalize_output json $dbh db_safe_quote %get_params get_input %json);
 our $dbh;
 our $now;
 our $when;
