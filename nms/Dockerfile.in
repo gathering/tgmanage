@@ -82,6 +82,7 @@ RUN apt-get -y install          \
     perl-base                   \
     perl-modules                \
     varnish                     \
+    libfreezethaw-perl		\
     apache2    
 
 RUN cd /srv/tgmanage/ && tools/get_mibs.sh
