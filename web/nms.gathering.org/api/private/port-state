@@ -27,5 +27,7 @@ while (my $ref = $q3->fetchrow_hashref()) {
 	$nms::web::json{'switches'}{$ref->{'sysname'}}{'temp'} = $ref->{'temp'};
 	$nms::web::json{'switches'}{$ref->{'sysname'}}{'temp_time'} = $ref->{'time'};
 }
+$nms::web::cc{'max-age'} = '2';
+$nms::web::cc{'stale-while-revalidate'} = '120';
 
 finalize_output();
