@@ -5,7 +5,7 @@
 use DBI;
 use lib '../../../../include';
 use nms;
-use nms::web qw(%get_params %json finalize_output get_input);
+use nms::web qw(%get_params %json finalize_output get_input $dbh);
 use strict;
 use warnings;
 use JSON;
@@ -20,11 +20,14 @@ my @added;
 my @dups;
 
 my $sth = $nms::web::dbh->prepare("SELECT sysname FROM switches WHERE sysname=?");
-my $insert = $nms::web::dbh->prepare("INSERT INTO SWITCHES (ip, sysname, switchtype,placement) VALUES(?,?,'ex2200',?);");
+
+my @fields = ('ip', 'sysname', 'switchtype', 'last_updated', 'locked', 'poll_frequency', 'community', 'lldp_chassis_id', 'secondary_ip');
 
 foreach my $tmp2 (@tmp) {
 	my %switch = %{$tmp2};
 	my $affected = 0;
+	my %template = ();
+	map { $template{$_} = 'DEFAULT' } @fields;
 
 	$sth->execute( $switch{'sysname'});
 	while ( my @row = $sth->fetchrow_array ) {
@@ -32,14 +35,21 @@ foreach my $tmp2 (@tmp) {
 	}
 
 	if ($affected == 0) {
-		my ($x1,$x2,$y1,$y2);
-		$x1 = $switch{'placement'}{'x1'};
-		$y1 = $switch{'placement'}{'y1'};
-		$x2 = $switch{'placement'}{'xx'};
-		$y2 = $switch{'placement'}{'yy'};
-		my $place = "(($x1,$y1),($x2,$y2))";
-		$json{'foo'} = $place . "foo";
-		$insert->execute($switch{'mgtmt4'}, $switch{'sysname'},$place);
+		map {
+			if (defined ($template{$_})) {
+				$template{$_} = $dbh->quote($switch{$_});
+			}
+		} keys %switch;
+		if (defined($switch{'placement'})) {
+			my ($x1,$x2,$y1,$y2);
+			$x1 = $switch{'placement'}{'x1'};
+			$y1 = $switch{'placement'}{'y1'};
+			$x2 = $switch{'placement'}{'xx'};
+			$y2 = $switch{'placement'}{'yy'};
+			my $place = "(($x1,$y1),($x2,$y2))";
+			$template{'placement'} = $place;
+		}
+		$nms::web::dbh->do("INSERT INTO SWITCHES (ip, sysname, switchtype, last_updated, locked, poll_frequency, community, lldp_chassis_id, secondary_ip)  VALUES ($template{'ip'}, $template{'sysname'}, $template{'switchtype'}, $template{'last_updated'}, $template{'locked'}, $template{'poll_frequency'}, $template{'community'}, $template{'lldp_chassis_id'}, $template{'secondary_ip'});");
 		push @added, $switch{'sysname'};
 	} else {
 		push @dups, $switch{'sysname'};
