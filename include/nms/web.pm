@@ -58,6 +58,9 @@ sub setwhen {
 		$now = db_safe_quote('now') . "::timestamp ";
 		$cc{'max-age'} = "3600";
 	}
+	if (defined($get_params{'offset'})) {
+		$now = "(" . $now . " - " . db_safe_quote('offset') . "::interval)";
+	}
 	$when = " time > " . $now . " - '5m'::interval and time < " . $now . " ";
 	return $when;
 }
