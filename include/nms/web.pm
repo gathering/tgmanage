@@ -7,8 +7,9 @@ use DBI;
 use Data::Dumper;
 use JSON;
 use nms;
-use Digest::SHA qw(sha512_base64);
-use FreezeThaw qw(freeze);
+use Digest::SHA;
+use FreezeThaw;
+use URI::Escape;
 package nms::web;
 
 use base 'Exporter';
@@ -58,9 +59,6 @@ sub setwhen {
 		$now = db_safe_quote('now') . "::timestamp ";
 		$cc{'max-age'} = "3600";
 	}
-	if (defined($get_params{'offset'})) {
-		$now = "(" . $now . " - " . db_safe_quote('offset') . "::interval)";
-	}
 	$when = " time > " . $now . " - '5m'::interval and time < " . $now . " ";
 	return $when;
 }
@@ -68,7 +66,7 @@ sub setwhen {
 sub finalize_output {
 	my $query;
 	my $hash = Digest::SHA::sha512_base64(FreezeThaw::freeze(%json));
-	$query = $dbh->prepare ('select ' . $now . ' as time;');
+	$query = $dbh->prepare('select to_char(' . $now . ', \'YYYY-MM-DD"T"HH24:MI:SS\') as time;');
 	$query->execute();
 
 	$json{'time'} = $query->fetchrow_hashref()->{'time'};
@@ -81,9 +79,10 @@ sub finalize_output {
 }
 
 sub populate_params {
-	foreach my $hdr (split("&",$ENV{'QUERY_STRING'} || "")) {
+	my $querystring = $ENV{'QUERY_STRING'} || "";
+	foreach my $hdr (split("&",$querystring)) {
 		my ($key, $value) = split("=",$hdr,"2");
-		$get_params{$key} = $value;
+		$get_params{$key} = URI::Escape::uri_unescape($value);
 	}
 }
 
