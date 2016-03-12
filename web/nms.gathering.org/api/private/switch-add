@@ -39,22 +39,25 @@ foreach my $tmp2 (@tmp) {
 	}
 
 	if ($affected == 0) {
+		my %placement;
+		if (not defined ($switch{'placement'})) {
+			%placement = guess_placement($switch{'sysname'});
+		} else {
+			%placement = %{$switch{'placement'}};
+		}
+		my ($x1,$x2,$y1,$y2);
+		$x1 = $placement{'x1'};
+		$y1 = $placement{'y1'};
+		$x2 = $placement{'xx'};
+		$y2 = $placement{'yy'};
+		$switch{'placement'} = "(($x1,$y1),($x2,$y2))";
+		
 		map {
 			if (defined ($template{$_})) {
-				$template{$_} = $dbh->quote($switch{$_});
+					$template{$_} = $dbh->quote($switch{$_});
 			}
 		} keys %switch;
-		if (not defined($switch{'placement'})) {
-			%{$switch{'placement'}} = guess_placement($switch{'sysname'});
-		}
 		
-		my ($x1,$x2,$y1,$y2);
-		$x1 = $switch{'placement'}{'x1'};
-		$y1 = $switch{'placement'}{'y1'};
-		$x2 = $switch{'placement'}{'xx'};
-		$y2 = $switch{'placement'}{'yy'};
-		my $place = "(($x1,$y1),($x2,$y2))";
-		$template{'placement'} = $dbh->quote($place);
 
 		$nms::web::dbh->do("INSERT INTO SWITCHES (ip, sysname, switchtype, last_updated, locked, poll_frequency, community, lldp_chassis_id, secondary_ip, placement)  VALUES ($template{'ip'}, $template{'sysname'}, $template{'switchtype'}, $template{'last_updated'}, $template{'locked'}, $template{'poll_frequency'}, $template{'community'}, $template{'lldp_chassis_id'}, $template{'secondary_ip'}, $template{'placement'});");
 		push @added, $switch{'sysname'};
@@ -65,12 +68,13 @@ foreach my $tmp2 (@tmp) {
 			$y1 = $switch{'placement'}{'y1'};
 			$x2 = $switch{'placement'}{'xx'};
 			$y2 = $switch{'placement'}{'yy'};
-			my $place = "(($x1,$y1),($x2,$y2))";
-			$switch{'placement'} = $place;
+			$switch{'placement'} = "(($x1,$y1),($x2,$y2))";
 		}
 		my @set;
 		map {
-			push @set, "$_=" . $dbh->quote($switch{$_});
+			if (defined($template{$_})) {
+				push @set, "$_=" . $dbh->quote($switch{$_});
+			}
 		} keys %switch;
 		$nms::web::dbh->do("UPDATE SWITCHES SET " . join(", ", @set) . "WHERE sysname=" . $dbh->quote($switch{'sysname'}) . ";");
 		push @dups, $switch{'sysname'};
