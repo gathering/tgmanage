@@ -911,56 +911,12 @@ function detectHandler() {
 	setUpdater(handler_ping);
 }
 
-/*
- * Display and populate the dialog box for debugging timers.
- *
- * Could probably be cleaned up.
- */
-function showTimerDebug() {
-	var tableTop = document.getElementById('debugTimers');
-	var table = document.getElementById('timerTable');
-	var tr, td1, td2;
-	if (table)
-		tableTop.removeChild(table);
-	table = document.createElement("table");
-	table.id = "timerTable";
-	table.style.zIndex = 100;
-	table.className = "table";
-	table.classList.add("table");
-	table.classList.add("table-default");
-	var header = table.createTHead();
-	tr = header.insertRow(0);
-	td = tr.insertCell(0);
-	td.innerHTML = "Handler";
-	td = tr.insertCell(1);
-	td.innerHTML = "Interval (ms)";
-	td = tr.insertCell(2);
-	td.innerHTML = "Name";
-	td = tr.insertCell(3);
-	td.innerHTML = "Description";
-	for (var v in nms.timers) {
-		tr = table.insertRow(-1);
-		td = tr.insertCell(0);
-		td.textContent = nms.timers[v].handle;
-		td = tr.insertCell(1);
-		td.style.width = "15em";
-		var tmp = "<div class=\"input-group\"><input type=\"text\" id='handlerValue" + v + "' value='" + nms.timers[v].interval + "' class=\"form-control\"></input>";
-		tmp += "<span class=\"input-group-btn\"><button type=\"button\" class=\"btn btn-default\" onclick=\"nms.timers['" + v + "'].setInterval(document.getElementById('handlerValue" + v + "').value);\">Apply</button></span></div>";
-		td.innerHTML = tmp;
-		td = tr.insertCell(2);
-		td.textContent = nms.timers[v].name;
-		td = tr.insertCell(3);
-		td.textContent = nms.timers[v].description;
-	}
-	tableTop.appendChild(table);
-	document.getElementById('debugTimers').style.display = 'block'; 
-}
-
 function setMenu()
 {
 	var nav = document.getElementsByTagName("nav")[0];
 	nav.style.display = nms.menuShowing ? '' : 'none';
 }
+
 function toggleMenu()
 {
 	nms.menuShowing = ! nms.menuShowing;

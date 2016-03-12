@@ -71,13 +71,8 @@
 		<li class="dropdown-header">View</li>
 		<li><a href="#" onclick="toggleNightMode()">Toggle Night Mode</a></li>
 		<li class="divider"> </li>
-		<li class="dropdown-header">Map scale</li>
-		<li><a href="#"><label id="scaler-text" for='scaler'></label><input type="range" id="scaler" name="points" min="0.2" max="3" step="0.01" onchange="scaleChange()" /></a></li>
-		<li class="divider"> </li>
 		<li class="dropdown-header">Help</li>
-	  	<li><a href="#" onclick="toggleLayer('aboutBox');" >About NMS</a></li>
 	  	<li><a href="#" onclick="toggleLayer('aboutKeybindings');" >Keyboard Shortcuts</a></li>
-		<li><a onclick="showTimerDebug(); hideSwitch();" style="cursor: pointer;" >Debug timers</a></li>
 	      </ul>
 	    </li>
 	    <li><p id="updater_name" class="navbar-text"></p></li>
@@ -226,93 +221,6 @@
 	      </div>
 	    </div>
 	  </div>
-	  <div id="aboutBox" class="col-md-4" style="display: none; position: absolute; z-index: 100;">
-	    <div id="abotBox" class="panel panel-default">
-	      <div class="panel-heading">
-		<h3 class="panel-title">Welcome to NMS
-		  <button type="button" class="close" aria-labe="Close" onclick="document.getElementById('aboutBox').style.display = 'none';" style="float: right;">
-		    <span aria-hidden="true">&times;</span>
-		  </button>
-		</h3>
-	      </div>
-	      <div class="panel-body">
-		<h3>Cool stuff:</h3>
-		<ul>
-		  <li>Click a switch for more info</li>
-		  <li>Rewind: You can check out state at a specific time or
-		    replay from the beginning of the event. Only works for
-		    data where we keep time-series (so not for
-		  comments)</li>
-		  <li>Press '?' to toggle the menu.</li>
-		  <li>Auto-scaling the viewport/canvas</li>
-		  <li>Total client speed (up right)</li>
-		  <li>Generic(-ish) map handlers: provide a name, init-function
-		    and an update-function and the nms lib does the rest as far as
-		    integration goes.</li>
-		</ul>
-		<h3>Todo list front end:</h3>
-		<ul>
-		  <li>Polish time travel UI (Allow playing from a given time at a given speed, play/pause buttons, etc)</li>
-		  <li>Better "popup" boxes: It's growing out of control.</li>
-		  <li>Toggle auto-scale on/off</li>
-		  <li>Clean up various global variables</li>
-		  <li>Create name spaces in nms.*: It's just barely better
-		  than global stuff now.</li>
-		  <li>Add DHCP map</li>
-		  <li>More info on switches: Port state, possibly link time
-		    trends</li>
-		  <li>Moving switches around (like ping.html + edit)</li>
-		  <li>Split nms.js into multiple components to unclutter the
-		    code</li>
-		  <li>Comments: Fix UTF8 garbligash caused by $dbh-&gt;quote()</li>
-		</ul>
-		<h3>Todo for backend:</h3>
-		<ul>
-		  <li>IPv6 support</li>
-		  <li>Provide public API's</li>
-		  <li>Investigate a json tree filter/massager</li>
-		  <li>Close SQL injections (IT'S WIDE OPEN BECAUSE WHY NOT THAT'S NEVER A PROBLEM)</li>
-		  <li>Split port-state.pl into multiple appropriate pieces. Right
-		    it mixes heavy time-critical data with less time-critical and
-		    cheap computation.</li>
-		  <li>Rip comments out of port-state.pl completely so it's not
-		    bound by the same cache issues and can be reliably
-		    refreshed.</li>
-		  <li>Consider time log of DHCP (right now it just stores the
-		    most recent timestamp, making time travel impossible)</li>
-		  <li>Fix SNMP-fetcher so it gets ifXTable and at least
-		    ifOperStatus from ifTable. Don't request the entire
-		    ifXTable if we can avoid it. Possibly other
-		  tweaks.</li>
-		  <li>Support for adding switches through an API, not just pure SQL.</li>
-		  <li>Integrate with FAP</li>
-		  <li>Clean up old interfaces</li>
-		  <li>Review various agents/tools</li>
-		  <li>Improve cache headers</li>
-		  <li>Cache invalidation of comments? (Probably not needed)</li>
-		  <li>Re-test the SQL schema. It's been modified and works fine
-		    on my laptop, but I need to dump it, commit it and test it.</li>
-		  <li>Munin plugin for ports.</li>
-		</ul>
-	      </div>
-	    </div>
-	  </div>
-	</div>
-	<div id="debugTimers" class="panel panel-default" style="display: none; position: absolute; z-index: 100;">
-	  <div class="panel-heading">
-	    <h1 class="panel-title">Debug timers (e.g.: Break stuff! FAST!)
-	      <button type="button" class="close" aria-labe="Close" onclick="document.getElementById('debugTimers').style.display = 'none';" style="float: right;">
-		<span aria-hidden="true">&times;</span>
-	      </button>
-	    </h1>
-	  </div>
-	  <div id="timerTableTop" class="panel-body">
-	    <p>These are internal timers for the NMS frontend. They are
-	    provided mainly to debug the frontend. Setting AJAX-triggering
-	    counters to ridiculous numbers is not advised (mainly because
-	    it causes server load).</p>
-	  </div>
-	  <table id="timerTable"> </table>
 	</div>
 
 	<canvas id="bgCanvas" width="1920" height="1032" style="position: absolute; z-index: 1;"> </canvas>
