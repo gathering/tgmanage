@@ -43,7 +43,8 @@ var nmsMap = nmsMap || {
 nmsMap.init = function() {
 	this._initContexts();
 	this._drawBG();
-	nmsData.registerSource("switches","/api/public/switches",function(){nmsMap._drawAllSwitches();});
+	nmsData.registerSource("switches","/api/public/switches");
+	nmsData.addHandler("switches","nmsMap",function(){nmsMap._drawAllSwitches();});
 	window.addEventListener('resize',nmsMap._resizeEvent,true);
 	document.addEventListener('load',nmsMap._resizeEvent,true);
 	this._drawAllSwitches();
@@ -153,6 +154,10 @@ nmsMap._getBox = function(sw) {
 
 nmsMap._drawSwitch = function(sw)
 {
+	// XXX: If a handler sets a color before switches are loaded... The
+	// color will get set fine so this isn't a problem.
+	if (nmsData.switches == undefined || nmsData.switches.switches == undefined)
+		return;
 	var box = this._getBox(sw);
 	var color = nmsMap._color[sw];
 	if (color == undefined) {

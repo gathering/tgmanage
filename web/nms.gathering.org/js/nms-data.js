@@ -44,6 +44,7 @@ nmsCore.assert = function(cb) {
  *
  * nmsData.data[name] - actual data
  * nmsData.registerSource() - add a source, will be polled periodicall
+ * nmsData.addHandler()
  * nmsData.updateSource() - issue a one-off update, outside of whatever
  * 			    periodic polling might take place
  */
@@ -124,8 +125,6 @@ nmsData.removeSource = function (name) {
  *
  * name: "Local" name. Maps to nmsData[name]
  * target: URL of the source
- * cb: Optional callback
- * cbdata: Optional callback data
  *
  * This can be called multiple times to add multiple handlers. There's no
  * guarantee that they will be run in order, but right now they do.
@@ -136,26 +135,47 @@ nmsData.removeSource = function (name) {
  *
  * FIXME: Should be unified with nmsTimers() somehow.
  */
-nmsData.registerSource = function(name, target, cb, cbdata) {
-	var fresh = false;
-	var cbob = {
-		name: name,
-		cb: cb,
-		cbdata: cbdata
-	};
+nmsData.registerSource = function(name, target) {
 	if (this._sources[name] == undefined) {
-		this._sources[name] = { target: target, cbs: [] };
+		this._sources[name] = { target: target, cbs: {}, fresh: true };
 		this._sources[name]['handle'] = setInterval(function(){nmsData.updateSource(name)}, 1000);
 		this.stats.newSource++;
-		fresh = true;
 	} else {
 		this.stats.oldSource++;
 	}
-	this._sources[name].cbs.push(cbob);
 
 	this.stats.pollSets++;
-	if (fresh)
-		this.updateSource(name);
+}
+
+nmsData.addHandler = function(name, id, cb, cbdata) {
+	var cbob = {
+		id: id,
+		name: name,
+		cb: cb,
+		fresh: true,
+		cbdata: cbdata
+	};
+	if (id == undefined) {
+		return;
+	}
+	this._sources[name].cbs[id] = cbob;
+	this.updateSource(name);
+}
+
+/*
+ * Unregister all handlers with the "id" for all sources.
+ *
+ * Mainly used to avoid fini() functions in the map handlers. E.g.: just
+ * reuse "mapHandler" as id.
+ */
+nmsData.unregisterHandlerWildcard = function(id) {
+	for (var v in nmsData._sources) {
+		this._unregisterHandler(v, id);
+	}
+}
+
+nmsData._unregisterHandler = function(name, id) {
+	delete this._sources[name].cbs[id];
 }
 
 /*
@@ -218,6 +238,13 @@ nmsData._genericUpdater = function(name) {
 					}
 				}
 			} else {
+				for (var i in nmsData._sources[name].cbs) {
+					var tmp = nmsData._sources[name].cbs[i];
+					if (tmp.cb != undefined && tmp.fresh) {
+						nmsData._sources[name].cbs[i].fresh = false;
+						tmp.cb(tmp.cbdata);
+					}
+				}
 				nmsData.stats.identicalFetches++;
 			}
 		},

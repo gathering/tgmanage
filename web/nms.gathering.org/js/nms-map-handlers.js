@@ -329,12 +329,14 @@ function commentUpdater()
 
 function commentInit()
 {
+	nmsData.addHandler("comments","mapHandler",commentUpdater);
 	setLegend(1,"white","0 comments");
 	setLegend(2,blue,"Persistent");
 	setLegend(3,red, "New");
 	setLegend(4,orange,"Active");	
 	setLegend(5,green ,"Old/inactive only");	
 }
+
 /*
  * Testing-function to randomize colors of linknets and switches
  */
@@ -354,6 +356,7 @@ function randomizeColors()
 
 function discoInit()
 {
+	nmsData.addHandler("switches","mapHandler",randomizeColors);
 	setNightMode(true);
 	setLegend(1,blue,"Y");	
 	setLegend(2,red, "M");

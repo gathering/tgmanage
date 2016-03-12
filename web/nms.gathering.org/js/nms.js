@@ -289,7 +289,10 @@ nms.playback.tick = function()
 
   // Update data and force redraw
   // FIXME: nmsData merge
-  nms.updater.updater();
+  // nms.updater.updater();
+  // FIXME: 2: This should not be necsarry. The updaters should be
+  // data-driven, not time-driven. E.g.: If nmsData upates, the handlers
+  // should run.
 }
 /*
  * Helper function for safely getting a valid now-epoch
@@ -530,14 +533,12 @@ function setUpdater(fo)
 {
 	nms.updater = undefined;
 	nmsMap.reset();
+	nmsData.unregisterHandlerWildcard("mapHandler");
 	fo.init();
 	nms.updater = fo;
 	var foo = document.getElementById("updater_name");
 	foo.innerHTML = fo.name + "   ";
 	document.location.hash = fo.tag;
-	if (nms.ping_data && nms.switches_then && nmsData.switches) {
-		nms.updater.updater();
-	}
 }
 
 /*
