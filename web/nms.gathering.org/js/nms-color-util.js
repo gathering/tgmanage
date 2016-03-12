@@ -49,21 +49,22 @@ function getRandomColor()
  */
 function drawGradient(gradients)
 {
-	var gradient = dr.hidden.ctx.createLinearGradient(0,0,1000,0);
+	var ctx = nmsMap._c.hidden.ctx; // FIXME: Move it away...
+	var gradient = ctx.createLinearGradient(0,0,1000,0);
 	var stops = gradients.length - 1;
 	nms.gradients = gradients;
 	for (var color in gradients) {
 		var i = color / stops;
 		gradient.addColorStop(i, gradients[color]);
 	}
-	dr.hidden.ctx.beginPath();
-	dr.hidden.ctx.strokeStyle = gradient;
-	dr.hidden.ctx.moveTo(0,0);
-	dr.hidden.ctx.lineTo(1000,0);
-	dr.hidden.ctx.lineWidth = 10;
-	dr.hidden.ctx.closePath();
-	dr.hidden.ctx.stroke();
-	dr.hidden.ctx.moveTo(0,0);
+	ctx.beginPath();
+	ctx.strokeStyle = gradient;
+	ctx.moveTo(0,0);
+	ctx.lineTo(1000,0);
+	ctx.lineWidth = 10;
+	ctx.closePath();
+	ctx.stroke();
+	ctx.moveTo(0,0);
 }
 
 /*
@@ -83,7 +84,8 @@ function getColorStop(x) {
  * made generic.
  */
 function getColor(x,y) {
-	var imageData = dr.hidden.ctx.getImageData(x, y, 1, 1);
+	var ctx = nmsMap._c.hidden.ctx; // FIXME: Move it away...
+	var imageData = ctx.getImageData(x, y, 1, 1);
 	var data = imageData.data;
 	if (data.length < 4)
 		return false;

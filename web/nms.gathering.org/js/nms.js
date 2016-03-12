@@ -3,30 +3,14 @@ var nms = {
 	stats:{}, // Various internal stats
 	updater:undefined, // Active updater
 	speed:0, // Current aggregated speed
-	drawn:false, // Set to 'true' when switches are drawn
 	switch_showing:"", // Which switch we are displaying (if any).
 	switchInfo:{},
-	switchInfoDrawn:{},
 	repop_switch:false, // True if we need to repopulate the switch info when port state updates (e.g.: added comments);
 	repop_time:false, // Timestamp in case we get a cached result
 	nightMode:false, 
-	/*
-	 * Switch-specific variables. These are currently separate from
-	 * "switches_now" because switches_now is reset every time we get
-	 * new data.
-	 */
-	nightBlur:{}, // Have we blurred this switch or not?
-	shadowBlur:10,
-	shadowColor:"#EEEEEE",
-	switch_color:{},  // Color for switch
-	linknet_color:{}, // color for linknet
-	textDrawn:{}, // Have we drawn text for this switch?
 	_now: false,
 	get now() { return this._now },
 	set now(v) { this._now = n; nmsData.now = n; },
-	fontSize:16, // This is scaled too, but 16 seems to make sense.
-	fontFace:"Verdana",
-	fontLineFactor:3,
 	/*
 	 * Various setInterval() handlers. See nmsTimer() for how they are
 	 * used.
@@ -36,8 +20,6 @@ var nms = {
 	 */
 	timers: {
 		playback:false,
-		ports:false,
-		ping:false
 	},
 	menuShowing:true,
 	/*
@@ -67,8 +49,7 @@ var nms = {
 		'k':moveTimeFromKey,
 		'l':moveTimeFromKey,
 		'p':moveTimeFromKey,
-		'r':moveTimeFromKey,
-		'not-default':keyDebug
+		'r':moveTimeFromKey
 	},
   /*
    * Playback controllers and variables
@@ -115,90 +96,6 @@ function nmsTimer(handler, interval, name, description) {
 	};
 }
 
-
-/*
- * Drawing primitives.
- *
- * This contains both canvas and context for drawing layers. It's on a
- * top-level namespace to reduce SLIGHTLY the ridiculously long names
- * (e.g.: dr.bg.ctx.drawImage() is long enough....).
- *
- * Only initialized once (for now).
- */
-var dr = {};
-
-/*
- * Original scale. This is just used to define the coordinate system.
- * 1920x1032 was chosen for tg15 by coincidence: We scaled the underlying
- * map down to "full hd" and these are the bounds we got. There's no
- * particular reason this couldn't change, except it means re-aligning all
- * switches.
- */
-var orig = {
-	width:1920,
-	height:1032
-	};
-
-/*
- * Canvas dimensions, and scale factor.
- *
- * We could derive scale factor from canvas.width / orig.width, but it's
- * used so frequently that this makes much more sense.
- *
- * Width and height are rarely used.
- */
-var canvas = { 
-	width:0,
-	height:0,
-	scale:1
-};
-
-/*
- * Various margins at the sides.
- *
- * Not really used much, except for "text", which is really more of a
- * padding than margin...
- */
-var margin = {
-	x:10,
-	y:20,
-	text:3
-};
-
-/*
- * Convenience-function to populate the 'dr' structure.
- *
- * Only run once.
- */
-function initDrawing() {
-	dr['bg'] = {};
-	dr['bg']['c'] = document.getElementById("bgCanvas");
-	dr['bg']['ctx'] = dr['bg']['c'].getContext('2d');
-	dr['link'] = {};
-	dr['link']['c'] = document.getElementById("linkCanvas");
-	dr['link']['ctx'] = dr['link']['c'].getContext('2d');
-	dr['blur'] = {};
-	dr['blur']['c'] = document.getElementById("blurCanvas");
-	dr['blur']['ctx'] = dr['blur']['c'].getContext('2d');
-	dr['switch'] = {};
-	dr['switch']['c'] = document.getElementById("switchCanvas");
-	dr['switch']['ctx'] = dr['switch']['c'].getContext('2d');
-	dr['text'] = {};
-	dr['text']['c'] = document.getElementById("textCanvas");
-	dr['text']['ctx'] = dr['text']['c'].getContext('2d');
-	dr['textInfo'] = {};
-	dr['textInfo']['c'] = document.getElementById("textInfoCanvas");
-	dr['textInfo']['ctx'] = dr['textInfo']['c'].getContext('2d');
-	dr['top'] = {};
-	dr['top']['c'] = document.getElementById("topCanvas");
-	dr['top']['ctx'] = dr['top']['c'].getContext('2d');
-	dr['input'] = {};
-	dr['input']['c'] = document.getElementById("inputCanvas");
-	dr['input']['ctx'] = dr['top']['c'].getContext('2d');
-	dr['hidden'] = {};
-	dr['hidden']['c'] = document.getElementById("hiddenCanvas");
-	dr['hidden']['ctx'] = dr['hidden']['c'].getContext('2d');
-}
 
 /*
  * Convenience function that doesn't support huge numbers, and it's easier
@@ -619,12 +516,6 @@ function updateMap()
 	}
 	if (!newerSwitches())
 		return;
-	if (!nms.drawn)
-		setScale();
-	if (!nms.drawn)
-		return;
-	if (!nms.ping_data)
-		return;
 	
 	if (nms.updater != undefined && nmsData.switches && nms.switches_then) {
 		nms.updater.updater();
@@ -638,14 +529,12 @@ function updateMap()
 function setUpdater(fo)
 {
 	nms.updater = undefined;
-	resetColors();
-	resetTextInfo();
+	nmsMap.reset();
 	fo.init();
 	nms.updater = fo;
 	var foo = document.getElementById("updater_name");
 	foo.innerHTML = fo.name + "   ";
 	document.location.hash = fo.tag;
-	initialUpdate();
 	if (nms.ping_data && nms.switches_then && nmsData.switches) {
 		nms.updater.updater();
 	}
@@ -697,31 +586,6 @@ function resetSwitchStates() {
   }
 }
 
-/*
- * Convenience function to avoid waiting for pollers when data is available
- * for the first time.
- */
-function initialUpdate()
-{
-	return;
-	if (nms.ping_data && nms.switches_then && nmsData.switches && nms.updater != undefined && nms.did_update == false ) {
-		resizeEvent();
-		if (!nms.drawn) {
-			drawSwitches();
-			drawLinknets();
-		}
-		nms.updater.updater();
-		nms.did_update = true;
-	}
-}
-
-function resetBlur()
-{
-	nms.nightBlur = {};
-	dr.blur.ctx.clearRect(0,0,canvas.width,canvas.height);
-	drawSwitches();
-}
-
 function applyBlur()
 {
 	var blur = document.getElementById("shadowBlur");
@@ -730,6 +594,14 @@ function applyBlur()
 	nms.shadowColor = col.value;
 	resetBlur();
 	saveSettings();
+}
+
+function toggleLayer(layer) {
+       var l = document.getElementById(layer);
+       if (l.style.display == 'none')
+               l.style.display = '';
+       else
+               l.style.display = 'none';
 }
 
 function showBlurBox()
@@ -864,54 +736,6 @@ function setLinknetColors(i,c1,c2)
 	}
 }
 
-/*
- * (Re)draw a switch 'sw'.
- *
- * Color defaults to 'blue' if it's not set in the data structure.
- */
-function drawSwitch(sw)
-{
-		var box = nmsData.switches.switches[sw]['placement'];
-		var color = nms.switch_color[sw];
-		if (color == undefined) {
-			color = blue;
-		}
-		dr.switch.ctx.fillStyle = color;
-		/*
-		 * XXX: This is a left-over from before NMS did separate
-		 * canvases, and might be done better elsewhere.
-		 */
-		if (nms.nightMode && nms.nightBlur[sw] != true) {
-			dr.blur.ctx.shadowBlur = nms.shadowBlur;
-			dr.blur.ctx.shadowColor = nms.shadowColor;
-			drawBoxBlur(box['x'],box['y'],box['width'],box['height']);
-			nms.nightBlur[sw] = true;
-		}
-		drawBox(box['x'],box['y'],box['width'],box['height']);
-		dr.switch.ctx.shadowBlur = 0;
-		if (!nms.textDrawn[sw]) {
-			if ((box['width'] + 10 )< box['height']) {
-				drawSideways(dr.text.ctx, sw,box['x'],box['y'],box['width'],box['height']);
-			} else {
-				drawRegular(dr.text.ctx,sw,box['x'],box['y'],box['width'],box['height']);
-			}
-			
-			nms.textDrawn[sw] = true;
-		}
-}
-
-/*
- * Draw all switches
- */
-function drawSwitches()
-{
-	if (!nmsData.switches || !nmsData.switches.switches)
-		return;
-	for (var sw in nmsData.switches.switches) {
-		drawSwitch(sw);
-	}
-	nms.drawn = true;
-}
 function drawSwitchInfo()
 {
 	if (!nmsData.switches || !nmsData.switches.switches)
@@ -957,41 +781,10 @@ function drawNow()
  */
 function drawScene()
 {
-	dr.text.ctx.font = Math.floor(nms.fontSize * canvas.scale) + "px " + nms.fontFace;
+	//dr.text.ctx.font = Math.floor(nms.fontSize * canvas.scale) + "px " + nms.fontFace;
 	dr.textInfo.ctx.font = Math.floor(nms.fontSize * canvas.scale) + "px " + nms.fontFace;
 	drawLinknets();
-	drawSwitches();
 	drawSwitchInfo();
-}
-
-/*
- * Set the scale factor and (re)draw the scene and background.
- * Uses canvas.scale and updates canvas.height and canvas.width.
- */
-function setScale()
-{
-	canvas.height =  orig.height * canvas.scale ;
-	canvas.width = orig.width * canvas.scale ;
-	for (var a in dr) {
-		/*
-		 * Resizing this to a too small size breaks gradients on smaller screens.
-		 */
-		if (a == 'hidden')
-			continue;
-		dr[a].c.height = canvas.height;
-		dr[a].c.width = canvas.width;
-	}
-	nms.nightBlur = {};
-	nms.textDrawn = {};
-	nms.switchInfoDrawn = {};
-	if (nms.gradients)
-		drawGradient(nms.gradients);
-	drawBG();
-	drawScene();
-	drawNow();
-	
-	document.getElementById("scaler").value = canvas.scale;
-	document.getElementById("scaler-text").innerHTML = (parseFloat(canvas.scale)).toPrecision(3);
 }
 
 /*
@@ -1012,8 +805,8 @@ function isIn(box, x, y)
  * if none is found.
  */
 function findSwitch(x,y) {
-	x = parseInt(parseInt(x) / canvas.scale);
-	y = parseInt(parseInt(y) / canvas.scale);
+	x = parseInt(parseInt(x) / nmsMap.scale);
+	y = parseInt(parseInt(y) / nmsMap.scale);
 
 	for (var v in nmsData.switches.switches) {
 		if(isIn(nmsData.switches.switches[v]['placement'],x,y)) {
@@ -1021,27 +814,6 @@ function findSwitch(x,y) {
 		}
 	}
 	return undefined;
-}
-
-/*
- * Set switch color of 'sw' to 'c', then re-draw the switch.
- */
-function setSwitchColor(sw, c)
-{
-	if(!nms.switch_color || !nms.switch_color[sw] || nms.switch_color[sw] != c) {
-		nms.switch_color[sw] = c;
-		drawSwitch(sw);
-	}
-}
-
-/*
- * Event handler for the front-end drag bar to change scale
- */
-function scaleChange()
-{
-	var scaler = document.getElementById("scaler").value;
-	canvas.scale = scaler;
-	setScale();
 }
 
 /*
@@ -1056,35 +828,6 @@ function switchClick(sw)
 }
 
 /*
- * Resets the colors of linknets and switches.
- *
- * Useful when mode changes so we don't re-use colors from previous modes
- * due to lack of data or bugs.
- */
-function resetColors()
-{
-	if (!nms.sswitches_now)
-		return;
-	if (nmsData.switches.linknets) {
-		for (var i in nmsData.switches.linknets) {
-			setLinknetColors(i, blue,blue);
-		}
-	}
-	for (var sw in nmsData.switches.switches) {
-		setSwitchColor(sw, blue);
-	}
-}
-
-function resetTextInfo()
-{
-	if (!nmsData.switches)
-		return;
-	for (var sw in nmsData.switches.switches) {
-		switchInfoText(sw, undefined);
-	}
-
-}
-/*
  * onclick handler for the canvas.
  *
  * Currently just shows info for a switch.
@@ -1094,40 +837,6 @@ function canvasClick(e)
 	var sw = findSwitch(e.pageX - e.target.offsetLeft, e.pageY - e.target.offsetTop);
 	if (sw != undefined) {
 		switchClick(sw);
-	}
-}
-
-/*
- * Resize event-handler.
- *
- * Recomputes the scale and applies it.
- *
- * Has to use c.offset* since we are just scaling the canvas, not
- * everything else.
- *
- */
-function resizeEvent()
-{
-	var width = window.innerWidth - dr.bg.c.offsetLeft;
-	var height = window.innerHeight - dr.bg.c.offsetTop;
-	if (width / (orig.width + margin.x) > height  /  (orig.height + margin.y)) {
-		canvas.scale = height / (orig.height + margin.y);
-	} else {
-		canvas.scale = width / (orig.width + margin.x);
-	}
-	setScale();
-}
-
-/*
- * Draws the background image (scaled).
- */
-function drawBG()
-{
-	if (nms.nightMode) {
-		invertCanvas();
-	} else {
-		var image = document.getElementById('source');
-		dr.bg.ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
 	}
 }
 
@@ -1143,50 +852,11 @@ function setNightMode(toggle) {
 	body.style.background = toggle ? "black" : "white";
 	var nav = document.getElementsByTagName("nav")[0];
 	if (toggle) {
-		dr.blur.c.style.display = '';
 		nav.classList.add('navbar-inverse');
 	} else {
-		dr.blur.c.style.display = 'none';
 		nav.classList.remove('navbar-inverse');
 	}
-	setScale();
-}
-
-function switchInfoText(sw, text)
-{
-	var box = nmsData.switches.switches.[sw]['placement'];
-	var c = canvas.scale;
-	if (nms.switchInfo[sw] == text && nms.switchInfoDrawn[sw]) {
-		return;
-	}
-	nms.switchInfo[sw] = text;
-	nms.switchInfoDrawn[sw] = true;
-	dr.textInfo.ctx.clearRect(c* box['x'], c*box['y'], c*box['width'], c*box['height']);
-	if (text != undefined && text != "") {
-		if ((box['width'] + 10 )< box['height']) {
-			drawSideways(dr.textInfo.ctx, text,box['x'],box['y'],box['width'],box['height'],"end");
-		} else {
-			drawRegular(dr.textInfo.ctx, text,box['x'],box['y'],box['width'],box['height'],"end");
-		}
-	}
-}
-
-/*
- * Draw a box (e.g.: switch).
- */
-function drawBox(x,y,boxw,boxh)
-{
-	var myX = Math.floor(x * canvas.scale);
-	var myY = Math.floor(y * canvas.scale);
-	var myX2 = Math.floor((boxw) * canvas.scale);
-	var myY2 = Math.floor((boxh) * canvas.scale);
-	dr.switch.ctx.fillRect(myX,myY, myX2, myY2);
-	dr.switch.ctx.lineWidth = Math.floor(1.0 * canvas.scale);
-	if (canvas.scale < 1.0) {
-		dr.switch.ctx.lineWidth = 1.0;
-	}
-	dr.switch.ctx.strokeStyle = "#000000";
-	dr.switch.ctx.strokeRect(myX,myY, myX2, myY2);
+	nmsMap.setNightMode(toggle);
 }
 
 /*
@@ -1200,108 +870,6 @@ function drawBoxBlur(x,y,boxw,boxh)
 	var myY2 = Math.floor((boxh) * canvas.scale);
 	dr.blur.ctx.fillRect(myX,myY, myX2, myY2);
 }
-/*
- * Draw text on a box - sideways!
- *
- * XXX: This is pretty nasty and should also probably take a box as input.
- */
-function drawSideways(ctx,text,x,y,w,h,align)
-{
-	ctx.rotate(Math.PI * 3 / 2);
-	ctx.fillStyle = "white";
-	ctx.strokeStyle = "black";
-	if (align == "end") {
-		ctx.textAlign = align;
-		y = y-h + margin.text*2;
-	} else {
-		ctx.textAlign = "start";
-	}
-	ctx.lineWidth = Math.floor(nms.fontLineFactor * canvas.scale);
-	if (ctx.lineWidth == 0) {
-		ctx.lineWidth = Math.round(nms.fontLineFactor * canvas.scale);
-	}
-	ctx.strokeText(text, - canvas.scale * (y + h - margin.text),canvas.scale * (x + w - margin.text) );
-	ctx.fillText(text, - canvas.scale * (y + h - margin.text),canvas.scale * (x + w - margin.text) );
-
-	ctx.rotate(Math.PI / 2);
-}
-
-/*
- * Draw background inverted (wooo)
- *
- * XXX: This is broken for chromium on local file system (e.g.: file:///)
- * Seems like a chromium bug?
- */
-function invertCanvas() {
-	var imageObj = document.getElementById('source');
-	dr.bg.ctx.drawImage(imageObj, 0, 0, canvas.width, canvas.height);
-
-	var imageData = dr.bg.ctx.getImageData(0, 0, canvas.width, canvas.height);
-	var data = imageData.data;
-
-	for(var i = 0; i < data.length; i += 4) {
-		data[i] = 255 - data[i];
-		data[i + 1] = 255 - data[i + 1];
-		data[i + 2] = 255 - data[i + 2];
-	}
-	dr.bg.ctx.putImageData(imageData, 0, 0);
-}
-
-/*
- * Draw regular text on a box.
- *
- * Should take the same format as drawSideways()
- *
- * XXX: Both should be renamed to have 'text' or something in them
- */
-function drawRegular(ctx,text,x,y,w,h,align) {
-
-	ctx.fillStyle = "white";
-	ctx.strokeStyle = "black";
-	ctx.lineWidth = Math.floor(nms.fontLineFactor * canvas.scale);
-	if (align == "end") {
-		ctx.textAlign = align;
-		x = x+w - margin.text*2;
-	} else {
-		ctx.textAlign = "start";
-	}
-	if (ctx.lineWidth == 0) {
-		ctx.lineWidth = Math.round(nms.fontLineFactor * canvas.scale);
-	}
-	ctx.strokeText(text, (x + margin.text) * canvas.scale, (y + h - margin.text) * canvas.scale);
-	ctx.fillText(text, (x + margin.text) * canvas.scale, (y + h - margin.text) * canvas.scale);
-}
-
-/*
- * Draw a line between switch "insw1" and "insw2", using a gradiant going
- * from color1 to color2.
- *
- * XXX: beginPath() and closePath() is needed to avoid re-using the
- * gradient/color 
- */
-function connectSwitches(insw1, insw2,color1, color2) {
-	var sw1 = nmsData.switches.switches[insw1].placement;
-	var sw2 = nmsData.switches.switches[insw2].placement;
-	if (color1 == undefined)
-		color1 = blue;
-	if (color2 == undefined)
-		color2 = blue;
-	var x0 = Math.floor((sw1.x + sw1.width/2) * canvas.scale);
-	var y0 = Math.floor((sw1.y + sw1.height/2) * canvas.scale);
-	var x1 = Math.floor((sw2.x + sw2.width/2) * canvas.scale);
-	var y1 = Math.floor((sw2.y + sw2.height/2) * canvas.scale);
-	var gradient = dr.link.ctx.createLinearGradient(x1,y1,x0,y0);
-	gradient.addColorStop(0, color1);
-	gradient.addColorStop(1, color2);
-	dr.link.ctx.beginPath();
-	dr.link.ctx.strokeStyle = gradient;
-	dr.link.ctx.moveTo(x0,y0);
-	dr.link.ctx.lineTo(x1,y1); 
-	dr.link.ctx.lineWidth = Math.floor(5 * canvas.scale);
-	dr.link.ctx.closePath();
-	dr.link.ctx.stroke();
-	dr.link.ctx.moveTo(0,0);
-}
 
 /*
  * Boot up "fully fledged" NMS.
@@ -1311,16 +879,13 @@ function connectSwitches(insw1, insw2,color1, color2) {
  * drawing, etc).
  */
 function initNMS() {
-	initDrawing();
-	window.addEventListener('resize',resizeEvent,true);
-	document.addEventListener('load',resizeEvent,true);
 	
 	nms.timers.playback = new nmsTimer(nms.playback.tick, 1000, "Playback ticker", "Handler used to advance time");
 	
 	// Public
 	
 	nmsData.registerSource("ping", "/api/public/ping");
-	nmsData.registerSource("switches","/api/public/switches", drawSwitches);
+	nmsData.registerSource("switches","/api/public/switches");
 	nmsData.registerSource("switchstate","/api/public/switch-state");
 
 	// Private	
@@ -1328,6 +893,7 @@ function initNMS() {
 	nmsData.registerSource("comments", "/api/private/comments");
 	nmsData.registerSource("smanagement","/api/private/switches-management");
 
+	nmsMap.init();
 	detectHandler();
 	nms.playback.play();
 	setupKeyhandler();
@@ -1390,45 +956,10 @@ function showTimerDebug() {
 	document.getElementById('debugTimers').style.display = 'block'; 
 }
 
-function hideLayer(layer) {
-	var l = document.getElementById(layer);
-	l.style.display = "none";
-	if (layer != "layerVisibility")
-		nms.layerVisibility[layer] = false;
-	saveSettings();
-}
-
-function showLayer(layer) {
-	var l = document.getElementById(layer);
-	l.style.display = "";
-	if (layer != "layerVisibility")
-		nms.layerVisibility[layer] = true;
-	saveSettings();
-}
-
-function toggleLayer(layer) {
-	var l = document.getElementById(layer);
-	if (l.style.display == 'none')
-		l.style.display = '';
-	else
-		l.style.display = 'none';
-}
-
-function applyLayerVis()
-{
-	for (var l in nms.layerVisibility) {
-		var layer = document.getElementById(l);
-		if (layer)
-			layer.style.display = nms.layerVisibility[l] ? '' : 'none';
-	}
-}
-
 function setMenu()
 {
 	var nav = document.getElementsByTagName("nav")[0];
 	nav.style.display = nms.menuShowing ? '' : 'none';
-	resizeEvent();
-
 }
 function toggleMenu()
 {
@@ -1491,13 +1022,6 @@ function moveTimeFromKey(e,key)
 	return true;
 }
 
-var debugEvent;
-function keyDebug(e)
-{
-	console.log(e);
-	debugEvent = e;
-}
-
 function keyPressed(e)
 {
 	if (e.target.nodeName == "INPUT") {
@@ -1551,10 +1075,8 @@ function restoreSettings()
 	for (var v in retrieve) {
 		nms[v] = retrieve[v];
 	}
-	setScale();
 	setMenu();
 	setNightMode(nms.nightMode);
-	applyLayerVis();
 }
 
 function forgetSettings()
