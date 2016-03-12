@@ -137,6 +137,7 @@ nmsData.removeSource = function (name) {
  * FIXME: Should be unified with nmsTimers() somehow.
  */
 nmsData.registerSource = function(name, target, cb, cbdata) {
+	var fresh = false;
 	var cbob = {
 		name: name,
 		cb: cb,
@@ -146,12 +147,15 @@ nmsData.registerSource = function(name, target, cb, cbdata) {
 		this._sources[name] = { target: target, cbs: [] };
 		this._sources[name]['handle'] = setInterval(function(){nmsData.updateSource(name)}, 1000);
 		this.stats.newSource++;
+		fresh = true;
 	} else {
 		this.stats.oldSource++;
 	}
 	this._sources[name].cbs.push(cbob);
 
 	this.stats.pollSets++;
+	if (fresh)
+		this.updateSource(name);
 }
 
 /*
@@ -189,7 +193,6 @@ nmsData._genericUpdater = function(name) {
 		this.stats.ajaxOverflow++;
 		return;
 	}
-	this.stats.outstandingAjaxRequests++;
 	var now = "";
 	if (this._now != undefined)
 		now = "now=" + this._now;
@@ -210,7 +213,9 @@ nmsData._genericUpdater = function(name) {
 				nmsData[name] = data;
 				for (var i in nmsData._sources[name].cbs) {
 					var tmp = nmsData._sources[name].cbs[i];
-					tmp.cb(tmp.cbdata);
+					if (tmp.cb != undefined) {
+						tmp.cb(tmp.cbdata);
+					}
 				}
 			} else {
 				nmsData.stats.identicalFetches++;

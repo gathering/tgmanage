@@ -1,14 +1,8 @@
+"use strict";
 var nms = {
 	stats:{}, // Various internal stats
 	updater:undefined, // Active updater
-	update_time:0, // Client side timestamp for last update
-	switches_management:{switches:{}},
-	switches_now:{switches:{}}, // Most recent data
-	switches_then:{switches:{}}, // 2 minutes old
-	comments:{}, // Switch comments
-	poller:{hashes:{},time:{}}, // Tracks generic poller hashes/timestamps
 	speed:0, // Current aggregated speed
-	ping_data:undefined, // JSON data for ping history.
 	drawn:false, // Set to 'true' when switches are drawn
 	switch_showing:"", // Which switch we are displaying (if any).
 	switchInfo:{},
@@ -27,25 +21,12 @@ var nms = {
 	switch_color:{},  // Color for switch
 	linknet_color:{}, // color for linknet
 	textDrawn:{}, // Have we drawn text for this switch?
-	now:false, // Date we are looking at (false for current date).
+	_now: false,
+	get now() { return this._now },
+	set now(v) { this._now = n; nmsData.now = n; },
 	fontSize:16, // This is scaled too, but 16 seems to make sense.
 	fontFace:"Verdana",
 	fontLineFactor:3,
-	/*
-	 * This is used to track outbound AJAX requests and skip updates if
-	 * we have too many outstanding requests. The ajaxOverflow is a
-	 * counter that tracks how many times this has happened.
-	 *
-	 * It's a cheap way to be nice to the server.
-	 */
-	outstandingAjaxRequests:0,
-	ajaxOverflow:0,
-	/*
-	 * Set to 'true' after we've done some basic updating. Used to
-	 * bootstrap the map quickly as soon as we have enough data, then
-	 * ignored.
-	 */
-	did_update:false,
 	/*
 	 * Various setInterval() handlers. See nmsTimer() for how they are
 	 * used.
@@ -225,7 +206,7 @@ function initDrawing() {
  */
 function byteCount(bytes) {
 	var units = ['', 'K', 'M', 'G', 'T', 'P'];
-	i = 0;
+	var i = 0;
 	while (bytes > 1024) {
 		bytes = bytes / 1024;
 		i++;
@@ -410,8 +391,7 @@ nms.playback.tick = function()
   }
 
   // Update data and force redraw
-  updatePorts();
-  updatePing();
+  // FIXME: nmsData merge
   nms.updater.updater();
 }
 /*
@@ -433,6 +413,7 @@ function hideSwitch()
 		var swtop = document.getElementById("info-switch-parent");
 		var switchele = document.getElementById("info-switch-table");
 		var comments = document.getElementById("info-switch-comments-table");
+		var commentbox;
 		if (switchele != undefined)
 			switchele.parentNode.removeChild(switchele);
 		if (comments != undefined)
@@ -443,6 +424,7 @@ function hideSwitch()
 		swtop.style.display = 'none';
 		nms.switch_showing = "";
 }
+
 /*
  * Display info on switch "x" in the info-box
  *
@@ -450,8 +432,8 @@ function hideSwitch()
  */
 function showSwitch(x)
 {
-		var sw = nms.switches_now["switches"][x];
-		var swm = nms.switches_management[x];
+		var sw = nmsData.switches["switches"][x];
+		var swm = nmsData.smanagement.switches[x];
 		var swtop = document.getElementById("info-switch-parent");
 		var swpanel = document.getElementById("info-switch-panel-body");
 		var swtitle = document.getElementById("info-switch-title");
@@ -471,8 +453,8 @@ function showSwitch(x)
 		swtitle.innerHTML = x + '<button type="button" class="close" aria-labe="Close" onclick="hideSwitch();" style="float: right;"><span aria-hidden="true">&times;</span></button>';
 		var speed = 0;
 		var speed2 = 0;
-		for (port in nms.switches_now["switches"][x]["ports"]) {
-			if (nms.switches_now["switches"][x]["ports"] == undefined ||
+		for (port in nmsData.switches["switches"][x]["ports"]) {
+			if (nmsData.switches["switches"][x]["ports"] == undefined ||
 			    nms.switches_then["switches"][x]["ports"] == undefined) {
 				continue;
 			}
@@ -482,7 +464,7 @@ function showSwitch(x)
 			    /ge-0\/0\/47$/.exec(port))
 			 {
 				 var t = nms.switches_then["switches"][x]["ports"][port];
-				 var n = nms.switches_now["switches"][x]["ports"][port];
+				 var n = nmsData.switches["switches"][x]["ports"][port];
 				 speed += (parseInt(t["ifhcoutoctets"]) - parseInt(n["ifhcoutoctets"])) / (parseInt(t["time"] - n["time"]));
 				 speed2 += (parseInt(t["ifhcinoctets"]) - parseInt(n["ifhcinoctets"])) / (parseInt(t["time"] - n["time"]));
 			 }
@@ -502,13 +484,13 @@ function showSwitch(x)
 		td2.innerHTML = byteCount(8 * speed2) + "b/s";
 
 		speed = 0;
-		for (port in nms.switches_now["switches"][x]["ports"]) {
-			if (nms.switches_now["switches"][x]["ports"] == undefined ||
+		for (port in nmsData.switches["switches"][x]["ports"]) {
+			if (nmsData.switches["switches"][x]["ports"] == undefined ||
 			    nms.switches_then["switches"][x]["ports"] == undefined) {
 				continue;
 			}
 			 var t = nms.switches_then["switches"][x]["ports"][port];
-			 var n = nms.switches_now["switches"][x]["ports"][port];
+			 var n = nmsData.switches["switches"][x]["ports"][port];
 			 speed += (parseInt(t["ifhcinoctets"]) -parseInt(n["ifhcinoctets"])) / (parseInt(t["time"] - n["time"]));
 		}
 
@@ -519,13 +501,13 @@ function showSwitch(x)
 		td2.innerHTML = byteCount(8 * speed) + "b/s";
 
 		speed = 0;
-		for (port in nms.switches_now["switches"][x]["ports"]) {
-			if (nms.switches_now["switches"][x]["ports"] == undefined ||
+		for (port in nmsData.switches["switches"][x]["ports"]) {
+			if (nmsData.switches["switches"][x]["ports"] == undefined ||
 			    nms.switches_then["switches"][x]["ports"] == undefined) {
 				continue;
 			}
 			 var t = nms.switches_then["switches"][x]["ports"][port];
-			 var n = nms.switches_now["switches"][x]["ports"][port];
+			 var n = nmsData.switches["switches"][x]["ports"][port];
 			 speed += (parseInt(t["ifhcoutoctets"]) -parseInt(n["ifhcoutoctets"])) / (parseInt(t["time"] - n["time"]));
 		}
 
@@ -535,14 +517,14 @@ function showSwitch(x)
 		td1.innerHTML = "Total speed (out)";
 		td2.innerHTML = byteCount(8 * speed) + "b/s";
 
-		for (v in sw) { 
+		for (var v in sw) { 
 			tr = switchele.insertRow(-1);
 			td1 = tr.insertCell(0);
 			td2 = tr.insertCell(1);
 			td1.innerHTML = v;
 			td2.innerHTML = sw[v];
 		}
-		for (v in swm) { 
+		for (var v in swm) { 
 			tr = switchele.insertRow(-1);
 			td1 = tr.insertCell(0);
 			td2 = tr.insertCell(1);
@@ -550,7 +532,7 @@ function showSwitch(x)
 			td2.innerHTML = swm[v];
 		}
 
-		comments = document.createElement("table");
+		var comments = document.createElement("table");
 		comments.id = "info-switch-comments-table";
 		comments.className = "table table-condensed";
 		var cap = document.createElement("caption");
@@ -558,34 +540,34 @@ function showSwitch(x)
 		comments.appendChild(cap);
 	
 		var has_comment = false;
-		if (nms.comments[x] == undefined) {
-			nms.comments[x] = {};
-			nms.comments[x]["comments"] = [];
-		}
-		for (var c in nms.comments[x]["comments"]) {
-			var comment = nms.comments[x]["comments"][c];
-			has_comment = true;
-			if (comment["state"] == "active" || comment["state"] == "persist" || comment["state"] == "inactive") {
-				tr = comments.insertRow(-1);
-				var col;
-				if (comment["state"] == "active")
-					col = "danger";
-				else if (comment["state"] == "inactive")
-					col = false;
-				else
-					col = "info";
-				tr.className = col;
-				tr.id = "commentRow" + comment["id"];
-				td1 = tr.insertCell(0);
-				td2 = tr.insertCell(1);
-				td1.style.whiteSpace = "nowrap";
-				td1.style.width = "8em";
-				var txt =  '<div class="btn-group" role="group" aria-label="..."><button type="button" class="btn btn-xs btn-default" data-trigger="focus" data-toggle="popover" title="Info" data-content="Comment added ' + epochToString(comment["time"]) + " by user " + comment["username"] + ' and listed as ' + comment["state"] + '"><span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span></button>';
-				txt += '<button type="button" class="btn btn-xs btn-danger" data-trigger="focus" data-toggle="tooltip" title="Mark as deleted" onclick="commentDelete(' + comment["id"] + ');"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span></button>';
-				txt += '<button type="button" class="btn btn-xs btn-success" data-trigger="focus" data-toggle="tooltip" title="Mark as inactive/fixed" onclick="commentInactive(' + comment["id"] + ');"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span></button>';
-				txt += '<button type="button" class="btn btn-xs btn-info" data-trigger="focus" data-toggle="tooltip" title="Mark as persistent" onclick="commentPersist(' + comment["id"] + ');"><span class="glyphicon glyphicon-star" aria-hidden="true"></span></button></div>';
-				td1.innerHTML = txt;
-				td2.textContent = comment['comment'];
+		if (nmsData.comments.comments == undefined || nmsData.comments.comments[x] == undefined) {
+			console.log("blank");
+		} else {
+			for (var c in nmsData.comments.comments[x]["comments"]) {
+				var comment = nmsData.comments.comments[x]["comments"][c];
+				has_comment = true;
+				if (comment["state"] == "active" || comment["state"] == "persist" || comment["state"] == "inactive") {
+					tr = comments.insertRow(-1);
+					var col;
+					if (comment["state"] == "active")
+						col = "danger";
+					else if (comment["state"] == "inactive")
+						col = false;
+					else
+						col = "info";
+					tr.className = col;
+					tr.id = "commentRow" + comment["id"];
+					td1 = tr.insertCell(0);
+					td2 = tr.insertCell(1);
+					td1.style.whiteSpace = "nowrap";
+					td1.style.width = "8em";
+					var txt =  '<div class="btn-group" role="group" aria-label="..."><button type="button" class="btn btn-xs btn-default" data-trigger="focus" data-toggle="popover" title="Info" data-content="Comment added ' + epochToString(comment["time"]) + " by user " + comment["username"] + ' and listed as ' + comment["state"] + '"><span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span></button>';
+					txt += '<button type="button" class="btn btn-xs btn-danger" data-trigger="focus" data-toggle="tooltip" title="Mark as deleted" onclick="commentDelete(' + comment["id"] + ');"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span></button>';
+					txt += '<button type="button" class="btn btn-xs btn-success" data-trigger="focus" data-toggle="tooltip" title="Mark as inactive/fixed" onclick="commentInactive(' + comment["id"] + ');"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span></button>';
+					txt += '<button type="button" class="btn btn-xs btn-info" data-trigger="focus" data-toggle="tooltip" title="Mark as persistent" onclick="commentPersist(' + comment["id"] + ');"><span class="glyphicon glyphicon-star" aria-hidden="true"></span></button></div>';
+					td1.innerHTML = txt;
+					td2.textContent = comment['comment'];
+				}
 			}
 		}
 		
@@ -618,13 +600,6 @@ function setLegend(x,color,name)
 	el.textContent = name;
 }
 
-function updateAjaxInfo()
-{
-	var out = document.getElementById('outstandingAJAX');
-	var of = document.getElementById('overflowAJAX');
-	out.textContent = nms.outstandingAjaxRequests;
-	of.textContent = nms.ajaxOverflow;
-}
 /*
  * Run periodically to trigger map updates when a handler is active
  */
@@ -650,9 +625,8 @@ function updateMap()
 		return;
 	if (!nms.ping_data)
 		return;
-	nms.update_time = Date.now();
 	
-	if (nms.updater != undefined && nms.switches_now && nms.switches_then) {
+	if (nms.updater != undefined && nmsData.switches && nms.switches_then) {
 		nms.updater.updater();
 	}
 	drawNow();
@@ -672,7 +646,7 @@ function setUpdater(fo)
 	foo.innerHTML = fo.name + "   ";
 	document.location.hash = fo.tag;
 	initialUpdate();
-	if (nms.ping_data && nms.switches_then && nms.switches_now) {
+	if (nms.ping_data && nms.switches_then && nmsData.switches) {
 		nms.updater.updater();
 	}
 }
@@ -714,10 +688,10 @@ function updateSwitchProperty(sw,property,data,target) {
  * Helper function for reseting switch state data (and keeping more permanent data)
  */
 function resetSwitchStates() {
-  for (var sw in nms.switches_now.switches) {
-    for (var property in nms.switches_now.switches[sw]) {
+  for (var sw in nmsData.switches.switches) {
+    for (var property in nmsData.switches.switches[sw]) {
       if (['ports','temp','temp_time'].indexOf(property) > -1) {
-        nms.switches_now.switches[sw][property] = undefined;
+        nmsData.switches.switches[sw][property] = undefined;
       }
     }
   }
@@ -730,7 +704,7 @@ function resetSwitchStates() {
 function initialUpdate()
 {
 	return;
-	if (nms.ping_data && nms.switches_then && nms.switches_now && nms.updater != undefined && nms.did_update == false ) {
+	if (nms.ping_data && nms.switches_then && nmsData.switches && nms.updater != undefined && nms.did_update == false ) {
 		resizeEvent();
 		if (!nms.drawn) {
 			drawSwitches();
@@ -766,33 +740,7 @@ function showBlurBox()
 	col.value = nms.shadowColor;
 	document.getElementById("blurManic").style.display = '';
 }
-/*
- * Update nms.ping_data 
- */
-function updatePing()
-{
-	var now = nms.now ? ("?now=" + nms.now) : "";
-	if (nms.outstandingAjaxRequests > 5) {
-		nms.ajaxOverflow++;
-		updateAjaxInfo();
-		return;
-	}
-	nms.outstandingAjaxRequests++;
-	$.ajax({
-		type: "GET",
-		url: "/api/public/ping" + now,
-		dataType: "text",
-		success: function (data, textStatus, jqXHR) {
-			nms.ping_data = JSON.parse(data);
-			initialUpdate();
-			updateMap();
-		},
-		complete: function(jqXHR, textStatus) {
-			nms.outstandingAjaxRequests--;
-			updateAjaxInfo();
-		}
-	});
-}
+
 
 function commentInactive(id)
 {
@@ -857,230 +805,19 @@ function addComment(sw,comment)
 }
 
 /*
- * FIXME: Not at all done.
- *
- * genericUpdater() should be something one registers for, then it
- * automatically picks up intervals based on max-age from the backend, and
- * allows forced updates (E.g.: force polling comments after a comment is
- * added, force polling switches after switches has been changed).
- *
- */
-function doMiscUpdates() {
-	genericUpdater("comments","comments", "/api/private/comments");
-	genericUpdater("switches_management", "switches", "/api/private/switches-management");
-}
-
-function nmsStatsInc(stat) {
-	if (nms.stats[stat] == undefined)
-		nms.stats[stat] = 0;
-	nms.stats[stat]++;
-}
-/*
- * Updates nms[name] with data fetched from remote target in variable
- * "remotename". If a callback is provided, it is called with argument meh.
- *
- * This also populates nms.pollers[name] with the server-provided hash.
- * Only if a change is detected is the callback issued.
- */
-function genericUpdater(name, remotename, target, cb, meh) {
-	if (nms.outstandingAjaxRequests > 5) {
-		nms.ajaxOverflow++;
-		updateAjaxInfo();
-		return;
-	}
-	nms.outstandingAjaxRequests++;
-	var now = "";
-	if (nms.now != false)
-		now = "now=" + nms.now;
-	if (now != "") {
-		if (target.match("\\?"))
-			now = "&" + now;
-		else
-			now = "?" + now;
-	}
-
-	$.ajax({
-		type: "GET",
-		url: target + now,
-		dataType: "text",
-		success: function (data, textStatus, jqXHR) {
-			var  indata = JSON.parse(data);
-			if (nms.poller.hashes[name] != indata['hash']) {
-				nms[name] = indata[remotename];
-				nms.poller.hashes[name] = indata['hash'];
-				nms.poller.time[name] = indata['time'];
-				if (cb != undefined) {
-					cb(meh);
-				}
-			} else {
-				nmsStatsInc("identicalFetches");
-			}
-		},
-		complete: function(jqXHR, textStatus) {
-			nms.outstandingAjaxRequests--;
-			updateAjaxInfo();
-		}
-	});
-}
-
-/*
- * Update nms.switches_now and nms.switches_then
- */
-function updatePorts()
-{
-	var now = "";
-	if (nms.outstandingAjaxRequests > 5) {
-		nms.ajaxOverflow++;
-		updateAjaxInfo();
-		return;
-	}
-	nms.outstandingAjaxRequests++;
-	if (nms.now != false)
-		now = "?now=" + nms.now;
-	$.ajax({
-		type: "GET",
-		url: "/api/private/port-state"+ now ,
-		dataType: "text",
-		success: function (data, textStatus, jqXHR) {
-			var  switchdata = JSON.parse(data);
-			updateSwitches(switchdata,nms.switches_now);
-			initialUpdate();
-			updateSpeed();
-			updateMap();
-			if (nms.repop_time == false && nms.repop_switch)
-				nms.repop_time = nms.switches_now.time;
-			else if (nms.repop_switch && nms.switch_showing && nms.repop_time != nms.switches_now.time) {
-				showSwitch(nms.switch_showing,true);
-				nms.repop_switch = false;
-				nms.repop_time = false;
-			}
-		},
-		complete: function(jqXHR, textStatus) {
-			nms.outstandingAjaxRequests--;
-			updateAjaxInfo();
-		}
-	});
-	nms.outstandingAjaxRequests++;
-	$.ajax({
-		type: "GET",
-		url: "/api/public/switches"+ now ,
-		dataType: "text",
-		success: function (data, textStatus, jqXHR) {
-			var switchdata = JSON.parse(data);
-			updateSwitches(switchdata,nms.switches_now);
-			parseIntPlacements();
-		},
-		complete: function(jqXHR, textStatus) {
-			nms.outstandingAjaxRequests--;
-			updateAjaxInfo();
-		}
-	});
-	now="";
-	if (nms.now != false)
-		now = "?now=" + nms.now;
-	nms.outstandingAjaxRequests++;
-	updateAjaxInfo();
-	$.ajax({
-		type: "GET",
-		url: "/api/private/port-state" + now,
-		dataType: "text",
-		success: function (data, textStatus, jqXHR) {
-			var  switchdata = JSON.parse(data);
-			updateSwitches(switchdata,nms.switches_then);
-			initialUpdate();
-			updateSpeed();
-			updateMap();
-		},
-		complete: function(jqXHR, textStatus) {
-			nms.outstandingAjaxRequests--;
-			updateAjaxInfo();
-		}
-	})
-}
-
-/*
  * Returns true if we have now and then-data for switches and that the
  * "now" is actually newer. Useful for basic sanity and avoiding negative
  * values when rewinding time.
  */
 function newerSwitches()
 {
-	if (nms.switches_now.time == undefined || nms.switches_then.time == undefined)
+	if (nmsData.switches.time == undefined || nms.switches_then.time == undefined)
 		return false;
-	var now_timestamp = stringToEpoch(nms.switches_now.time);
+	var now_timestamp = stringToEpoch(nmsData.switches.time);
 	var then_timestamp = stringToEpoch(nms.switches_then.time);
 	if (now_timestamp == 0 || then_timestamp == 0 || then_timestamp >= now_timestamp)
 		return false;
 	return true;
-}
-/*
- * Use nms.switches_now and nms.switches_then to update 'nms.speed'.
- *
- * nms.speed is a total of ifHCInOctets across all client-interfaces
- * nms.speed_full is a total of for /all/ interfaces.
- *
- * This is run separate of updatePorts mainly for historic reasons, but
- * if it was added to the tail end of updatePorts, there'd have to be some
- * logic to ensure it was run after both requests. Right now, it's just
- * equally wrong for both scenarios, not consistently wrong (or something).
- *
- * FIXME: Err, yeah, add this to the tail-end of updatePorts instead :D
- *
- */
-
-function updateSpeed()
-{
-	var speed_in = parseInt(0);
-	var speed_full = parseInt(0);
-	var counter=0;
-	var sw;
-	var speedele = document.getElementById("speed");
-	if (!newerSwitches())
-		return;
-	for (sw in nms.switches_now["switches"]) {
-		for (port in nms.switches_now["switches"][sw]["ports"]) {
-			if (!nms.switches_now["switches"][sw]["ports"][port]) {
-				console.log("ops");
-				continue;
-			}
-			if (!nms.switches_then || !nms.switches_then["switches"] || !nms.switches_then["switches"][sw] || !nms.switches_then["switches"][sw]["ports"]) {
-				continue;
-			}
-			if (!nms.switches_now || !nms.switches_now["switches"] || !nms.switches_now["switches"][sw] || !nms.switches_now["switches"][sw]["ports"]) {
-				continue;
-			}
-
-			if (!nms.switches_then["switches"][sw]["ports"][port]) {
-				console.log("ops");
-				continue;
-			}
-			var diff = parseInt(parseInt(nms.switches_now["switches"][sw]["ports"][port]["time"]) - parseInt(nms.switches_then["switches"][sw]["ports"][port]["time"]));
-			var then = parseInt(nms.switches_then["switches"][sw]["ports"][port]["ifhcinoctets"])  ;
-			var now =  parseInt(nms.switches_now["switches"][sw]["ports"][port]["ifhcinoctets"]) ;
-			var diffval = (now - then);
-			if (then == 0 || now == 0 || diffval == 0 || diffval == NaN) {
-				continue;
-			}
-			speed_full += parseInt(diffval/diff);
-			if (( /e\d-\d/.exec(sw) || /e\d\d-\d/.exec(sw)) &&  ( /ge-\d\/\d\/\d$/.exec(port) || /ge-\d\/\d\/\d\d$/.exec(port))) {
-				if (!(
-					/ge-0\/0\/44$/.exec(port) ||
-					/ge-0\/0\/45$/.exec(port) ||
-					/ge-0\/0\/46$/.exec(port) ||
-					/ge-0\/0\/47$/.exec(port))) {
-					speed_in += parseInt(diffval/diff) ;
-					counter++;
-				}
-			}
-		}
-	}
-	nms.speed = speed_in;
-	nms.speed_full = speed_full;
-	if (speedele) {
-		speedele.innerHTML = byteCount(8 * parseInt(nms.speed)) + "b/s";
-		speedele.innerHTML += " / " + byteCount(8 * parseInt(nms.speed_full)) + "b/s";
-
-	}
 }
 
 /*
@@ -1092,8 +829,8 @@ function drawLinknet(i)
 {
 	var c1 = nms.linknet_color[i] && nms.linknet_color[i].c1 ? nms.linknet_color[i].c1 : blue;
 	var c2 = nms.linknet_color[i] && nms.linknet_color[i].c2 ? nms.linknet_color[i].c2 : blue;
-	if (nms.switches_now.switches[nms.switches_now.linknets[i].sysname1] && nms.switches_now.switches[nms.switches_now.linknets[i].sysname2]) {
-		connectSwitches(nms.switches_now.linknets[i].sysname1,nms.switches_now.linknets[i].sysname2, c1, c2);
+	if (nmsData.switches.switches[nmsData.switches.linknets[i].sysname1] && nmsData.switches.switches[nmsData.switches.linknets[i].sysname2]) {
+		connectSwitches(nmsData.switches.linknets[i].sysname1,nmsData.switches.linknets[i].sysname2, c1, c2);
 	}
 }
 
@@ -1102,8 +839,8 @@ function drawLinknet(i)
  */
 function drawLinknets()
 {
-	if (nms.switches_now && nms.switches_now.linknets) {
-		for (var i in nms.switches_now.linknets) {
+	if (nmsData.switches && nmsData.switches.linknets) {
+		for (var i in nmsData.switches.linknets) {
 			drawLinknet(i);
 		}
 	}
@@ -1134,7 +871,7 @@ function setLinknetColors(i,c1,c2)
  */
 function drawSwitch(sw)
 {
-		var box = nms.switches_now['switches'][sw]['placement'];
+		var box = nmsData.switches.switches[sw]['placement'];
 		var color = nms.switch_color[sw];
 		if (color == undefined) {
 			color = blue;
@@ -1164,37 +901,20 @@ function drawSwitch(sw)
 }
 
 /*
- * Make sure all placements of switches are parsed as integers so we don't
- * have to pollute the code with pasreInt() every time we use it.
- */
-function parseIntPlacements() {
-	for (var sw in nms.switches_now.switches) {
-		nms.switches_now.switches[sw]['placement']['x'] =
-			parseInt(nms.switches_now.switches[sw]['placement']['x']);
-		nms.switches_now.switches[sw]['placement']['y'] =
-			parseInt(nms.switches_now.switches[sw]['placement']['y']);
-		nms.switches_now.switches[sw]['placement']['width'] =
-			parseInt(nms.switches_now.switches[sw]['placement']['width']);
-		nms.switches_now.switches[sw]['placement']['height'] =
-			parseInt(nms.switches_now.switches[sw]['placement']['height']);
-	}
-}
-
-/*
  * Draw all switches
  */
 function drawSwitches()
 {
-	if (!nms.switches_now || !nms.switches_now.switches)
+	if (!nmsData.switches || !nmsData.switches.switches)
 		return;
-	for (var sw in nms.switches_now.switches) {
+	for (var sw in nmsData.switches.switches) {
 		drawSwitch(sw);
 	}
 	nms.drawn = true;
 }
 function drawSwitchInfo()
 {
-	if (!nms.switches_now || !nms.switches_now.switches)
+	if (!nmsData.switches || !nmsData.switches.switches)
 		return;
 	for (var sw in nms.switchInfo) {
 		switchInfoText(sw, nms.switchInfo[sw]);
@@ -1210,10 +930,10 @@ function drawSwitchInfo()
  */
 function drawNow()
 {
-	if (!nms.switches_now)
+	if (!nmsData.switches)
 		return;
 	// XXX: Get rid of microseconds that we get from the backend.
-	var now = /^[^.]*/.exec(nms.switches_now.time);
+	var now = /^[^.]*/.exec(nmsData.switches.time);
 	dr.top.ctx.font = Math.round(2 * nms.fontSize * canvas.scale) + "px " + nms.fontFace;
 	dr.top.ctx.clearRect(0,0,Math.floor(800 * canvas.scale),Math.floor(100 * canvas.scale));
 	dr.top.ctx.fillStyle = "white";
@@ -1295,8 +1015,8 @@ function findSwitch(x,y) {
 	x = parseInt(parseInt(x) / canvas.scale);
 	y = parseInt(parseInt(y) / canvas.scale);
 
-	for (var v in nms.switches_now.switches) {
-		if(isIn(nms.switches_now.switches[v]['placement'],x,y)) {
+	for (var v in nmsData.switches.switches) {
+		if(isIn(nmsData.switches.switches[v]['placement'],x,y)) {
 			return v;
 		}
 	}
@@ -1343,23 +1063,23 @@ function switchClick(sw)
  */
 function resetColors()
 {
-	if (!nms.switches_now)
+	if (!nms.sswitches_now)
 		return;
-	if (nms.switches_now.linknets) {
-		for (var i in nms.switches_now.linknets) {
+	if (nmsData.switches.linknets) {
+		for (var i in nmsData.switches.linknets) {
 			setLinknetColors(i, blue,blue);
 		}
 	}
-	for (var sw in nms.switches_now.switches) {
+	for (var sw in nmsData.switches.switches) {
 		setSwitchColor(sw, blue);
 	}
 }
 
 function resetTextInfo()
 {
-	if (!nms.switches_now)
+	if (!nmsData.switches)
 		return;
-	for (var sw in nms.switches_now.switches) {
+	for (var sw in nmsData.switches.switches) {
 		switchInfoText(sw, undefined);
 	}
 
@@ -1434,7 +1154,7 @@ function setNightMode(toggle) {
 
 function switchInfoText(sw, text)
 {
-	var box = nms.switches_now['switches'][sw]['placement'];
+	var box = nmsData.switches.switches.[sw]['placement'];
 	var c = canvas.scale;
 	if (nms.switchInfo[sw] == text && nms.switchInfoDrawn[sw]) {
 		return;
@@ -1560,8 +1280,8 @@ function drawRegular(ctx,text,x,y,w,h,align) {
  * gradient/color 
  */
 function connectSwitches(insw1, insw2,color1, color2) {
-	var sw1 = nms.switches_now.switches[insw1].placement;
-	var sw2 = nms.switches_now.switches[insw2].placement;
+	var sw1 = nmsData.switches.switches[insw1].placement;
+	var sw2 = nmsData.switches.switches[insw2].placement;
 	if (color1 == undefined)
 		color1 = blue;
 	if (color2 == undefined)
@@ -1595,12 +1315,19 @@ function initNMS() {
 	window.addEventListener('resize',resizeEvent,true);
 	document.addEventListener('load',resizeEvent,true);
 	
-	nms.timers.ports = new nmsTimer(updatePorts, 1000, "Port updater", "AJAX request to update port data (traffic, etc)");
-	
-	nms.timers.ping = new nmsTimer(updatePing, 1000, "Ping updater", "AJAX request to update ping data");
-	
 	nms.timers.playback = new nmsTimer(nms.playback.tick, 1000, "Playback ticker", "Handler used to advance time");
 	
+	// Public
+	
+	nmsData.registerSource("ping", "/api/public/ping");
+	nmsData.registerSource("switches","/api/public/switches", drawSwitches);
+	nmsData.registerSource("switchstate","/api/public/switch-state");
+
+	// Private	
+	nmsData.registerSource("portstate","/api/private/port-state");
+	nmsData.registerSource("comments", "/api/private/comments");
+	nmsData.registerSource("smanagement","/api/private/switches-management");
+
 	detectHandler();
 	nms.playback.play();
 	setupKeyhandler();
