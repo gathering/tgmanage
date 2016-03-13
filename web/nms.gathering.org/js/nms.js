@@ -1,7 +1,6 @@
 "use strict";
 var nms = {
 	stats:{}, // Various internal stats
-	switch_showing:"", // Which switch we are displaying (if any).
 	get nightMode() { return this._nightMode; },
 	set nightMode(val) { if (val != this._nightMode) { this._nightMode = val; setNightMode(val); } },
 	/*
@@ -299,134 +298,6 @@ function getNowEpoch() {
 		return parseInt(Date.now() / 1000);
 }
 
-
-function hideSwitch()
-{
-	_hideSwitch();
-	nmsData.unregisterHandler("comments","switchshower");
-}
-
-/*
- * Hide switch info-box
- */
-function _hideSwitch()
-{
-	var swtop = document.getElementById("info-switch-parent");
-	var switchele = document.getElementById("info-switch-table");
-	var comments = document.getElementById("info-switch-comments-table");
-	var commentbox;
-	if (switchele != undefined)
-		switchele.parentNode.removeChild(switchele);
-	if (comments != undefined)
-		comments.parentNode.removeChild(comments);
-	commentbox = document.getElementById("commentbox");
-	if (commentbox != undefined)
-		commentbox.parentNode.removeChild(commentbox);
-	swtop.style.display = 'none';
-	nms.switch_showing = "";
-}
-
-function showSwitch(x) {
-	nmsData.addHandler("comments","switchshower",_showSwitch,x);
-	_showSwitch(x);
-}
-
-/*
- * Display info on switch "x" in the info-box
- *
- * FIXME: THIS IS A MONSTROSITY.
- */
-function _showSwitch(x)
-{
-	var sw = nmsData.switches["switches"][x];
-	var swm = nmsData.smanagement.switches[x];
-	var swtop = document.getElementById("info-switch-parent");
-	var swpanel = document.getElementById("info-switch-panel-body");
-	var swtitle = document.getElementById("info-switch-title");
-	var tr;
-	var td1;
-	var td2;
-	
-	_hideSwitch();	
-	nms.switch_showing = x;
-	var switchele = document.createElement("table");
-	switchele.id = "info-switch-table";
-	switchele.className = "table";
-	switchele.classList.add("table");
-	switchele.classList.add("table-condensed");
-	
-	swtitle.innerHTML = x + '<button type="button" class="close" aria-labe="Close" onclick="hideSwitch();" style="float: right;"><span aria-hidden="true">&times;</span></button>';
-
-	for (var v in sw) { 
-		if (v == "placement") {
-			continue;
-		}
-		tr = switchele.insertRow(-1);
-		td1 = tr.insertCell(0);
-		td2 = tr.insertCell(1);
-		td1.innerHTML = v;
-		td2.innerHTML = sw[v];
-	}
-	for (var v in swm) { 
-		tr = switchele.insertRow(-1);
-		td1 = tr.insertCell(0);
-		td2 = tr.insertCell(1);
-		td1.innerHTML = v;
-		td2.innerHTML = swm[v];
-	}
-
-	var comments = document.createElement("table");
-	comments.id = "info-switch-comments-table";
-	comments.className = "table table-condensed";
-	var cap = document.createElement("caption");
-	cap.textContent = "Comments";
-	comments.appendChild(cap);
-
-	var has_comment = false;
-	if (nmsData.comments.comments == undefined || nmsData.comments.comments[x] == undefined) {
-	} else {
-		for (var c in nmsData.comments.comments[x]["comments"]) {
-			var comment = nmsData.comments.comments[x]["comments"][c];
-			has_comment = true;
-			if (comment["state"] == "active" || comment["state"] == "persist" || comment["state"] == "inactive") {
-				tr = comments.insertRow(-1);
-				var col;
-				if (comment["state"] == "active")
-					col = "danger";
-				else if (comment["state"] == "inactive")
-					col = false;
-				else
-					col = "info";
-				tr.className = col;
-				tr.id = "commentRow" + comment["id"];
-				td1 = tr.insertCell(0);
-				td2 = tr.insertCell(1);
-				td1.style.whiteSpace = "nowrap";
-				td1.style.width = "8em";
-				var txt =  '<div class="btn-group" role="group" aria-label="..."><button type="button" class="btn btn-xs btn-default" data-trigger="focus" data-toggle="popover" title="Info" data-content="Comment added ' + epochToString(comment["time"]) + " by user " + comment["username"] + ' and listed as ' + comment["state"] + '"><span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span></button>';
-				txt += '<button type="button" class="btn btn-xs btn-danger" data-trigger="focus" data-toggle="tooltip" title="Mark as deleted" onclick="commentDelete(' + comment["id"] + ');"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span></button>';
-				txt += '<button type="button" class="btn btn-xs btn-success" data-trigger="focus" data-toggle="tooltip" title="Mark as inactive/fixed" onclick="commentInactive(' + comment["id"] + ');"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span></button>';
-				txt += '<button type="button" class="btn btn-xs btn-info" data-trigger="focus" data-toggle="tooltip" title="Mark as persistent" onclick="commentPersist(' + comment["id"] + ');"><span class="glyphicon glyphicon-star" aria-hidden="true"></span></button></div>';
-				td1.innerHTML = txt;
-				td2.textContent = comment['comment'];
-			}
-		}
-	}
-
-	swtop.appendChild(switchele);
-	if (has_comment) {
-		swtop.appendChild(comments);
-		$(function () { $('[data-toggle="popover"]').popover({placement:"top",continer:'body'}) })
-	}
-	var commentbox = document.createElement("div");
-	commentbox.id = "commentbox";
-	commentbox.className = "panel-body";
-	commentbox.style.width = "100%";
-	commentbox.innerHTML = '<div class="input-group"><input type="text" class="form-control" placeholder="Comment" id="' + x + '-comment"><span class=\"input-group-btn\"><button class="btn btn-default" onclick="addComment(\'' + x + '\',document.getElementById(\'' + x + '-comment\').value); document.getElementById(\'' + x + '-comment\').value = \'\'; document.getElementById(\'' + x + '-comment\').placeholder = \'Comment added. Wait for next refresh.\';">Add comment</button></span></div>';
-	swtop.appendChild(commentbox);
-	swtop.style.display = 'block';
-}
-
 /*
  * There are 4 legend-bars. This is a helper-function to set the color and
  * description/name for each one. Used from handler init-functions.
@@ -492,18 +363,13 @@ function commentChange(id,state)
 		state:state
 	};
 	myData = JSON.stringify(myData);
-	var foo = document.getElementById("commentRow" + id);
-	if (foo) {
-		foo.className = '';
-		foo.style.backgroundColor = "silver";
-	}
 	$.ajax({
 		type: "POST",
 		url: "/api/private/comment-change",
 		dataType: "text",
 		data:myData,
 		success: function (data, textStatus, jqXHR) {
-			nmsData.updateSource("comments");
+			nmsData.invalidate("comments");
 		}
 	});
 }
@@ -521,7 +387,7 @@ function addComment(sw,comment)
 		dataType: "text",
 		data:myData,
 		success: function (data, textStatus, jqXHR) {
-			nmsData.updateSource("comments");
+			nmsData.invalidate("comments");
 		}
 	});
 }
@@ -558,17 +424,6 @@ function findSwitch(x,y) {
 }
 
 /*
- * Called when a switch is clicked
- */
-function switchClick(sw)
-{
-	if (nms.switch_showing == sw)
-		hideSwitch();
-	else
-		showSwitch(sw);
-}
-
-/*
  * onclick handler for the canvas.
  *
  * Currently just shows info for a switch.
@@ -577,7 +432,7 @@ function canvasClick(e)
 {
 	var sw = findSwitch(e.pageX - e.target.offsetLeft, e.pageY - e.target.offsetTop);
 	if (sw != undefined) {
-		switchClick(sw);
+		nmsInfoBox.click(sw);
 	}
 }
 

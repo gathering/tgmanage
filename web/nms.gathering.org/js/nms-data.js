@@ -1,36 +1,8 @@
 "use strict";
 
-/**************************************************************************
- *                                                                        *
- * THIS IS WORK IN PROGRESS, NOT CURRENTLY USED!                          *
- *                                                                        *
- * It WILL eventually replace large chunks of nms.js. But we're not there *
- * yet.                                                                   *
- *                                                                        *
- **************************************************************************/
-
-
-/*
- * This will obviously be moved
- */
-var nmsCore = nmsCore || {
-	stats: {
-		assertErrors:0
-	}
-}
-
-nmsCore.assert = function(cb) {
-	if (!cb) {
-		nmsCore.stats.assertErrors++;
-		throw "Assertion failed";
-	}
-}
-
 /*
  * This file/module/whatever is an attempt to gather all data collection in
  * one place.
- *
- * It is work in progress.
  *
  * The basic idea is to have all periodic data updates unified here, with
  * stats, tracking of "ajax overflows" and general-purpose error handling
@@ -42,11 +14,13 @@ nmsCore.assert = function(cb) {
  * nmsData.old[name]. You can use getNow / setNow() to append a 'now='
  * string.
  *
- * nmsData.data[name] - actual data
+ * nmsData[name] - actual data
+ * nmsData.old[name] - previous copy of data
  * nmsData.registerSource() - add a source, will be polled periodicall
  * nmsData.addHandler()
  * nmsData.updateSource() - issue a one-off update, outside of whatever
  * 			    periodic polling might take place
+ * nmsData.invalidate() - Invalidate browser-cache.
  */
 
 
@@ -103,8 +77,6 @@ var nmsData = nmsData || {
 
 
 nmsData._dropData = function (name) {
-	nmsCore.assert(name);
-	nmsCore.assert(this[name]);
 	delete this[name];
 	delete this.old[name];
 }
@@ -148,6 +120,12 @@ nmsData.registerSource = function(name, target) {
 	this.stats.pollSets++;
 }
 
+/*
+ * Add a handler (callback) for a source, using an id.
+ *
+ * This is idempotent: if the id is the same, it will just overwrite the
+ * old id, not add a copy.
+ */
 nmsData.addHandler = function(name, id, cb, cbdata) {
 	var cbob = {
 		id: id,
@@ -187,9 +165,12 @@ nmsData.unregisterHandler = function(name, id) {
  * after a comment is posted).
  */
 nmsData.updateSource = function(name) {
-	this._genericUpdater(name);
+	this._genericUpdater(name, true);
 }
 
+nmsData.invalidate = function(name) {
+	this._genericUpdater(name, false);
+}
 /*
  * Reset a source, deleting all data, including old.
  *
@@ -208,7 +189,7 @@ nmsData.resetSource = function(name) {
  * Do not use this directly. Use updateSource().
  *
  */
-nmsData._genericUpdater = function(name) {
+nmsData._genericUpdater = function(name, cacheok) {
 	if (this.stats.outstandingAjaxRequests++ > this._ajaxThreshold) {
 		this.stats.outstandingAjaxRequests--;
 		this.stats.ajaxOverflow++;
@@ -223,8 +204,14 @@ nmsData._genericUpdater = function(name) {
 		else
 			now = "?" + now;
 	}
+	var heads = {};
+	if (cacheok == false) {
+		heads['Cache-Control'] = "max-age=0, no-cache, stale-while-revalidate=0";
+	}
+
 	$.ajax({
 		type: "GET",
+		headers: heads,
 		url: this._sources[name].target + now,
 		dataType: "json",
 		success: function (data, textStatus, jqXHR) {
