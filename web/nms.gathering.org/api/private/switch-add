@@ -24,6 +24,22 @@ my $sth = $nms::web::dbh->prepare("SELECT sysname FROM switches WHERE sysname=?"
 
 my @fields = ('ip', 'sysname', 'switchtype', 'last_updated', 'locked', 'poll_frequency', 'community', 'lldp_chassis_id', 'secondary_ip', 'placement');
 
+sub convertplace
+{
+	my %in = %{$_[0]};
+	my %out = ();
+
+	if (not defined $in{'x1'} and defined($in{'x'})) {
+		$out{'x1'} = $in{'x'};
+		$out{'y1'} = $in{'y'};
+		$out{'xx'} = $in{'x'} + $in{'width'};
+		$out{'yy'} = $in{'y'} + $in{'height'};
+	} else {
+		return \%in;
+	}
+	return \%out;
+}
+
 foreach my $tmp2 (@tmp) {
 	my %switch = %{$tmp2};
 	my $affected = 0;
@@ -43,7 +59,7 @@ foreach my $tmp2 (@tmp) {
 		if (not defined ($switch{'placement'})) {
 			%placement = guess_placement($switch{'sysname'});
 		} else {
-			%placement = %{$switch{'placement'}};
+			%placement = %{convertplace($switch{'placement'})};
 		}
 		if (not defined($switch{'ip'}) and defined($switch{'mgtmt4'})) {
 			$switch{'ip'} = $switch{'mgtmt4'};
@@ -66,11 +82,12 @@ foreach my $tmp2 (@tmp) {
 		push @added, $switch{'sysname'};
 	} else {
 		if (defined($switch{'placement'})) {
+			my %placement = %{convertplace($switch{'placement'})};
 			my ($x1,$x2,$y1,$y2);
-			$x1 = $switch{'placement'}{'x1'};
-			$y1 = $switch{'placement'}{'y1'};
-			$x2 = $switch{'placement'}{'xx'};
-			$y2 = $switch{'placement'}{'yy'};
+			$x1 = $placement{'x1'};
+			$y1 = $placement{'y1'};
+			$x2 = $placement{'xx'};
+			$y2 = $placement{'yy'};
 			$switch{'placement'} = "(($x1,$y1),($x2,$y2))";
 		}
 		if (not defined($switch{'ip'}) and defined($switch{'mgtmt4'})) {

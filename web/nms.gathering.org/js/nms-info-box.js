@@ -59,6 +59,7 @@ nmsInfoBox._hide = function()
 		commentbox.parentNode.removeChild(commentbox);
 	swtop.style.display = 'none';
 	nmsInfoBox._showing = "";
+	nmsInfoBox._editHide();
 }
 
 /*
@@ -151,7 +152,7 @@ nmsInfoBox._show = function(x)
 	nmsInfoBox._hide();	
 	nmsInfoBox._showing = x;
 	
-	swtitle.innerHTML = x + '<button type="button" class="close" aria-labe="Close" onclick="nmsInfoBox.hide();" style="float: right;"><span aria-hidden="true">&times;</span></button>';
+	swtitle.innerHTML = ' <button type="button" class="edit btn btn-xs btn-warning" onclick="nmsInfoBox._edit(\'' + x + '\');">Edit</button> ' + x + ' <button type="button" class="close" aria-label="Close" onclick="nmsInfoBox.hide();" style="float: right;"><span aria-hidden="true">&times;</span></button>';
 
 	for (var v in sw) { 
 		if (v == "placement") {
@@ -195,3 +196,101 @@ nmsInfoBox._show = function(x)
 	swtop.style.display = 'block';
 }
 
+nmsInfoBox._nullBlank = function(x) {
+	if (x == null || x == false || x == undefined)
+		return "";
+	return x;
+}
+
+nmsInfoBox._editHide = function() {
+	var container = document.getElementById("nmsInfoBox-edit-box");
+	if (container != undefined)
+		container.parentNode.removeChild(container);
+}
+
+nmsInfoBox._edit = function(sw) {
+	var template = {};
+	var place = false;
+	nmsInfoBox._editHide();
+	var container = document.createElement("div");
+	container.id = "nmsInfoBox-edit-box";
+
+	nmsInfoBox._editValues = {};
+	if (nmsData.switches.switches[sw] != undefined) {
+		for (var v in nmsData.switches.switches[sw]) {
+			if (v == "placement") {
+				place = JSON.stringify(nmsData.switches.switches[sw][v]);
+				template[v] = "";
+				continue;
+			}
+			template[v] = this._nullBlank(nmsData.switches.switches[sw][v]);
+		}
+	}
+	if (nmsData.smanagement.switches[sw] != undefined) {
+		for (var v in nmsData.smanagement.switches[sw]) {
+			template[v] = this._nullBlank(nmsData.smanagement.switches[sw][v]);
+		}
+	}
+	var content = [];
+	for (v in template) {
+		var tmpsw = '\'' + sw + '\'';
+		var tmpv = '\'' + v + '\'';
+		var tmphandler = '"nmsInfoBox._editChange(' + tmpsw + ',' + tmpv + ');"';
+		var html = "<input type=\"text\" class=\"form-control\" value=\"" + template[v] + "\" id=\"edit-"+ sw + "-" + v + '" onchange=' + tmphandler + ' oninput=' + tmphandler + '/>';
+		content.push([v, html]);
+	}
+	var table = nmsInfoBox._makeTable(content, "edit");
+	var swtop = document.getElementById("info-switch-parent");
+	container.appendChild(table);
+	var submit = document.createElement("button");
+	submit.innerHTML = "Save changes";
+	submit.classList.add("btn", "btn-primary");
+	submit.id = "edit-submit-" + sw;
+	submit.onclick = function(e) { nmsInfoBox._editSave(sw, e); };
+	container.appendChild(submit);
+	var output = document.createElement("output");
+	output.id = "edit-output";
+	container.appendChild(output);
+	swtop.appendChild(container);
+	if (place) {
+		var pval = document.getElementById("edit-" + sw + "-placement");
+		if (pval) {
+			pval.value = place;
+		}
+	}
+}
+
+nmsInfoBox._editChange = function(sw, v) {
+	var el = document.getElementById("edit-" + sw + "-" + v);
+	var val = el.value;
+	if (v == "placement")
+		val = JSON.parse(val);
+	nmsInfoBox._editValues[v] = val;
+	el.classList.add("bg-warning");
+	var myData = nmsInfoBox._editStringify(sw);
+	var out = document.getElementById("edit-output");
+	out.value = myData;
+}
+
+nmsInfoBox._editStringify = function(sw) {
+	for (var key in nmsInfoBox._editValues) {
+		var val = nmsInfoBox._editValues[key];
+	}
+	nmsInfoBox._editValues['sysname'] = sw;
+	var myData = JSON.stringify([nmsInfoBox._editValues]);
+	return myData;
+}
+nmsInfoBox._editSave = function(sw, e) {
+	var myData = nmsInfoBox._editStringify(sw);
+	$.ajax({
+		type: "POST",
+		url: "/api/private/switch-add",
+		dataType: "text",
+		data:myData,
+		success: function (data, textStatus, jqXHR) {
+			nmsData.invalidate("switches");
+			nmsData.invalidate("smanagement");
+		}
+	});
+	nmsInfoBox._editHide();
+}
