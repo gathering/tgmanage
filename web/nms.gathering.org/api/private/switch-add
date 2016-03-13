@@ -82,7 +82,12 @@ foreach my $tmp2 (@tmp) {
 		push @added, $switch{'sysname'};
 	} else {
 		if (defined($switch{'placement'})) {
-			my %placement = %{convertplace($switch{'placement'})};
+			my %placement;
+			if ($switch{'placement'} eq "reset") {
+				%placement = guess_placement($switch{'sysname'});
+			} else {
+				%placement = %{convertplace($switch{'placement'})};
+			}
 			my ($x1,$x2,$y1,$y2);
 			$x1 = $placement{'x1'};
 			$y1 = $placement{'y1'};
