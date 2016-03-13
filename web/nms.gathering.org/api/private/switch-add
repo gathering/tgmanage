@@ -45,6 +45,9 @@ foreach my $tmp2 (@tmp) {
 		} else {
 			%placement = %{$switch{'placement'}};
 		}
+		if (not defined($switch{'ip'}) and defined($switch{'mgtmt4'})) {
+			$switch{'ip'} = $switch{'mgtmt4'};
+		}
 		my ($x1,$x2,$y1,$y2);
 		$x1 = $placement{'x1'};
 		$y1 = $placement{'y1'};
@@ -69,6 +72,9 @@ foreach my $tmp2 (@tmp) {
 			$x2 = $switch{'placement'}{'xx'};
 			$y2 = $switch{'placement'}{'yy'};
 			$switch{'placement'} = "(($x1,$y1),($x2,$y2))";
+		}
+		if (not defined($switch{'ip'}) and defined($switch{'mgtmt4'})) {
+			$switch{'ip'} = $switch{'mgtmt4'};
 		}
 		my @set;
 		map {

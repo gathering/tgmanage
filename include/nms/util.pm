@@ -18,6 +18,7 @@ sub parse_switch {
 		'mgtmt4' => "$mgtmt4",
 		'mgtmt6' => "$mgtmt6",
 		'lolid' => "$lolid",
+		'ip' => "$mgtmt4",
 		'distro' => "$distro"
 	);
 	%{$ret{'placement'}} = guess_placement($switch);
