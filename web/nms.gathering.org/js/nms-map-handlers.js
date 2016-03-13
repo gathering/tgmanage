@@ -296,8 +296,12 @@ function commentUpdater()
 	if (nmsData.comments == undefined || nmsData.comments.comments == undefined) {
 		return
 	}
-	for (var sw in nmsData.comments.comments) {
+	for (var sw in nmsData.switches.switches) {
 		var c = "white";
+		if (nmsData.comments.comments[sw] == undefined) {
+			nmsMap.setSwitchColor(sw,c);
+			continue;
+		}
 		var s = nmsData.comments.comments[sw];
 		var then = 0;
 		var active = 0;

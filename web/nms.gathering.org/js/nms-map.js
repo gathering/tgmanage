@@ -26,12 +26,12 @@ var nmsMap = nmsMap || {
 	contexts: ["bg","link","blur","switch","text","textInfo","top","input","hidden"],
 	_info: {},
 	_settings: {
-		fontLineFactor: 3,
+		fontLineFactor: 2,
 		textMargin: 3,
 		xMargin: 10,
 		yMargin: 20,
-		fontSize: 14,
-		fontFace: "Verdana"
+		fontSize: 15,
+		fontFace: "sans-serif"
 	},
 	scale: 1,
 	_orig: { width:1920, height:1032 },
@@ -126,6 +126,9 @@ nmsMap._resizeEvent = function() {
  *
  * FIXME: The math here is just wild approximation and guesswork because
  * I'm lazy.
+ *
+ * FIXME: 2: Should really just use _drawText() instead somehow. Font size
+ * being an issue.
  */
 nmsMap.drawNow = function ()
 {
@@ -139,7 +142,7 @@ nmsMap.drawNow = function ()
 	var ctx = nmsMap._c.top.ctx;
 	ctx.save();
 	ctx.scale(this.scale, this.scale);
-	ctx.font = Math.round(2 * this._settings.fontSize) + "px " + this._settings.fontFace;
+	ctx.font = (2 * this._settings.fontSize) + "px " + this._settings.fontFace;
 	ctx.clearRect(0,0,800,100);
 	ctx.fillStyle = "white";
 	ctx.strokeStyle = "black";
@@ -198,14 +201,7 @@ nmsMap._drawSwitch = function(sw)
 	this._c.switch.ctx.fillStyle = color;
 	this._drawBox(this._c.switch.ctx, box['x'],box['y'],box['width'],box['height']);
 	this._c.switch.ctx.shadowBlur = 0;
-	this._drawSidewaysText(this._c.text.ctx, sw,box);
-	/*
-		if ((box['width'] + 10 )< box['height']) {
-			//
-		} else {
-			//drawRegular(dr.text.ctx,sw,box['x'],box['y'],box['width'],box['height']);
-		}
-	*/
+	this._drawText(this._c.text.ctx, sw,box);
 }
 
 nmsMap._drawSwitchInfo = function(sw) {
@@ -213,7 +209,7 @@ nmsMap._drawSwitchInfo = function(sw) {
 	if (this._info[sw] == undefined) {
 		this._clearBox(this._c.textInfo.ctx, box);
 	} else {
-		this._drawSidewaysText(this._c.textInfo.ctx, this._info[sw], box, "right");
+		this._drawText(this._c.textInfo.ctx, this._info[sw], box, "right");
 	}
 }
 
@@ -224,25 +220,38 @@ nmsMap._clearBox = function(ctx,box) {
 	ctx.restore();
 }
 
-nmsMap._drawSidewaysText = function(ctx, text, box, align) {
+nmsMap._drawText = function(ctx, text, box, align) {
+	var rotate = false;
+
+	if ((box['width'] + 10 )< box['height'])
+		rotate = true;
+	
 	this._clearBox(ctx,box);
 	ctx.save();
-	ctx.scale(this.scale, this.scale); // FIXME: Do it everywhere?
-	ctx.lineWidth = Math.floor(nmsMap._settings.fontLineFactor);
-	if (ctx.lineWidth == 0) {
-		ctx.lineWidth = Math.round(nms._settings.fontLineFactor);
-	}
+	ctx.scale(this.scale, this.scale);
+	ctx.font = "bold " + this._settings.fontSize + "px " + this._settings.fontFace;
+	console.log(ctx.font);
+	ctx.lineWidth = nmsMap._settings.fontLineFactor;
 	ctx.fillStyle = "white";
 	ctx.strokeStyle = "black";
-	ctx.translate(box.x + box.width - this._settings.textMargin, box.y + box.height - this._settings.textMargin);
-	ctx.rotate(Math.PI * 3/2);
+	ctx.translate(box.x + this._settings.textMargin, box.y + box.height - this._settings.textMargin);
+	
+	if (rotate) {
+		ctx.translate(box.width - this._settings.textMargin * 2,0);
+		ctx.rotate(Math.PI * 3/2);
+	}
+
 	if (align == "right") {
 		ctx.textAlign = "right";
 		/*
 		 * Margin*2 is to compensate for the margin above.
 		 */
-		ctx.translate(box.height - this._settings.textMargin*2,0);
+		if (rotate)
+			ctx.translate(box.height - this._settings.textMargin*2,0);
+		else
+			ctx.translate(box.width - this._settings.textMargin*2,0);
 	}
+
 	ctx.strokeText(text, 0, 0);
 	ctx.fillText(text, 0, 0);
 	ctx.restore();
