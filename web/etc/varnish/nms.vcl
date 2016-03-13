@@ -30,6 +30,7 @@ sub vcl_recv {
         return (pass);
     }
 
+    return (pass);
     # Brukes ikke. Cookies er for nubs.
     unset req.http.Cookie;
 

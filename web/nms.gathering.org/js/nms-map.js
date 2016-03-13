@@ -19,7 +19,9 @@ var nmsMap = nmsMap || {
 		colorSame:0,
 		resizeEvents:0,
 		switchInfoUpdate:0,
-		switchInfoSame:0
+		switchInfoSame:0,
+		nowDups:0,
+		nows:0
 	},
 	contexts: ["bg","link","blur","switch","text","textInfo","top","input","hidden"],
 	_info: {},
@@ -27,7 +29,9 @@ var nmsMap = nmsMap || {
 		fontLineFactor: 3,
 		textMargin: 3,
 		xMargin: 10,
-		yMargin: 20
+		yMargin: 20,
+		fontSize: 14,
+		fontFace: "Verdana"
 	},
 	scale: 1,
 	_orig: { width:1920, height:1032 },
@@ -43,7 +47,6 @@ var nmsMap = nmsMap || {
 nmsMap.init = function() {
 	this._initContexts();
 	this._drawBG();
-	nmsData.registerSource("switches","/api/public/switches");
 	nmsData.addHandler("switches","nmsMap",function(){nmsMap._drawAllSwitches();});
 	window.addEventListener('resize',nmsMap._resizeEvent,true);
 	document.addEventListener('load',nmsMap._resizeEvent,true);
@@ -114,7 +117,36 @@ nmsMap._resizeEvent = function() {
 	}
 	nmsMap._drawBG();
 	nmsMap._drawAllSwitches();
+	nmsMap.drawNow();
 	nmsMap.stats.resizeEvents++;
+}
+
+/*
+ * Draw current time-window
+ *
+ * FIXME: The math here is just wild approximation and guesswork because
+ * I'm lazy.
+ */
+nmsMap.drawNow = function ()
+{
+	var now = nmsData.now;
+	if (nmsMap._lastNow == now) {
+		nmsMap.stats.nowDups++;
+		return;
+	}
+	nmsMap.stats.nows++;
+
+	var ctx = nmsMap._c.top.ctx;
+	ctx.save();
+	ctx.scale(this.scale, this.scale);
+	ctx.font = Math.round(2 * this._settings.fontSize) + "px " + this._settings.fontFace;
+	ctx.clearRect(0,0,800,100);
+	ctx.fillStyle = "white";
+	ctx.strokeStyle = "black";
+	ctx.lineWidth = nms.fontLineFactor;
+	ctx.strokeText(now, 0 + this._settings.textMargin, 25);
+	ctx.fillText(now, 0 + this._settings.textMargin, 25);
+	ctx.restore();
 }
 
 nmsMap.setNightMode = function(toggle) {
@@ -267,4 +299,77 @@ nmsMap._connectBoxes = function(box1, box2,color1, color2) {
 	ctx.lineWidth = 5;
 	ctx.stroke();
 	ctx.restore();
+}
+
+/*
+ * STUFF NOT YET INTEGRATED, BUT MOVED AWAY FROM nms.js TO TIDY.
+ *
+ * Consider this a TODO list.
+ */
+
+
+/*
+ * Draw the blur for a box.
+ */
+function drawBoxBlur(x,y,boxw,boxh)
+{
+	var myX = Math.floor(x * canvas.scale);
+	var myY = Math.floor(y * canvas.scale);
+	var myX2 = Math.floor((boxw) * canvas.scale);
+	var myY2 = Math.floor((boxh) * canvas.scale);
+	dr.blur.ctx.fillRect(myX,myY, myX2, myY2);
+}
+
+/*
+ * Draw a linknet with index i.
+ *
+ * XXX: Might have to change the index here to match backend
+ */
+function drawLinknet(i)
+{
+	var c1 = nms.linknet_color[i] && nms.linknet_color[i].c1 ? nms.linknet_color[i].c1 : blue;
+	var c2 = nms.linknet_color[i] && nms.linknet_color[i].c2 ? nms.linknet_color[i].c2 : blue;
+	if (nmsData.switches.switches[nmsData.switches.linknets[i].sysname1] && nmsData.switches.switches[nmsData.switches.linknets[i].sysname2]) {
+		connectSwitches(nmsData.switches.linknets[i].sysname1,nmsData.switches.linknets[i].sysname2, c1, c2);
+	}
+}
+
+/*
+ * Draw all linknets
+ */
+function drawLinknets()
+{
+	if (nmsData.switches && nmsData.switches.linknets) {
+		for (var i in nmsData.switches.linknets) {
+			drawLinknet(i);
+		}
+	}
+}
+
+/*
+ * Change both colors of a linknet.
+ *
+ * XXX: Probably have to change this to better match the backend data
+ */
+function setLinknetColors(i,c1,c2)
+{
+	if (!nms.linknet_color[i] || 
+ 	     nms.linknet_color[i].c1 != c1 ||
+	     nms.linknet_color[i].c2 != c2) {
+		if (!nms.linknet_color[i])
+			nms.linknet_color[i] = {};
+		nms.linknet_color[i]['c1'] = c1;
+		nms.linknet_color[i]['c2'] = c2;
+		drawLinknet(i);
+	}
+}
+
+function applyBlur()
+{
+	var blur = document.getElementById("shadowBlur");
+	var col = document.getElementById("shadowColor");
+	nms.shadowBlur = blur.value;
+	nms.shadowColor = col.value;
+	resetBlur();
+	saveSettings();
 }

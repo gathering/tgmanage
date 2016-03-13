@@ -82,11 +82,12 @@ var nmsData = nmsData || {
 	 */
 	get now() { return this._now || this._last; },
 	set now(val) {
-		if (val == undefined) {
-			this._now = undefined;
+		if (val == undefined || !val) {
+			nmsData._now = undefined;
+		} else {
+			// FIXME: Check if now is valid syntax.
+			nmsData._now = val;
 		}
-		// FIXME: Check if now is valid syntax.
-		this._now = now;
 	},
 	/*
 	 * List of sources, name, handler, etc
@@ -170,11 +171,11 @@ nmsData.addHandler = function(name, id, cb, cbdata) {
  */
 nmsData.unregisterHandlerWildcard = function(id) {
 	for (var v in nmsData._sources) {
-		this._unregisterHandler(v, id);
+		this.unregisterHandler(v, id);
 	}
 }
 
-nmsData._unregisterHandler = function(name, id) {
+nmsData.unregisterHandler = function(name, id) {
 	delete this._sources[name].cbs[id];
 }
 
@@ -227,10 +228,11 @@ nmsData._genericUpdater = function(name) {
 		url: this._sources[name].target + now,
 		dataType: "json",
 		success: function (data, textStatus, jqXHR) {
-			nmsData._last = data['time'];
 			if (nmsData[name] == undefined ||  nmsData[name]['hash'] != data['hash']) {
+				nmsData._last = data['time'];
 				nmsData.old[name] = nmsData[name];
 				nmsData[name] = data;
+				nmsMap.drawNow();
 				for (var i in nmsData._sources[name].cbs) {
 					var tmp = nmsData._sources[name].cbs[i];
 					if (tmp.cb != undefined) {
