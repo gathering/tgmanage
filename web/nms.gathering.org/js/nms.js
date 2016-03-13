@@ -491,6 +491,7 @@ function commentChange(id,state)
 		comment:id,
 		state:state
 	};
+	myData = JSON.stringify(myData);
 	var foo = document.getElementById("commentRow" + id);
 	if (foo) {
 		foo.className = '';
