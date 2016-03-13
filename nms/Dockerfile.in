@@ -28,6 +28,7 @@ RUN apt-get update && apt-get -y install \
      httpie                 \
      locales                \
      screen                 \
+     openssh-server	    \
      pkg-config    
 
 VOLUME [ "/sys/fs/cgroup" ]
