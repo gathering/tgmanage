@@ -383,14 +383,17 @@ nmsMap._moveStopListen = function() {
 
 nmsMap._moveDone = function(e) {
 	nmsMap._moveStopListen();
+	if(nmsMap._moveOldBox == false) {
+		return;
+	}
 	nmsMap._moveSubmit();
 	nmsMap._clearOld(nmsMap._moveOldBox);
 }
 
 nmsMap._moveStart = function(sw, e)
 {
-	console.log("moving " + sw);
 	nmsMap._moving = sw;
+	nmsMap._moveOldBox = false;
 	nmsMap._moveXstart = (e.pageX - e.target.offsetLeft) / nmsMap.scale;
 	nmsMap._moveYstart = (e.pageY - e.target.offsetTop) / nmsMap.scale;
 	nmsMap._moveBox = nmsData.switches.switches[sw].placement;
