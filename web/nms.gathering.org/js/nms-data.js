@@ -71,8 +71,11 @@ var nmsData = nmsData || {
 	/*
 	 * Maximum number of AJAX requests in transit before we start
 	 * skipping updates.
+	 *
+	 * A problem right now is that it will typically always hit the
+	 * same thing since everything starts at the same time...
 	 */
-	_ajaxThreshold: 5
+	_ajaxThreshold: 10
 };
 
 

@@ -30,10 +30,10 @@ sub convertplace
 	my %out = ();
 
 	if (not defined $in{'x1'} and defined($in{'x'})) {
-		$out{'x1'} = $in{'x'};
-		$out{'y1'} = $in{'y'};
-		$out{'xx'} = $in{'x'} + $in{'width'};
-		$out{'yy'} = $in{'y'} + $in{'height'};
+		$out{'x1'} = int($in{'x'});
+		$out{'y1'} = int($in{'y'});
+		$out{'xx'} = int($in{'x'} + $in{'width'});
+		$out{'yy'} = int($in{'y'} + $in{'height'});
 	} else {
 		return \%in;
 	}
@@ -89,6 +89,7 @@ foreach my $tmp2 (@tmp) {
 			$x2 = $placement{'xx'};
 			$y2 = $placement{'yy'};
 			$switch{'placement'} = "(($x1,$y1),($x2,$y2))";
+			push @dups, "not really, but: " . $switch{'placement'};
 		}
 		if (not defined($switch{'ip'}) and defined($switch{'mgtmt4'})) {
 			$switch{'ip'} = $switch{'mgtmt4'};

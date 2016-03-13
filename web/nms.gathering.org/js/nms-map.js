@@ -13,6 +13,7 @@
 
 
 var nmsMap = nmsMap || {
+	_moveInProgress: false,
 	stats: {
 		earlyDrawAll:0,
 		colorChange:0,
@@ -47,7 +48,7 @@ var nmsMap = nmsMap || {
 nmsMap.init = function() {
 	this._initContexts();
 	this._drawBG();
-	nmsData.addHandler("switches","nmsMap",function(){nmsMap._drawAllSwitches();});
+	nmsData.addHandler("switches","nmsMap",function(){nmsMap._resizeEvent();});
 	window.addEventListener('resize',nmsMap._resizeEvent,true);
 	document.addEventListener('load',nmsMap._resizeEvent,true);
 	this._drawAllSwitches();
@@ -230,7 +231,6 @@ nmsMap._drawText = function(ctx, text, box, align) {
 	ctx.save();
 	ctx.scale(this.scale, this.scale);
 	ctx.font = "bold " + this._settings.fontSize + "px " + this._settings.fontFace;
-	console.log(ctx.font);
 	ctx.lineWidth = nmsMap._settings.fontLineFactor;
 	ctx.fillStyle = "white";
 	ctx.strokeStyle = "black";
@@ -275,7 +275,6 @@ nmsMap._drawBox = function(ctx, x, y, boxw, boxh) {
 	ctx.strokeStyle = "#000000";
 	ctx.strokeRect(x,y, boxw, boxh);
 	ctx.restore();
-
 }
 
 nmsMap._connectSwitches = function(sw1, sw2, color1, color2) {
@@ -309,6 +308,96 @@ nmsMap._connectBoxes = function(box1, box2,color1, color2) {
 	ctx.stroke();
 	ctx.restore();
 }
+
+nmsMap.moveSet = function(toggle) {
+	nmsMap._moveInProgress = toggle;
+	if (!toggle)
+		nmsMap._moveStopListen();
+}
+
+/*
+ * onclick handler for the canvas.
+ *
+ * Currently just shows info for a switch.
+ */
+nmsMap.canvasClick = function(e)
+{
+	var sw = findSwitch(e.pageX - e.target.offsetLeft, e.pageY - e.target.offsetTop);
+	if (sw != undefined) {
+		if (nmsMap._moveInProgress) {
+			nmsMap._moveStart(sw, e);
+		} else {
+			nmsInfoBox.click(sw);
+		}
+	}
+}
+
+nmsMap._clearOld = function(box) {
+	if (box) {
+		nmsMap._c.top.ctx.save();
+		nmsMap._c.top.ctx.fillStyle = "#000000";
+		nmsMap._c.top.ctx.scale(nmsMap.scale, nmsMap.scale); // FIXME
+		nmsMap._c.top.ctx.clearRect(box['x'] - 5, box['y'] - 5, box['width'] + 10, box['height'] + 10);
+		nmsMap._c.top.ctx.restore();
+	}
+}
+
+nmsMap._moveMove = function(e) {
+	nmsMap._moveX = (e.pageX - e.target.offsetLeft) / nmsMap.scale;
+	nmsMap._moveY = (e.pageY - e.target.offsetTop) / nmsMap.scale;
+	var diffx = nmsMap._moveX - nmsMap._moveXstart;
+	var diffy = nmsMap._moveY - nmsMap._moveYstart;
+	var box = {};
+	nmsMap._clearOld(nmsMap._moveOldBox);
+	box['x'] = nmsMap._moveBox['x'] + diffx;
+	box['y'] = nmsMap._moveBox['y'] + diffy;
+	box['height'] = nmsMap._moveBox['height'];
+	box['width'] = nmsMap._moveBox['width'];
+	nmsMap._moveOldBox = box;
+	nmsMap._c.top.ctx.save();
+	nmsMap._c.top.ctx.fillStyle = "red";
+	nmsMap._drawBox(nmsMap._c.top.ctx, box['x'], box['y'], box['width'], box['height']);
+	nmsMap._c.top.ctx.restore();
+}
+
+nmsMap._moveSubmit = function() {
+	var data = {
+		sysname: nmsMap._moving,
+		placement: nmsMap._moveOldBox
+	}
+	var myData = JSON.stringify([data]);
+	$.ajax({
+		type: "POST",
+		url: "/api/private/switch-add",
+		dataType: "text",
+		data:myData,
+		success: function (data, textStatus, jqXHR) {
+			nmsData.invalidate("switches");
+		}
+	});
+}
+nmsMap._moveStopListen = function() {
+	nmsMap._c.input.c.removeEventListener('mousemove',nmsMap._moveMove, true);
+	nmsMap._c.input.c.removeEventListener('mouseup',nmsMap._moveDone, true);
+}
+
+nmsMap._moveDone = function(e) {
+	nmsMap._moveStopListen();
+	nmsMap._moveSubmit();
+	nmsMap._clearOld(nmsMap._moveOldBox);
+}
+
+nmsMap._moveStart = function(sw, e)
+{
+	console.log("moving " + sw);
+	nmsMap._moving = sw;
+	nmsMap._moveXstart = (e.pageX - e.target.offsetLeft) / nmsMap.scale;
+	nmsMap._moveYstart = (e.pageY - e.target.offsetTop) / nmsMap.scale;
+	nmsMap._moveBox = nmsData.switches.switches[sw].placement;
+	nmsMap._c.input.c.addEventListener('mousemove',nmsMap._moveMove,true);
+	nmsMap._c.input.c.addEventListener('mouseup',nmsMap._moveDone,true);
+}
+
 
 /*
  * STUFF NOT YET INTEGRATED, BUT MOVED AWAY FROM nms.js TO TIDY.
@@ -382,3 +471,4 @@ function applyBlur()
 	resetBlur();
 	saveSettings();
 }
+

@@ -424,19 +424,6 @@ function findSwitch(x,y) {
 }
 
 /*
- * onclick handler for the canvas.
- *
- * Currently just shows info for a switch.
- */
-function canvasClick(e)
-{
-	var sw = findSwitch(e.pageX - e.target.offsetLeft, e.pageY - e.target.offsetTop);
-	if (sw != undefined) {
-		nmsInfoBox.click(sw);
-	}
-}
-
-/*
  * Set night mode to whatever 'toggle' is.
  *
  * Changes background and nav-bar, then leaves the rest to nmsMap.
