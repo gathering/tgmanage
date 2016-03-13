@@ -21,6 +21,8 @@ var nmsInfoBox = nmsInfoBox || {
  */
 nmsInfoBox.show = function(x) {
 	nmsData.addHandler("comments","switchshower",nmsInfoBox._show,x);
+	nmsData.addHandler("switches","switchshower",nmsInfoBox._show,x);
+	nmsData.addHandler("smanagement","switchshower",nmsInfoBox._show,x);
 	nmsInfoBox._show(x);
 }
 
@@ -30,6 +32,8 @@ nmsInfoBox.show = function(x) {
 nmsInfoBox.hide = function() {
 	nmsInfoBox._hide();
 	nmsData.unregisterHandler("comments","switchshower");
+	nmsData.unregisterHandler("switches","switchshower");
+	nmsData.unregisterHandler("smanagement","switchshower");
 }
 
 /*
