@@ -18,6 +18,7 @@ sub parse_switch {
 		'mgtmt4' => "$mgtmt4",
 		'mgtmt6' => "$mgtmt6",
 		'lolid' => "$lolid",
+		'ip' => "$mgtmt4",
 		'distro' => "$distro"
 	);
 	%{$ret{'placement'}} = guess_placement($switch);
@@ -62,13 +63,13 @@ sub guess_placement {
 		my ($e, $s) = ($1, $2);
 		$src = "main";
 
-		$x = int(232 + (($e-1)/2) * 31.1);
+		$x = int(292 + (($e-1)/2) * 31.1);
 		$y = undef;
 
-		$x += 14 if ($e >= 17);
-		$x += 14 if ($e >= 29);
-		$x += 14 if ($e >= 45);
-		$x += 14 if ($e >= 63);
+		$x += 14 if ($e >= 13);
+		$x += 14 if ($e >= 25);
+		$x += 14 if ($e >= 41);
+		$x += 14 if ($e >= 59);
 
 		if ($s > 2) {
 			$y = 405 - 120 * ($s-2);
@@ -83,17 +84,18 @@ sub guess_placement {
 		$y += 45 if $name eq "e1-4";
 		$y += 20 if $name eq "e3-4";
 		$y += 15 if $name eq "e5-4";
-		$yy -= 25 if $name eq "e11-1";
+		$yy -= 25 if $name eq "e7-1";
+		$y += 10 if $name eq "e5-2";
+		$yy -= 25 if $name eq "e5-2";
+		$y += 20 if ($e >= 81 and $s == 2);
+		$yy -= 20 if ($e >= 79 and $s == 1);
+		$yy -= 30 if ($e >= 81 and $s == 1);
 
-		#$yy -= 14 if $name eq "e77-1";
-		#$yy -= 28 if $name eq "e79-1";
-		#$yy -= 15 if $name eq "e81-1";
-		#$yy -= 56 if $name eq "e83-1";
 	} elsif ($name =~ /^sw(\d+)-creativia$/) {
 		my ($s) = ($1);
 		$src = "creativia";
 		$x = 1535;
-		$y = int(130 + 32.2 * $s);
+		$y = int(160 + 32.2 * $s);
 		$yy = $y + 20;
 		if ($s == 1) {
 			$xx = $x + 70;
@@ -108,14 +110,11 @@ sub guess_placement {
 	} elsif ($name =~ /^crew(\d+)-(\d+)$/) {
 		my ($s, $n) = ($1, $2);
 		$src = "crew";
-		$x = 1023 + 45 * $n;
-		$y = int(329 + 20.5 * $s);
-		$xx = $x + 45;
+		$x = 550 + 65 * $n;
+		$y = int(759 + 20.5 * $s);
+		$xx = $x + 65;
 		$yy = $y + 14;
 
-		if ($s == 1 && $n == 1) {
-			$xx += 25;
-		}
 	} else {
 		# Fallback to have _some_ position
 		$src = "random";

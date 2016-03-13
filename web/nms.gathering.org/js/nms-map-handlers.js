@@ -2,8 +2,7 @@
  * Map handlers/updaters for NMS.
  *
  * These are functions used to determine how the map should look in NMS.
- * They represent vastly different information, but in a uniform way. I
- * suppose this is the c++-type of object orientation...
+ * They represent vastly different information, but in a uniform way.
  *
  * The idea is that these updaters only parse information that's fetched by
  * NMS - they do not request additional information. E.g., ping data is
@@ -11,6 +10,10 @@
  * displayed. This might seem redundant, but it means any handler can
  * utilize information from any aspect of NMS, and thus opens NMS up to the
  * world of intelligent maps base don multiple data sources.
+ *
+ * Warning: This paradigm will change. Handlers will be expected to
+ * register their own callbacks for nmsData. Work in progress.
+ *
  */
 
 /*
@@ -257,7 +260,6 @@ function tempInit()
 function pingUpdater()
 {
 	if (!nms.ping_data || !nms.ping_data["switches"]) {
-		resetColors();
 		return;
 	}
 	for (var sw in nms.switches_now["switches"]) {
@@ -291,62 +293,74 @@ function commentUpdater()
 {
 	var realnow = Date.now();
 	var now = Math.floor(realnow / 1000);
-	for (var sw in nms.switches_now["switches"]) {
+	if (nmsData.comments == undefined || nmsData.comments.comments == undefined) {
+		return
+	}
+	for (var sw in nmsData.switches.switches) {
 		var c = "white";
-		var s = nms.switches_now["switches"][sw];
-		if (s["comments"] && s["comments"].length > 0) {
-			var then = 0;
-			var active = 0;
-			var persist = 0;
-			c = "yellow";
-			for (var v in s["comments"]) {
-				var then_test = parseInt(s["comments"][v]["time"]);
-				if (then_test > then && s["comments"][v]["state"] != "inactive")
-					then = then_test;
-				if (s["comments"][v]["state"] == "active") {
-					active++;
-				}
-				if (s["comments"][v]["state"] == "persist")
-					persist++;
-			}
-			if (then > (now - (60*15))) {
-				c = red;
-			} else if (active > 0) {
-				c = orange;
-			} else if (persist > 0) {
-				c = blue;
-			} else {
-				c = green;
-			}
+		if (nmsData.comments.comments[sw] == undefined) {
+			nmsMap.setSwitchColor(sw,c);
+			continue;
 		}
-		setSwitchColor(sw, c);
+		var s = nmsData.comments.comments[sw];
+		var then = 0;
+		var active = 0;
+		var persist = 0;
+		c = "yellow";
+		for (var v in s["comments"]) {
+			var then_test = parseInt(s["comments"][v]["time"]);
+			if (then_test > then && s["comments"][v]["state"] != "inactive")
+				then = then_test;
+			if (s["comments"][v]["state"] == "active") {
+				active++;
+			}
+			if (s["comments"][v]["state"] == "persist")
+				persist++;
+		}
+		if (then > (now - (60*15))) {
+			c = red;
+		} else if (active > 0) {
+			c = orange;
+		} else if (persist > 0) {
+			c = blue;
+		} else {
+			c = green;
+		}
+		nmsMap.setSwitchColor(sw, c);
 	}
 }
 
 
 function commentInit()
 {
+	nmsData.addHandler("comments","mapHandler",commentUpdater);
 	setLegend(1,"white","0 comments");
 	setLegend(2,blue,"Persistent");
 	setLegend(3,red, "New");
 	setLegend(4,orange,"Active");	
 	setLegend(5,green ,"Old/inactive only");	
 }
+
 /*
  * Testing-function to randomize colors of linknets and switches
  */
 function randomizeColors()
 {
-	for (var i in nms.switches_now.linknets) {
+/*	for (var i in nms.switches_now.linknets) {
 		setLinknetColors(i, getRandomColor(), getRandomColor());
 	}
-	for (var sw in nms.switches_now.switches) {
-		setSwitchColor(sw, getRandomColor());
+*/
+	if (nmsData.switches == undefined  || nmsData.switches.switches == undefined) {
+		return;
+	}
+	for (var sw in nmsData.switches.switches) {
+		nmsMap.setSwitchColor(sw, getRandomColor());
 	}
 }
 
 function discoInit()
 {
+	nmsData.addHandler("switches","mapHandler",randomizeColors);
 	setNightMode(true);
 	setLegend(1,blue,"Y");	
 	setLegend(2,red, "M");

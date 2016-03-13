@@ -1,73 +1,33 @@
+"use strict";
 var nms = {
-	updater:undefined, // Active updater
-	update_time:0, // Client side timestamp for last update
-	switches_management:{switches:{}},
-	switches_now:{switches:{}}, // Most recent data
-	switches_then:{switches:{}}, // 2 minutes old
-	speed:0, // Current aggregated speed
-	ping_data:undefined, // JSON data for ping history.
-	drawn:false, // Set to 'true' when switches are drawn
-	switch_showing:"", // Which switch we are displaying (if any).
-	switchInfo:{},
-	switchInfoDrawn:{},
-	repop_switch:false, // True if we need to repopulate the switch info when port state updates (e.g.: added comments);
-	repop_time:false, // Timestamp in case we get a cached result
-	nightMode:false, 
+	stats:{}, // Various internal stats
+	get nightMode() { return this._nightMode; },
+	set nightMode(val) { if (val != this._nightMode) { this._nightMode = val; setNightMode(val); } },
 	/*
-	 * Switch-specific variables. These are currently separate from
-	 * "switches_now" because switches_now is reset every time we get
-	 * new data.
+	 * FIXME: This should be slightly smarter.
 	 */
-	nightBlur:{}, // Have we blurred this switch or not?
-	shadowBlur:10,
-	shadowColor:"#EEEEEE",
-	switch_color:{},  // Color for switch
-	linknet_color:{}, // color for linknet
-	textDrawn:{}, // Have we drawn text for this switch?
-	now:false, // Date we are looking at (false for current date).
-	fontSize:16, // This is scaled too, but 16 seems to make sense.
-	fontFace:"Verdana",
-	fontLineFactor:3,
-	/*
-	 * This is used to track outbound AJAX requests and skip updates if
-	 * we have too many outstanding requests. The ajaxOverflow is a
-	 * counter that tracks how many times this has happened.
-	 *
-	 * It's a cheap way to be nice to the server.
-	 */
-	outstandingAjaxRequests:0,
-	ajaxOverflow:0,
-	/*
-	 * Set to 'true' after we've done some basic updating. Used to
-	 * bootstrap the map quickly as soon as we have enough data, then
-	 * ignored.
-	 */
-	did_update:false,
+	_now: false,
+	get now() { return this._now },
+	set now(v) { this._now = v; nmsData.now = v; },
 	/*
 	 * Various setInterval() handlers. See nmsTimer() for how they are
 	 * used.
 	 *
-	 * Cool fact: Adding one here adds it to the 'debug timers'
-	 * drop-down.
+	 * FIXME: Should just stop using these.
 	 */
 	timers: {
 		playback:false,
-		ports:false,
-		ping:false
 	},
+	
 	menuShowing:true,
 	/*
 	 * This is a list of nms[x] variables that we store in our
 	 * settings-cookie when altered and restore on load.
 	 */
 	settingsList:[
-		'shadowBlur',
-		'shadowColor',
 		'nightMode',
-		'menuShowing',
-		'layerVisibility'
+		'menuShowing'
 	],
-	layerVisibility:{},
 	keyBindings:{
 		'?':toggleMenu,
 		'n':toggleNightMode,
@@ -83,19 +43,18 @@ var nms = {
 		'k':moveTimeFromKey,
 		'l':moveTimeFromKey,
 		'p':moveTimeFromKey,
-		'r':moveTimeFromKey,
-		'not-default':keyDebug
+		'r':moveTimeFromKey
 	},
-  /*
-   * Playback controllers and variables
-   */
-  playback:{
-    startTime: false,
-    stopTime: false,
-    playing: false,
-    replayTime: 0,
-    replayIncrement: 60 * 60
-  }
+	/*
+	 * Playback controllers and variables
+	 */
+	playback:{
+		startTime: false,
+		stopTime: false,
+		playing: false,
+		replayTime: 0,
+		replayIncrement: 60 * 60
+	 }
 };
 
 /*
@@ -133,96 +92,12 @@ function nmsTimer(handler, interval, name, description) {
 
 
 /*
- * Drawing primitives.
- *
- * This contains both canvas and context for drawing layers. It's on a
- * top-level namespace to reduce SLIGHTLY the ridiculously long names
- * (e.g.: dr.bg.ctx.drawImage() is long enough....).
- *
- * Only initialized once (for now).
- */
-var dr = {};
-
-/*
- * Original scale. This is just used to define the coordinate system.
- * 1920x1032 was chosen for tg15 by coincidence: We scaled the underlying
- * map down to "full hd" and these are the bounds we got. There's no
- * particular reason this couldn't change, except it means re-aligning all
- * switches.
- */
-var orig = {
-	width:1920,
-	height:1032
-	};
-
-/*
- * Canvas dimensions, and scale factor.
- *
- * We could derive scale factor from canvas.width / orig.width, but it's
- * used so frequently that this makes much more sense.
- *
- * Width and height are rarely used.
- */
-var canvas = { 
-	width:0,
-	height:0,
-	scale:1
-};
-
-/*
- * Various margins at the sides.
- *
- * Not really used much, except for "text", which is really more of a
- * padding than margin...
- */
-var margin = {
-	x:10,
-	y:20,
-	text:3
-};
-
-/*
- * Convenience-function to populate the 'dr' structure.
- *
- * Only run once.
- */
-function initDrawing() {
-	dr['bg'] = {};
-	dr['bg']['c'] = document.getElementById("bgCanvas");
-	dr['bg']['ctx'] = dr['bg']['c'].getContext('2d');
-	dr['link'] = {};
-	dr['link']['c'] = document.getElementById("linkCanvas");
-	dr['link']['ctx'] = dr['link']['c'].getContext('2d');
-	dr['blur'] = {};
-	dr['blur']['c'] = document.getElementById("blurCanvas");
-	dr['blur']['ctx'] = dr['blur']['c'].getContext('2d');
-	dr['switch'] = {};
-	dr['switch']['c'] = document.getElementById("switchCanvas");
-	dr['switch']['ctx'] = dr['switch']['c'].getContext('2d');
-	dr['text'] = {};
-	dr['text']['c'] = document.getElementById("textCanvas");
-	dr['text']['ctx'] = dr['text']['c'].getContext('2d');
-	dr['textInfo'] = {};
-	dr['textInfo']['c'] = document.getElementById("textInfoCanvas");
-	dr['textInfo']['ctx'] = dr['textInfo']['c'].getContext('2d');
-	dr['top'] = {};
-	dr['top']['c'] = document.getElementById("topCanvas");
-	dr['top']['ctx'] = dr['top']['c'].getContext('2d');
-	dr['input'] = {};
-	dr['input']['c'] = document.getElementById("inputCanvas");
-	dr['input']['ctx'] = dr['top']['c'].getContext('2d');
-	dr['hidden'] = {};
-	dr['hidden']['c'] = document.getElementById("hiddenCanvas");
-	dr['hidden']['ctx'] = dr['hidden']['c'].getContext('2d');
-}
-
-/*
  * Convenience function that doesn't support huge numbers, and it's easier
  * to comment than to fix. But not really, but I'm not fixing it anyway.
  */
 function byteCount(bytes) {
 	var units = ['', 'K', 'M', 'G', 'T', 'P'];
-	i = 0;
+	var i = 0;
 	while (bytes > 1024) {
 		bytes = bytes / 1024;
 		i++;
@@ -236,7 +111,7 @@ function byteCount(bytes) {
  */
 function toggleNightMode()
 {
-	setNightMode(!nms.nightMode);
+	nms.nightMode = !nms.nightMode;
 	saveSettings();
 }
 
@@ -309,76 +184,82 @@ function epochToString(t)
 
 	return str;
 }
-function localEpochToString(t) {
-  var d = new Date(parseInt(t) * parseInt(1000));
-  var timezoneOffset = d.getTimezoneOffset() * -60;
-  t = t + timezoneOffset;
 
-  return epochToString(t);
+function localEpochToString(t) {
+	var d = new Date(parseInt(t) * parseInt(1000));
+	var timezoneOffset = d.getTimezoneOffset() * -60;
+	t = t + timezoneOffset;
+
+	return epochToString(t);
 }
 
 /*
  * Start replaying historical data.
  */
 nms.playback.startReplay = function(startTime,stopTime) {
-  if(!startTime || !stopTime)
-    return false;
+	if(!startTime || !stopTime)
+		return false;
 
-  nms.playback.pause();
-  nms.playback.startTime = stringToEpoch(startTime);
-  nms.playback.stopTime = stringToEpoch(stopTime);
-  nms.now = epochToString(nms.playback.startTime);
-  nms.playback.play();
+	nms.playback.pause();
+	nms.playback.startTime = stringToEpoch(startTime);
+	nms.playback.stopTime = stringToEpoch(stopTime);
+	nms.now = epochToString(nms.playback.startTime);
+	nms.playback.play();
 }
+
 /*
  * Pause playback
  */
 nms.playback.pause = function() {
-  nms.timers.playback.stop();
-  nms.playback.playing = false;
+	nms.timers.playback.stop();
+	nms.playback.playing = false;
 }
+
 /*
  * Start playback
  */
 nms.playback.play = function() {
-  nms.playback.tick();
-  nms.timers.playback.start();
-  nms.playback.playing = true;
+	nms.playback.tick();
+	nms.timers.playback.start();
+	nms.playback.playing = true;
 }
+
 /*
  * Toggle playback
  */
 nms.playback.toggle = function() {
-  if(nms.playback.playing) {
-    nms.playback.pause();
-  } else {
-    nms.playback.play();
-  }
+	if(nms.playback.playing) {
+		nms.playback.pause();
+	} else {
+		nms.playback.play();
+	}
 }
+
 /*
  * Jump to place in time
  */
 nms.playback.setNow = function(now) {
-  resetSwitchStates();
-  now = parseNow(now);
-  nms.now = now;
+	var now = parseNow(now);
+	nms.now = now;
 
-  nms.playback.stopTime = false;
-  nms.playback.startTime = false;
-  nms.playback.tick();
+	nms.playback.stopTime = false;
+	nms.playback.startTime = false;
+	nms.playback.tick();
 }
+
 /*
  * Step forwards or backwards in timer
  */
 nms.playback.stepTime = function(n)
 {
-  now = getNowEpoch();
-  newtime = parseInt(now) + parseInt(n);
-  nms.now = epochToString(parseInt(newtime));
+	var now = getNowEpoch();
+	var newtime = parseInt(now) + parseInt(n);
+	nms.now = epochToString(parseInt(newtime));
 
-  if(!nms.playback.playing)
-    nms.playback.tick();
+	if(!nms.playback.playing)
+		nms.playback.tick();
 }
+
 /*
  * Ticker to trigger updates, and advance time if replaying
  *
@@ -386,214 +267,35 @@ nms.playback.stepTime = function(n)
  */
 nms.playback.tick = function()
 {
-  nms.playback.replayTime = getNowEpoch();
+	nms.playback.replayTime = getNowEpoch();
 
-  // If outside start-/stopTime, remove limits and pause playback
-  if (nms.playback.stopTime && (nms.playback.replayTime >= nms.playback.stopTime || nms.playback.replayTime < nms.playback.startTime)) {
-    nms.playback.stopTime = false;
-    nms.playback.startTime = false;
-    nms.playback.pause();
-    return;
-  }
+	// If outside start-/stopTime, remove limits and pause playback
+	if (nms.playback.stopTime && (nms.playback.replayTime >= nms.playback.stopTime || nms.playback.replayTime < nms.playback.startTime)) {
+		nms.playback.stopTime = false;
+		nms.playback.startTime = false;
+		nms.playback.pause();
+		return;
+	}
 
-  // If past actual datetime, go live
-  if (nms.playback.replayTime > parseInt(Date.now() / 1000)) {
-    nms.now = false;
-  }
+	// If past actual datetime, go live
+	if (nms.playback.replayTime > parseInt(Date.now() / 1000)) {
+		nms.now = false;
+	}
 
-  // If we are still replaying, advance time
-  if(nms.now !== false && nms.playback.playing) {
-    nms.playback.stepTime(nms.playback.replayIncrement);
-  }
-
-  // Update data and force redraw
-  updatePorts();
-  updatePing();
-  nms.updater.updater();
+	// If we are still replaying, advance time
+	if(nms.now !== false && nms.playback.playing) {
+		nms.playback.stepTime(nms.playback.replayIncrement);
+	}
 }
+
 /*
  * Helper function for safely getting a valid now-epoch
  */
 function getNowEpoch() {
-  if (nms.now && nms.now != 0)
-    return stringToEpoch(nms.now);
-  else
-    return parseInt(Date.now() / 1000);
-}
-
-
-/*
- * Hide switch info-box
- */
-function hideSwitch()
-{
-		var swtop = document.getElementById("info-switch-parent");
-		var switchele = document.getElementById("info-switch-table");
-		var comments = document.getElementById("info-switch-comments-table");
-		if (switchele != undefined)
-			switchele.parentNode.removeChild(switchele);
-		if (comments != undefined)
-			comments.parentNode.removeChild(comments);
-		commentbox = document.getElementById("commentbox");
-		if (commentbox != undefined)
-			commentbox.parentNode.removeChild(commentbox);
-		swtop.style.display = 'none';
-		nms.switch_showing = "";
-}
-/*
- * Display info on switch "x" in the info-box
- *
- * FIXME: THIS IS A MONSTROSITY.
- */
-function showSwitch(x)
-{
-		var sw = nms.switches_now["switches"][x];
-		var swm = nms.switches_management["switches"][x];
-		var swtop = document.getElementById("info-switch-parent");
-		var swpanel = document.getElementById("info-switch-panel-body");
-		var swtitle = document.getElementById("info-switch-title");
-		var tr;
-		var td1;
-		var td2;
-	
-		hideSwitch();	
-		nms.switch_showing = x;
-		document.getElementById("aboutBox").style.display = "none";
-		var switchele = document.createElement("table");
-		switchele.id = "info-switch-table";
-		switchele.className = "table";
-		switchele.classList.add("table");
-		switchele.classList.add("table-condensed");
-		
-		swtitle.innerHTML = x + '<button type="button" class="close" aria-labe="Close" onclick="hideSwitch();" style="float: right;"><span aria-hidden="true">&times;</span></button>';
-		var speed = 0;
-		var speed2 = 0;
-		for (port in nms.switches_now["switches"][x]["ports"]) {
-			if (nms.switches_now["switches"][x]["ports"] == undefined ||
-			    nms.switches_then["switches"][x]["ports"] == undefined) {
-				continue;
-			}
-			if (/ge-0\/0\/44$/.exec(port) ||
-			    /ge-0\/0\/45$/.exec(port) ||
-			    /ge-0\/0\/46$/.exec(port) ||
-			    /ge-0\/0\/47$/.exec(port))
-			 {
-				 var t = nms.switches_then["switches"][x]["ports"][port];
-				 var n = nms.switches_now["switches"][x]["ports"][port];
-				 speed += (parseInt(t["ifhcoutoctets"]) - parseInt(n["ifhcoutoctets"])) / (parseInt(t["time"] - n["time"]));
-				 speed2 += (parseInt(t["ifhcinoctets"]) - parseInt(n["ifhcinoctets"])) / (parseInt(t["time"] - n["time"]));
-			 }
-		}
-
-		tr = switchele.insertRow(-1);
-		td1 = tr.insertCell(0);
-		td2 = tr.insertCell(1);
-		td1.innerHTML = "Uplink speed (out , port 44-47)";
-		td2.innerHTML = byteCount(8 * speed) + "b/s";
-
-		tr = switchele.insertRow(-1);
-		td1 = tr.insertCell(0);
-		td2 = tr.insertCell(1);
-		td1.title = "Port 44, 45, 46 and 47 are used as uplinks.";
-		td1.innerHTML = "Uplink speed (in , port 44-47)";
-		td2.innerHTML = byteCount(8 * speed2) + "b/s";
-
-		speed = 0;
-		for (port in nms.switches_now["switches"][x]["ports"]) {
-			if (nms.switches_now["switches"][x]["ports"] == undefined ||
-			    nms.switches_then["switches"][x]["ports"] == undefined) {
-				continue;
-			}
-			 var t = nms.switches_then["switches"][x]["ports"][port];
-			 var n = nms.switches_now["switches"][x]["ports"][port];
-			 speed += (parseInt(t["ifhcinoctets"]) -parseInt(n["ifhcinoctets"])) / (parseInt(t["time"] - n["time"]));
-		}
-
-		tr = switchele.insertRow(-1);
-		td1 = tr.insertCell(0);
-		td2 = tr.insertCell(1);
-		td1.innerHTML = "Total speed (in)";
-		td2.innerHTML = byteCount(8 * speed) + "b/s";
-
-		speed = 0;
-		for (port in nms.switches_now["switches"][x]["ports"]) {
-			if (nms.switches_now["switches"][x]["ports"] == undefined ||
-			    nms.switches_then["switches"][x]["ports"] == undefined) {
-				continue;
-			}
-			 var t = nms.switches_then["switches"][x]["ports"][port];
-			 var n = nms.switches_now["switches"][x]["ports"][port];
-			 speed += (parseInt(t["ifhcoutoctets"]) -parseInt(n["ifhcoutoctets"])) / (parseInt(t["time"] - n["time"]));
-		}
-
-		tr = switchele.insertRow(-1);
-		td1 = tr.insertCell(0);
-		td2 = tr.insertCell(1);
-		td1.innerHTML = "Total speed (out)";
-		td2.innerHTML = byteCount(8 * speed) + "b/s";
-
-		for (v in sw) { 
-			tr = switchele.insertRow(-1);
-			td1 = tr.insertCell(0);
-			td2 = tr.insertCell(1);
-			td1.innerHTML = v;
-			td2.innerHTML = sw[v];
-		}
-		for (v in swm) { 
-			tr = switchele.insertRow(-1);
-			td1 = tr.insertCell(0);
-			td2 = tr.insertCell(1);
-			td1.innerHTML = v;
-			td2.innerHTML = swm[v];
-		}
-
-		comments = document.createElement("table");
-		comments.id = "info-switch-comments-table";
-		comments.className = "table table-condensed";
-		var cap = document.createElement("caption");
-		cap.textContent = "Comments";
-		comments.appendChild(cap);
-	
-		var has_comment = false;
-		for (var c in sw["comments"]) {
-			var comment = sw["comments"][c];
-			has_comment = true;
-			if (comment["state"] == "active" || comment["state"] == "persist" || comment["state"] == "inactive") {
-				tr = comments.insertRow(-1);
-				var col;
-				if (comment["state"] == "active")
-					col = "danger";
-				else if (comment["state"] == "inactive")
-					col = false;
-				else
-					col = "info";
-				tr.className = col;
-				tr.id = "commentRow" + comment["id"];
-				td1 = tr.insertCell(0);
-				td2 = tr.insertCell(1);
-				td1.style.whiteSpace = "nowrap";
-				td1.style.width = "8em";
-				var txt =  '<div class="btn-group" role="group" aria-label="..."><button type="button" class="btn btn-xs btn-default" data-trigger="focus" data-toggle="popover" title="Info" data-content="Comment added ' + epochToString(comment["time"]) + " by user " + comment["username"] + ' and listed as ' + comment["state"] + '"><span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span></button>';
-				txt += '<button type="button" class="btn btn-xs btn-danger" data-trigger="focus" data-toggle="tooltip" title="Mark as deleted" onclick="commentDelete(' + comment["id"] + ');"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span></button>';
-				txt += '<button type="button" class="btn btn-xs btn-success" data-trigger="focus" data-toggle="tooltip" title="Mark as inactive/fixed" onclick="commentInactive(' + comment["id"] + ');"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span></button>';
-				txt += '<button type="button" class="btn btn-xs btn-info" data-trigger="focus" data-toggle="tooltip" title="Mark as persistent" onclick="commentPersist(' + comment["id"] + ');"><span class="glyphicon glyphicon-star" aria-hidden="true"></span></button></div>';
-				td1.innerHTML = txt;
-				td2.textContent = comment['comment'];
-			}
-		}
-		
-		swtop.appendChild(switchele);
-		if (has_comment) {
-			swtop.appendChild(comments);
-			$(function () { $('[data-toggle="popover"]').popover({placement:"top",continer:'body'}) })
-		}
-		var commentbox = document.createElement("div");
-		commentbox.id = "commentbox";
-		commentbox.className = "panel-body";
-		commentbox.style.width = "100%";
-		commentbox.innerHTML = '<div class="input-group"><input type="text" class="form-control" placeholder="Comment" id="' + x + '-comment"><span class=\"input-group-btn\"><button class="btn btn-default" onclick="addComment(\'' + x + '\',document.getElementById(\'' + x + '-comment\').value); document.getElementById(\'' + x + '-comment\').value = \'\'; document.getElementById(\'' + x + '-comment\').placeholder = \'Comment added. Wait for next refresh.\';">Add comment</button></span></div>';
-		swtop.appendChild(commentbox);
-		swtop.style.display = 'block';
+	if (nms.now && nms.now != 0)
+		return stringToEpoch(nms.now);
+	else
+		return parseInt(Date.now() / 1000);
 }
 
 /*
@@ -611,180 +313,25 @@ function setLegend(x,color,name)
 	el.textContent = name;
 }
 
-function updateAjaxInfo()
-{
-	var out = document.getElementById('outstandingAJAX');
-	var of = document.getElementById('overflowAJAX');
-	out.textContent = nms.outstandingAjaxRequests;
-	of.textContent = nms.ajaxOverflow;
-}
-/*
- * Run periodically to trigger map updates when a handler is active
- */
-function updateMap()
-{
-	/*
-	 * XXX: This a bit hacky: There are a bunch of links that use
-	 * href="#foo" but probably shouldn't. This breaks refresh since we
-	 * base this on the location hash. To circumvent that issue
-	 * somewhat, we just update the location hash if it's not
-	 * "correct".
-	 */
-	if (nms.updater) {
-		if (document.location.hash != ('#' + nms.updater.tag)) {
-			document.location.hash = nms.updater.tag;
-		}
-	}
-	if (!newerSwitches())
-		return;
-	if (!nms.drawn)
-		setScale();
-	if (!nms.drawn)
-		return;
-	if (!nms.ping_data)
-		return;
-	nms.update_time = Date.now();
-	
-	if (nms.updater != undefined && nms.switches_now && nms.switches_then) {
-		nms.updater.updater();
-	}
-	drawNow();
-}
-
 /*
  * Change map handler (e.g., change from uplink map to ping map)
  */
 function setUpdater(fo)
 {
-	nms.updater = undefined;
-	resetColors();
-	resetTextInfo();
+	nmsMap.reset();
+	nmsData.unregisterHandlerWildcard("mapHandler");
 	fo.init();
-	nms.updater = fo;
 	var foo = document.getElementById("updater_name");
 	foo.innerHTML = fo.name + "   ";
 	document.location.hash = fo.tag;
-	initialUpdate();
-	if (nms.ping_data && nms.switches_then && nms.switches_now) {
-		nms.updater.updater();
-	}
 }
 
-/*
- * Helper function for updating switch-data without overwriting existing
- * data with non-existent data
- */
-function updateSwitches(switchdata,target) {
-	target['time'] = switchdata['time'] //Assume we always get time
-
-	if(switchdata.switches != undefined) {
-		for(var sw in switchdata.switches) {
-			if(switchdata.switches[sw]['management'] != undefined)
-				updateSwitchProperty(sw,'management',switchdata.switches[sw]['management'],target);
-			if(switchdata.switches[sw]['ports'] != undefined)
-				updateSwitchProperty(sw,'ports',switchdata.switches[sw]['ports'],target);
-			if(switchdata.switches[sw]['temp'] != undefined)
-				updateSwitchProperty(sw,'temp',switchdata.switches[sw]['temp'],target);
-			if(switchdata.switches[sw]['temp_time'] != undefined)
-				updateSwitchProperty(sw,'temp_time',switchdata.switches[sw]['temp_time'],target);
-			if(switchdata.switches[sw]['placement'] != undefined)
-				updateSwitchProperty(sw,'placement',switchdata.switches[sw]['placement'],target);
-		}
-	}
-}
-/*
- * Helper function for updating a limited subset of switch properties,
- * while the current state of the switch data is unknown.
- */
-function updateSwitchProperty(sw,property,data,target) {
-  if(target.switches[sw] == undefined)
-    target.switches[sw] = {};
-
-  target.switches[sw][property] = data;
-}
-
-/*
- * Helper function for reseting switch state data (and keeping more permanent data)
- */
-function resetSwitchStates() {
-  for (var sw in nms.switches_now.switches) {
-    for (var property in nms.switches_now.switches[sw]) {
-      if (['ports','temp','temp_time'].indexOf(property) > -1) {
-        nms.switches_now.switches[sw][property] = undefined;
-      }
-    }
-  }
-}
-
-/*
- * Convenience function to avoid waiting for pollers when data is available
- * for the first time.
- */
-function initialUpdate()
-{
-	return;
-	if (nms.ping_data && nms.switches_then && nms.switches_now && nms.updater != undefined && nms.did_update == false ) {
-		resizeEvent();
-		if (!nms.drawn) {
-			drawSwitches();
-			drawLinknets();
-		}
-		nms.updater.updater();
-		nms.did_update = true;
-	}
-}
-
-function resetBlur()
-{
-	nms.nightBlur = {};
-	dr.blur.ctx.clearRect(0,0,canvas.width,canvas.height);
-	drawSwitches();
-}
-
-function applyBlur()
-{
-	var blur = document.getElementById("shadowBlur");
-	var col = document.getElementById("shadowColor");
-	nms.shadowBlur = blur.value;
-	nms.shadowColor = col.value;
-	resetBlur();
-	saveSettings();
-}
-
-function showBlurBox()
-{
-	var blur = document.getElementById("shadowBlur");
-	var col = document.getElementById("shadowColor");
-	blur.value = nms.shadowBlur;
-	col.value = nms.shadowColor;
-	document.getElementById("blurManic").style.display = '';
-}
-/*
- * Update nms.ping_data 
- */
-function updatePing()
-{
-	var now = nms.now ? ("?now=" + nms.now) : "";
-	if (nms.outstandingAjaxRequests > 5) {
-		nms.ajaxOverflow++;
-		updateAjaxInfo();
-		return;
-	}
-	nms.outstandingAjaxRequests++;
-	$.ajax({
-		type: "GET",
-		url: "/api/public/ping" + now,
-		dataType: "text",
-		success: function (data, textStatus, jqXHR) {
-			nms.ping_data = JSON.parse(data);
-			initialUpdate();
-			updateMap();
-		},
-		complete: function(jqXHR, textStatus) {
-			nms.outstandingAjaxRequests--;
-			updateAjaxInfo();
-		}
-	});
+function toggleLayer(layer) {
+       var l = document.getElementById(layer);
+       if (l.style.display == 'none')
+               l.style.display = '';
+       else
+               l.style.display = 'none';
 }
 
 function commentInactive(id)
@@ -815,18 +362,14 @@ function commentChange(id,state)
 		comment:id,
 		state:state
 	};
-	var foo = document.getElementById("commentRow" + id);
-	if (foo) {
-		foo.className = '';
-		foo.style.backgroundColor = "silver";
-	}
+	myData = JSON.stringify(myData);
 	$.ajax({
 		type: "POST",
 		url: "/api/private/comment-change",
 		dataType: "text",
 		data:myData,
 		success: function (data, textStatus, jqXHR) {
-			nms.repop_switch = true;
+			nmsData.invalidate("comments");
 		}
 	});
 }
@@ -837,396 +380,19 @@ function addComment(sw,comment)
 		switch:sw,
 		comment:comment
 	};
+	myData = JSON.stringify(myData);
 	$.ajax({
 		type: "POST",
 		url: "/api/private/comment-add",
 		dataType: "text",
 		data:myData,
 		success: function (data, textStatus, jqXHR) {
-			nms.repop_switch = true;
+			nmsData.invalidate("comments");
 		}
 	});
 }
 
-/*
- * Update nms.switches_management
- *
- * FIXME: This isn't actually called from anywhere, only console at the
- * moment.
- */
-function updateSwitchManagement()
-{
-	if (nms.outstandingAjaxRequests > 5) {
-		nms.ajaxOverflow++;
-		updateAjaxInfo();
-		return;
-	}
-	nms.outstandingAjaxRequests++;
-	$.ajax({
-		type: "GET",
-		url: "/api/private/switches-management" ,
-		dataType: "text",
-		success: function (data, textStatus, jqXHR) {
-			var  switchdata = JSON.parse(data);
-			nms.switches_management = switchdata;
-		},
-		complete: function(jqXHR, textStatus) {
-			nms.outstandingAjaxRequests--;
-			updateAjaxInfo();
-		}
-	});
-}
 
-/*
- * Update nms.switches_now and nms.switches_then
- */
-function updatePorts()
-{
-	var now = "";
-	if (nms.outstandingAjaxRequests > 5) {
-		nms.ajaxOverflow++;
-		updateAjaxInfo();
-		return;
-	}
-	nms.outstandingAjaxRequests++;
-	if (nms.now != false)
-		now = "?now=" + nms.now;
-	$.ajax({
-		type: "GET",
-		url: "/api/private/port-state"+ now ,
-		dataType: "text",
-		success: function (data, textStatus, jqXHR) {
-			var  switchdata = JSON.parse(data);
-			updateSwitches(switchdata,nms.switches_now);
-			initialUpdate();
-			updateSpeed();
-			updateMap();
-			if (nms.repop_time == false && nms.repop_switch)
-				nms.repop_time = nms.switches_now.time;
-			else if (nms.repop_switch && nms.switch_showing && nms.repop_time != nms.switches_now.time) {
-				showSwitch(nms.switch_showing,true);
-				nms.repop_switch = false;
-				nms.repop_time = false;
-			}
-		},
-		complete: function(jqXHR, textStatus) {
-			nms.outstandingAjaxRequests--;
-			updateAjaxInfo();
-		}
-	});
-	nms.outstandingAjaxRequests++;
-	$.ajax({
-		type: "GET",
-		url: "/api/public/switches"+ now ,
-		dataType: "text",
-		success: function (data, textStatus, jqXHR) {
-			var switchdata = JSON.parse(data);
-			updateSwitches(switchdata,nms.switches_now);
-			parseIntPlacements();
-		},
-		complete: function(jqXHR, textStatus) {
-			nms.outstandingAjaxRequests--;
-			updateAjaxInfo();
-		}
-	});
-	now="";
-	if (nms.now != false)
-		now = "?now=" + nms.now;
-	nms.outstandingAjaxRequests++;
-	updateAjaxInfo();
-	$.ajax({
-		type: "GET",
-		url: "/api/private/port-state" + now,
-		dataType: "text",
-		success: function (data, textStatus, jqXHR) {
-			var  switchdata = JSON.parse(data);
-			updateSwitches(switchdata,nms.switches_then);
-			initialUpdate();
-			updateSpeed();
-			updateMap();
-		},
-		complete: function(jqXHR, textStatus) {
-			nms.outstandingAjaxRequests--;
-			updateAjaxInfo();
-		}
-	})
-}
-
-/*
- * Returns true if we have now and then-data for switches and that the
- * "now" is actually newer. Useful for basic sanity and avoiding negative
- * values when rewinding time.
- */
-function newerSwitches()
-{
-	if (nms.switches_now.time == undefined || nms.switches_then.time == undefined)
-		return false;
-	var now_timestamp = stringToEpoch(nms.switches_now.time);
-	var then_timestamp = stringToEpoch(nms.switches_then.time);
-	if (now_timestamp == 0 || then_timestamp == 0 || then_timestamp >= now_timestamp)
-		return false;
-	return true;
-}
-/*
- * Use nms.switches_now and nms.switches_then to update 'nms.speed'.
- *
- * nms.speed is a total of ifHCInOctets across all client-interfaces
- * nms.speed_full is a total of for /all/ interfaces.
- *
- * This is run separate of updatePorts mainly for historic reasons, but
- * if it was added to the tail end of updatePorts, there'd have to be some
- * logic to ensure it was run after both requests. Right now, it's just
- * equally wrong for both scenarios, not consistently wrong (or something).
- *
- * FIXME: Err, yeah, add this to the tail-end of updatePorts instead :D
- *
- */
-
-function updateSpeed()
-{
-	var speed_in = parseInt(0);
-	var speed_full = parseInt(0);
-	var counter=0;
-	var sw;
-	var speedele = document.getElementById("speed");
-	if (!newerSwitches())
-		return;
-	for (sw in nms.switches_now["switches"]) {
-		for (port in nms.switches_now["switches"][sw]["ports"]) {
-			if (!nms.switches_now["switches"][sw]["ports"][port]) {
-				console.log("ops");
-				continue;
-			}
-			if (!nms.switches_then || !nms.switches_then["switches"] || !nms.switches_then["switches"][sw] || !nms.switches_then["switches"][sw]["ports"]) {
-				continue;
-			}
-			if (!nms.switches_now || !nms.switches_now["switches"] || !nms.switches_now["switches"][sw] || !nms.switches_now["switches"][sw]["ports"]) {
-				continue;
-			}
-
-			if (!nms.switches_then["switches"][sw]["ports"][port]) {
-				console.log("ops");
-				continue;
-			}
-			var diff = parseInt(parseInt(nms.switches_now["switches"][sw]["ports"][port]["time"]) - parseInt(nms.switches_then["switches"][sw]["ports"][port]["time"]));
-			var then = parseInt(nms.switches_then["switches"][sw]["ports"][port]["ifhcinoctets"])  ;
-			var now =  parseInt(nms.switches_now["switches"][sw]["ports"][port]["ifhcinoctets"]) ;
-			var diffval = (now - then);
-			if (then == 0 || now == 0 || diffval == 0 || diffval == NaN) {
-				continue;
-			}
-			speed_full += parseInt(diffval/diff);
-			if (( /e\d-\d/.exec(sw) || /e\d\d-\d/.exec(sw)) &&  ( /ge-\d\/\d\/\d$/.exec(port) || /ge-\d\/\d\/\d\d$/.exec(port))) {
-				if (!(
-					/ge-0\/0\/44$/.exec(port) ||
-					/ge-0\/0\/45$/.exec(port) ||
-					/ge-0\/0\/46$/.exec(port) ||
-					/ge-0\/0\/47$/.exec(port))) {
-					speed_in += parseInt(diffval/diff) ;
-					counter++;
-				}
-			}
-		}
-	}
-	nms.speed = speed_in;
-	nms.speed_full = speed_full;
-	if (speedele) {
-		speedele.innerHTML = byteCount(8 * parseInt(nms.speed)) + "b/s";
-		speedele.innerHTML += " / " + byteCount(8 * parseInt(nms.speed_full)) + "b/s";
-
-	}
-}
-
-/*
- * Draw a linknet with index i.
- *
- * XXX: Might have to change the index here to match backend
- */
-function drawLinknet(i)
-{
-	var c1 = nms.linknet_color[i] && nms.linknet_color[i].c1 ? nms.linknet_color[i].c1 : blue;
-	var c2 = nms.linknet_color[i] && nms.linknet_color[i].c2 ? nms.linknet_color[i].c2 : blue;
-	if (nms.switches_now.switches[nms.switches_now.linknets[i].sysname1] && nms.switches_now.switches[nms.switches_now.linknets[i].sysname2]) {
-		connectSwitches(nms.switches_now.linknets[i].sysname1,nms.switches_now.linknets[i].sysname2, c1, c2);
-	}
-}
-
-/*
- * Draw all linknets
- */
-function drawLinknets()
-{
-	if (nms.switches_now && nms.switches_now.linknets) {
-		for (var i in nms.switches_now.linknets) {
-			drawLinknet(i);
-		}
-	}
-}
-
-/*
- * Change both colors of a linknet.
- *
- * XXX: Probably have to change this to better match the backend data
- */
-function setLinknetColors(i,c1,c2)
-{
-	if (!nms.linknet_color[i] || 
- 	     nms.linknet_color[i].c1 != c1 ||
-	     nms.linknet_color[i].c2 != c2) {
-		if (!nms.linknet_color[i])
-			nms.linknet_color[i] = {};
-		nms.linknet_color[i]['c1'] = c1;
-		nms.linknet_color[i]['c2'] = c2;
-		drawLinknet(i);
-	}
-}
-
-/*
- * (Re)draw a switch 'sw'.
- *
- * Color defaults to 'blue' if it's not set in the data structure.
- */
-function drawSwitch(sw)
-{
-		var box = nms.switches_now['switches'][sw]['placement'];
-		var color = nms.switch_color[sw];
-		if (color == undefined) {
-			color = blue;
-		}
-		dr.switch.ctx.fillStyle = color;
-		/*
-		 * XXX: This is a left-over from before NMS did separate
-		 * canvases, and might be done better elsewhere.
-		 */
-		if (nms.nightMode && nms.nightBlur[sw] != true) {
-			dr.blur.ctx.shadowBlur = nms.shadowBlur;
-			dr.blur.ctx.shadowColor = nms.shadowColor;
-			drawBoxBlur(box['x'],box['y'],box['width'],box['height']);
-			nms.nightBlur[sw] = true;
-		}
-		drawBox(box['x'],box['y'],box['width'],box['height']);
-		dr.switch.ctx.shadowBlur = 0;
-		if (!nms.textDrawn[sw]) {
-			if ((box['width'] + 10 )< box['height']) {
-				drawSideways(dr.text.ctx, sw,box['x'],box['y'],box['width'],box['height']);
-			} else {
-				drawRegular(dr.text.ctx,sw,box['x'],box['y'],box['width'],box['height']);
-			}
-			
-			nms.textDrawn[sw] = true;
-		}
-}
-
-/*
- * Make sure all placements of switches are parsed as integers so we don't
- * have to pollute the code with pasreInt() every time we use it.
- */
-function parseIntPlacements() {
-	for (var sw in nms.switches_now.switches) {
-		nms.switches_now.switches[sw]['placement']['x'] =
-			parseInt(nms.switches_now.switches[sw]['placement']['x']);
-		nms.switches_now.switches[sw]['placement']['y'] =
-			parseInt(nms.switches_now.switches[sw]['placement']['y']);
-		nms.switches_now.switches[sw]['placement']['width'] =
-			parseInt(nms.switches_now.switches[sw]['placement']['width']);
-		nms.switches_now.switches[sw]['placement']['height'] =
-			parseInt(nms.switches_now.switches[sw]['placement']['height']);
-	}
-}
-
-/*
- * Draw all switches
- */
-function drawSwitches()
-{
-	if (!nms.switches_now || !nms.switches_now.switches)
-		return;
-	for (var sw in nms.switches_now.switches) {
-		drawSwitch(sw);
-	}
-	nms.drawn = true;
-}
-function drawSwitchInfo()
-{
-	if (!nms.switches_now || !nms.switches_now.switches)
-		return;
-	for (var sw in nms.switchInfo) {
-		switchInfoText(sw, nms.switchInfo[sw]);
-	}
-	nms.drawn = true;
-}
-
-/*
- * Draw current time-window
- *
- * FIXME: The math here is just wild approximation and guesswork because
- * I'm lazy.
- */
-function drawNow()
-{
-	if (!nms.switches_now)
-		return;
-	// XXX: Get rid of microseconds that we get from the backend.
-	var now = /^[^.]*/.exec(nms.switches_now.time);
-	dr.top.ctx.font = Math.round(2 * nms.fontSize * canvas.scale) + "px " + nms.fontFace;
-	dr.top.ctx.clearRect(0,0,Math.floor(800 * canvas.scale),Math.floor(100 * canvas.scale));
-	dr.top.ctx.fillStyle = "white";
-	dr.top.ctx.strokeStyle = "black";
-	dr.top.ctx.lineWidth = Math.floor(nms.fontLineFactor * canvas.scale);
-	if (dr.top.ctx.lineWidth == 0) {
-		dr.top.ctx.lineWidth = Math.round(nms.fontLineFactor * canvas.scale);
-	}
-	dr.top.ctx.strokeText(now, 0 + margin.text, 25 * canvas.scale);
-	dr.top.ctx.fillText(now, 0 + margin.text, 25 * canvas.scale);
-}
-/*
- * Draw foreground/scene.
- *
- * FIXME: Review this! This was made before linknets and switches were
- * split apart.
- *
- * This is used so linknets are drawn before switches. If a switch is all
- * that has changed, we just need to re-draw that, but linknets require
- * scene-redrawing.
- */
-function drawScene()
-{
-	dr.text.ctx.font = Math.floor(nms.fontSize * canvas.scale) + "px " + nms.fontFace;
-	dr.textInfo.ctx.font = Math.floor(nms.fontSize * canvas.scale) + "px " + nms.fontFace;
-	drawLinknets();
-	drawSwitches();
-	drawSwitchInfo();
-}
-
-/*
- * Set the scale factor and (re)draw the scene and background.
- * Uses canvas.scale and updates canvas.height and canvas.width.
- */
-function setScale()
-{
-	canvas.height =  orig.height * canvas.scale ;
-	canvas.width = orig.width * canvas.scale ;
-	for (var a in dr) {
-		/*
-		 * Resizing this to a too small size breaks gradients on smaller screens.
-		 */
-		if (a == 'hidden')
-			continue;
-		dr[a].c.height = canvas.height;
-		dr[a].c.width = canvas.width;
-	}
-	nms.nightBlur = {};
-	nms.textDrawn = {};
-	nms.switchInfoDrawn = {};
-	if (nms.gradients)
-		drawGradient(nms.gradients);
-	drawBG();
-	drawScene();
-	drawNow();
-	
-	document.getElementById("scaler").value = canvas.scale;
-	document.getElementById("scaler-text").innerHTML = (parseFloat(canvas.scale)).toPrecision(3);
-}
 
 /*
  * Returns true if the coordinates (x,y) is inside the box defined by
@@ -1246,11 +412,11 @@ function isIn(box, x, y)
  * if none is found.
  */
 function findSwitch(x,y) {
-	x = parseInt(parseInt(x) / canvas.scale);
-	y = parseInt(parseInt(y) / canvas.scale);
+	x = parseInt(parseInt(x) / nmsMap.scale);
+	y = parseInt(parseInt(y) / nmsMap.scale);
 
-	for (var v in nms.switches_now.switches) {
-		if(isIn(nms.switches_now.switches[v]['placement'],x,y)) {
+	for (var v in nmsData.switches.switches) {
+		if(isIn(nmsData.switches.switches[v]['placement'],x,y)) {
 			return v;
 		}
 	}
@@ -1258,118 +424,9 @@ function findSwitch(x,y) {
 }
 
 /*
- * Set switch color of 'sw' to 'c', then re-draw the switch.
- */
-function setSwitchColor(sw, c)
-{
-	if(!nms.switch_color || !nms.switch_color[sw] || nms.switch_color[sw] != c) {
-		nms.switch_color[sw] = c;
-		drawSwitch(sw);
-	}
-}
-
-/*
- * Event handler for the front-end drag bar to change scale
- */
-function scaleChange()
-{
-	var scaler = document.getElementById("scaler").value;
-	canvas.scale = scaler;
-	setScale();
-}
-
-/*
- * Called when a switch is clicked
- */
-function switchClick(sw)
-{
-	if (nms.switch_showing == sw)
-		hideSwitch();
-	else
-		showSwitch(sw);
-}
-
-/*
- * Resets the colors of linknets and switches.
- *
- * Useful when mode changes so we don't re-use colors from previous modes
- * due to lack of data or bugs.
- */
-function resetColors()
-{
-	if (!nms.switches_now)
-		return;
-	if (nms.switches_now.linknets) {
-		for (var i in nms.switches_now.linknets) {
-			setLinknetColors(i, blue,blue);
-		}
-	}
-	for (var sw in nms.switches_now.switches) {
-		setSwitchColor(sw, blue);
-	}
-}
-
-function resetTextInfo()
-{
-	if (!nms.switches_now)
-		return;
-	for (var sw in nms.switches_now.switches) {
-		switchInfoText(sw, undefined);
-	}
-
-}
-/*
- * onclick handler for the canvas.
- *
- * Currently just shows info for a switch.
- */
-function canvasClick(e)
-{
-	var sw = findSwitch(e.pageX - e.target.offsetLeft, e.pageY - e.target.offsetTop);
-	if (sw != undefined) {
-		switchClick(sw);
-	}
-}
-
-/*
- * Resize event-handler.
- *
- * Recomputes the scale and applies it.
- *
- * Has to use c.offset* since we are just scaling the canvas, not
- * everything else.
- *
- */
-function resizeEvent()
-{
-	var width = window.innerWidth - dr.bg.c.offsetLeft;
-	var height = window.innerHeight - dr.bg.c.offsetTop;
-	if (width / (orig.width + margin.x) > height  /  (orig.height + margin.y)) {
-		canvas.scale = height / (orig.height + margin.y);
-	} else {
-		canvas.scale = width / (orig.width + margin.x);
-	}
-	setScale();
-}
-
-/*
- * Draws the background image (scaled).
- */
-function drawBG()
-{
-	if (nms.nightMode) {
-		invertCanvas();
-	} else {
-		var image = document.getElementById('source');
-		dr.bg.ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
-	}
-}
-
-/*
  * Set night mode to whatever 'toggle' is.
- * 
- * XXX: setScale() is a bit of a hack, but it really is the same stuff we
- * need to do: Redraw "everything" (not really).
+ *
+ * Changes background and nav-bar, then leaves the rest to nmsMap.
  */
 function setNightMode(toggle) {
 	nms.nightMode = toggle;
@@ -1377,184 +434,34 @@ function setNightMode(toggle) {
 	body.style.background = toggle ? "black" : "white";
 	var nav = document.getElementsByTagName("nav")[0];
 	if (toggle) {
-		dr.blur.c.style.display = '';
 		nav.classList.add('navbar-inverse');
 	} else {
-		dr.blur.c.style.display = 'none';
 		nav.classList.remove('navbar-inverse');
 	}
-	setScale();
-}
-
-function switchInfoText(sw, text)
-{
-	var box = nms.switches_now['switches'][sw]['placement'];
-	var c = canvas.scale;
-	if (nms.switchInfo[sw] == text && nms.switchInfoDrawn[sw]) {
-		return;
-	}
-	nms.switchInfo[sw] = text;
-	nms.switchInfoDrawn[sw] = true;
-	dr.textInfo.ctx.clearRect(c* box['x'], c*box['y'], c*box['width'], c*box['height']);
-	if (text != undefined && text != "") {
-		if ((box['width'] + 10 )< box['height']) {
-			drawSideways(dr.textInfo.ctx, text,box['x'],box['y'],box['width'],box['height'],"end");
-		} else {
-			drawRegular(dr.textInfo.ctx, text,box['x'],box['y'],box['width'],box['height'],"end");
-		}
-	}
-}
-
-/*
- * Draw a box (e.g.: switch).
- */
-function drawBox(x,y,boxw,boxh)
-{
-	var myX = Math.floor(x * canvas.scale);
-	var myY = Math.floor(y * canvas.scale);
-	var myX2 = Math.floor((boxw) * canvas.scale);
-	var myY2 = Math.floor((boxh) * canvas.scale);
-	dr.switch.ctx.fillRect(myX,myY, myX2, myY2);
-	dr.switch.ctx.lineWidth = Math.floor(1.0 * canvas.scale);
-	if (canvas.scale < 1.0) {
-		dr.switch.ctx.lineWidth = 1.0;
-	}
-	dr.switch.ctx.strokeStyle = "#000000";
-	dr.switch.ctx.strokeRect(myX,myY, myX2, myY2);
-}
-
-/*
- * Draw the blur for a box.
- */
-function drawBoxBlur(x,y,boxw,boxh)
-{
-	var myX = Math.floor(x * canvas.scale);
-	var myY = Math.floor(y * canvas.scale);
-	var myX2 = Math.floor((boxw) * canvas.scale);
-	var myY2 = Math.floor((boxh) * canvas.scale);
-	dr.blur.ctx.fillRect(myX,myY, myX2, myY2);
-}
-/*
- * Draw text on a box - sideways!
- *
- * XXX: This is pretty nasty and should also probably take a box as input.
- */
-function drawSideways(ctx,text,x,y,w,h,align)
-{
-	ctx.rotate(Math.PI * 3 / 2);
-	ctx.fillStyle = "white";
-	ctx.strokeStyle = "black";
-	if (align == "end") {
-		ctx.textAlign = align;
-		y = y-h + margin.text*2;
-	} else {
-		ctx.textAlign = "start";
-	}
-	ctx.lineWidth = Math.floor(nms.fontLineFactor * canvas.scale);
-	if (ctx.lineWidth == 0) {
-		ctx.lineWidth = Math.round(nms.fontLineFactor * canvas.scale);
-	}
-	ctx.strokeText(text, - canvas.scale * (y + h - margin.text),canvas.scale * (x + w - margin.text) );
-	ctx.fillText(text, - canvas.scale * (y + h - margin.text),canvas.scale * (x + w - margin.text) );
-
-	ctx.rotate(Math.PI / 2);
-}
-
-/*
- * Draw background inverted (wooo)
- *
- * XXX: This is broken for chromium on local file system (e.g.: file:///)
- * Seems like a chromium bug?
- */
-function invertCanvas() {
-	var imageObj = document.getElementById('source');
-	dr.bg.ctx.drawImage(imageObj, 0, 0, canvas.width, canvas.height);
-
-	var imageData = dr.bg.ctx.getImageData(0, 0, canvas.width, canvas.height);
-	var data = imageData.data;
-
-	for(var i = 0; i < data.length; i += 4) {
-		data[i] = 255 - data[i];
-		data[i + 1] = 255 - data[i + 1];
-		data[i + 2] = 255 - data[i + 2];
-	}
-	dr.bg.ctx.putImageData(imageData, 0, 0);
-}
-
-/*
- * Draw regular text on a box.
- *
- * Should take the same format as drawSideways()
- *
- * XXX: Both should be renamed to have 'text' or something in them
- */
-function drawRegular(ctx,text,x,y,w,h,align) {
-
-	ctx.fillStyle = "white";
-	ctx.strokeStyle = "black";
-	ctx.lineWidth = Math.floor(nms.fontLineFactor * canvas.scale);
-	if (align == "end") {
-		ctx.textAlign = align;
-		x = x+w - margin.text*2;
-	} else {
-		ctx.textAlign = "start";
-	}
-	if (ctx.lineWidth == 0) {
-		ctx.lineWidth = Math.round(nms.fontLineFactor * canvas.scale);
-	}
-	ctx.strokeText(text, (x + margin.text) * canvas.scale, (y + h - margin.text) * canvas.scale);
-	ctx.fillText(text, (x + margin.text) * canvas.scale, (y + h - margin.text) * canvas.scale);
-}
-
-/*
- * Draw a line between switch "insw1" and "insw2", using a gradiant going
- * from color1 to color2.
- *
- * XXX: beginPath() and closePath() is needed to avoid re-using the
- * gradient/color 
- */
-function connectSwitches(insw1, insw2,color1, color2) {
-	var sw1 = nms.switches_now.switches[insw1].placement;
-	var sw2 = nms.switches_now.switches[insw2].placement;
-	if (color1 == undefined)
-		color1 = blue;
-	if (color2 == undefined)
-		color2 = blue;
-	var x0 = Math.floor((sw1.x + sw1.width/2) * canvas.scale);
-	var y0 = Math.floor((sw1.y + sw1.height/2) * canvas.scale);
-	var x1 = Math.floor((sw2.x + sw2.width/2) * canvas.scale);
-	var y1 = Math.floor((sw2.y + sw2.height/2) * canvas.scale);
-	var gradient = dr.link.ctx.createLinearGradient(x1,y1,x0,y0);
-	gradient.addColorStop(0, color1);
-	gradient.addColorStop(1, color2);
-	dr.link.ctx.beginPath();
-	dr.link.ctx.strokeStyle = gradient;
-	dr.link.ctx.moveTo(x0,y0);
-	dr.link.ctx.lineTo(x1,y1); 
-	dr.link.ctx.lineWidth = Math.floor(5 * canvas.scale);
-	dr.link.ctx.closePath();
-	dr.link.ctx.stroke();
-	dr.link.ctx.moveTo(0,0);
+	nmsMap.setNightMode(toggle);
 }
 
 /*
  * Boot up "fully fledged" NMS.
  *
- * If you only want parts of the functionality, then re-implement this
- * (e.g., just add and start the handlers you want, don't worry about
- * drawing, etc).
+ * This can be re-written to provide different looks and feels but using
+ * the same framework. Or rather: that's the goal. We're not quite there
+ * yet.
  */
 function initNMS() {
-	initDrawing();
-	window.addEventListener('resize',resizeEvent,true);
-	document.addEventListener('load',resizeEvent,true);
-	
-	nms.timers.ports = new nmsTimer(updatePorts, 1000, "Port updater", "AJAX request to update port data (traffic, etc)");
-	
-	nms.timers.ping = new nmsTimer(updatePing, 1000, "Ping updater", "AJAX request to update ping data");
-	
 	nms.timers.playback = new nmsTimer(nms.playback.tick, 1000, "Playback ticker", "Handler used to advance time");
 	
+	// Public
+	nmsData.registerSource("ping", "/api/public/ping");
+	nmsData.registerSource("switches","/api/public/switches");
+	nmsData.registerSource("switchstate","/api/public/switch-state");
+
+	// Private	
+	nmsData.registerSource("portstate","/api/private/port-state");
+	nmsData.registerSource("comments", "/api/private/comments");
+	nmsData.registerSource("smanagement","/api/private/switches-management");
+
+	nmsMap.init();
 	detectHandler();
 	nms.playback.play();
 	setupKeyhandler();
@@ -1572,91 +479,12 @@ function detectHandler() {
 	setUpdater(handler_ping);
 }
 
-/*
- * Display and populate the dialog box for debugging timers.
- *
- * Could probably be cleaned up.
- */
-function showTimerDebug() {
-	var tableTop = document.getElementById('debugTimers');
-	var table = document.getElementById('timerTable');
-	var tr, td1, td2;
-	if (table)
-		tableTop.removeChild(table);
-	table = document.createElement("table");
-	table.id = "timerTable";
-	table.style.zIndex = 100;
-	table.className = "table";
-	table.classList.add("table");
-	table.classList.add("table-default");
-	var header = table.createTHead();
-	tr = header.insertRow(0);
-	td = tr.insertCell(0);
-	td.innerHTML = "Handler";
-	td = tr.insertCell(1);
-	td.innerHTML = "Interval (ms)";
-	td = tr.insertCell(2);
-	td.innerHTML = "Name";
-	td = tr.insertCell(3);
-	td.innerHTML = "Description";
-	for (var v in nms.timers) {
-		tr = table.insertRow(-1);
-		td = tr.insertCell(0);
-		td.textContent = nms.timers[v].handle;
-		td = tr.insertCell(1);
-		td.style.width = "15em";
-		var tmp = "<div class=\"input-group\"><input type=\"text\" id='handlerValue" + v + "' value='" + nms.timers[v].interval + "' class=\"form-control\"></input>";
-		tmp += "<span class=\"input-group-btn\"><button type=\"button\" class=\"btn btn-default\" onclick=\"nms.timers['" + v + "'].setInterval(document.getElementById('handlerValue" + v + "').value);\">Apply</button></span></div>";
-		td.innerHTML = tmp;
-		td = tr.insertCell(2);
-		td.textContent = nms.timers[v].name;
-		td = tr.insertCell(3);
-		td.textContent = nms.timers[v].description;
-	}
-	tableTop.appendChild(table);
-	document.getElementById('debugTimers').style.display = 'block'; 
-}
-
-function hideLayer(layer) {
-	var l = document.getElementById(layer);
-	l.style.display = "none";
-	if (layer != "layerVisibility")
-		nms.layerVisibility[layer] = false;
-	saveSettings();
-}
-
-function showLayer(layer) {
-	var l = document.getElementById(layer);
-	l.style.display = "";
-	if (layer != "layerVisibility")
-		nms.layerVisibility[layer] = true;
-	saveSettings();
-}
-
-function toggleLayer(layer) {
-	var l = document.getElementById(layer);
-	if (l.style.display == 'none')
-		l.style.display = '';
-	else
-		l.style.display = 'none';
-}
-
-function applyLayerVis()
-{
-	for (var l in nms.layerVisibility) {
-		var layer = document.getElementById(l);
-		if (layer)
-			layer.style.display = nms.layerVisibility[l] ? '' : 'none';
-	}
-}
-
 function setMenu()
 {
 	var nav = document.getElementsByTagName("nav")[0];
 	nav.style.display = nms.menuShowing ? '' : 'none';
-	resizeEvent();
-
 }
+
 function toggleMenu()
 {
 	nms.menuShowing = ! nms.menuShowing;
@@ -1718,13 +546,6 @@ function moveTimeFromKey(e,key)
 	return true;
 }
 
-var debugEvent;
-function keyDebug(e)
-{
-	console.log(e);
-	debugEvent = e;
-}
-
 function keyPressed(e)
 {
 	if (e.target.nodeName == "INPUT") {
@@ -1778,42 +599,33 @@ function restoreSettings()
 	for (var v in retrieve) {
 		nms[v] = retrieve[v];
 	}
-	setScale();
 	setMenu();
-	setNightMode(nms.nightMode);
-	applyLayerVis();
-}
-
-function forgetSettings()
-{
-	document.cookie = 'nms=' + btoa('{}');
 }
 
 /*
  * Time travel gui
  */
-var datepicker;
 function startNowPicker(now) {
-  $.datetimepicker.setLocale('no');
-  $('#nowPicker').datetimepicker('destroy');
-  if(!now && nms.now)
-    now = nms.now;
-  datepicker = $('#nowPicker').datetimepicker({
-    value: now,
-    mask:false,
-    inline:true,
-    todayButton: false,
-    validateOnBlur:false,
-    dayOfWeekStart:1,
-    maxDate:'+1970/01/01',
-    onSelectDate: function(ct,$i){
-      document.getElementById('nowPicker').dataset.iso = localEpochToString(ct.valueOf()/1000);
-    },
-    onSelectTime: function(ct,$i){
-      document.getElementById('nowPicker').dataset.iso = localEpochToString(ct.valueOf()/1000);
-    },
-    onGenerate: function(ct,$i){
-      document.getElementById('nowPicker').dataset.iso = localEpochToString(ct.valueOf()/1000);
-    }
-  });
+	$.datetimepicker.setLocale('no');
+	$('#nowPicker').datetimepicker('destroy');
+	if(!now && nms.now)
+		now = nms.now;
+	var datepicker = $('#nowPicker').datetimepicker({
+		value: now,
+		mask:false,
+		inline:true,
+		todayButton: false,
+		validateOnBlur:false,
+		dayOfWeekStart:1,
+		maxDate:'+1970/01/01',
+		onSelectDate: function(ct,$i){
+			document.getElementById('nowPicker').dataset.iso = localEpochToString(ct.valueOf()/1000);
+		},
+		onSelectTime: function(ct,$i){
+			document.getElementById('nowPicker').dataset.iso = localEpochToString(ct.valueOf()/1000);
+		},
+		onGenerate: function(ct,$i){
+			document.getElementById('nowPicker').dataset.iso = localEpochToString(ct.valueOf()/1000);
+		}
+	});
 }

@@ -7,12 +7,15 @@ use DBI;
 use Data::Dumper;
 use JSON;
 use nms;
+use Digest::SHA;
+use FreezeThaw;
+use URI::Escape;
 package nms::web;
 
 use base 'Exporter';
 our %get_params;
 our %json;
-our @EXPORT = qw(finalize_output json dbh db_safe_quote %get_params get_input %json);
+our @EXPORT = qw(finalize_output json $dbh db_safe_quote %get_params get_input %json);
 our $dbh;
 our $now;
 our $when;
@@ -62,10 +65,12 @@ sub setwhen {
 
 sub finalize_output {
 	my $query;
-	$query = $dbh->prepare ('select ' . $now . ' as time;');
+	my $hash = Digest::SHA::sha512_base64(FreezeThaw::freeze(%json));
+	$query = $dbh->prepare('select to_char(' . $now . ', \'YYYY-MM-DD"T"HH24:MI:SS\') as time;');
 	$query->execute();
 
 	$json{'time'} = $query->fetchrow_hashref()->{'time'};
+	$json{'hash'} = $hash;
 	printcc;
 
 	print "Content-Type: text/jso; charset=utf-8\n\n";
@@ -74,9 +79,10 @@ sub finalize_output {
 }
 
 sub populate_params {
-	foreach my $hdr (split("&",$ENV{'QUERY_STRING'} || "")) {
+	my $querystring = $ENV{'QUERY_STRING'} || "";
+	foreach my $hdr (split("&",$querystring)) {
 		my ($key, $value) = split("=",$hdr,"2");
-		$get_params{$key} = $value;
+		$get_params{$key} = URI::Escape::uri_unescape($value);
 	}
 }
 

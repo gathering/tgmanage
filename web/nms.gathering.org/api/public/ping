@@ -22,4 +22,6 @@ while (my $ref = $lq->fetchrow_hashref()) {
 
 $q->execute();
 
+$nms::web::cc{'max-age'} = "1";
+$nms::web::cc{'stale-while-revalidate'} = "5";
 finalize_output();

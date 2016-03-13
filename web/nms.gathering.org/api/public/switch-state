@@ -41,4 +41,6 @@ while (my $ref = $qs->fetchrow_hashref()) {
 	$nms::web::json{'switches'}{$ref->{'switch'}}{'latency_secondary'} = $ref->{'latency_ms'};
 }
 
+$nms::web::cc{'max-age'} = "5";
+$nms::web::cc{'stale-while-revalidate'} = "30";
 finalize_output();
