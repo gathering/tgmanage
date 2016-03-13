@@ -140,6 +140,30 @@ nmsInfoBox._makeCommentTable = function(content) {
 }
 
 /*
+ * FIXME: Not sure this belongs here, it's really part of the "Core" ui,
+ * not just the infobox.
+ */
+nmsInfoBox._search = function() {
+	var el = document.getElementById("searchbox");
+	var id = false;
+	if (el) {
+		id = el.value;
+	}
+	if (id && nmsData.switches.switches[id] != undefined) {
+		nmsMap.setSwitchColor(id, "pink");
+		el.parentElement.classList.remove("has-error");
+		el.parentElement.classList.add("has-success");
+		setTimeout(function(){
+			nmsInfoBox.show(id);
+			var el = document.getElementById("searchbox");
+			el.parentElement.classList.remove("has-success");
+			},1000);
+	} else {
+		el.parentElement.classList.add("has-error");
+	}
+}
+
+/*
  * Display info on switch "x" in the info-box
  *
  * Use nmsInfoBox.show(), otherwise changes wont be picked up.
@@ -152,6 +176,7 @@ nmsInfoBox._show = function(x)
 	var swpanel = document.getElementById("info-switch-panel-body");
 	var swtitle = document.getElementById("info-switch-title");
 	var content = [];
+
 	
 	nmsInfoBox._hide();	
 	nmsInfoBox._showing = x;
@@ -267,10 +292,18 @@ nmsInfoBox._edit = function(sw) {
 nmsInfoBox._editChange = function(sw, v) {
 	var el = document.getElementById("edit-" + sw + "-" + v);
 	var val = el.value;
-	if (v == "placement")
-		val = JSON.parse(val);
+	if (v == "placement") {
+		try {
+			val = JSON.parse(val);
+			el.parentElement.classList.remove("has-error");
+			el.parentElement.classList.add("has-success");
+		} catch (e) {
+			el.parentElement.classList.add("has-error");
+			return;
+		}
+	}
 	nmsInfoBox._editValues[v] = val;
-	el.classList.add("bg-warning");
+	el.classList.add("has-warning");
 	var myData = nmsInfoBox._editStringify(sw);
 	var out = document.getElementById("edit-output");
 	out.value = myData;
