@@ -82,18 +82,18 @@
 	    <li><p id="updater_name" class="navbar-text"></p></li>
 	    <div class="navbar-form navbar-left">
 	      <div class="form-group">
-		<button class="btn btn-default btn-xs" id="legend-1"></button>
-		<button class="btn btn-default btn-xs" id="legend-2"></button>
-		<button class="btn btn-default btn-xs" id="legend-3"></button>
-		<button class="btn btn-default btn-xs" id="legend-4"></button>
-		<button class="btn btn-default btn-xs" id="legend-5"></button>
+		<button class="btn btn-default btn-sm" id="legend-1"></button>
+		<button class="btn btn-default btn-sm" id="legend-2"></button>
+		<button class="btn btn-default btn-sm" id="legend-3"></button>
+		<button class="btn btn-default btn-sm" id="legend-4"></button>
+		<button class="btn btn-default btn-sm" id="legend-5"></button>
 	      </div>
-	      	<div class="form-group">
-	      <div class="form-inline">
-		  <input id="searchbox" type="text" class="form-control" placeholder="Search" onchange="nmsInfoBox._search()" />
-		  <button class="btn" onclick="nmsInfoBox._search();">Search</button>
+	      <div class="input-group input-group-sm">
+		<input id="searchbox" type="text" class="form-control" placeholder="Search" oninput="nmsInfoBox._search()" />
+		  <span class="input-group-btn">
+		  <button class="btn btn-default" type="button" onclick="nmsInfoBox.show(document.getElementById('searchbox').value);">Go!</button>
+		</span>
 	      </div>
-		</div>
 	    </div>
 	    </li>
 	  </ul>

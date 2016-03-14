@@ -150,14 +150,24 @@ nmsInfoBox._search = function() {
 		id = el.value;
 	}
 	if (id && nmsData.switches.switches[id] != undefined) {
-		nmsMap.setSwitchColor(id, "pink");
+		nmsMap.setSwitchColor(id, "red");
+		window.setTimeout(function(){
+			nmsMap.setSwitchColor(id, "pink");
+			window.setTimeout(function(){
+				nmsMap.setSwitchColor(id, "red");
+				window.setTimeout(function(){
+					nmsMap.setSwitchColor(id, "pink");
+					window.setTimeout(function(){
+						nmsMap.setSwitchColor(id, "red");
+						window.setTimeout(function(){
+							nmsMap.setSwitchColor(id, "pink");
+						},300);
+					},300);
+				},300);
+			},300);
+		},300);
 		el.parentElement.classList.remove("has-error");
 		el.parentElement.classList.add("has-success");
-		setTimeout(function(){
-			nmsInfoBox.show(id);
-			var el = document.getElementById("searchbox");
-			el.parentElement.classList.remove("has-success");
-			},1000);
 	} else {
 		el.parentElement.classList.add("has-error");
 	}
