@@ -168,6 +168,18 @@ nmsData.unregisterHandler = function(name, id) {
  * after a comment is posted).
  */
 nmsData.updateSource = function(name) {
+	/*
+	 * See comment in nms.js nmsINIT();
+	 */
+	if (name == "ticker" ) {
+		for (var i in nmsData._sources[name].cbs) {
+			var tmp = nmsData._sources[name].cbs[i];
+			if (tmp.cb != undefined) {
+				tmp.cb(tmp.cbdata);
+			}
+		}
+		return;
+	}
 	this._genericUpdater(name, true);
 }
 

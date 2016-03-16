@@ -52,15 +52,20 @@ sub db_safe_quote {
 
 # returns a valid $when statement
 # Also sets cache-control headers if time is overridden
+# This can be called explicitly to override the window of time we evaluate.
+# Normally up to 15 minutes old data will be returned, but for some API
+# endpoints it is better to return no data than old data (e.g.: ping).
 sub setwhen {
-	my $when;
 	$now = "now()";
+	my $window = '15m';
+	if (@_ == 1) {
+		$window = $_[0];
+	}
 	if (defined($get_params{'now'})) {
 		$now = db_safe_quote('now') . "::timestamp ";
 		$cc{'max-age'} = "3600";
 	}
-	$when = " time > " . $now . " - '15m'::interval and time < " . $now . " ";
-	return $when;
+	$when = " time > " . $now . " - '".$window."'::interval and time < " . $now . " ";
 }
 
 sub finalize_output {
@@ -93,6 +98,6 @@ BEGIN {
 
 	$dbh = nms::db_connect();
 	populate_params();
-	$when = setwhen();
+	setwhen();
 }
 1;

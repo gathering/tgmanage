@@ -46,6 +46,7 @@ while (1) {
 		next if (!defined($switch));
 
 		$latency //= "\\N";
+		$latency*=1000;
 		$dbh->pg_putcopydata("$switch\t$latency\n");
 	}
 	$dbh->pg_putcopyend();

@@ -162,9 +162,6 @@ function trafficUpdater()
 	}
 }
 
-/*
- * Init-function for uplink map
- */
 function trafficTotInit()
 {
 	var m = 1024 * 1024 / 8;
@@ -250,23 +247,20 @@ function tempInit()
 
 function pingUpdater()
 {
-	if (!nms.ping_data || !nms.ping_data["switches"]) {
+	if (nmsData.switches == undefined || nmsData.switches.switches == undefined) {
 		return;
 	}
-	for (var sw in nms.switches_now["switches"]) {
-		var c = blue;
-		if (nms.ping_data['switches'] && nms.ping_data['switches'][sw])
-			c = gradient_from_latency(nms.ping_data["switches"][sw]["latency"]);
-		setSwitchColor(sw, c);
-	}
-	for (var ln in nms.switches_now["linknets"]) {
-		var c1 = blue;
-		var c2 = c1;
-		if (nms.ping_data['linknets'] && nms.ping_data['linknets'][ln]) {
-			c1 = gradient_from_latency(nms.ping_data["linknets"][ln][0]);
-			c2 = gradient_from_latency(nms.ping_data["linknets"][ln][1]);
+	for (var sw in nmsData.switches.switches) {
+		try {
+			if (nmsData.ping.switches[sw].age > 0) {
+				c = red;
+			} else {
+				c = gradient_from_latency(nmsData.ping.switches[sw].latency);
+			}
+			nmsMap.setSwitchColor(sw, c);
+		} catch (e) {
+			nmsMap.setSwitchColor(sw, blue);
 		}
-		setLinknetColors(ln, c1, c2);
 	}
 }
 
@@ -278,6 +272,9 @@ function pingInit()
 	setLegend(3,gradient_from_latency(60),"60ms");	
 	setLegend(4,gradient_from_latency(100),"100ms");	
 	setLegend(5,gradient_from_latency(undefined) ,"No response");	
+	nmsData.addHandler("ping","mapHandler",pingUpdater);
+	nmsData.addHandler("switches","mapHandler",pingUpdater);
+	nmsData.addHandler("ticker", "mapHandler", pingUpdater);
 }
 
 function commentUpdater()

@@ -320,7 +320,17 @@ function setUpdater(fo)
 {
 	nmsMap.reset();
 	nmsData.unregisterHandlerWildcard("mapHandler");
-	fo.init();
+	try {
+		fo.init();
+	} catch (e) {
+		/*
+		 * This can happen typically on initial load where the data
+		 * hasn't been retrieved yet. Instead of breaking the
+		 * entire init-process, just bail out here.
+		 */
+		console.log("Possibly broken handler: " + fo.name);
+		console.log(e);
+	}
 	var foo = document.getElementById("updater_name");
 	foo.innerHTML = fo.name + "   ";
 	document.location.hash = fo.tag;
@@ -455,6 +465,13 @@ function initNMS() {
 	nmsData.registerSource("ping", "/api/public/ping");
 	nmsData.registerSource("switches","/api/public/switches");
 	nmsData.registerSource("switchstate","/api/public/switch-state");
+	
+	// This is a magic dummy-source, it's purpose is to give a unified
+	// way to get ticks every second. It is mainly meant to allow map
+	// handlers to register for ticks so they will execute without data
+	// (and thus notice stale data instead of showing a green ping-map
+	// despite no pings)
+	nmsData.registerSource("ticker","bananabananbanana");
 
 	// Private	
 	nmsData.registerSource("snmp","/api/private/snmp");
