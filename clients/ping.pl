@@ -13,7 +13,7 @@ my $dbh = nms::db_connect();
 $dbh->{AutoCommit} = 0;
 $dbh->{RaiseError} = 1;
 
-my $q = $dbh->prepare("SELECT switch,ip,secondary_ip FROM switches WHERE ip<>'127.0.0.1'");
+my $q = $dbh->prepare("SELECT switch,ip,secondary_ip FROM switches WHERE ip is not null");
 my $lq = $dbh->prepare("SELECT linknet,addr1,addr2 FROM linknets");
 
 while (1) {
@@ -36,7 +36,6 @@ while (1) {
 			$ping->host_add($secondary_ip);
 			$secondary_ip_to_switch{$secondary_ip} = $switch;
 		}
-		print "ip: $ip\n";
 	}
 	my $result = $ping->ping();
 	die $ping->get_error if (!defined($result));
@@ -73,18 +72,19 @@ while (1) {
 		$ping->host_add($ref->{'addr1'});
 		$ping->host_add($ref->{'addr2'});
 	}
-	$result = $ping->ping();
-	die $ping->get_error if (!defined($result));
+	if (@linknets) { 
+		$result = $ping->ping();
+		die $ping->get_error if (!defined($result));
 
-	$dbh->do('COPY linknet_ping (linknet, latency1_ms, latency2_ms) FROM STDIN');  # date is implicitly now.
-	for my $linknet (@linknets) {
-		my $id = $linknet->{'linknet'};
-		my $latency1 = $result->{$linknet->{'addr1'}} // '\N';
-		my $latency2 = $result->{$linknet->{'addr2'}} // '\N';
-		$dbh->pg_putcopydata("$id\t$latency1\t$latency2\n");
+		$dbh->do('COPY linknet_ping (linknet, latency1_ms, latency2_ms) FROM STDIN');  # date is implicitly now.
+			for my $linknet (@linknets) {
+				my $id = $linknet->{'linknet'};
+				my $latency1 = $result->{$linknet->{'addr1'}} // '\N';
+				my $latency2 = $result->{$linknet->{'addr2'}} // '\N';
+				$dbh->pg_putcopydata("$id\t$latency1\t$latency2\n");
+			}
+		$dbh->pg_putcopyend();
 	}
-	$dbh->pg_putcopyend();
 	$dbh->commit;
-	
 }
 

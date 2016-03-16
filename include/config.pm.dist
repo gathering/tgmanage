@@ -10,8 +10,10 @@ our $db_host = "gerald.tg15.gathering.org";
 our $db_username = "nms";
 our $db_password = "<removed>";
 
-# NMS hash used for public NMS obfuscation of interface names
-our $nms_hash = "<removed>";
+# NMS: What SNMP objects to fetch.
+our @snmp_objects = [['ifTable'], ['ifXTable'], ['sysDescr'], ['sysName'],['ipForward']];
+# Max SNMP polls to fire off at the same time.
+our $snmp_max = 20;
 
 # DHCP-servers
 our $dhcp_server1 = "185.12.59.66"; # primary

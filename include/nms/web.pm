@@ -59,13 +59,14 @@ sub setwhen {
 		$now = db_safe_quote('now') . "::timestamp ";
 		$cc{'max-age'} = "3600";
 	}
-	$when = " time > " . $now . " - '5m'::interval and time < " . $now . " ";
+	$when = " time > " . $now . " - '15m'::interval and time < " . $now . " ";
 	return $when;
 }
 
 sub finalize_output {
 	my $query;
 	my $hash = Digest::SHA::sha512_base64(FreezeThaw::freeze(%json));
+	$dbh->commit;
 	$query = $dbh->prepare('select to_char(' . $now . ', \'YYYY-MM-DD"T"HH24:MI:SS\') as time;');
 	$query->execute();
 
