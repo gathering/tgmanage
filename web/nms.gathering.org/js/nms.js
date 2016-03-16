@@ -475,7 +475,6 @@ function initNMS() {
 
 	// Private	
 	nmsData.registerSource("snmp","/api/private/snmp");
-	nmsData.registerSource("portstate","/api/private/port-state");
 	nmsData.registerSource("comments", "/api/private/comments");
 	nmsData.registerSource("smanagement","/api/private/switches-management");
 
