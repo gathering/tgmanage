@@ -14,7 +14,7 @@ our $db_password = "<removed>";
 # Some basics
 our @snmp_objects = [
 ['ifIndex'],
-['sysNam'],
+['sysName'],
 ['sysDescr'],
 ['ifHighSpeed'],
 ['ifType'],
