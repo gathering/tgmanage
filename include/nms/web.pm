@@ -77,8 +77,10 @@ sub finalize_output {
 
 	$json{'time'} = $query->fetchrow_hashref()->{'time'};
 	$json{'hash'} = $hash;
+	
 	printcc;
-
+	
+	print "Etag: $hash\n";
 	print "Content-Type: text/jso; charset=utf-8\n\n";
 	print JSON::XS::encode_json(\%json);
 	print "\n";
