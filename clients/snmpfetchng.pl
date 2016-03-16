@@ -103,7 +103,11 @@ sub inner_loop
 					  Community => $switch{'community'},
 					  UseEnums => 1,
 					  Version => '2');
-		$s->bulkwalk(0, 10, @nms::config::snmp_objects, sub{ callback(\%switch, @_); });
+		my $ret = $s->bulkwalk(0, 10, @nms::config::snmp_objects, sub{ callback(\%switch, @_); });
+		if (!defined($ret)) {
+			mylog("Fudge: ".  $s->{'ErrorStr'});
+			$outstanding--;
+		}
 	}
 	mylog( "Polling " . @switches . " switches: $poll_todo");
 	SNMP::MainLoop(5);

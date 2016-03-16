@@ -11,7 +11,28 @@ our $db_username = "nms";
 our $db_password = "<removed>";
 
 # NMS: What SNMP objects to fetch.
-our @snmp_objects = [['ifTable'], ['ifXTable'], ['sysDescr'], ['sysName'],['ipForward']];
+# Some basics
+our @snmp_objects = [
+['ifIndex'],
+['sysNam'],
+['sysDescr'],
+['ifHighSpeed'],
+['ifType'],
+['ifName'],
+['ifDescr'],
+['ifAlias'],
+['ifOperStatus'],
+['ifAdminStatus'],
+['ifLastChange'],
+['ifHCInOctets'],
+['ifHCOutOctets'],
+['ifInDiscards'],
+['ifOutDiscards'],
+['ifInErrors'],
+['ifOutErrors'],
+['ifInUnknownProtos'],
+['ifOutQLen']
+];
 # Max SNMP polls to fire off at the same time.
 our $snmp_max = 20;
 
