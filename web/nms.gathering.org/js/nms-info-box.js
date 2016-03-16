@@ -64,6 +64,7 @@ nmsInfoBox._hide = function()
 	swtop.style.display = 'none';
 	nmsInfoBox._showing = "";
 	nmsInfoBox._editHide();
+	nmsInfoBox._snmpHide();
 }
 
 /*
@@ -173,6 +174,25 @@ nmsInfoBox._search = function() {
 	}
 }
 
+nmsInfoBox._snmp = function(x,tree)
+{
+
+	nmsInfoBox._snmpHide();
+	var container = document.createElement("div");
+	container.id = "nmsInfoBox-snmp-show";
+	
+	var swtop = document.getElementById("info-switch-parent");
+	var output = document.createElement("output");
+	output.id = "edit-output";
+	output.style = "white-space: pre;";
+	try {
+		output.value = JSON.stringify(nmsData.snmp.snmp[x][tree],null,4);
+	} catch(e) {
+		output.value = "(no recent data (yet)?)";
+	}
+	container.appendChild(output);
+	swtop.appendChild(container);
+}
 /*
  * Display info on switch "x" in the info-box
  *
@@ -191,7 +211,7 @@ nmsInfoBox._show = function(x)
 	nmsInfoBox._hide();	
 	nmsInfoBox._showing = x;
 	
-	swtitle.innerHTML = ' <button type="button" class="edit btn btn-xs btn-warning" onclick="nmsInfoBox._edit(\'' + x + '\');">Edit</button> ' + x + ' <button type="button" class="close" aria-label="Close" onclick="nmsInfoBox.hide();" style="float: right;"><span aria-hidden="true">&times;</span></button>';
+	swtitle.innerHTML = ' <button type="button" class="edit btn btn-xs btn-warning" onclick="nmsInfoBox._edit(\'' + x + '\');">Edit</button> <button type="button" class="edit btn btn-xs btn-default" onclick="nmsInfoBox._snmp(\'' + x + '\',\'ports\');">Ports</button> <button type="button" class="edit btn btn-xs btn-default" onclick="nmsInfoBox._snmp(\'' + x + '\',\'misc\');">Misc</button> ' + x + ' <button type="button" class="close" aria-label="Close" onclick="nmsInfoBox.hide();" style="float: right;"><span aria-hidden="true">&times;</span></button>';
 
 	for (var v in sw) { 
 		if (v == "placement") {
@@ -246,11 +266,17 @@ nmsInfoBox._editHide = function() {
 	if (container != undefined)
 		container.parentNode.removeChild(container);
 }
+nmsInfoBox._snmpHide = function() {
+	var container = document.getElementById("nmsInfoBox-snmp-show");
+	if (container != undefined)
+		container.parentNode.removeChild(container);
+}
 
 nmsInfoBox._edit = function(sw) {
 	var template = {};
 	var place = false;
 	nmsInfoBox._editHide();
+	nmsInfoBox._snmpHide();
 	var container = document.createElement("div");
 	container.id = "nmsInfoBox-edit-box";
 
