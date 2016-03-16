@@ -112,4 +112,5 @@ foreach my $tmp2 (@tmp) {
 $json{'switches_addded'} = \@added;
 $json{'switches_updated'} = \@dups;
 
+print "X-ban: /api/.*switches.*\n";
 finalize_output();

@@ -30,7 +30,6 @@ sub vcl_recv {
         return (pass);
     }
 
-    return (pass);
     # Brukes ikke. Cookies er for nubs.
     unset req.http.Cookie;
 
@@ -47,18 +46,8 @@ sub vcl_hash {
 # Mauve magi. Hva nå enn det er.
 # Dette er WIP - Skal flyttes til backend
 sub vcl_backend_response {
-    if (beresp.status == 200) {
-        set beresp.ttl = 2s;
-    } else {
-        # Vi cacher feilmeldinger, fordi vi er kule.
-        set beresp.ttl = 1s;
-    }
-
-    if(bereq.url ~ "port-state.pl" && beresp.status == 200) {
-        set beresp.ttl = 1s;
-    }
-    if (beresp.status == 200 && bereq.url ~ "now=") {
-        # Historisk data kan vi cache cirka evig
-        set beresp.ttl = 60m;
+    set beresp.http.x-url = bereq.url;
+    if (beresp.http.x-ban) {
+        ban("obj.http.x-url ~ " + beresp.http.x-ban);
     }
 }
