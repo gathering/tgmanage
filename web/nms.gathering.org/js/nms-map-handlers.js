@@ -73,38 +73,36 @@ var handlers = [
 
 /*
  * Update function for uplink map
- * Run periodically when uplink map is active.
  */
 function uplinkUpdater()
 {
-	if (!nmsData.switches_now["switches"])
+	if (!nmsData.switches)
 		return;
-	for (sw in nms.switches_now["switches"]) {
+	if (!nmsData.switches.switches)
+		return;
+	if (!nmsData.switchstate)
+		return;
+	if (!nmsData.switchstate.switches)
+		return;
+	for (sw in nmsData.switches.switches) {
 		var uplinks=0;
-		for (port in nms.switches_now["switches"][sw]["ports"]) {
-			if (!nms.switches_then["switches"][sw]["ports"] || 
-			    !nms.switches_now["switches"][sw]["ports"])
-				continue;
-			if (/ge-0\/0\/44$/.exec(port) ||
-			    /ge-0\/0\/45$/.exec(port) ||
-			    /ge-0\/0\/46$/.exec(port) ||
-			    /ge-0\/0\/47$/.exec(port))
-			 {
-				 if (parseInt(nms.switches_then["switches"][sw]["ports"][port]["ifhcoutoctets"]) != parseInt(nms.switches_now["switches"][sw]["ports"][port]["ifhcoutoctets"])) {
-					 uplinks += 1;
-				 }
-			 }
+		if (nmsData.switchstate.switches[sw] == undefined || nmsData.switchstate.switches[sw].uplinks == undefined) {
+			uplinks=0;
+		} else {
+			uplinks = nmsData.switchstate.switches[sw].uplinks.live;
+			nuplinks = nmsData.switchstate.switches[sw].uplinks.total;
 		}
+
 		if (uplinks == 0) {
-			setSwitchColor(sw,"white");
-		} else if (uplinks == 1) {
-			setSwitchColor(sw,red);
-		} else if (uplinks == 2) {
-			setSwitchColor(sw, orange);
-		} else if (uplinks == 3) { 
-			setSwitchColor(sw, green);
+			nmsMap.setSwitchColor(sw,"white");
+		} else if (nuplinks == uplinks) {
+			nmsMap.setSwitchColor(sw,green);
+		} else if (nuplinks - uplinks == 1) {
+			nmsMap.setSwitchColor(sw, orange);
+		} else if (nuplinks - uplinks == 2) {
+			nmsMap. setSwitchColor(sw, red);
 		} else if (uplinks > 3) {
-			setSwitchColor(sw, blue);
+			nmsMap.setSwitchColor(sw, blue);
 		}
 	}
 }
@@ -114,10 +112,12 @@ function uplinkUpdater()
  */
 function uplinkInit()
 {
+	nmsData.addHandler("switches","mapHandler",uplinkUpdater);
+	nmsData.addHandler("switchstate","mapHandler",uplinkUpdater);
 	setLegend(1,"white","0 uplinks");	
-	setLegend(2,red,"1 uplink");	
-	setLegend(3,orange,"2 uplinks");	
-	setLegend(4,green,"3 uplinks");	
+	setLegend(2,red,"2 missing");	
+	setLegend(3,orange,"1 missing");	
+	setLegend(4,green,"0 missing");	
 	setLegend(5,blue,"4 uplinks");	
 }
 

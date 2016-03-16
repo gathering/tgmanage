@@ -17,6 +17,8 @@ while (my $ref = $q->fetchrow_hashref()) {
 	
 	for my $porti (keys %{$data{'ports'}}) {
 		my %port = %{$data{'ports'}{$porti}};
+		my $smallport = $porti;
+		$smallport =~ s/[0-9-].*$//;
 		if ($porti =~  /ge-0\/0\/4[4-7]/ or $porti eq 'eth0') {
 			$json{'switches'}{$sysname}{'uplinks'}{'ifHCInOctets'} += $port{'ifHCInOctets'};
 			$json{'switches'}{$sysname}{'uplinks'}{'ifHCOutOctets'} += $port{'ifHCOutOctets'};
@@ -25,39 +27,16 @@ while (my $ref = $q->fetchrow_hashref()) {
 			}
 			$json{'switches'}{$sysname}{'uplinks'}{'total'} += 1;
 		}
-		$json{'switches'}{$sysname}{'ifHCInOctets'} += $port{'ifHCInOctets'};
-		$json{'switches'}{$sysname}{'ifHCOutOctets'} += $port{'ifHCOutOctets'};
+
+		$json{'switches'}{$sysname}{$smallport}{'ifHCInOctets'} += $port{'ifHCInOctets'};
+		$json{'switches'}{$sysname}{$smallport}{'ifHCOutOctets'} += $port{'ifHCOutOctets'};
 		if ($port{'ifOperStatus'} eq "up") {
-			$json{'switches'}{$sysname}{'live'} += 1;
+			$json{'switches'}{$sysname}{$smallport}{'live'} += 1;
 		}
-		$json{'switches'}{$sysname}{'total'} += 1;
+		$json{'switches'}{$sysname}{$smallport}{'total'} += 1;
 	}
 	$json{'switches'}{$sysname}{'time'} = $ref->{'time'};
 }
-
-finalize_output();
-exit;
-$q->execute();
-
-while (my $ref = $q->fetchrow_hashref()) {
- 	my @fields = ('ifhcoutoctets','ifhcinoctets');
-	foreach my $val (@fields) {
-		if ($ref->{'ifname'} =~  /ge-0\/0\/4[4-7]/) {
-			$nms::web::json{'switches'}{$ref->{'sysname'}}{'uplinks'}{$val} += $ref->{$val};
-		}
-		$nms::web::json{'switches'}{$ref->{'sysname'}}{'total'}{$val} += $ref->{$val};
-	}
-	$nms::web::json{'switches'}{$ref->{'sysname'}}{'time'} += $ref->{'time'};
-}
-
-my $q3 = $nms::web::dbh->prepare('select distinct on (switch) switch,temp,time,sysname from switch_temp natural join switches where ' . $nms::web::when . ' order by switch,time desc');
-
-$q3->execute();
-while (my $ref = $q3->fetchrow_hashref()) {
-	my $sysname = $ref->{'sysname'};
-	$nms::web::json{'switches'}{$ref->{'sysname'}}{'temp'} = $ref->{'temp'};
-}
-
 $nms::web::cc{'max-age'} = "5";
 $nms::web::cc{'stale-while-revalidate'} = "30";
 finalize_output();

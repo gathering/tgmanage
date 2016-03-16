@@ -5,6 +5,7 @@ use Time::HiRes;
 use Net::Oping;
 use strict;
 use warnings;
+use Data::Dumper;
 
 use lib '../include';
 use nms;
@@ -38,17 +39,22 @@ while (1) {
 		}
 	}
 	my $result = $ping->ping();
+	my %dropped = %{$ping->get_dropped()};
 	die $ping->get_error if (!defined($result));
 
 	$dbh->do('COPY ping (switch, latency_ms) FROM STDIN');  # date is implicitly now.
+	my $drops = 0;
 	while (my ($ip, $latency) = each %$result) {
 		my $switch = $ip_to_switch{$ip};
 		next if (!defined($switch));
 
+		if (!defined($latency)) {
+			$drops += $dropped{$ip};
+		}
 		$latency //= "\\N";
-		$latency*=1000;
 		$dbh->pg_putcopydata("$switch\t$latency\n");
 	}
+	print "Dropped: $drops\n";
 	$dbh->pg_putcopyend();
 
 	$dbh->do('COPY ping_secondary_ip (switch, latency_ms) FROM STDIN');  # date is implicitly now.
