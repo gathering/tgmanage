@@ -147,30 +147,21 @@ nmsInfoBox._makeCommentTable = function(content) {
 nmsInfoBox._search = function() {
 	var el = document.getElementById("searchbox");
 	var id = false;
+	var hits = 0;
 	if (el) {
 		id = el.value;
 	}
-	if (id && nmsData.switches.switches[id] != undefined) {
-		nmsMap.setSwitchColor(id, "red");
-		window.setTimeout(function(){
-			nmsMap.setSwitchColor(id, "pink");
-			window.setTimeout(function(){
-				nmsMap.setSwitchColor(id, "red");
-				window.setTimeout(function(){
-					nmsMap.setSwitchColor(id, "pink");
-					window.setTimeout(function(){
-						nmsMap.setSwitchColor(id, "red");
-						window.setTimeout(function(){
-							nmsMap.setSwitchColor(id, "pink");
-						},300);
-					},300);
-				},300);
-			},300);
-		},300);
-		el.parentElement.classList.remove("has-error");
-		el.parentElement.classList.add("has-success");
+	if(id) {
+		for(var sw in nmsData.switches.switches) {
+			if(sw.indexOf(id) > -1) {
+				hits++;
+				nmsMap.setSwitchHighlight(sw,true);
+			} else {
+				nmsMap.setSwitchHighlight(sw,false);
+			}
+		}
 	} else {
-		el.parentElement.classList.add("has-error");
+		nmsMap.removeAllSwitchHighlights();
 	}
 }
 

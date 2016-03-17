@@ -9,20 +9,23 @@
  * nmsMap.init() - start things up
  * nmsMap.setSwitchColor(switch,color)
  * nmsMap.setSwitchInfo(switch,info)
+ * nmsMap.setSwitchHighlight(switch,true/false)
+ * nmsMap.removeAllSwitchHighlights()
  */
 
 
 var nmsMap = nmsMap || {
 	_moveInProgress: false,
 	stats: {
-		earlyDrawAll:0,
 		colorChange:0,
 		colorSame:0,
-		resizeEvents:0,
-		switchInfoUpdate:0,
-		switchInfoSame:0,
+		earlyDrawAll:0,
 		nowDups:0,
-		nows:0
+		nows:0,
+		resizeEvents:0,
+		switchInfoSame:0,
+		switchInfoUpdate:0,
+		highlightChange:0
 	},
 	contexts: ["bg","link","blur","switch","text","textInfo","top","input","hidden"],
 	_info: {},
@@ -43,6 +46,7 @@ var nmsMap = nmsMap || {
 	},
 
 	_color: { },
+	_highlight: { },
 	_c: {}
 }
 
@@ -66,6 +70,21 @@ nmsMap.setSwitchColor = function(sw, color) {
 	} else {
 		this.stats.colorSame++;
 	}
+}
+
+nmsMap.setSwitchHighlight = function(sw, highlight) {
+	if(highlight)
+		highlight == true;
+	if (this._highlight[sw] != highlight) {
+		this._highlight[sw] = highlight;
+		this._drawSwitch(sw);
+		this.stats.highlightChange++;
+	}
+}
+
+nmsMap.removeAllSwitchHighlights = function() {
+	for(var sw in this._highlight)
+		this.setSwitchHighlight(sw,false);
 }
 
 nmsMap.reset = function() {
@@ -226,6 +245,9 @@ nmsMap._drawSwitch = function(sw)
 		return;
 	var box = this._getBox(sw);
 	var color = nmsMap._color[sw];
+	if(nmsMap._highlight[sw]) {
+		color = red;
+	}
 	if (color == undefined) {
 		color = blue;
 	}
