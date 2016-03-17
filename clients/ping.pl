@@ -10,11 +10,12 @@ use Data::Dumper;
 use lib '../include';
 use nms;
 
+$|++;
 my $dbh = nms::db_connect();
 $dbh->{AutoCommit} = 0;
 $dbh->{RaiseError} = 1;
 
-my $q = $dbh->prepare("SELECT switch,ip,secondary_ip FROM switches WHERE ip is not null");
+my $q = $dbh->prepare("SELECT switch,ip,secondary_ip FROM switches WHERE ip is not null ORDER BY random()");
 my $lq = $dbh->prepare("SELECT linknet,addr1,addr2 FROM linknets");
 
 while (1) {
@@ -54,7 +55,9 @@ while (1) {
 		$latency //= "\\N";
 		$dbh->pg_putcopydata("$switch\t$latency\n");
 	}
-	print "Dropped: $drops\n";
+	if ($drops > 0) {
+		print "$drops ";
+	}
 	$dbh->pg_putcopyend();
 
 	$dbh->do('COPY ping_secondary_ip (switch, latency_ms) FROM STDIN');  # date is implicitly now.
