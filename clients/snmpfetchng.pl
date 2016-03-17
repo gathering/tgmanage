@@ -83,7 +83,6 @@ sub populate_switches
 			'community' => $ref->{'community'}
 		};
 	}
-	$dbh->commit;
 }
 
 sub inner_loop
@@ -98,7 +97,6 @@ sub inner_loop
 		$switch{'start'} = time;
 		$qlock->execute($switch{'id'})
 			or die "Couldn't lock switch";
-		$dbh->commit;
 		my $s = SNMP::Session->new(DestHost => $switch{'mgtip'},
 					  Community => $switch{'community'},
 					  UseEnums => 1,
@@ -109,6 +107,7 @@ sub inner_loop
 			$outstanding--;
 		}
 	}
+	$dbh->commit;
 	mylog( "Polling " . @switches . " switches: $poll_todo");
 	SNMP::MainLoop(5);
 }
