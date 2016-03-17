@@ -12,7 +12,7 @@ use Data::Dumper;
 
 $nms::web::cc{'max-age'} = "60";
 
-my $q2 = $nms::web::dbh->prepare('select sysname,ip,switchtype,poll_frequency,community,last_updated from switches ');
+my $q2 = $nms::web::dbh->prepare('select sysname,ip,poll_frequency,community,subnet4,subnet6,last_updated from switches ');
 
 $q2->execute();
 while (my $ref = $q2->fetchrow_hashref()) {

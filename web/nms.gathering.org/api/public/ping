@@ -2,10 +2,18 @@
 use lib '../../../../include';
 use nms::web;
 
-my $q = $nms::web::dbh->prepare("SELECT DISTINCT ON (sysname) time,sysname, latency_ms FROM ping NATURAL JOIN switches WHERE time in (select max(time) from ping where " . $nms::web::when . " group by switch)");
+#nms::web::setwhen('1s');
+
+my $q = $nms::web::dbh->prepare("SELECT DISTINCT ON (sysname) (now() - time) as age,sysname, latency_ms FROM ping NATURAL JOIN switches WHERE time in (select max(time) from ping where " . $nms::web::when . " group by switch)");
 $q->execute();
 while (my $ref = $q->fetchrow_hashref()) {
 	$nms::web::json{'switches'}{$ref->{'sysname'}}{'latency'} = $ref->{'latency_ms'};
+	# This isn't pretty, feel free to fix, but I want age == seconds
+	# without decimals.
+	my ($h,$m,$ss) = split(':', $ref->{'age'});
+	my ($s,undef) = split('\.', "$ss");
+	
+	$nms::web::json{'switches'}{$ref->{'sysname'}}{'age'} = ($h*60*60) + ($m*60) + $s;#  $$ref->{'age'};
 }
 
 my $qs = $nms::web::dbh->prepare("SELECT DISTINCT ON (switch) switch, latency_ms FROM ping_secondary_ip WHERE " . $nms::web::when .  " ORDER BY switch, time DESC;");
@@ -19,8 +27,6 @@ $lq->execute();
 while (my $ref = $lq->fetchrow_hashref()) {
 	$nms::web::json{'linknets'}{$ref->{'linknet'}} = [ $ref->{'latency1_ms'}, $ref->{'latency2_ms'} ];
 }
-
-$q->execute();
 
 $nms::web::cc{'max-age'} = "1";
 $nms::web::cc{'stale-while-revalidate'} = "5";

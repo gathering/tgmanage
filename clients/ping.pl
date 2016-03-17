@@ -5,15 +5,17 @@ use Time::HiRes;
 use Net::Oping;
 use strict;
 use warnings;
+use Data::Dumper;
 
 use lib '../include';
 use nms;
 
+$|++;
 my $dbh = nms::db_connect();
 $dbh->{AutoCommit} = 0;
 $dbh->{RaiseError} = 1;
 
-my $q = $dbh->prepare("SELECT switch,ip,secondary_ip FROM switches WHERE ip<>'127.0.0.1'");
+my $q = $dbh->prepare("SELECT switch,ip,secondary_ip FROM switches WHERE ip is not null ORDER BY random()");
 my $lq = $dbh->prepare("SELECT linknet,addr1,addr2 FROM linknets");
 
 while (1) {
@@ -36,18 +38,25 @@ while (1) {
 			$ping->host_add($secondary_ip);
 			$secondary_ip_to_switch{$secondary_ip} = $switch;
 		}
-		print "ip: $ip\n";
 	}
 	my $result = $ping->ping();
+	my %dropped = %{$ping->get_dropped()};
 	die $ping->get_error if (!defined($result));
 
 	$dbh->do('COPY ping (switch, latency_ms) FROM STDIN');  # date is implicitly now.
+	my $drops = 0;
 	while (my ($ip, $latency) = each %$result) {
 		my $switch = $ip_to_switch{$ip};
 		next if (!defined($switch));
 
+		if (!defined($latency)) {
+			$drops += $dropped{$ip};
+		}
 		$latency //= "\\N";
 		$dbh->pg_putcopydata("$switch\t$latency\n");
+	}
+	if ($drops > 0) {
+		print "$drops ";
 	}
 	$dbh->pg_putcopyend();
 
@@ -73,18 +82,19 @@ while (1) {
 		$ping->host_add($ref->{'addr1'});
 		$ping->host_add($ref->{'addr2'});
 	}
-	$result = $ping->ping();
-	die $ping->get_error if (!defined($result));
+	if (@linknets) { 
+		$result = $ping->ping();
+		die $ping->get_error if (!defined($result));
 
-	$dbh->do('COPY linknet_ping (linknet, latency1_ms, latency2_ms) FROM STDIN');  # date is implicitly now.
-	for my $linknet (@linknets) {
-		my $id = $linknet->{'linknet'};
-		my $latency1 = $result->{$linknet->{'addr1'}} // '\N';
-		my $latency2 = $result->{$linknet->{'addr2'}} // '\N';
-		$dbh->pg_putcopydata("$id\t$latency1\t$latency2\n");
+		$dbh->do('COPY linknet_ping (linknet, latency1_ms, latency2_ms) FROM STDIN');  # date is implicitly now.
+			for my $linknet (@linknets) {
+				my $id = $linknet->{'linknet'};
+				my $latency1 = $result->{$linknet->{'addr1'}} // '\N';
+				my $latency2 = $result->{$linknet->{'addr2'}} // '\N';
+				$dbh->pg_putcopydata("$id\t$latency1\t$latency2\n");
+			}
+		$dbh->pg_putcopyend();
 	}
-	$dbh->pg_putcopyend();
 	$dbh->commit;
-	
 }
 

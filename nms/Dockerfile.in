@@ -28,6 +28,7 @@ RUN apt-get update && apt-get -y install \
      httpie                 \
      locales                \
      screen                 \
+     openssh-server	    \
      pkg-config    
 
 VOLUME [ "/sys/fs/cgroup" ]
@@ -40,7 +41,6 @@ RUN echo . /etc/default/locale >> /root/.bashrc
 RUN echo export LANG >> /root/.bashrc
 RUN echo . /etc/bash_completion >> /root/.bashrc
 ENV TERM=rxvt-unicode
-ADD .vimrc /root/.vimrc
 RUN rm /etc/apt/apt.conf.d/docker-clean
 RUN systemctl mask dev-hugepages.mount sys-fs-fuse-connections.mount systemd-logind.service
 RUN git clone https://github.com/tech-server/tgmanage.git /srv/tgmanage

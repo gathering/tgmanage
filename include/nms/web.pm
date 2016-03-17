@@ -7,8 +7,9 @@ use DBI;
 use Data::Dumper;
 use JSON;
 use nms;
-use Digest::SHA qw(sha512_base64);
-use FreezeThaw qw(freeze);
+use Digest::SHA;
+use FreezeThaw;
+use URI::Escape;
 package nms::web;
 
 use base 'Exporter';
@@ -51,39 +52,45 @@ sub db_safe_quote {
 
 # returns a valid $when statement
 # Also sets cache-control headers if time is overridden
+# This can be called explicitly to override the window of time we evaluate.
+# Normally up to 15 minutes old data will be returned, but for some API
+# endpoints it is better to return no data than old data (e.g.: ping).
 sub setwhen {
-	my $when;
 	$now = "now()";
+	my $window = '15m';
+	if (@_ == 1) {
+		$window = $_[0];
+	}
 	if (defined($get_params{'now'})) {
 		$now = db_safe_quote('now') . "::timestamp ";
 		$cc{'max-age'} = "3600";
 	}
-	if (defined($get_params{'offset'})) {
-		$now = "(" . $now . " - " . db_safe_quote('offset') . "::interval)";
-	}
-	$when = " time > " . $now . " - '5m'::interval and time < " . $now . " ";
-	return $when;
+	$when = " time > " . $now . " - '".$window."'::interval and time < " . $now . " ";
 }
 
 sub finalize_output {
 	my $query;
 	my $hash = Digest::SHA::sha512_base64(FreezeThaw::freeze(%json));
-	$query = $dbh->prepare ('select ' . $now . ' as time;');
+	$dbh->commit;
+	$query = $dbh->prepare('select to_char(' . $now . ', \'YYYY-MM-DD"T"HH24:MI:SS\') as time;');
 	$query->execute();
 
 	$json{'time'} = $query->fetchrow_hashref()->{'time'};
 	$json{'hash'} = $hash;
+	
 	printcc;
-
+	
+	print "Etag: $hash\n";
 	print "Content-Type: text/jso; charset=utf-8\n\n";
 	print JSON::XS::encode_json(\%json);
 	print "\n";
 }
 
 sub populate_params {
-	foreach my $hdr (split("&",$ENV{'QUERY_STRING'} || "")) {
+	my $querystring = $ENV{'QUERY_STRING'} || "";
+	foreach my $hdr (split("&",$querystring)) {
 		my ($key, $value) = split("=",$hdr,"2");
-		$get_params{$key} = $value;
+		$get_params{$key} = URI::Escape::uri_unescape($value);
 	}
 }
 
@@ -93,6 +100,6 @@ BEGIN {
 
 	$dbh = nms::db_connect();
 	populate_params();
-	$when = setwhen();
+	setwhen();
 }
 1;

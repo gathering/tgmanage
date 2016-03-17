@@ -46,15 +46,15 @@ Update frequency: on user input
 
 Lists comments.
 
-/api/private/port-state
------------------------
+/api/private/snmp
+-----------------
 
 Methods: GET
 
 Update frequency: Every few seconds, based on SNMP data.
 
-Returns detailed per-port statistics. Being somewhat reorganized but will
-remain highly relevant.
+Returns full SNMP-data, split into two trees. 'misc' and 'ports'.
+
 
 /api/private/switches-management
 --------------------------------
@@ -70,9 +70,14 @@ List management information for switches.
 
 Methods: POST
 
-Add switches, supports same format as tools/add_switches.txt.pl
+Add or update switches, supports same format as tools/add_switches.txt.pl
 
 Accepts an array of switches.
+
+Magic: If you set placement to be "reset", it will re-calculate placement
+based on sysname. For new switches, this is redundant as an empty
+placement-field will trigger the same behavior.
+
 
 Public
 ......

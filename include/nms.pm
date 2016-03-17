@@ -26,7 +26,7 @@ sub db_connect {
 
 	my $dbh = DBI->connect($connstr,
 	                       $nms::config::db_username,
-	                       $nms::config::db_password)
+	                       $nms::config::db_password, {AutoCommit => 0})
 	        or die "Couldn't connect to database";
 	return $dbh;	
 }

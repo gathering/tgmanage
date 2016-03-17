@@ -3,21 +3,26 @@ use strict;
 use warnings;
 use DBI;
 use POSIX;
-use Time::HiRes;
+#use Time::HiRes qw(time);
 use SNMP;
 use Data::Dumper;
 use lib '../include';
 use nms;
 
+SNMP::addMibDirs("/tmp/tmp.esQYrkg9MW/v2");
+SNMP::loadModules('SNMPv2-MIB');
+SNMP::loadModules('ENTITY-MIB');
+SNMP::loadModules('IF-MIB');
+SNMP::loadModules('LLDP-MIB');
+SNMP::loadModules('IP-MIB');
+SNMP::loadModules('IP-FORWARD-MIB');
 our $dbh = nms::db_connect();
 $dbh->{AutoCommit} = 0;
 $dbh->{RaiseError} = 1;
 
-#my $qualification =  'sysname LIKE \'e71%\'';
-
 my $qualification = <<"EOF";
 (last_updated IS NULL OR now() - last_updated > poll_frequency)
-AND (locked='f' OR now() - last_updated > '5 minutes'::interval)
+AND (locked='f' OR now() - last_updated > '15 minutes'::interval)
 AND ip is not null
 EOF
 
@@ -28,13 +33,11 @@ SELECT
   DATE_TRUNC('second', now() - last_updated - poll_frequency) AS overdue
 FROM
   switches
-  NATURAL LEFT JOIN switchtypes
 WHERE
 $qualification
 ORDER BY
-  priority DESC,
   overdue DESC
-LIMIT 10
+LIMIT ?
 FOR UPDATE OF switches
 EOF
 	or die "Couldn't prepare qswitch";
@@ -44,8 +47,10 @@ our $qunlock = $dbh->prepare("UPDATE switches SET locked='f', last_updated=now()
 	or die "Couldn't prepare qunlock";
 my @switches = ();
 
-our $temppoll = $dbh->prepare("INSERT INTO switch_temp (switch,temp,time) VALUES((select switch from switches where sysname = ?),?,now())")
-	or die "Couldn't prepare temppoll";
+my $sth = $dbh->prepare("INSERT INTO snmp (switch,data) VALUES((select switch from switches where sysname=?), ?)");
+
+our $outstanding = 0;
+
 sub mylog
 {
 	my $msg = shift;
@@ -57,7 +62,15 @@ sub mylog
 sub populate_switches
 {
 	@switches = ();
-	$qswitch->execute()
+	my $limit = $nms::config::snmp_max - $outstanding;
+	if ($limit < 0) {
+		mylog("Something wrong. Too many outstanding polls going.");
+		$limit = 1;
+	}
+	if ($outstanding > 0) {
+		mylog("Outstanding polls: $outstanding . Current limit: $limit");
+	}
+	$qswitch->execute($limit)
 		or die "Couldn't get switch";
 	
 	while (my $ref = $qswitch->fetchrow_hashref()) {
@@ -68,103 +81,75 @@ sub populate_switches
 			'community' => $ref->{'community'}
 		};
 	}
-		$dbh->commit;
 }
 
 sub inner_loop
 {
-	mylog("Starting run");
 	populate_switches();
+	my $poll_todo = "";
 	for my $refswitch (@switches) {
+		$outstanding++;
 		my %switch = %{$refswitch};
-		mylog( "START: Polling $switch{'sysname'} ($switch{'mgtip'}) ");
+		$poll_todo .= "$switch{'sysname'} ";
 
 		$switch{'start'} = time;
 		$qlock->execute($switch{'id'})
 			or die "Couldn't lock switch";
-		$dbh->commit;
-		my $s = new SNMP::Session(DestHost => $switch{'mgtip'},
+		my $s = SNMP::Session->new(DestHost => $switch{'mgtip'},
 					  Community => $switch{'community'},
+					  UseEnums => 1,
 					  Version => '2');
-		my @vars = ();
-		push @vars, [ "sysName", 0];
-		push @vars, [ "sysDescr", 0];
-		push @vars, [ "1.3.6.1.4.1.2636.3.1.13.1.7.7.1.0", 0];
-		my $varlist = SNMP::VarList->new(@vars);
-		$s->get($varlist, [ \&ckcall, \%switch ]);
-		$s->gettable('ifXTable',callback => [\&callback, \%switch]);
+		my $ret = $s->bulkwalk(0, 10, @nms::config::snmp_objects, sub{ callback(\%switch, @_); });
+		if (!defined($ret)) {
+			mylog("Fudge: ".  $s->{'ErrorStr'});
+			$outstanding--;
+		}
 	}
-	mylog( "Added " . @switches . " ");
+	$dbh->commit;
+	mylog( "Polling " . @switches . " switches: $poll_todo");
 	SNMP::MainLoop(5);
 }
 
-sub ckcall
-{
+sub callback{
+	my @top = $_[1];
 	my %switch = %{$_[0]};
+	my %tree;
+	my %ttop;
+	my %nics;
+	my @nicids;
 
-	my $vars = $_[1];
-	my ($sysname,$sysdescr,$temp) = (undef,undef,undef);
-	for my $var (@$vars) {
-		if ($var->[0] eq "sysName") {
-			$sysname = $var->[2];
-		} elsif ($var->[0] eq "sysDescr") {
-			$sysdescr = $var->[2];
-		} elsif ($var->[0] eq "enterprises.2636.3.1.13.1.7.7.1.0.0") {
-			$temp = $var->[2];
-		}
-	}
-	if (defined $temp && $temp =~ /^\d+$/) {
-		$temppoll->execute($switch{'sysname'},$temp);
-	} else {
-		warn "Couldn't read temp for " . $switch{'sysname'} . ", got " . (defined $temp ? $temp : "undef");
-	}
-	$dbh->commit;
-}
-my @values = ('ifName','ifHighSpeed','ifHCOutOctets','ifHCInOctets');
-my $query = "INSERT INTO polls (switch,time";
-foreach my $val (@values) {
-	$query .= ",$val";
-}
-$query .= ") VALUES(?,timeofday()::timestamp";
-foreach my $val (@values) {
-	$query .= ",?";
-}
-$query .= ");";
-
-our $qpoll = $dbh->prepare($query)
-	or die "Couldn't prepare qpoll";
-sub callback
-{
-	my %switch = %{$_[0]};
-	my $table = $_[1];
-
-	my %ifs = ();
-
-	foreach my $key (keys %{$table}) {
-		my $descr = $table->{$key}->{'ifName'};
-
-		if ($descr =~ m/(ge|xe|et)-/ && $descr !~ m/\./) {
-			$ifs{$descr} = $table->{$key};
-		}
-	}
-
-
-	foreach my $key (keys %ifs) {
-		my @vals = ();
-		foreach my $val (@values) {
-			if (!defined($ifs{$key}{$val})) {
-				die "Missing data";
+	for my $ret (@top) {
+		for my $var (@{$ret}) {
+			for my $inner (@{$var}) {
+				my ($tag,$type,$name,$iid, $val) = ( $inner->tag ,$inner->type , $inner->name, $inner->iid, $inner->val);
+				if ($tag eq "ifPhysAddress") {
+					next;
+				}
+				$tree{$iid}{$tag} = $val;
+				if ($tag eq "ifIndex") {
+					push @nicids, $iid;
+				}
 			}
-			push @vals, $ifs{$key}{$val};
 		}
-		$qpoll->execute($switch{'id'},@vals) || die "ops";
 	}
-	mylog( "STOP: Polling $switch{'sysname'} took " . (time - $switch{'start'}) . "s");
+
+	my %tree2;
+	for my $nic (@nicids) {
+		$tree2{'ports'}{$tree{$nic}{'ifName'}} = $tree{$nic};
+		delete $tree{$nic};
+	}
+	for my $iid (keys %tree) {
+		for my $key (keys %{$tree{$iid}}) {
+			$tree2{'misc'}{$key}{$iid} = $tree{$iid}{$key};
+		}
+	}
+	$sth->execute($switch{'sysname'}, JSON::XS::encode_json(\%tree2));
 	$qunlock->execute($switch{'id'})
 		or die "Couldn't unlock switch";
 	$dbh->commit;
+	$outstanding--;
+	mylog( "Polled $switch{'sysname'} in " . (time - $switch{'start'}) . "s. ($outstanding outstanding polls)");
 }
-print $query . "\n";
 while (1) {
 	inner_loop();
 }
