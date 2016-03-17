@@ -210,11 +210,13 @@ nmsMap._drawSwitchBlur = function(sw)
 	if (nmsData.switches == undefined || nmsData.switches.switches == undefined)
 		return;
 	var box = this._getBox(sw);
+	this._c.blur.ctx.save();
 	this._c.blur.ctx.fillStyle = "red";
-	this._c.blur.ctx.shadowBlur = 100;
-	this._c.blur.ctx.shadowColor = "green";
-	this._drawBox(this._c.blur.ctx, box['x'],box['y'],box['width'],box['height']);
-	this._c.blur.ctx.shadowBlur = 0;
+	this._c.blur.ctx.shadowBlur = 30;
+	this._c.blur.ctx.shadowColor = "white";
+	this._c.blur.ctx.scale(this.scale, this.scale); // FIXME
+	this._c.blur.ctx.fillRect(box['x'],box['y'],box['width'],box['height']);
+	this._c.blur.ctx.restore();
 }
 nmsMap._drawSwitch = function(sw)
 {

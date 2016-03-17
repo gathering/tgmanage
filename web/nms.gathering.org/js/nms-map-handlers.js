@@ -346,9 +346,14 @@ function randomizeColors()
 	}
 }
 
+function discoDo() {
+	randomizeColors();
+	setTimeout(randomizeColors,500);
+}
 function discoInit()
 {
-	nmsData.addHandler("switches","mapHandler",randomizeColors);
+	nmsData.addHandler("ticker", "mapHandler", discoDo);
+	
 	setNightMode(true);
 	setLegend(1,blue,"Y");	
 	setLegend(2,red, "M");

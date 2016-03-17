@@ -20,8 +20,6 @@ our $dbh = nms::db_connect();
 $dbh->{AutoCommit} = 0;
 $dbh->{RaiseError} = 1;
 
-#my $qualification =  'sysname LIKE \'e71%\'';
-
 my $qualification = <<"EOF";
 (last_updated IS NULL OR now() - last_updated > poll_frequency)
 AND (locked='f' OR now() - last_updated > '15 minutes'::interval)
@@ -92,7 +90,7 @@ sub inner_loop
 	for my $refswitch (@switches) {
 		$outstanding++;
 		my %switch = %{$refswitch};
-		$poll_todo .= "$switch{'sysname'} ($switch{'mgtip'}) ";
+		$poll_todo .= "$switch{'sysname'} ";
 
 		$switch{'start'} = time;
 		$qlock->execute($switch{'id'})
@@ -146,11 +144,11 @@ sub callback{
 		}
 	}
 	$sth->execute($switch{'sysname'}, JSON::XS::encode_json(\%tree2));
-	mylog( "Polled $switch{'sysname'} in " . (time - $switch{'start'}) . "s. ($outstanding outstanding polls)");
 	$qunlock->execute($switch{'id'})
 		or die "Couldn't unlock switch";
 	$dbh->commit;
 	$outstanding--;
+	mylog( "Polled $switch{'sysname'} in " . (time - $switch{'start'}) . "s. ($outstanding outstanding polls)");
 }
 while (1) {
 	inner_loop();
