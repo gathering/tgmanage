@@ -22,7 +22,7 @@ my @dups;
 
 my $sth = $nms::web::dbh->prepare("SELECT sysname FROM switches WHERE sysname=?");
 
-my @fields = ('ip', 'sysname', 'switchtype', 'last_updated', 'locked', 'poll_frequency', 'community', 'lldp_chassis_id', 'secondary_ip', 'placement');
+my @fields = ('ip', 'sysname', 'switchtype', 'last_updated', 'locked', 'poll_frequency', 'community', 'lldp_chassis_id', 'secondary_ip', 'subnet4', 'subnet6', 'placement');
 
 sub convertplace
 {
