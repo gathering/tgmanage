@@ -29,7 +29,7 @@ EOF
 # Borrowed from snmpfetch.pl 
 our $qswitch = $dbh->prepare(<<"EOF")
 SELECT 
-  *,
+  sysname,switch,host(ip) as ip,community,
   DATE_TRUNC('second', now() - last_updated - poll_frequency) AS overdue
 FROM
   switches
