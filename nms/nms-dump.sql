@@ -272,18 +272,17 @@ SET default_tablespace = '';
 SET default_with_oids = false;
 
 --
--- Name: dhcp; Type: TABLE; Schema: public; Owner: nms; Tablespace: 
+-- Name: dhcp; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
 --
 
 CREATE TABLE dhcp (
-    switch integer NOT NULL,
-    network cidr NOT NULL,
-    last_ack timestamp without time zone,
-    owner_color character varying
+    switch integer,
+    "time" timestamp without time zone,
+    mac macaddr
 );
 
 
-ALTER TABLE dhcp OWNER TO nms;
+ALTER TABLE dhcp OWNER TO postgres;
 
 --
 -- Name: linknet_ping; Type: TABLE; Schema: public; Owner: nms; Tablespace: 
@@ -492,7 +491,8 @@ CREATE TABLE switches (
     secondary_ip inet,
     placement box,
     subnet4 cidr,
-    subnet6 cidr
+    subnet6 cidr,
+    distro character varying
 );
 
 
@@ -582,6 +582,20 @@ ALTER TABLE ONLY switches
 
 
 --
+-- Name: dhcp_switch; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX dhcp_switch ON dhcp USING btree (switch);
+
+
+--
+-- Name: dhcp_time; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX dhcp_time ON dhcp USING btree ("time");
+
+
+--
 -- Name: ping_index; Type: INDEX; Schema: public; Owner: nms; Tablespace: 
 --
 
@@ -659,13 +673,6 @@ CREATE INDEX switch_temp_index ON switch_temp USING btree (switch);
 
 
 --
--- Name: switches_dhcp; Type: INDEX; Schema: public; Owner: nms; Tablespace: 
---
-
-CREATE UNIQUE INDEX switches_dhcp ON dhcp USING btree (switch);
-
-
---
 -- Name: switches_switch; Type: INDEX; Schema: public; Owner: nms; Tablespace: 
 --
 
@@ -684,6 +691,14 @@ CREATE INDEX updated_index2 ON linknet_ping USING btree ("time");
 --
 
 CREATE INDEX updated_index3 ON ping_secondary_ip USING btree ("time");
+
+
+--
+-- Name: dhcp_switch_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY dhcp
+    ADD CONSTRAINT dhcp_switch_fkey FOREIGN KEY (switch) REFERENCES switches(switch);
 
 
 --
@@ -726,15 +741,6 @@ REVOKE ALL ON SCHEMA public FROM PUBLIC;
 REVOKE ALL ON SCHEMA public FROM postgres;
 GRANT ALL ON SCHEMA public TO postgres;
 GRANT ALL ON SCHEMA public TO PUBLIC;
-
-
---
--- Name: dhcp; Type: ACL; Schema: public; Owner: nms
---
-
-REVOKE ALL ON TABLE dhcp FROM PUBLIC;
-REVOKE ALL ON TABLE dhcp FROM nms;
-GRANT ALL ON TABLE dhcp TO nms;
 
 
 --
