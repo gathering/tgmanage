@@ -157,6 +157,12 @@ nmsMap.setNightMode = function(toggle) {
 	if (this._nightmode == toggle)
 		return;
 	this._nightmode = toggle;
+	if (!toggle)
+		this._c.blur.c.style.display = "none";
+	else {
+		this._drawAllBlur();
+		this._c.blur.c.style.display = "";
+	}
 	nmsMap._drawBG();
 }
 
@@ -188,6 +194,17 @@ nmsMap._getBox = function(sw) {
 	return box;
 }
 
+nmsMap._drawSwitchBlur = function(sw)
+{
+	if (nmsData.switches == undefined || nmsData.switches.switches == undefined)
+		return;
+	var box = this._getBox(sw);
+	this._c.blur.ctx.fillStyle = "red";
+	this._c.blur.ctx.shadowBlur = 100;
+	this._c.blur.ctx.shadowColor = "green";
+	this._drawBox(this._c.blur.ctx, box['x'],box['y'],box['width'],box['height']);
+	this._c.blur.ctx.shadowBlur = 0;
+}
 nmsMap._drawSwitch = function(sw)
 {
 	// XXX: If a handler sets a color before switches are loaded... The
@@ -264,6 +281,14 @@ nmsMap._drawAllSwitches = function() {
 	}
 	for (var sw in nmsData.switches.switches) {
 		this._drawSwitch(sw);
+	}
+	if (this._nightmode)
+		this._drawAllBlur();
+}
+
+nmsMap._drawAllBlur = function() {
+	for (var sw in nmsData.switches.switches) {
+		this._drawSwitchBlur(sw);
 	}
 }
 
@@ -408,19 +433,6 @@ nmsMap._moveStart = function(sw, e)
  * Consider this a TODO list.
  */
 
-
-/*
- * Draw the blur for a box.
- */
-function drawBoxBlur(x,y,boxw,boxh)
-{
-	var myX = Math.floor(x * canvas.scale);
-	var myY = Math.floor(y * canvas.scale);
-	var myX2 = Math.floor((boxw) * canvas.scale);
-	var myY2 = Math.floor((boxh) * canvas.scale);
-	dr.blur.ctx.fillRect(myX,myY, myX2, myY2);
-}
-
 /*
  * Draw a linknet with index i.
  *
@@ -465,13 +477,4 @@ function setLinknetColors(i,c1,c2)
 	}
 }
 
-function applyBlur()
-{
-	var blur = document.getElementById("shadowBlur");
-	var col = document.getElementById("shadowColor");
-	nms.shadowBlur = blur.value;
-	nms.shadowColor = col.value;
-	resetBlur();
-	saveSettings();
-}
 
