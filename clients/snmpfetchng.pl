@@ -29,7 +29,7 @@ EOF
 # Borrowed from snmpfetch.pl 
 our $qswitch = $dbh->prepare(<<"EOF")
 SELECT 
-  *,
+  sysname,switch,host(ip) as ip,community,
   DATE_TRUNC('second', now() - last_updated - poll_frequency) AS overdue
 FROM
   switches
@@ -38,7 +38,6 @@ $qualification
 ORDER BY
   overdue DESC
 LIMIT ?
-FOR UPDATE OF switches
 EOF
 	or die "Couldn't prepare qswitch";
 our $qlock = $dbh->prepare("UPDATE switches SET locked='t', last_updated=now() WHERE switch=?")
@@ -95,6 +94,7 @@ sub inner_loop
 		$switch{'start'} = time;
 		$qlock->execute($switch{'id'})
 			or die "Couldn't lock switch";
+		$dbh->commit;
 		my $s = SNMP::Session->new(DestHost => $switch{'mgtip'},
 					  Community => $switch{'community'},
 					  UseEnums => 1,
@@ -105,7 +105,6 @@ sub inner_loop
 			$outstanding--;
 		}
 	}
-	$dbh->commit;
 	mylog( "Polling " . @switches . " switches: $poll_todo");
 	SNMP::MainLoop(5);
 }
