@@ -22,7 +22,7 @@ my @dups;
 
 my $sth = $nms::web::dbh->prepare("SELECT sysname FROM switches WHERE sysname=?");
 
-my @fields = ('ip', 'sysname', 'switchtype', 'last_updated', 'locked', 'poll_frequency', 'community', 'lldp_chassis_id', 'secondary_ip', 'subnet4', 'subnet6', 'placement');
+my @fields = ('ip', 'sysname', 'switchtype', 'last_updated', 'locked', 'poll_frequency', 'community', 'lldp_chassis_id', 'secondary_ip', 'subnet4', 'subnet6', 'placement', 'distro', 'secondary_ip');
 
 sub convertplace
 {
@@ -64,6 +64,9 @@ foreach my $tmp2 (@tmp) {
 		if (not defined($switch{'ip'}) and defined($switch{'mgtmt4'})) {
 			$switch{'ip'} = $switch{'mgtmt4'};
 		}
+		if (not defined($switch{'secondary_ip'}) and defined($switch{'mgtmt6'})) {
+			$switch{'secondary_ip'} = $switch{'mgtmt6'};
+		}
 		my ($x1,$x2,$y1,$y2);
 		$x1 = $placement{'x1'};
 		$y1 = $placement{'y1'};
@@ -98,6 +101,9 @@ foreach my $tmp2 (@tmp) {
 		}
 		if (not defined($switch{'ip'}) and defined($switch{'mgtmt4'})) {
 			$switch{'ip'} = $switch{'mgtmt4'};
+		}
+		if (not defined($switch{'secondary_ip'}) and defined($switch{'mgtmt6'})) {
+			$switch{'secondary_ip'} = $switch{'mgtmt6'};
 		}
 		my @set;
 		map {
