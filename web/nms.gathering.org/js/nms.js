@@ -478,11 +478,11 @@ function initNMS() {
 	nmsData.registerSource("comments", "/api/private/comments");
 	nmsData.registerSource("smanagement","/api/private/switches-management");
 
+	restoreSettings();
 	nmsMap.init();
 	detectHandler();
 	nms.playback.play();
 	setupKeyhandler();
-	restoreSettings();
 }
 
 function detectHandler() {

@@ -35,6 +35,7 @@ var nmsMap = nmsMap || {
 		fontFace: "sans-serif"
 	},
 	scale: 1,
+	_init: true,
 	_orig: { width:1920, height:1032 },
 	_canvas: {
 		get width() { return nmsMap.scale * nmsMap._orig.width; },
@@ -45,13 +46,16 @@ var nmsMap = nmsMap || {
 	_c: {}
 }
 
+nmsMap._loadEvent = function(e) {
+	nmsMap._init = false;
+	nmsMap._drawAllSwitches();
+}
 nmsMap.init = function() {
 	this._initContexts();
-	this._drawBG();
+	this._init = true;
 	nmsData.addHandler("switches","nmsMap",function(){nmsMap._resizeEvent();});
 	window.addEventListener('resize',nmsMap._resizeEvent,true);
-	document.addEventListener('load',nmsMap._resizeEvent,true);
-	this._drawAllSwitches();
+	document.addEventListener('load',nmsMap._loadEvent,true);
 }
 
 nmsMap.setSwitchColor = function(sw, color) {
@@ -111,15 +115,19 @@ nmsMap._resizeEvent = function() {
 		/*
 		 * Resizing this to a too small size breaks gradients on smaller screens.
 		 */
-		if (a == 'hidden')
+		if (a == 'hidden' && a != 'blur')
 			continue;
 		nmsMap._c[a].c.height = nmsMap._canvas.height;
 		nmsMap._c[a].c.width = nmsMap._canvas.width;
 	}
-	nmsMap._drawBG();
-	nmsMap._drawAllSwitches();
-	nmsMap.drawNow();
-	nmsMap.stats.resizeEvents++;
+	if (nmsMap._init != true) {
+		console.log("Drawing shit");
+		nmsMap._blurDrawn = false;
+		nmsMap._drawBG();
+		nmsMap._drawAllSwitches();
+		nmsMap.drawNow();
+		nmsMap.stats.resizeEvents++;
+	}
 }
 
 /*
@@ -157,6 +165,9 @@ nmsMap.setNightMode = function(toggle) {
 	if (this._nightmode == toggle)
 		return;
 	this._nightmode = toggle;
+	if (this._init == true) {
+		return;
+	}
 	if (!toggle)
 		this._c.blur.c.style.display = "none";
 	else {
@@ -287,8 +298,11 @@ nmsMap._drawAllSwitches = function() {
 }
 
 nmsMap._drawAllBlur = function() {
+	if (nmsMap._blurDrawn == true)
+		return;
+	nmsMap._blurDrawn = true;
 	for (var sw in nmsData.switches.switches) {
-		this._drawSwitchBlur(sw);
+		nmsMap._drawSwitchBlur(sw);
 	}
 }
 
