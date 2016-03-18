@@ -17,8 +17,6 @@ TFTP_ADDRESS=":69"
 TFTP_OPTIONS="--secure"
 END
 
-/etc/init.d/tftpd-hpa restart
-
 mkdir -p /var/lib/tftpboot
 
 cd ~/tgmanage
@@ -31,3 +29,7 @@ bootstrap/fetch-debinstall.sh /var/lib/tftpboot/debian
 # NOTE! The pxe/ directory contains an 'ubuntu' menu...
 # The files required to booting Ubuntu installer or live
 # must be fetched manually (for now)
+
+# Restart tftpd-hpa.service
+systemctl restart tftpd-hpa.service
+

@@ -8,8 +8,13 @@ fi
 # OK, we know the content of $0 is OK. I prefer sane names.
 ROLE=$1;
 
+#  Resynchronize the package index before install
+
+apt-get -y update
+
 # Start by installing common packages. Remember to update
 # this when a new common dependency is discovered, plx.
+
 apt-get -y install \
 	vim-nox \
 	git \

@@ -2,8 +2,8 @@
 INSTALLER_DEST=$1
 DEBINSTROOT=http://ftp.no.debian.org/debian/dists
 
-mkdir -p ${INSTALLER_DEST}/{squeeze,wheezy}/{amd64,i386}
-for DIST in squeeze wheezy
+mkdir -p ${INSTALLER_DEST}/{wheezy,jessie}/{amd64,i386}
+for DIST in wheezy jessie
 do 
   for ARCH in i386 amd64; 
   do 
