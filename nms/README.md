@@ -10,9 +10,13 @@
 - run `./makedockerfiles.sh`, which creates the docker image files, and builds
   them. 
 
-- Start database node: ` ... `
-- Start front end node: ` ... `
+- Start database node: `docker run -v /sys/fs/cgroup:/sys/fs/cgroup:ro --privileged --rm -ti --name=db nms-db`
+- Start front end node: ` docker run -v /sys/fs/cgroup:/sys/fs/cgroup:ro --privileged --rm -ti --name=front --link=db:db nms-front `
+- Find IP's: `docker inspect front`, `docker instpect db`
+- Start a shell in a container: `docker exec front /bin/bash`
 - Open localhost:PORT in browser to start testing.
+
+
 
 ## TODO
 - finish the installation guide above.

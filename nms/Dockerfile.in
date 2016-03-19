@@ -107,12 +107,12 @@ ADD config.pm /srv/tgmanage/include/
 @template nms-db
 FROM nms-base
 RUN apt-get install -y postgresql-doc-9.4 postgresql-9.4
-ADD nms-dump.sql.gz /
+ADD nms-dump.sql /
 ADD postgresql.conf /etc/postgresql/9.4/main/
 ADD pg_hba.conf /etc/postgresql/9.4/main/
 RUN chown -R postgres:postgres /etc/postgresql/
 RUN chmod a+r /etc/postgresql/9.4/main/*conf
 RUN service postgresql start && su postgres -c "psql --command=\"CREATE ROLE nms PASSWORD 'md5f6f0a94af5ec8b6001e41b8f06fd22d8' NOSUPERUSER NOCREATEDB NOCREATEROLE INHERIT LOGIN;\"" && su postgres -c "createdb -O nms nms" && service postgresql stop
-RUN service postgresql start && su postgres -c "gunzip < /nms-dump.sql.gz | psql nms" && service postgresql stop
+RUN service postgresql start && su postgres -c "cat /nms-dump.sql | psql nms" && service postgresql stop
 RUN service postgresql start && su postgres -c "psql --command=\"ALTER ROLE nms PASSWORD 'md5f6f0a94af5ec8b6001e41b8f06fd22d8';\"" && service postgresql stop
 EXPOSE 5432
