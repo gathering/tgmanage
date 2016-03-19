@@ -65,6 +65,7 @@ nmsInfoBox._hide = function()
 	nmsInfoBox._showing = "";
 	nmsInfoBox._editHide();
 	nmsInfoBox._snmpHide();
+	nmsInfoBox._createHide();
 }
 
 /*
@@ -388,7 +389,7 @@ nmsInfoBox._editSave = function(sw, e) {
 	var myData = nmsInfoBox._editStringify(sw);
 	$.ajax({
 		type: "POST",
-		url: "/api/private/switch-add",
+		url: "/api/private/switch-update",
 		dataType: "text",
 		data:myData,
 		success: function (data, textStatus, jqXHR) {
@@ -397,4 +398,46 @@ nmsInfoBox._editSave = function(sw, e) {
 		}
 	});
 	nmsInfoBox._editHide();
+}
+
+
+/*
+ * Display infobox for new switch
+ *
+ * TODO: Integrate and rebuild info-box display logic
+ */
+nmsInfoBox._createShow = function()
+{
+	var container = document.createElement("div");
+  container.className = "col-md-5";
+	container.id = "nmsInfoBox-create";
+  container.style.zIndex = "999";
+
+	var swtop = document.getElementById("wrap");
+	nmsInfoBox._hide();	
+
+  container.innerHTML = '<div class="panel panel-default"> <div class="panel-heading">Add new switch <button type="button" class="close" aria-label="Close" onclick="nmsInfoBox._createHide();" style="float: right;">X</button></div> <div class="panel-body"><input type="text" class="form-control" id="create-sysname" placeholder="Sysname id"><button class="btn btn-default" onclick="nmsInfoBox._createSave(document.getElementById(\'create-sysname\').value);">Add switch</button></div><div id="create-switch-feedback"></div> </div>';
+
+	swtop.appendChild(container);
+}
+nmsInfoBox._createSave = function(sw) {
+  var feedback = document.getElementById("create-switch-feedback");
+  var myData = JSON.stringify([{'sysname':sw}]);
+  $.ajax({
+    type: "POST",
+    url: "/api/private/switch-add",
+    dataType: "text",
+    data:myData,
+    success: function (data, textStatus, jqXHR) {
+      var result = JSON.parse(data);
+      if(result.switches_addded.length > 0) {
+        nmsInfoBox._createHide();
+      }
+    }
+  });
+}
+nmsInfoBox._createHide = function() {
+	var container = document.getElementById("nmsInfoBox-create");
+	if (container != undefined)
+		container.parentNode.removeChild(container);
 }
