@@ -140,6 +140,38 @@ nmsInfoBox._makeCommentTable = function(content) {
 	return table;
 }
 
+nmsInfoBox._searchSmart = function(id, sw) {
+	if (nmsData.smanagement.switches[sw].distro == id) {
+		console.log("ieh");
+		return true;
+	}
+	if (id.match("[a-z]+.active")) {
+		console.log("hei: " + sw);
+		var family = id.match("[a-z]+");
+		var limit = id;
+		limit = limit.replace(family + ".active>","");
+		limit = limit.replace(family + ".active<","");
+		limit = limit.replace(family + ".active=","");
+		var operator = id.replace(family + ".active","")[0];
+		if (limit == parseInt(limit)) {
+			if (operator == ">" ) {
+				if (nmsData.switchstate.switches[sw][family].live > limit) {
+					return true;
+				}
+			} else if (operator == "<") {
+				if (nmsData.switchstate.switches[sw][family].live < limit) {
+					return true;
+				}
+			} else if (operator == "=") {
+				if (nmsData.switchstate.switches[sw][family].live == limit) {
+					return true;
+				}
+			}
+		}
+	}
+	return false;
+}
+
 /*
  * FIXME: Not sure this belongs here, it's really part of the "Core" ui,
  * not just the infobox.
@@ -153,11 +185,19 @@ nmsInfoBox._search = function() {
 	}
 	if(id) {
 		for(var sw in nmsData.switches.switches) {
-			if(sw.indexOf(id) > -1) {
-				hits++;
-				nmsMap.setSwitchHighlight(sw,true);
+			if (id[0] == "/") {
+				if (nmsInfoBox._searchSmart(id.slice(1),sw)) {
+					nmsMap.setSwitchHighlight(sw,true);
+				} else {
+					nmsMap.setSwitchHighlight(sw,false);
+				}
 			} else {
-				nmsMap.setSwitchHighlight(sw,false);
+				if(sw.indexOf(id) > -1) {
+					hits++;
+					nmsMap.setSwitchHighlight(sw,true);
+				} else {
+					nmsMap.setSwitchHighlight(sw,false);
+				}
 			}
 		}
 	} else {

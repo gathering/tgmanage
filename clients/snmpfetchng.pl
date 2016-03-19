@@ -60,7 +60,6 @@ sub populate_switches
 {
 	@switches = ();
 	my $limit = $nms::config::snmp_max;
-	print "called populate\n";	
 	$qswitch->execute($limit)
 		or die "Couldn't get switch";
 	$dbh->commit;
