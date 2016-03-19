@@ -83,10 +83,40 @@ foreach my $tmp2 (@tmp) {
 
 		$nms::web::dbh->do("INSERT INTO SWITCHES (ip, sysname, switchtype, last_updated, locked, poll_frequency, community, lldp_chassis_id, secondary_ip, placement)  VALUES ($template{'ip'}, $template{'sysname'}, $template{'switchtype'}, $template{'last_updated'}, $template{'locked'}, $template{'poll_frequency'}, $template{'community'}, $template{'lldp_chassis_id'}, $template{'secondary_ip'}, $template{'placement'});");
 		push @added, $switch{'sysname'};
+	} else {
+		if (defined($switch{'placement'})) {
+			my %placement;
+			if ($switch{'placement'} eq "reset") {
+				%placement = guess_placement($switch{'sysname'});
+			} else {
+				%placement = %{convertplace($switch{'placement'})};
+			}
+			my ($x1,$x2,$y1,$y2);
+			$x1 = $placement{'x1'};
+			$y1 = $placement{'y1'};
+			$x2 = $placement{'xx'};
+			$y2 = $placement{'yy'};
+			$switch{'placement'} = "(($x1,$y1),($x2,$y2))";
+			push @dups, "not really, but: " . $switch{'placement'};
+		}
+		if (not defined($switch{'ip'}) and defined($switch{'mgtmt4'})) {
+			$switch{'ip'} = $switch{'mgtmt4'};
+		}
+		if (not defined($switch{'secondary_ip'}) and defined($switch{'mgtmt6'})) {
+			$switch{'secondary_ip'} = $switch{'mgtmt6'};
+		}
+		my @set;
+		map {
+			if (defined($template{$_})) {
+				push @set, "$_=" . $dbh->quote($switch{$_});
+			}
+		} keys %switch;
+		$nms::web::dbh->do("UPDATE SWITCHES SET " . join(", ", @set) . "WHERE sysname=" . $dbh->quote($switch{'sysname'}) . ";");
+		push @dups, $switch{'sysname'};
 	}
 }
-
 $json{'switches_addded'} = \@added;
+$json{'switches_updated'} = \@dups;
 
 print "X-ban: /api/.*switches.*\n";
 finalize_output();
