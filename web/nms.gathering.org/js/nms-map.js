@@ -138,6 +138,9 @@ nmsMap._resizeEvent = function() {
 			continue;
 		nmsMap._c[a].c.height = nmsMap._canvas.height;
 		nmsMap._c[a].c.width = nmsMap._canvas.width;
+    if(a == 'bg') {
+      nmsMap._drawBG();
+    }
 	}
 	if (nmsMap._init != true) {
 		console.log("Drawing shit");
