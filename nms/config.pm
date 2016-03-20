@@ -6,9 +6,9 @@ package nms::config;
 
 # DB
 our $db_name = "nms";
-our $db_host = "db";
+our $db_host = "nms-dev-db.gathering.org";
 our $db_username = "nms";
-our $db_password = "foobar";
+our $db_password = "nms-lol";
 
 # NMS hash used for public NMS obfuscation of interface names
 our $nms_hash = "<removed>";
