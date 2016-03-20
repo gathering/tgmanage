@@ -44,17 +44,18 @@ SET default_tablespace = '';
 SET default_with_oids = false;
 
 --
--- Name: dhcp; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: dhcp; Type: TABLE; Schema: public; Owner: nms; Tablespace: 
 --
 
 CREATE TABLE dhcp (
     switch integer,
     "time" timestamp without time zone,
-    mac macaddr
+    mac macaddr,
+    ip inet
 );
 
 
-ALTER TABLE dhcp OWNER TO postgres;
+ALTER TABLE dhcp OWNER TO nms;
 
 --
 -- Name: linknet_ping; Type: TABLE; Schema: public; Owner: nms; Tablespace: 
@@ -162,7 +163,7 @@ CREATE TABLE seen_mac (
 ALTER TABLE seen_mac OWNER TO nms;
 
 --
--- Name: snmp; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: snmp; Type: TABLE; Schema: public; Owner: nms; Tablespace: 
 --
 
 CREATE TABLE snmp (
@@ -176,7 +177,7 @@ CREATE TABLE snmp (
 ALTER TABLE snmp OWNER TO nms;
 
 --
--- Name: snmp_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: snmp_id_seq; Type: SEQUENCE; Schema: public; Owner: nms
 --
 
 CREATE SEQUENCE snmp_id_seq
@@ -190,7 +191,7 @@ CREATE SEQUENCE snmp_id_seq
 ALTER TABLE snmp_id_seq OWNER TO nms;
 
 --
--- Name: snmp_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: snmp_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: nms
 --
 
 ALTER SEQUENCE snmp_id_seq OWNED BY snmp.id;
@@ -292,7 +293,7 @@ ALTER TABLE ONLY linknets ALTER COLUMN linknet SET DEFAULT nextval('linknets_lin
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: id; Type: DEFAULT; Schema: public; Owner: nms
 --
 
 ALTER TABLE ONLY snmp ALTER COLUMN id SET DEFAULT nextval('snmp_id_seq'::regclass);
@@ -354,14 +355,14 @@ ALTER TABLE ONLY switches
 
 
 --
--- Name: dhcp_switch; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: dhcp_switch; Type: INDEX; Schema: public; Owner: nms; Tablespace: 
 --
 
 CREATE INDEX dhcp_switch ON dhcp USING btree (switch);
 
 
 --
--- Name: dhcp_time; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: dhcp_time; Type: INDEX; Schema: public; Owner: nms; Tablespace: 
 --
 
 CREATE INDEX dhcp_time ON dhcp USING btree ("time");
@@ -417,21 +418,21 @@ CREATE INDEX seen_mac_seen ON seen_mac USING btree (seen);
 
 
 --
--- Name: snmp_time; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: snmp_time; Type: INDEX; Schema: public; Owner: nms; Tablespace: 
 --
 
 CREATE INDEX snmp_time ON snmp USING btree ("time");
 
 
 --
--- Name: snmp_time15; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: snmp_time15; Type: INDEX; Schema: public; Owner: nms; Tablespace: 
 --
 
 CREATE INDEX snmp_time15 ON snmp USING btree (id, switch);
 
 
 --
--- Name: snmp_time6; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: snmp_time6; Type: INDEX; Schema: public; Owner: nms; Tablespace: 
 --
 
 CREATE INDEX snmp_time6 ON snmp USING btree ("time" DESC, switch);
@@ -466,7 +467,7 @@ CREATE INDEX updated_index3 ON ping_secondary_ip USING btree ("time");
 
 
 --
--- Name: dhcp_switch_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: dhcp_switch_fkey; Type: FK CONSTRAINT; Schema: public; Owner: nms
 --
 
 ALTER TABLE ONLY dhcp
@@ -474,7 +475,7 @@ ALTER TABLE ONLY dhcp
 
 
 --
--- Name: snmp_switch_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: snmp_switch_fkey; Type: FK CONSTRAINT; Schema: public; Owner: nms
 --
 
 ALTER TABLE ONLY snmp
@@ -525,23 +526,23 @@ GRANT ALL ON TABLE seen_mac TO nms;
 
 
 --
--- Name: snmp; Type: ACL; Schema: public; Owner: postgres
+-- Name: snmp; Type: ACL; Schema: public; Owner: nms
 --
 
 REVOKE ALL ON TABLE snmp FROM PUBLIC;
-REVOKE ALL ON TABLE snmp FROM postgres;
-GRANT ALL ON TABLE snmp TO postgres;
+REVOKE ALL ON TABLE snmp FROM nms;
 GRANT ALL ON TABLE snmp TO nms;
+GRANT ALL ON TABLE snmp TO postgres;
 
 
 --
--- Name: snmp_id_seq; Type: ACL; Schema: public; Owner: postgres
+-- Name: snmp_id_seq; Type: ACL; Schema: public; Owner: nms
 --
 
 REVOKE ALL ON SEQUENCE snmp_id_seq FROM PUBLIC;
-REVOKE ALL ON SEQUENCE snmp_id_seq FROM postgres;
-GRANT ALL ON SEQUENCE snmp_id_seq TO postgres;
+REVOKE ALL ON SEQUENCE snmp_id_seq FROM nms;
 GRANT ALL ON SEQUENCE snmp_id_seq TO nms;
+GRANT ALL ON SEQUENCE snmp_id_seq TO postgres;
 
 
 --
