@@ -452,13 +452,19 @@ nmsInfoBox._search = function() {
 	}
 	if(matches.length == 1) {
 		document.getElementById("searchbox-submit").classList.add("btn-primary");
-		document.getElementById("searchbox").addEventListener("keydown",function(e) {
-			if(e.keyCode == 13)
-				nmsInfoBox.showWindow("switchInfo",matches[0]);
-		});
+		document.getElementById("searchbox").dataset.match = matches[0];
+		document.getElementById("searchbox").addEventListener("keydown",nmsInfoBox._searchKeyListener,false);
 	} else {
 		document.getElementById("searchbox-submit").classList.remove("btn-primary");
-		document.getElementById("searchbox").removeEventListener("keydown",false);
+		document.getElementById("searchbox").dataset.match = '';
+		document.getElementById("searchbox").removeEventListener("keydown",nmsInfoBox._searchKeyListener,false);
+	}
+}
+
+nmsInfoBox._searchKeyListener = function(e) {
+	if(e.keyCode == 13) {
+		var sw = document.getElementById("searchbox").dataset.match;
+		nmsInfoBox.showWindow("switchInfo",sw);
 	}
 }
 
