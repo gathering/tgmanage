@@ -92,7 +92,7 @@
 	      <div class="input-group input-group-sm">
 		<input id="searchbox" type="text" class="form-control" placeholder="Filter" oninput="nmsInfoBox._search()" />
 		  <span class="input-group-btn">
-		  <button class="btn btn-default" type="button" onclick="nmsInfoBox.show(document.getElementById('searchbox').value);">Go!</button>
+		  <button id="searchbox-submit" class="btn btn-default" type="button" onclick="nmsInfoBox.showWindow('switchInfo',document.getElementById('searchbox').value);">Go!</button>
 		</span>
 	      </div>
 	    </div>
