@@ -465,6 +465,7 @@ function initNMS() {
 	nmsData.registerSource("ping", "/api/public/ping");
 	nmsData.registerSource("switches","/api/public/switches");
 	nmsData.registerSource("switchstate","/api/public/switch-state");
+	nmsData.registerSource("dhcpsummary","/api/public/dhcp-summary");
 	
 	// This is a magic dummy-source, it's purpose is to give a unified
 	// way to get ticks every second. It is mainly meant to allow map
