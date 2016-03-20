@@ -21,11 +21,12 @@ And make sure that your user is in the docker group, so that you can run docker 
 
 -- getting to prompt(without cgroup): 
 `docker run -v "/home/kiro/repos/tgmanage:/srv/tgmanage" -v "/home/kiro/repos/tgmanage/nms/.bashrc:/root/.bashrc" -w "/srv/tgmanage/web/nms.gathering.org" \
--it --privileged nms-front /bin/bash`
+-rm=true -ti --name=front --privileged nms-front /bin/bash`
 
 - Find IP's:
 `docker inspect nms-db | grep "IPAddress\":"`
 `docker inspect nms-front | grep "IPAddress\":"`
 
 - Open the nms-front ip in the web browser.
+http://172.17.0.2:8080/
 
