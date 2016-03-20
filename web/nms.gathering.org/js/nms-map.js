@@ -59,7 +59,7 @@ nmsMap.init = function() {
 	this._init = true;
 	nmsData.addHandler("switches","nmsMap",function(){nmsMap._resizeEvent();});
 	window.addEventListener('resize',nmsMap._resizeEvent,true);
-	document.addEventListener('load',nmsMap._loadEvent,true);
+	window.addEventListener('load',nmsMap._loadEvent,true);
 }
 
 nmsMap.setSwitchColor = function(sw, color) {
@@ -143,7 +143,6 @@ nmsMap._resizeEvent = function() {
     }
 	}
 	if (nmsMap._init != true) {
-		console.log("Drawing shit");
 		nmsMap._blurDrawn = false;
 		nmsMap._drawBG();
 		nmsMap._drawAllSwitches();
