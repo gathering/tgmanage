@@ -160,27 +160,27 @@ function stringToEpoch(t)
 function epochToString(t)
 {
 	// Adjust for timezone when converting from epoch (UTC) to string (local)
-	var d = new Date(parseInt(t) * parseInt(1000));
-	var timezoneOffset = d.getTimezoneOffset() * -60;
+	var date = new Date(parseInt(t) * parseInt(1000));
+	var timezoneOffset = date.getTimezoneOffset() * -60;
 	t = t - timezoneOffset;
 
-	var d = new Date(parseInt(t) * parseInt(1000));
-	var str = d.getFullYear() + "-";
-	if (parseInt(d.getMonth()) < 9)
+    date = new Date(parseInt(t) * parseInt(1000));
+	var str = date.getFullYear() + "-";
+	if (parseInt(date.getMonth()) < 9)
 		str += "0";
-	str += (parseInt(d.getMonth())+1) + "-";
-	if (d.getDate() < 10)
+	str += (parseInt(date.getMonth())+1) + "-";
+	if (date.getDate() < 10)
 		str += "0";
-	str += d.getDate() + "T";
-	if (d.getHours() < 10)
+	str += date.getDate() + "T";
+	if (date.getHours() < 10)
 		str += "0";
-	str += d.getHours() + ":";
-	if (d.getMinutes() < 10)
+	str += date.getHours() + ":";
+	if (date.getMinutes() < 10)
 		str += "0";
-	str += d.getMinutes() + ":";
-	if (d.getSeconds() < 10)
+	str += date.getMinutes() + ":";
+	if (date.getSeconds() < 10)
 		str += "0";
-	str += d.getSeconds();
+	str += date.getSeconds();
 
 	return str;
 }
@@ -409,11 +409,7 @@ function addComment(sw,comment)
  */
 function isIn(box, x, y)
 {
-	if ((x >= box.x) && (x <= (box.x + box.width)) && (y >= box.y) && (y <= (box.y + box.height))) {
-		return true;
-	}
-	return false;
-
+    return ((x >= box.x) && (x <= (box.x + box.width)) && (y >= box.y) && (y <= (box.y + box.height)));
 }
 
 /*
@@ -486,7 +482,6 @@ function initNMS() {
 }
 
 function detectHandler() {
-	var url = document.URL;
 	for (var i in handlers) {
 		if (('#' + handlers[i].tag) == document.location.hash) {
 			setUpdater(handlers[i]);

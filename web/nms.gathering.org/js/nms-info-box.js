@@ -15,8 +15,8 @@ var nmsInfoBox = nmsInfoBox || {
   stats: {},
   _container: false, //Container window
   _window: false, //Active window (reference to _windowTypes object or false)
-  _windowTypes: [], //List of all avaliable window types
-}
+  _windowTypes: [] //List of all avaliable window types
+};
 
 /*
  * Shows a window from the _windowTypes list
@@ -30,7 +30,7 @@ nmsInfoBox.showWindow = function (windowName,argument) {
       return;
     }
   }
-}
+};
 
 /*
  * Refresh the active window
@@ -40,7 +40,7 @@ nmsInfoBox.showWindow = function (windowName,argument) {
  */
 nmsInfoBox.refresh = function() {
   nmsInfoBox._show();
-}
+};
 
 /*
  * Internal function to show the active _window and pass along any arguments
@@ -80,7 +80,7 @@ nmsInfoBox._show = function(argument) {
   }
   this._container.appendChild(panel);
   this._container.style.display = "block";
-}
+};
 
 /*
  * Hide the active window and tell it to unload
@@ -95,7 +95,7 @@ nmsInfoBox.hide = function() {
 	nmsData.unregisterHandler("switches","switchshower");
 	nmsData.unregisterHandler("smanagement","switchshower");
 	nmsData.unregisterHandler("snmp","switchshower");
-}
+};
 
 /*
  * Window type: Add Switch
@@ -130,7 +130,7 @@ nmsInfoBox._windowTypes.addSwitch = {
       data:myData,
       success: function (data, textStatus, jqXHR) {
         var result = JSON.parse(data);
-        if(result.switches_addded.length > 0) {
+        if(result.switches_addded.length > 0) { // FIXME unresolved variable switches_addded
           nmsInfoBox.hide();
         }
         nmsData.invalidate("switches");
@@ -226,9 +226,10 @@ nmsInfoBox._windowTypes.switchInfo = {
     var template = {};
 
     nmsInfoBox._editValues = {};
+    var place;
     for (var v in this.swi) {
       if (v == "placement") {
-        var place = JSON.stringify(this.swi[v]);
+        place = JSON.stringify(this.swi[v]);
         template[v] = place;
         continue;
       }
@@ -313,7 +314,7 @@ nmsInfoBox._windowTypes.switchInfo = {
 nmsInfoBox.click = function(sw)
 {
   this.showWindow("switchInfo",sw);
-}
+};
 
 /*
  * General-purpose table-maker?
@@ -343,7 +344,7 @@ nmsInfoBox._makeTable = function(content, caption) {
 		td2.innerHTML = content[v][1];
 	}
 	return table;
-}
+};
 
 /*
  * Create and return a table for comments.
@@ -386,7 +387,7 @@ nmsInfoBox._makeCommentTable = function(content) {
 		td2.innerHTML = comment["comment"];
 	}
 	return table;
-}
+};
 
 nmsInfoBox._searchSmart = function(id, sw) {
 	if (nmsData.smanagement.switches[sw].distro == id) {
@@ -418,7 +419,7 @@ nmsInfoBox._searchSmart = function(id, sw) {
 		}
 	}
 	return false;
-}
+};
 
 /*
  * FIXME: Not sure this belongs here, it's really part of the "Core" ui,
@@ -461,21 +462,21 @@ nmsInfoBox._search = function() {
 		document.getElementById("searchbox").dataset.match = '';
 		document.getElementById("searchbox").removeEventListener("keydown",nmsInfoBox._searchKeyListener,false);
 	}
-}
+};
 
 nmsInfoBox._searchKeyListener = function(e) {
 	if(e.keyCode == 13) {
 		var sw = document.getElementById("searchbox").dataset.match;
 		nmsInfoBox.showWindow("switchInfo",sw);
 	}
-}
+};
 
 
 nmsInfoBox._nullBlank = function(x) {
 	if (x == null || x == false || x == undefined)
 		return "";
 	return x;
-}
+};
 
 
 nmsInfoBox._editChange = function(sw, v) {
@@ -496,13 +497,9 @@ nmsInfoBox._editChange = function(sw, v) {
 	var myData = nmsInfoBox._editStringify(sw);
 	var out = document.getElementById("edit-output");
 	out.value = myData;
-}
+};
 
 nmsInfoBox._editStringify = function(sw) {
-	for (var key in nmsInfoBox._editValues) {
-		var val = nmsInfoBox._editValues[key];
-	}
-	nmsInfoBox._editValues['sysname'] = sw;
-	var myData = JSON.stringify([nmsInfoBox._editValues]);
-	return myData;
-}
+    nmsInfoBox._editValues['sysname'] = sw;
+    return JSON.stringify([nmsInfoBox._editValues]);
+};
