@@ -22,7 +22,7 @@ my @dups;
 
 my $sth = $nms::web::dbh->prepare("SELECT sysname FROM switches WHERE sysname=?");
 
-my @fields = ('ip', 'sysname', 'switchtype', 'last_updated', 'locked', 'poll_frequency', 'community', 'lldp_chassis_id', 'secondary_ip', 'subnet4', 'subnet6', 'placement', 'distro', 'secondary_ip');
+my @fields = ('ip', 'sysname', 'last_updated', 'locked', 'poll_frequency', 'community', 'lldp_chassis_id', 'secondary_ip', 'subnet4', 'subnet6', 'placement', 'distro', 'secondary_ip');
 
 sub convertplace
 {
@@ -81,7 +81,7 @@ foreach my $tmp2 (@tmp) {
 		} keys %switch;
 		
 
-		$nms::web::dbh->do("INSERT INTO SWITCHES (ip, sysname, switchtype, last_updated, locked, poll_frequency, community, lldp_chassis_id, secondary_ip, placement)  VALUES ($template{'ip'}, $template{'sysname'}, $template{'switchtype'}, $template{'last_updated'}, $template{'locked'}, $template{'poll_frequency'}, $template{'community'}, $template{'lldp_chassis_id'}, $template{'secondary_ip'}, $template{'placement'});");
+		$nms::web::dbh->do("INSERT INTO SWITCHES (ip, sysname, last_updated, locked, poll_frequency, community, lldp_chassis_id, secondary_ip, placement,subnet4,subnet6,distro)  VALUES ($template{'ip'}, $template{'sysname'}, $template{'last_updated'}, $template{'locked'}, $template{'poll_frequency'}, $template{'community'}, $template{'lldp_chassis_id'}, $template{'secondary_ip'}, $template{'placement'},$template{'subnet4'},$template{'subnet6'},$template{'distro'});");
 		push @added, $switch{'sysname'};
 	}
 }
