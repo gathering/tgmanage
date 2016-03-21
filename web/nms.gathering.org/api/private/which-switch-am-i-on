@@ -18,13 +18,23 @@ print "\n\n";
 # get user ip from somewhere.
 # HTTP_X_FORWARDED_FOR is set by varnish. When using varnish, the REMOTE_ADDR will always be localhost.
 my $addr = $ENV{HTTP_X_FORWARDED_FOR} // $ENV{REMOTE_ADDR};
-print "-:" . $addr ."\n";
-
 
 # add start html: header + body etc.
+print "
+<html>
+    <body style=\"text-align: center; font-size: 50pt;\">
+";
 
+# print address
+print "" . $addr ."<br \>";
+
+# print switch name and distroname.
 while ( my $ref = $query->fetchrow_hashref() ) {
     print $ref->{sysname}. " @ " . $ref->{distro};
 }
 
 # add end html
+print "
+    </body>
+</html>
+";
