@@ -29,7 +29,7 @@ var nms = {
 		'menuShowing'
 	],
 	keyBindings:{
-		'?':toggleMenu,
+		'-':toggleMenu,
 		'n':toggleNightMode,
 		'1':setMapModeFromN,
 		'2':setMapModeFromN,
@@ -43,7 +43,9 @@ var nms = {
 		'k':moveTimeFromKey,
 		'l':moveTimeFromKey,
 		'p':moveTimeFromKey,
-		'r':moveTimeFromKey
+		'r':moveTimeFromKey,
+		'Escape':hideWindow,
+		'?':toggleHelp
 	},
 	/*
 	 * Playback controllers and variables
@@ -509,6 +511,13 @@ function toggleMenu()
 	setMenu();
 	saveSettings();
 }
+function hideWindow(e,key)
+{
+	nmsInfoBox.hide();
+}
+function toggleHelp(e,key) {
+	toggleLayer('aboutKeybindings');
+}
 
 function setMapModeFromN(e,key)
 {
@@ -569,7 +578,22 @@ function keyPressed(e)
 	if (e.target.nodeName == "INPUT") {
 		return false;
 	}
-	var key = String.fromCharCode(e.keyCode);
+	if(e.key) {
+		var key = e.key;
+	} else {
+		var key = e.keyCode;
+	}
+	switch(key) {
+		case 187:
+			key = '?';
+			break;
+		case 189:
+			key = '-';
+			break;
+		case 27:
+			key = 'Escape';
+			break;
+	}
 	if (nms.keyBindings[key])
 		return nms.keyBindings[key](e,key);
 	if (nms.keyBindings['default'])
@@ -580,7 +604,9 @@ function keyPressed(e)
 function setupKeyhandler()
 {
 	var b = document.getElementsByTagName("body")[0];
-	b.onkeypress = function(e){keyPressed(e);};
+	$( "body" ).keyup(function(e) {
+		keyPressed(e);
+	});
 }
 
 
