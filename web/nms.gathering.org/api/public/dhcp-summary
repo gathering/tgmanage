@@ -1,5 +1,7 @@
 #! /usr/bin/perl
 use lib '../../../../include';
+use strict;
+use warnings;
 use nms::web;
 
 nms::web::setwhen('2h');
