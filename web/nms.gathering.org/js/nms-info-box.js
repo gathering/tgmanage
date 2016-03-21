@@ -319,6 +319,7 @@ nmsInfoBox._windowTypes.switchInfo = {
 nmsInfoBox.click = function(sw)
 {
   this.showWindow("switchInfo",sw);
+  this._windowTypes.switchInfo.showComments();
 }
 
 /*
@@ -476,8 +477,10 @@ nmsInfoBox._searchKeyListener = function(e) {
 	switch (e.keyCode) {
 		case 13:
 			var sw = document.getElementById("searchbox").dataset.match;
-			if(sw != '')
+			if(sw != '') {
 				nmsInfoBox.showWindow("switchInfo",sw);
+				this._windowTypes.switchInfo.showComments();
+			}
 			break;
 		case 27:
 			document.getElementById("searchbox").dataset.match = '';
