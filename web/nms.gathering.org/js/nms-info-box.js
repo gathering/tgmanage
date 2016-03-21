@@ -22,6 +22,10 @@ var nmsInfoBox = nmsInfoBox || {
  * Shows a window from the _windowTypes list
  */
 nmsInfoBox.showWindow = function (windowName,argument) {
+	if(windowName == "switchInfo" && argument != '' && argument == this._window.sw) {
+		nmsInfoBox.hide();
+		return;
+	}
   nmsInfoBox.hide();
   for(var win in this._windowTypes) {
     if(windowName == win) {
