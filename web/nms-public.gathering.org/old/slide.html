@@ -1,0 +1,38 @@
+<!doctype html>
+<html>
+    <body>
+	<iframe id="tgview" style="border: 0; width: 1536px; height: 864px"></iframe>
+
+        <script>
+            (function() {
+                var urls = [
+                    'http://onlineclock.net/',
+                    'http://nms.tg13.gathering.org/dhcpkart.pl',
+                    'http://nms.tg13.gathering.org/nettkart-text.pl',
+                    'http://nms.tg13.gathering.org/nettkart-text.pl',
+                    'http://nms.tg13.gathering.org/uplinkkart.pl',
+                    'http://nms.tg13.gathering.org/uplinktrafikkart.pl',
+                    'http://nms.tg13.gathering.org/apkart.pl',
+                    'http://stats.tg13.gathering.org/'
+                    ];
+
+                var view = document.getElementById('tgview');
+                var fload = function( frame, url ) {
+                        frame.src = url;
+                };
+
+                var i = 0;
+                (function rotation() {
+                    //if ( i != l-1 ) { 
+                    if ( i != urls.length-1 ) { 
+                        i++
+                    } else {
+                        i = 0;
+                    }
+                    fload( view, urls[i] );
+                    setTimeout( arguments.callee, 10000 );
+                })();
+            })();
+        </script>
+    </body>
+</html>

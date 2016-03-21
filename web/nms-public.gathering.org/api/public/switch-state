@@ -1,0 +1,47 @@
+#! /usr/bin/perl
+# vim:ts=8:sw=8
+
+use lib '../../../../include';
+use nms::web qw (%json finalize_output);
+use strict;
+use warnings;
+use Data::Dumper;
+
+my $q = $nms::web::dbh->prepare('select sysname,extract(epoch from date_trunc(\'second\',time)) as time,data from snmp natural join switches where id in (select max(id) from snmp where '
+        . $nms::web::when . 'group by switch);');
+
+$q->execute();
+while ( my $ref = $q->fetchrow_hashref() ) {
+	my $sysname = $ref->{'sysname'};
+
+	my %data = %{JSON::XS::decode_json($ref->{'data'})};
+	
+	for my $porti (keys %{$data{'ports'}}) {
+		my %port = %{$data{'ports'}{$porti}};
+		my $smallport = $porti;
+		$smallport =~ s/[0-9-].*$//;
+		if ($porti =~  /ge-0\/0\/4[4-7]/) {
+			$json{'switches'}{$sysname}{'uplinks'}{'ifHCInOctets'} += $port{'ifHCInOctets'};
+			$json{'switches'}{$sysname}{'uplinks'}{'ifHCOutOctets'} += $port{'ifHCOutOctets'};
+			if ($port{'ifOperStatus'} eq "up") {
+				$json{'switches'}{$sysname}{'uplinks'}{'live'} += 1;
+			}
+			$json{'switches'}{$sysname}{'uplinks'}{'total'} += 1;
+		}
+
+		$json{'switches'}{$sysname}{ifs}{$smallport}{'ifHCInOctets'} += $port{'ifHCInOctets'};
+		$json{'switches'}{$sysname}{ifs}{$smallport}{'ifHCOutOctets'} += $port{'ifHCOutOctets'};
+		$json{'switches'}{$sysname}{totals}{'ifHCInOctets'} += $port{'ifHCInOctets'};
+		$json{'switches'}{$sysname}{totals}{'ifHCOutOctets'} += $port{'ifHCOutOctets'};
+		if ($port{'ifOperStatus'} eq "up") {
+			$json{'switches'}{$sysname}{ifs}{$smallport}{'live'} += 1;
+			$json{'switches'}{$sysname}{totals}{'live'} += 1;
+		}
+		$json{'switches'}{$sysname}{totals}{'total'} += 1;
+	}
+	$json{'switches'}{$sysname}{'time'} = $ref->{'time'};
+}
+
+$nms::web::cc{'max-age'} = "5";
+$nms::web::cc{'stale-while-revalidate'} = "30";
+finalize_output();

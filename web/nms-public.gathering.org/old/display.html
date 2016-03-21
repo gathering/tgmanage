@@ -1,0 +1,64 @@
+<html>
+	<head>
+		<title>TG15 - The Future Is Back</title>
+		<style type="text/css">
+			body {
+				margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; margin: 0 auto;
+			}
+
+			#slide {
+				visibility: hidden;
+				position: absolute;
+				bottom: 0px;
+				top: 0px;
+				left: 0px;
+				margin: 0px;
+				overflow-y: hidden;
+				overflow-x: hidden;
+			}
+
+			#subframe {
+				width: 1920px;
+				height: 1080px;
+			}
+		</style>
+		<script src="//code.jquery.com/jquery-1.11.2.min.js"></script>
+		<script type="text/javascript">
+			var page = 0;
+			var iframes = 3;
+			var delay = 10;
+
+			function rotate() {
+				$('body').delay(delay*1000).queue(function(next) { 
+											$('div').each(function(i, obj) {
+												if (i == page) {
+													this.style.visibility = 'visible';
+												} else {
+													this.style.visibility = 'hidden';
+												}
+											});
+											next();
+											rotate();
+										});
+				page = (page + 1) % iframes;
+			}
+
+			$(document).ready(function(){
+				rotate();
+			});
+		</script>
+	</head>
+	<body>  
+		<div id="slide" style="visibility: visible;">
+			<iframe class="frames" id="subframe" frameborder="0" src="http://nms.tg15.gathering.org/observium.html" scrolling="no"></iframe>
+		</div>
+		
+		<div id="slide">
+			<iframe class="frames" id="subframe" frameborder="0" src="http://nms.tg15.gathering.org/ping.html" scrolling="no"></iframe>
+		</div>
+		
+		<div id="slide">
+			<iframe class="frames" id="subframe" frameborder="0" src="http://nms.tg15.gathering.org/dhcpkart.pl" scrolling="no"></iframe>
+		</div>
+	</body>
+</html>
