@@ -425,7 +425,7 @@ nmsInfoBox._searchSmart = function(id, sw) {
 nmsInfoBox._search = function() {
 	var el = document.getElementById("searchbox");
 	var id = false;
-	var hits = 0;
+	var matches = [];
 	if (el) {
 		id = el.value;
 	}
@@ -433,13 +433,14 @@ nmsInfoBox._search = function() {
 		for(var sw in nmsData.switches.switches) {
 			if (id[0] == "/") {
 				if (nmsInfoBox._searchSmart(id.slice(1),sw)) {
+					matches.push(sw);
 					nmsMap.setSwitchHighlight(sw,true);
 				} else {
 					nmsMap.setSwitchHighlight(sw,false);
 				}
 			} else {
 				if(sw.indexOf(id) > -1) {
-					hits++;
+					matches.push(sw);
 					nmsMap.setSwitchHighlight(sw,true);
 				} else {
 					nmsMap.setSwitchHighlight(sw,false);
@@ -448,6 +449,22 @@ nmsInfoBox._search = function() {
 		}
 	} else {
 		nmsMap.removeAllSwitchHighlights();
+	}
+	if(matches.length == 1) {
+		document.getElementById("searchbox-submit").classList.add("btn-primary");
+		document.getElementById("searchbox").dataset.match = matches[0];
+		document.getElementById("searchbox").addEventListener("keydown",nmsInfoBox._searchKeyListener,false);
+	} else {
+		document.getElementById("searchbox-submit").classList.remove("btn-primary");
+		document.getElementById("searchbox").dataset.match = '';
+		document.getElementById("searchbox").removeEventListener("keydown",nmsInfoBox._searchKeyListener,false);
+	}
+}
+
+nmsInfoBox._searchKeyListener = function(e) {
+	if(e.keyCode == 13) {
+		var sw = document.getElementById("searchbox").dataset.match;
+		nmsInfoBox.showWindow("switchInfo",sw);
 	}
 }
 
