@@ -74,7 +74,7 @@
 		<li class="dropdown-header">Move switches</li>
 	  	<li><a href="#" onclick="nmsMap.moveSet(true);">Enable switch moving</a></li>
 	  	<li><a href="#" onclick="nmsMap.moveSet(false);">Disable switch moving</a></li>
-	  	<li><a href="#" onclick="nmsInfoBox._createShow();">Add switch</a></li>
+	  	<li><a href="#" onclick="nmsInfoBox.showWindow('addSwitch')">Add switch</a></li>
 		<li class="divider"> </li>
 		<li class="dropdown-header">Help</li>
 	  	<li><a href="#" onclick="toggleLayer('aboutKeybindings');" >Keyboard Shortcuts</a></li>
@@ -92,7 +92,7 @@
 	      <div class="input-group input-group-sm">
 		<input id="searchbox" type="text" class="form-control" placeholder="Filter" oninput="nmsInfoBox._search()" />
 		  <span class="input-group-btn">
-		  <button class="btn btn-default" type="button" onclick="nmsInfoBox.show(document.getElementById('searchbox').value);">Go!</button>
+		  <button id="searchbox-submit" class="btn btn-default" type="button" onclick="nmsInfoBox.showWindow('switchInfo',document.getElementById('searchbox').value);">Go!</button>
 		</span>
 	      </div>
 	    </div>
@@ -222,9 +222,7 @@
 	      </div>
 	    </div>
 	  </div>
-	  <div id="info-switch-parent" class="panel panel-default col-md-5" style="display: none; position: absolute; z-index: 120;">
-	    <div class="panel-heading"> <h3 class="panel-title" id="info-switch-title"></h3> </div>
-	    <div id="info-switch-panel-body"> <table class="table" id="info-switch-table"></table> </div>
+	  <div id="info-panel-container" class="col-md-5" style="display: none; position: absolute; z-index: 120;">
 	  </div>
 	</div>
 
