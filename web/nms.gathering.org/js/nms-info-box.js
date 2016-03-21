@@ -436,6 +436,7 @@ nmsInfoBox._search = function() {
 		id = el.value;
 	}
 	if(id) {
+		nmsMap.enableHighlights();
 		for(var sw in nmsData.switches.switches) {
 			if (id[0] == "/") {
 				if (nmsInfoBox._searchSmart(id.slice(1),sw)) {
@@ -454,23 +455,30 @@ nmsInfoBox._search = function() {
 			}
 		}
 	} else {
-		nmsMap.removeAllSwitchHighlights();
+		nmsMap.disableHighlights();
 	}
 	if(matches.length == 1) {
 		document.getElementById("searchbox-submit").classList.add("btn-primary");
 		document.getElementById("searchbox").dataset.match = matches[0];
-		document.getElementById("searchbox").addEventListener("keydown",nmsInfoBox._searchKeyListener,false);
 	} else {
 		document.getElementById("searchbox-submit").classList.remove("btn-primary");
 		document.getElementById("searchbox").dataset.match = '';
-		document.getElementById("searchbox").removeEventListener("keydown",nmsInfoBox._searchKeyListener,false);
 	}
 }
 
 nmsInfoBox._searchKeyListener = function(e) {
-	if(e.keyCode == 13) {
-		var sw = document.getElementById("searchbox").dataset.match;
-		nmsInfoBox.showWindow("switchInfo",sw);
+	switch (e.keyCode) {
+		case 13:
+			var sw = document.getElementById("searchbox").dataset.match;
+			if(sw != '')
+				nmsInfoBox.showWindow("switchInfo",sw);
+			break;
+		case 27:
+			document.getElementById("searchbox").dataset.match = '';
+			document.getElementById("searchbox").value = '';
+			nmsInfoBox._search();
+			nmsInfoBox.hide();
+			break;
 	}
 }
 

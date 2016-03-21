@@ -10,7 +10,8 @@
  * nmsMap.setSwitchColor(switch,color)
  * nmsMap.setSwitchInfo(switch,info)
  * nmsMap.setSwitchHighlight(switch,true/false)
- * nmsMap.removeAllSwitchHighlights()
+ * nmsMap.enableHighlights()
+ * nmsMap.disableHighlights()
  */
 
 
@@ -47,6 +48,7 @@ var nmsMap = nmsMap || {
 
 	_color: { },
 	_highlight: { },
+	_highlightActive: false,
 	_c: {}
 }
 
@@ -76,15 +78,19 @@ nmsMap.setSwitchHighlight = function(sw, highlight) {
 	if(highlight)
 		highlight == true;
 	if (this._highlight[sw] != highlight) {
-		this._highlight[sw] = highlight;
-		this._drawSwitch(sw);
 		this.stats.highlightChange++;
+		this._highlight[sw] = highlight;
 	}
+	this._drawSwitch(sw);
 }
 
-nmsMap.removeAllSwitchHighlights = function() {
-	for(var sw in this._highlight)
-		this.setSwitchHighlight(sw,false);
+nmsMap.enableHighlights = function() {
+	this._highlightActive = true;
+}
+
+nmsMap.disableHighlights = function() {
+	this._highlightActive = false;
+	this._drawAllSwitches();
 }
 
 nmsMap.reset = function() {
@@ -247,8 +253,12 @@ nmsMap._drawSwitch = function(sw)
 		return;
 	var box = this._getBox(sw);
 	var color = nmsMap._color[sw];
-	if(nmsMap._highlight[sw]) {
-		color = red;
+	if(this._highlightActive) {
+		if(nmsMap._highlight[sw]) {
+			color = green;
+		} else {
+			color = white;
+		}
 	}
 	if (color == undefined) {
 		color = blue;

@@ -486,6 +486,7 @@ function initNMS() {
 	detectHandler();
 	nms.playback.play();
 	setupKeyhandler();
+	setupSearchKeyHandler();
 }
 
 function detectHandler() {
@@ -610,6 +611,13 @@ function setupKeyhandler()
 	var b = document.getElementsByTagName("body")[0];
 	$( "body" ).keyup(function(e) {
 		keyPressed(e);
+	});
+}
+
+function setupSearchKeyHandler()
+{
+	$("#searchbox").keyup(function(e) {
+		nmsInfoBox._searchKeyListener(e);
 	});
 }
 
