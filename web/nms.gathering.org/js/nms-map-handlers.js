@@ -204,45 +204,52 @@ function colorFromSpeed(speed,factor)
 }
 
 
-/*
- * Tweaked this to scale from roughly 20C to 35C. Hence the -20  and /15
- * thing (e.g., "0" is 20 and "15" is 35 by the time we pass it to
- * rgb_from_max());
- */
 function temp_color(t)
 {
 	if (t == undefined) {
 		console.log("Temp_color, but temp is undefined");
 		return blue;
 	}
-	t = parseInt(t) - 12;
-	t = Math.floor((t / 23) * 1000);
+	t = parseInt(t);
+	t = Math.floor(t * 10);
 	return getColorStop(t);
 }
 
 function tempUpdater()
 {
-	for (sw in nms.switches_now["switches"]) {
+	if(!nmsData.switches)
+		return;
+
+	for (sw in nmsData.switches["switches"]) {
 		var t = "white";
 		var temp = "";
-		if (nms.switches_now["switches"][sw]["temp"]) {
-			t = temp_color(nms.switches_now["switches"][sw]["temp"]);
-			temp = nms.switches_now["switches"][sw]["temp"] + "°C";
-		}
-		
-		setSwitchColor(sw, t);
-		switchInfoText(sw, temp);
+
+		if(!nmsData.snmp || !nmsData.snmp.snmp[sw]["misc"] || !nmsData.snmp.snmp[sw]["misc"]["enterprises.2636.3.1.13.1.7.7.1.0.0"])
+			continue;
+
+		tempObj = nmsData.snmp.snmp[sw]["misc"]["enterprises.2636.3.1.13.1.7.7.1.0.0"];
+		Object.keys(tempObj).forEach(function (key) {
+			if(key == "") {
+				temp = tempObj[key] + "°C";
+				t = temp_color(temp);
+			}
+		});
+
+		nmsMap.setSwitchColor(sw, t);
+		nmsMap.setSwitchInfo(sw, temp);
 	}
 }
 
 function tempInit()
-{
-	drawGradient(["black",blue,lightblue,lightgreen,green,orange,red]);
-	setLegend(1,temp_color(15),"15 °C");	
-	setLegend(2,temp_color(20),"20 °C");	
+{ 
+	//Padded the gradient with extra colors for the upper unused values
+	drawGradient([blue,lightgreen,green,orange,red,red,red,red,red,red]);
+	setLegend(1,temp_color(0),"0 °C");	
+	setLegend(2,temp_color(15),"15 °C");	
 	setLegend(3,temp_color(25),"25 °C");	
-	setLegend(4,temp_color(30),"30 °C");	
-	setLegend(5,temp_color(35),"35 °C");	
+	setLegend(4,temp_color(35),"35 °C");	
+	setLegend(5,temp_color(45),"45 °C");	
+	nmsData.addHandler("switchstate","mapHandler",tempUpdater);
 }
 
 function pingUpdater()
