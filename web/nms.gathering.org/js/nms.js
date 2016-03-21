@@ -582,17 +582,21 @@ function keyPressed(e)
 		var key = e.key;
 	} else {
 		var key = e.keyCode;
-	}
-	switch(key) {
-		case 187:
-			key = '?';
-			break;
-		case 189:
-			key = '-';
-			break;
-		case 27:
-			key = 'Escape';
-			break;
+		switch(key) {
+			case 187:
+				key = '?';
+				break;
+			case 189:
+				key = '-';
+				break;
+			case 27:
+				key = 'Escape';
+				break;
+			default:
+				key = String.fromCharCode(key);
+				key = key.toLowerCase();
+				break;
+		}
 	}
 	if (nms.keyBindings[key])
 		return nms.keyBindings[key](e,key);
