@@ -114,7 +114,13 @@ sub guess_placement {
 		$y = int(759 + 20.5 * $s);
 		$xx = $x + 65;
 		$yy = $y + 14;
-
+	} elsif ($name =~ /^distro(\d)/) {
+		my $d = ($1);
+		$src = "distro";
+		$x = 292 + $d * 165;
+		$y = 415;
+		$xx = $x + 130;
+		$yy = $y + 20;
 	} else {
 		# Fallback to have _some_ position
 		$src = "random";
