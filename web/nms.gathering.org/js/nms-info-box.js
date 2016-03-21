@@ -250,6 +250,8 @@ nmsInfoBox._windowTypes.switchInfo = {
       content.push([v, html]);
     }
 
+		content.sort();
+
     var table = nmsInfoBox._makeTable(content, "edit");
     domObj.appendChild(table);
 
