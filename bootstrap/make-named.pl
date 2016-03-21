@@ -56,6 +56,42 @@ options {
         listen-on-v6 { any; };
 };
 
+logging {
+        category "default" { "debug"; };
+        category "general" { "debug"; };
+        category "database" { "debug"; };
+        category "security" { "debug"; "stats"; };
+        category "config" { "debug"; "stats"; };
+        category "resolver" { "debug"; "stats"; };
+        category "xfer-in" { "debug"; "stats"; };
+        category "xfer-out" { "debug"; "stats"; };
+        category "notify" { "debug"; "stats"; };
+        category "client" { "debug"; };
+        category "unmatched" { "debug"; };
+        category "network" { "debug"; };
+        category "update" { "debug"; };
+        category "queries" { "stats"; };
+        category "dispatch" { "debug"; };
+        category "dnssec" { "debug"; };
+        category "lame-servers" { "debug"; };
+
+        channel "debug" {
+                file "/etc/bind/nameddbg" versions 2 size 50m;
+                print-time yes;
+                print-category yes;
+                print-severity yes;
+                severity debug 9;
+        };
+
+        channel "stats" {
+                file "/etc/bind/namedstats" versions 2 size 50m;
+                print-time yes;
+                print-category yes;
+                print-severity yes;
+                severity debug 3;
+        };
+};
+
 key DHCP_UPDATER {
         algorithm HMAC-MD5.SIG-ALG.REG.INT;
         secret $nms::config::ddns_key;

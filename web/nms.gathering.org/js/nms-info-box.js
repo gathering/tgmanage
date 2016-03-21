@@ -393,33 +393,37 @@ nmsInfoBox._makeCommentTable = function(content) {
 }
 
 nmsInfoBox._searchSmart = function(id, sw) {
-	if (nmsData.smanagement.switches[sw].distro == id) {
-		console.log("ieh");
-		return true;
-	}
-	if (id.match("[a-z]+.active")) {
-		console.log("hei: " + sw);
-		var family = id.match("[a-z]+");
-		var limit = id;
-		limit = limit.replace(family + ".active>","");
-		limit = limit.replace(family + ".active<","");
-		limit = limit.replace(family + ".active=","");
-		var operator = id.replace(family + ".active","")[0];
-		if (limit == parseInt(limit)) {
-			if (operator == ">" ) {
-				if (nmsData.switchstate.switches[sw][family].live > limit) {
-					return true;
-				}
-			} else if (operator == "<") {
-				if (nmsData.switchstate.switches[sw][family].live < limit) {
-					return true;
-				}
-			} else if (operator == "=") {
-				if (nmsData.switchstate.switches[sw][family].live == limit) {
-					return true;
+	try {
+		if (nmsData.smanagement.switches[sw].distro == id) {
+			return true;
+		}
+		if (id.match("active")) {
+			var limit = id;
+			limit = limit.replace("active>","");
+			limit = limit.replace("active<","");
+			limit = limit.replace("active=","");
+			var operator = id.replace("active","")[0];
+			if (limit == parseInt(limit)) {
+				if (operator == ">" ) {
+					if (nmsData.switchstate.switches[sw]['totals'].live > limit) {
+						return true;
+					}
+				} else if (operator == "<") {
+					if (nmsData.switchstate.switches[sw]['totals'].live < limit) {
+						return true;
+					}
+				} else if (operator == "=") {
+					if (nmsData.switchstate.switches[sw]['totals'].live == limit) {
+						return true;
+					}
 				}
 			}
 		}
+		if (nmsData.snmp.snmp[sw].misc.sysDescr[0].match(id)) {
+			return true;
+		}
+	} catch (e) {
+		return false;
 	}
 	return false;
 }

@@ -1,0 +1,13 @@
+.switchname {
+	position: absolute;
+	font-family: sans-serif;
+	font-size: small;
+	white-space: nowrap;
+}
+.rot {
+	-webkit-transform: rotate(-90deg);
+	-webkit-transform-origin: 0% 0%;
+	transform: rotate(-90deg);
+	transform-origin: 0% 0%;
+	bottom: -14px;
+}
