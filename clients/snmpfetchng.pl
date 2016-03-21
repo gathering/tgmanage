@@ -95,7 +95,7 @@ sub inner_loop
 		}
 	}
 	mylog( "Polling " . @switches . " switches: $poll_todo");
-	SNMP::MainLoop(5);
+	SNMP::MainLoop(10);
 }
 
 sub callback{

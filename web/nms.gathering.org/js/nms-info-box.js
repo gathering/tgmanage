@@ -133,6 +133,8 @@ nmsInfoBox._windowTypes.addSwitch = {
         if(result.switches_addded.length > 0) {
           nmsInfoBox.hide();
         }
+        nmsData.invalidate("switches");
+        nmsData.invalidate("smanagement");
       }
     });
   }
