@@ -16,8 +16,8 @@ var nms = {
 	 * FIXME: Should just stop using these.
 	 */
 	timers: {
-		playback:false,
-	},
+		playback:false
+    },
 	
 	menuShowing:true,
 	/*
@@ -82,7 +82,7 @@ function nmsTimer(handler, interval, name, description) {
 		};
 
 	this.setInterval = function(interval) {
-		var started = this.handle == false ? false : true;
+		var started = this.handle != false;
 		this.stop();
 		this.interval = parseInt(interval);
 		if (started)
@@ -205,7 +205,7 @@ nms.playback.startReplay = function(startTime,stopTime) {
 	nms.playback.stopTime = stringToEpoch(stopTime);
 	nms.now = epochToString(nms.playback.startTime);
 	nms.playback.play();
-}
+};
 
 /*
  * Pause playback
@@ -213,7 +213,7 @@ nms.playback.startReplay = function(startTime,stopTime) {
 nms.playback.pause = function() {
 	nms.timers.playback.stop();
 	nms.playback.playing = false;
-}
+};
 
 /*
  * Start playback
@@ -222,7 +222,7 @@ nms.playback.play = function() {
 	nms.playback.tick();
 	nms.timers.playback.start();
 	nms.playback.playing = true;
-}
+};
 
 /*
  * Toggle playback
@@ -233,19 +233,18 @@ nms.playback.toggle = function() {
 	} else {
 		nms.playback.play();
 	}
-}
+};
 
 /*
  * Jump to place in time
  */
 nms.playback.setNow = function(now) {
-	var now = parseNow(now);
-	nms.now = now;
+	nms.now = parseNow(now);
 
 	nms.playback.stopTime = false;
 	nms.playback.startTime = false;
 	nms.playback.tick();
-}
+};
 
 /*
  * Step forwards or backwards in timer
@@ -258,7 +257,7 @@ nms.playback.stepTime = function(n)
 
 	if(!nms.playback.playing)
 		nms.playback.tick();
-}
+};
 
 /*
  * Ticker to trigger updates, and advance time if replaying
@@ -286,7 +285,7 @@ nms.playback.tick = function()
 	if(nms.now !== false && nms.playback.playing) {
 		nms.playback.stepTime(nms.playback.replayIncrement);
 	}
-}
+};
 
 /*
  * Helper function for safely getting a valid now-epoch
@@ -600,8 +599,8 @@ function getCookie(cname) {
 function saveSettings()
 {
 	var foo={};
-	for (var v in nms.settingsList) {
-		foo[nms.settingsList[v]] = nms[nms.settingsList[v]];
+	for ( var v in nms.settingsList ) {
+		foo[ nms.settingsList[v] ] = nms[ nms.settingsList[v] ];
 	}
 	document.cookie = 'nms='+btoa(JSON.stringify(foo));
 }
