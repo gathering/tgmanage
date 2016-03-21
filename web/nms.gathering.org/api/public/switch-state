@@ -20,7 +20,7 @@ while ( my $ref = $q->fetchrow_hashref() ) {
 		my %port = %{$data{'ports'}{$porti}};
 		my $smallport = $porti;
 		$smallport =~ s/[0-9-].*$//;
-		if ($porti =~  /ge-0\/0\/4[4-7]/ or $porti eq 'eth0') {
+		if ($porti =~  /ge-0\/0\/4[4-7]/) {
 			$json{'switches'}{$sysname}{'uplinks'}{'ifHCInOctets'} += $port{'ifHCInOctets'};
 			$json{'switches'}{$sysname}{'uplinks'}{'ifHCOutOctets'} += $port{'ifHCOutOctets'};
 			if ($port{'ifOperStatus'} eq "up") {
@@ -29,12 +29,15 @@ while ( my $ref = $q->fetchrow_hashref() ) {
 			$json{'switches'}{$sysname}{'uplinks'}{'total'} += 1;
 		}
 
-		$json{'switches'}{$sysname}{$smallport}{'ifHCInOctets'} += $port{'ifHCInOctets'};
-		$json{'switches'}{$sysname}{$smallport}{'ifHCOutOctets'} += $port{'ifHCOutOctets'};
+		$json{'switches'}{$sysname}{ifs}{$smallport}{'ifHCInOctets'} += $port{'ifHCInOctets'};
+		$json{'switches'}{$sysname}{ifs}{$smallport}{'ifHCOutOctets'} += $port{'ifHCOutOctets'};
+		$json{'switches'}{$sysname}{totals}{'ifHCInOctets'} += $port{'ifHCInOctets'};
+		$json{'switches'}{$sysname}{totals}{'ifHCOutOctets'} += $port{'ifHCOutOctets'};
 		if ($port{'ifOperStatus'} eq "up") {
-			$json{'switches'}{$sysname}{$smallport}{'live'} += 1;
+			$json{'switches'}{$sysname}{ifs}{$smallport}{'live'} += 1;
+			$json{'switches'}{$sysname}{totals}{'live'} += 1;
 		}
-		$json{'switches'}{$sysname}{$smallport}{'total'} += 1;
+		$json{'switches'}{$sysname}{totals}{'total'} += 1;
 	}
 	$json{'switches'}{$sysname}{'time'} = $ref->{'time'};
 }
