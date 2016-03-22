@@ -7,6 +7,7 @@ use strict;
 use warnings;
 use Data::Dumper;
 
+nms::web::setwhen('60m');
 my $q = $nms::web::dbh->prepare('select distinct on (sysname) extract(epoch from date_trunc(\'second\',time)) as time,sysname from dhcp join switches on dhcp.switch = switches.switch where ' . $nms::web::when . ' order by sysname,time desc;');
 $q->execute();
 while ( my $ref = $q->fetchrow_hashref() ) {

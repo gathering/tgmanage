@@ -20,7 +20,7 @@ while ( my $ref = $q->fetchrow_hashref() ) {
 		my %port = %{$data{'ports'}{$porti}};
 		my $smallport = $porti;
 		$smallport =~ s/[0-9-].*$//;
-		if ($porti =~  /ge-0\/0\/4[4-7]/) {
+		if ($porti =~  /ge-0\/0\/4[4-7]$/) {
 			$json{'switches'}{$sysname}{'uplinks'}{'ifHCInOctets'} += $port{'ifHCInOctets'};
 			$json{'switches'}{$sysname}{'uplinks'}{'ifHCOutOctets'} += $port{'ifHCOutOctets'};
 			if ($port{'ifOperStatus'} eq "up") {
