@@ -82,7 +82,7 @@ var nmsData = nmsData || {
 nmsData._dropData = function (name) {
 	delete this[name];
 	delete this.old[name];
-}
+};
 
 nmsData.removeSource = function (name) {
 	if (this._sources[name] == undefined) {
@@ -94,7 +94,7 @@ nmsData.removeSource = function (name) {
 		clearInterval(this._sources[name]['handle']);
 	}
 	delete this._sources[name];
-}
+};
 
 /*
  * Register a source.
@@ -121,7 +121,7 @@ nmsData.registerSource = function(name, target) {
 	}
 
 	this.stats.pollSets++;
-}
+};
 
 /*
  * Add a handler (callback) for a source, using an id.
@@ -130,7 +130,6 @@ nmsData.registerSource = function(name, target) {
  * old id, not add a copy.
  */
 nmsData.addHandler = function(name, id, cb, cbdata) {
-	try {
 	var cbob = {
 		id: id,
 		name: name,
@@ -143,9 +142,7 @@ nmsData.addHandler = function(name, id, cb, cbdata) {
 	}
 	this._sources[name].cbs[id] = cbob;
 	this.updateSource(name);
-	} catch (e) {
-	}
-}
+};
 
 /*
  * Unregister all handlers with the "id" for all sources.
@@ -157,11 +154,11 @@ nmsData.unregisterHandlerWildcard = function(id) {
 	for (var v in nmsData._sources) {
 		this.unregisterHandler(v, id);
 	}
-}
+};
 
 nmsData.unregisterHandler = function(name, id) {
 	delete this._sources[name].cbs[id];
-}
+};
 
 /*
  * Updates a source.
@@ -184,11 +181,11 @@ nmsData.updateSource = function(name) {
 		return;
 	}
 	this._genericUpdater(name, true);
-}
+};
 
 nmsData.invalidate = function(name) {
 	this._genericUpdater(name, false);
-}
+};
 /*
  * Reset a source, deleting all data, including old.
  *
@@ -198,7 +195,7 @@ nmsData.resetSource = function(name) {
 	this[name] = {};
 	this.old[name] = {};
 	this.updateSource(name);
-}
+};
 
 /*
  * Updates nmsData[name] and nmsData.old[name], issuing any callbacks where
@@ -239,16 +236,16 @@ nmsData._genericUpdater = function(name, cacheok) {
 				nmsData[name] = data;
 				nmsMap.drawNow();
 				for (var i in nmsData._sources[name].cbs) {
-					var tmp = nmsData._sources[name].cbs[i];
-					if (tmp.cb != undefined) {
-						tmp.cb(tmp.cbdata);
+					var tmp2 = nmsData._sources[name].cbs[i];
+					if (tmp2.cb != undefined) {
+						tmp2.cb(tmp2.cbdata);
 					}
 				}
 			} else {
-				for (var i in nmsData._sources[name].cbs) {
-					var tmp = nmsData._sources[name].cbs[i];
+				for (var j in nmsData._sources[name].cbs) {
+					var tmp = nmsData._sources[name].cbs[j];
 					if (tmp.cb != undefined && tmp.fresh) {
-						nmsData._sources[name].cbs[i].fresh = false;
+						nmsData._sources[name].cbs[j].fresh = false;
 						tmp.cb(tmp.cbdata);
 					}
 				}

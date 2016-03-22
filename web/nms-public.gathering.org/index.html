@@ -58,10 +58,27 @@
 	      </a>
 	      <ul class="dropdown-menu" role="menu">
 		<li><a href="#ping" onclick="setUpdater(handler_ping)">Ping map</a></li>
+		<li><a href="#uplink" onclick="setUpdater(handler_uplinks)">Uplink map</a></li>
+		<li><a href="#dhcp" onclick="setUpdater(handler_dhcp)">DHCP map</a></li>
+		<li><a href="#comment" onclick="setUpdater(handler_comment)">Comment spotter</a></li>
+		<li><a href="#temp" onclick="setUpdater(handler_temp)">Temperature map</a></li>
+		<li><a href="#traffic" onclick="setUpdater(handler_traffic)">Traffic map</a></li>
+		<li><a href="#traffictot" onclick="setUpdater(handler_traffic_tot)">Total switch traffic</a></li>
 		<li><a href="#disco" onclick="setUpdater(handler_disco)">DISCO</a></li>
 		<li class="divider"> </li>
+		<li><a href="#" onclick="toggleLayer('nowPickerBox');startNowPicker();">Travel in time</a></li>
+		<li><a href="#" onclick="nms.playback.startReplay('2015-04-01T09:00:00','2015-04-05T12:00:00');" title="Replay from opening 120 minutes per second">Replay TG</a></li>
+		<li class="divider"> </li>
+		<li class="dropdown-header">View</li>
 		<li><a href="#" onclick="toggleNightMode()">Toggle Night Mode</a></li>
 		<li class="divider"> </li>
+		<li class="dropdown-header">Move switches</li>
+	  	<li><a href="#" onclick="nmsMap.moveSet(true);">Enable switch moving</a></li>
+	  	<li><a href="#" onclick="nmsMap.moveSet(false);">Disable switch moving</a></li>
+	  	<li><a href="#" onclick="nmsInfoBox.showWindow('addSwitch')">Add switch</a></li>
+		<li class="divider"> </li>
+		<li class="dropdown-header">Help</li>
+	  	<li><a href="#" onclick="toggleLayer('aboutKeybindings');" >Keyboard Shortcuts</a></li>
 	      </ul>
 	    </li>
 	    <li><p id="updater_name" class="navbar-text"></p></li>
@@ -129,22 +146,26 @@
 		</tr>
 		<tr>
 		  <td>3</td>
-		  <td>View temperature map</td>
+		  <td>View DHCP map</td>
 		</tr>
 		<tr>
 		  <td>4</td>
-		  <td>View uplink traffic map</td>
-		</tr>
-		<tr>
-		  <td>5</td>
 		  <td>View comment spotter map</td>
 		</tr>
 		<tr>
+		  <td>5</td>
+		  <td>View temperature map</td>
+		</tr>
+		<tr>
 		  <td>6</td>
-		  <td>View total switch traffic map</td>
+		  <td>View uplink traffic map</td>
 		</tr>
 		<tr>
 		  <td>7</td>
+		  <td>View total switch traffic map</td>
+		</tr>
+		<tr>
+		  <td>9</td>
 		  <td>View Disco map</td>
 		</tr>
 		<tr>

@@ -15,8 +15,8 @@ var nmsInfoBox = nmsInfoBox || {
   stats: {},
   _container: false, //Container window
   _window: false, //Active window (reference to _windowTypes object or false)
-  _windowTypes: [], //List of all avaliable window types
-}
+  _windowTypes: [] //List of all avaliable window types
+};
 
 /*
  * Shows a window from the _windowTypes list
@@ -34,26 +34,30 @@ nmsInfoBox.showWindow = function (windowName,argument) {
       return;
     }
   }
-}
+};
 
 /*
  * Refresh the active window
- *
- * Todo: Could use a less aggressive refresh that doesn't hide-show everything
- *
  */
 nmsInfoBox.refresh = function() {
+	if(!nmsInfoBox._window)
+		return;
   nmsInfoBox._show();
+};
+nmsInfoBox.update = function(argument) {
+	if(!nmsInfoBox._window)
+		return;
+	nmsInfoBox._window.update(argument);
 }
 
 /*
  * Internal function to show the active _window and pass along any arguments
  */
 nmsInfoBox._show = function(argument) {
-  nmsData.addHandler("comments","switchshower",nmsInfoBox.update,argument);
-  nmsData.addHandler("switches","switchshower",nmsInfoBox.update,argument);
-  nmsData.addHandler("smanagement","switchshower",nmsInfoBox.update,argument);
-  nmsData.addHandler("snmp","switchshower",nmsInfoBox.update,argument);
+  nmsData.addHandler("comments","switchshower",nmsInfoBox.update,'comments');
+  nmsData.addHandler("switches","switchshower",nmsInfoBox.update,'switches');
+  nmsData.addHandler("smanagement","switchshower",nmsInfoBox.update,'smanagement');
+  nmsData.addHandler("snmp","switchshower",nmsInfoBox.update,'snmp');
 
   this._window.load(argument);
 
@@ -84,13 +88,13 @@ nmsInfoBox._show = function(argument) {
   }
   this._container.appendChild(panel);
   this._container.style.display = "block";
-}
+};
 
 /*
  * Hide the active window and tell it to unload
  */
 nmsInfoBox.hide = function() {
-  if(this._container == false || this._window == false)
+  if(!this._container || !this._window)
     return;
   this._container.style.display = "none";
   this._window.unload();
@@ -99,7 +103,7 @@ nmsInfoBox.hide = function() {
 	nmsData.unregisterHandler("switches","switchshower");
 	nmsData.unregisterHandler("smanagement","switchshower");
 	nmsData.unregisterHandler("snmp","switchshower");
-}
+};
 
 /*
  * Window type: Add Switch
@@ -122,6 +126,8 @@ nmsInfoBox._windowTypes.addSwitch = {
   },
   load: function(argument) {
   },
+	update: function(type) {
+	},
   unload: function() {
   },
   save: function() {
@@ -129,12 +135,12 @@ nmsInfoBox._windowTypes.addSwitch = {
     var myData = JSON.stringify([{'sysname':sysname}]);
     $.ajax({
       type: "POST",
-      url: "/api/private/switch-add",
+      url: "/api/write/switch-add",
       dataType: "text",
       data:myData,
       success: function (data, textStatus, jqXHR) {
         var result = JSON.parse(data);
-        if(result.switches_addded.length > 0) {
+        if(result.switches_addded.length > 0) { // FIXME unresolved variable switches_addded
           nmsInfoBox.hide();
         }
         nmsData.invalidate("switches");
@@ -159,17 +165,18 @@ nmsInfoBox._windowTypes.switchInfo = {
   sw: '',
   swi: '',
   swm: '',
+	commentsHash: false,
+	activeView: '',
   load: function(sw) {
     if(sw) {
       this.sw = sw;
     }
     this.swi = nmsData.switches["switches"][this.sw];
-    try {
-    this.swm = nmsData.smanagement.switches[this.sw];
-    } catch(e) {
-	this.swm = [];
-    }
-    
+		try {
+			this.swm = nmsData.smanagement.switches[this.sw];
+		} catch(e) {
+			this.swm = [];
+		}
 
     var content = [];
 
@@ -193,6 +200,15 @@ nmsInfoBox._windowTypes.switchInfo = {
     this.content = infotable;
 
   },
+	update: function(type) {
+		switch (type) {
+			case 'comments':
+				if(this.activeView == "comments" && this.commentsHash != nmsData.comments.hash) {
+					nmsInfoBox._windowTypes.switchInfo.showComments();
+				}
+				break;
+		}
+	},
   getTitle: function() {
     return '<button type="button" class="edit btn btn-xs btn-warning" onclick="nmsInfoBox._windowTypes.switchInfo.showEdit(\'' + this.sw + '\');">Edit</button> <button type="button" class="comments btn btn-xs btn-default" onclick="nmsInfoBox._windowTypes.switchInfo.showComments(\'' + this.sw + '\');">Comments</button> <button type="button" class="edit btn btn-xs btn-default" onclick="nmsInfoBox._windowTypes.switchInfo.showSNMP(\'ports\');">Ports</button> <button type="button" class="edit btn btn-xs btn-default" onclick="nmsInfoBox._windowTypes.switchInfo.showSNMP(\'misc\');">Misc</button> ' + this.sw + '';
   },
@@ -203,41 +219,60 @@ nmsInfoBox._windowTypes.switchInfo = {
     return this.childContent;
   },
   showComments: function() {
+			this.activeView = "comments";
       var domObj = document.createElement("div");
       var comments = [];
-      if (nmsData.comments.comments != undefined && nmsData.comments.comments[this.sw] != undefined) {
-        for (var c in nmsData.comments.comments[this.sw]["comments"]) {
-          var comment = nmsData.comments.comments[this.sw]["comments"][c];
-          if (comment["state"] == "active" || comment["state"] == "persist" || comment["state"] == "inactive") {
-            comments.push(comment);
-          }
-        }
-      }
 
-      if (comments.length > 0) {
-        var commenttable = nmsInfoBox._makeCommentTable(comments);
-        commenttable.id = "info-switch-comments-table";
-        domObj.appendChild(commenttable);
-        $(function () { $('[data-toggle="popover"]').popover({placement:"top",continer:'body'}) })
-      }
       var commentbox = document.createElement("div");
       commentbox.id = "commentbox";
       commentbox.className = "panel-body";
       commentbox.style.width = "100%";
-      commentbox.innerHTML = '<div class="input-group"><input type="text" class="form-control" placeholder="Comment" id="' + this.sw + '-comment"><span class=\"input-group-btn\"><button class="btn btn-default" onclick="addComment(\'' + this.sw + '\',document.getElementById(\'' + this.sw + '-comment\').value); document.getElementById(\'' + this.sw + '-comment\').value = \'\'; document.getElementById(\'' + this.sw + '-comment\').placeholder = \'Comment added. Wait for next refresh.\'; nmsInfoBox.hide();">Add comment</button></span></div>';
-      domObj.appendChild(commentbox);
+      commentbox.innerHTML = '<div class="input-group"><input type="text" class="form-control" placeholder="Comment" id="' + this.sw + '-comment"><span class=\"input-group-btn\"><button class="btn btn-default" onclick="addComment(\'' + this.sw + '\',document.getElementById(\'' + this.sw + '-comment\').value); document.getElementById(\'' + this.sw + '-comment\').value = \'\'; document.getElementById(\'' + this.sw + '-comment\').placeholder = \'Comment added. Wait for next refresh.\';">Add comment</button></span></div>';
 
+			// If we have no switch data, so just show comment form
+			if(!nmsData.comments || !nmsData.comments.comments) {
+				this.commentsHash = false;
+
+			// We have data, but its old, so don't change data
+			} else if(this.commentsHash != false && this.commentsHash == nmsData.comments.hash) {
+				return;
+
+			// We have data, refresh
+			} else if(nmsData.comments.comments[this.sw]) {
+				this.commentsHash = nmsData.comments.hash;
+				for (var c in nmsData.comments.comments[this.sw]["comments"]) {
+					var comment = nmsData.comments.comments[this.sw]["comments"][c];
+					if (comment["state"] == "active" || comment["state"] == "persist" || comment["state"] == "inactive") {
+						comments.push(comment);
+					}
+				}
+
+				if (comments.length > 0) {
+					var commenttable = nmsInfoBox._makeCommentTable(comments);
+					commenttable.id = "info-switch-comments-table";
+					domObj.appendChild(commenttable);
+					$(function () { $('[data-toggle="popover"]').popover({placement:"top",continer:'body'}) })
+				}
+
+			// We have no data for this switch, but its still correct
+			} else {
+				this.commentsHash = nmsData.comments.hash;
+			}
+
+      domObj.appendChild(commentbox);
       this.childContent = domObj;
       nmsInfoBox.refresh();
   },
   showEdit: function() {
+		this.activeView = "edit";
     var domObj = document.createElement("div");
     var template = {};
 
     nmsInfoBox._editValues = {};
+    var place;
     for (var v in this.swi) {
       if (v == "placement") {
-        var place = JSON.stringify(this.swi[v]);
+        place = JSON.stringify(this.swi[v]);
         template[v] = place;
         continue;
       }
@@ -254,6 +289,8 @@ nmsInfoBox._windowTypes.switchInfo = {
       var html = "<input type=\"text\" class=\"form-control\" value='" + template[v] + "' id=\"edit-"+ this.sw + "-" + v + '" onchange=' + tmphandler + ' oninput=' + tmphandler + '/>';
       content.push([v, html]);
     }
+
+		content.sort();
 
     var table = nmsInfoBox._makeTable(content, "edit");
     domObj.appendChild(table);
@@ -280,6 +317,7 @@ nmsInfoBox._windowTypes.switchInfo = {
     nmsInfoBox.refresh();
   },
   showSNMP: function(tree) {
+		this.activeView = "snmp";
     var domObj = document.createElement("div");
 
     var output = document.createElement("output");
@@ -297,13 +335,14 @@ nmsInfoBox._windowTypes.switchInfo = {
   },
   unload: function() {
     this.childContent = false;
+		this.commentsHash = false;
+		this.activeView = "";
   },
   save: function() {
     var myData = nmsInfoBox._editStringify(this.sw);
-    console.log(myData);
     $.ajax({
       type: "POST",
-      url: "/api/private/switch-update",
+      url: "/api/write/switch-update",
       dataType: "text",
       data:myData,
       success: function (data, textStatus, jqXHR) {
@@ -311,7 +350,6 @@ nmsInfoBox._windowTypes.switchInfo = {
         nmsData.invalidate("smanagement");
       }
     });
-    nmsInfoBox.hide();
   }
 };
 
@@ -322,7 +360,8 @@ nmsInfoBox._windowTypes.switchInfo = {
 nmsInfoBox.click = function(sw)
 {
   this.showWindow("switchInfo",sw);
-}
+  this._windowTypes.switchInfo.showComments();
+};
 
 /*
  * General-purpose table-maker?
@@ -352,7 +391,7 @@ nmsInfoBox._makeTable = function(content, caption) {
 		td2.innerHTML = content[v][1];
 	}
 	return table;
-}
+};
 
 /*
  * Create and return a table for comments.
@@ -395,7 +434,7 @@ nmsInfoBox._makeCommentTable = function(content) {
 		td2.innerHTML = comment["comment"];
 	}
 	return table;
-}
+};
 
 nmsInfoBox._searchSmart = function(id, sw) {
 	try {
@@ -424,6 +463,15 @@ nmsInfoBox._searchSmart = function(id, sw) {
 				}
 			}
 		}
+		if (nmsData.smanagement.switches[sw].ip.match(id)) {
+			return true;
+		}
+		if (nmsData.smanagement.switches[sw].subnet4.match(id)) {
+			return true;
+		}
+		if (nmsData.smanagement.switches[sw].subnet6.match(id)) {
+			return true;
+		}
 		if (nmsData.snmp.snmp[sw].misc.sysDescr[0].match(id)) {
 			return true;
 		}
@@ -431,7 +479,7 @@ nmsInfoBox._searchSmart = function(id, sw) {
 		return false;
 	}
 	return false;
-}
+};
 
 /*
  * FIXME: Not sure this belongs here, it's really part of the "Core" ui,
@@ -445,50 +493,54 @@ nmsInfoBox._search = function() {
 		id = el.value;
 	}
 	if(id) {
+		nmsMap.enableHighlights();
 		for(var sw in nmsData.switches.switches) {
-			if (id[0] == "/") {
-				if (nmsInfoBox._searchSmart(id.slice(1),sw)) {
-					matches.push(sw);
-					nmsMap.setSwitchHighlight(sw,true);
-				} else {
-					nmsMap.setSwitchHighlight(sw,false);
-				}
+			if(sw.indexOf(id) > -1) {
+				matches.push(sw);
+				nmsMap.setSwitchHighlight(sw,true);
+			} else if (nmsInfoBox._searchSmart(id,sw)) {
+				matches.push(sw);
+				nmsMap.setSwitchHighlight(sw,true);
 			} else {
-				if(sw.indexOf(id) > -1) {
-					matches.push(sw);
-					nmsMap.setSwitchHighlight(sw,true);
-				} else {
-					nmsMap.setSwitchHighlight(sw,false);
-				}
+				nmsMap.setSwitchHighlight(sw,false);
 			}
 		}
 	} else {
-		nmsMap.removeAllSwitchHighlights();
+		nmsMap.disableHighlights();
 	}
 	if(matches.length == 1) {
 		document.getElementById("searchbox-submit").classList.add("btn-primary");
 		document.getElementById("searchbox").dataset.match = matches[0];
-		document.getElementById("searchbox").addEventListener("keydown",nmsInfoBox._searchKeyListener,false);
 	} else {
 		document.getElementById("searchbox-submit").classList.remove("btn-primary");
 		document.getElementById("searchbox").dataset.match = '';
-		document.getElementById("searchbox").removeEventListener("keydown",nmsInfoBox._searchKeyListener,false);
 	}
-}
+};
 
 nmsInfoBox._searchKeyListener = function(e) {
-	if(e.keyCode == 13) {
-		var sw = document.getElementById("searchbox").dataset.match;
-		nmsInfoBox.showWindow("switchInfo",sw);
+	switch (e.keyCode) {
+		case 13:
+			var sw = document.getElementById("searchbox").dataset.match;
+			if(sw != '') {
+				nmsInfoBox.showWindow("switchInfo",sw);
+				this._windowTypes.switchInfo.showComments();
+			}
+			break;
+		case 27:
+			document.getElementById("searchbox").dataset.match = '';
+			document.getElementById("searchbox").value = '';
+			nmsInfoBox._search();
+			nmsInfoBox.hide();
+			break;
 	}
-}
+};
 
 
 nmsInfoBox._nullBlank = function(x) {
 	if (x == null || x == false || x == undefined)
 		return "";
 	return x;
-}
+};
 
 
 nmsInfoBox._editChange = function(sw, v) {
@@ -509,13 +561,9 @@ nmsInfoBox._editChange = function(sw, v) {
 	var myData = nmsInfoBox._editStringify(sw);
 	var out = document.getElementById("edit-output");
 	out.value = myData;
-}
+};
 
 nmsInfoBox._editStringify = function(sw) {
-	for (var key in nmsInfoBox._editValues) {
-		var val = nmsInfoBox._editValues[key];
-	}
-	nmsInfoBox._editValues['sysname'] = sw;
-	var myData = JSON.stringify([nmsInfoBox._editValues]);
-	return myData;
-}
+    nmsInfoBox._editValues['sysname'] = sw;
+    return JSON.stringify([nmsInfoBox._editValues]);
+};

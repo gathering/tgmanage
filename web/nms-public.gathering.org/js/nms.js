@@ -16,8 +16,8 @@ var nms = {
 	 * FIXME: Should just stop using these.
 	 */
 	timers: {
-		playback:false,
-	},
+		playback:false
+    },
 	
 	menuShowing:true,
 	/*
@@ -84,7 +84,7 @@ function nmsTimer(handler, interval, name, description) {
 		};
 
 	this.setInterval = function(interval) {
-		var started = this.handle == false ? false : true;
+		var started = this.handle != false;
 		this.stop();
 		this.interval = parseInt(interval);
 		if (started)
@@ -162,27 +162,27 @@ function stringToEpoch(t)
 function epochToString(t)
 {
 	// Adjust for timezone when converting from epoch (UTC) to string (local)
-	var d = new Date(parseInt(t) * parseInt(1000));
-	var timezoneOffset = d.getTimezoneOffset() * -60;
+	var date = new Date(parseInt(t) * parseInt(1000));
+	var timezoneOffset = date.getTimezoneOffset() * -60;
 	t = t - timezoneOffset;
 
-	var d = new Date(parseInt(t) * parseInt(1000));
-	var str = d.getFullYear() + "-";
-	if (parseInt(d.getMonth()) < 9)
+    date = new Date(parseInt(t) * parseInt(1000));
+	var str = date.getFullYear() + "-";
+	if (parseInt(date.getMonth()) < 9)
 		str += "0";
-	str += (parseInt(d.getMonth())+1) + "-";
-	if (d.getDate() < 10)
+	str += (parseInt(date.getMonth())+1) + "-";
+	if (date.getDate() < 10)
 		str += "0";
-	str += d.getDate() + "T";
-	if (d.getHours() < 10)
+	str += date.getDate() + "T";
+	if (date.getHours() < 10)
 		str += "0";
-	str += d.getHours() + ":";
-	if (d.getMinutes() < 10)
+	str += date.getHours() + ":";
+	if (date.getMinutes() < 10)
 		str += "0";
-	str += d.getMinutes() + ":";
-	if (d.getSeconds() < 10)
+	str += date.getMinutes() + ":";
+	if (date.getSeconds() < 10)
 		str += "0";
-	str += d.getSeconds();
+	str += date.getSeconds();
 
 	return str;
 }
@@ -207,7 +207,7 @@ nms.playback.startReplay = function(startTime,stopTime) {
 	nms.playback.stopTime = stringToEpoch(stopTime);
 	nms.now = epochToString(nms.playback.startTime);
 	nms.playback.play();
-}
+};
 
 /*
  * Pause playback
@@ -215,7 +215,7 @@ nms.playback.startReplay = function(startTime,stopTime) {
 nms.playback.pause = function() {
 	nms.timers.playback.stop();
 	nms.playback.playing = false;
-}
+};
 
 /*
  * Start playback
@@ -224,7 +224,7 @@ nms.playback.play = function() {
 	nms.playback.tick();
 	nms.timers.playback.start();
 	nms.playback.playing = true;
-}
+};
 
 /*
  * Toggle playback
@@ -235,19 +235,18 @@ nms.playback.toggle = function() {
 	} else {
 		nms.playback.play();
 	}
-}
+};
 
 /*
  * Jump to place in time
  */
 nms.playback.setNow = function(now) {
-	var now = parseNow(now);
-	nms.now = now;
+	nms.now = parseNow(now);
 
 	nms.playback.stopTime = false;
 	nms.playback.startTime = false;
 	nms.playback.tick();
-}
+};
 
 /*
  * Step forwards or backwards in timer
@@ -260,7 +259,7 @@ nms.playback.stepTime = function(n)
 
 	if(!nms.playback.playing)
 		nms.playback.tick();
-}
+};
 
 /*
  * Ticker to trigger updates, and advance time if replaying
@@ -288,7 +287,7 @@ nms.playback.tick = function()
 	if(nms.now !== false && nms.playback.playing) {
 		nms.playback.stepTime(nms.playback.replayIncrement);
 	}
-}
+};
 
 /*
  * Helper function for safely getting a valid now-epoch
@@ -377,7 +376,7 @@ function commentChange(id,state)
 	myData = JSON.stringify(myData);
 	$.ajax({
 		type: "POST",
-		url: "/api/private/comment-change",
+		url: "/api/write/comment-change",
 		dataType: "text",
 		data:myData,
 		success: function (data, textStatus, jqXHR) {
@@ -395,7 +394,7 @@ function addComment(sw,comment)
 	myData = JSON.stringify(myData);
 	$.ajax({
 		type: "POST",
-		url: "/api/private/comment-add",
+		url: "/api/write/comment-add",
 		dataType: "text",
 		data:myData,
 		success: function (data, textStatus, jqXHR) {
@@ -412,11 +411,7 @@ function addComment(sw,comment)
  */
 function isIn(box, x, y)
 {
-	if ((x >= box.x) && (x <= (box.x + box.width)) && (y >= box.y) && (y <= (box.y + box.height))) {
-		return true;
-	}
-	return false;
-
+    return ((x >= box.x) && (x <= (box.x + box.width)) && (y >= box.y) && (y <= (box.y + box.height)));
 }
 
 /*
@@ -468,6 +463,7 @@ function initNMS() {
 	nmsData.registerSource("switches","/api/public/switches");
 	nmsData.registerSource("switchstate","/api/public/switch-state");
 	nmsData.registerSource("dhcpsummary","/api/public/dhcp-summary");
+	nmsData.registerSource("dhcp","/api/public/dhcp");
 	
 	// This is a magic dummy-source, it's purpose is to give a unified
 	// way to get ticks every second. It is mainly meant to allow map
@@ -481,10 +477,10 @@ function initNMS() {
 	detectHandler();
 	nms.playback.play();
 	setupKeyhandler();
+	setupSearchKeyHandler();
 }
 
 function detectHandler() {
-	var url = document.URL;
 	for (var i in handlers) {
 		if (('#' + handlers[i].tag) == document.location.hash) {
 			setUpdater(handlers[i]);
@@ -524,18 +520,21 @@ function setMapModeFromN(e,key)
 			setUpdater(handler_uplinks);
 			break;
 		case '3':
-			setUpdater(handler_temp);
+			setUpdater(handler_dhcp);
 			break;
 		case '4':
-			setUpdater(handler_traffic);
-			break;
-		case '5':
 			setUpdater(handler_comment);
 			break;
+		case '5':
+			setUpdater(handler_temp);
+			break;
 		case '6':
-			setUpdater(handler_traffic_tot);
+			setUpdater(handler_traffic);
 			break;
 		case '7':
+			setUpdater(handler_traffic_tot);
+			break;
+		case '9':
 			setUpdater(handler_disco);
 			break;
 	}
@@ -608,6 +607,13 @@ function setupKeyhandler()
 	});
 }
 
+function setupSearchKeyHandler()
+{
+	$("#searchbox").keyup(function(e) {
+		nmsInfoBox._searchKeyListener(e);
+	});
+}
+
 
 function getCookie(cname) {
 	var name = cname + "=";
@@ -625,8 +631,8 @@ function getCookie(cname) {
 function saveSettings()
 {
 	var foo={};
-	for (var v in nms.settingsList) {
-		foo[nms.settingsList[v]] = nms[nms.settingsList[v]];
+	for ( var v in nms.settingsList ) {
+		foo[ nms.settingsList[v] ] = nms[ nms.settingsList[v] ];
 	}
 	document.cookie = 'nms='+btoa(JSON.stringify(foo));
 }
