@@ -119,8 +119,8 @@ zone "infra.$nms::config::tgname.gathering.org" {
 
 EOF
 
-# IPv6 PTR
-foreach my $ipv6_net (NetAddr::IP->new($nms::config::base_ipv6net)->split(32)){
+	# IPv6 PTR
+	foreach my $ipv6_net (NetAddr::IP->new($nms::config::base_ipv6net)->split(32)){
 		my $ipv6 = Net::IP->new($ipv6_net);
 		(my $ipv6zone = $ipv6->reverse_ip()) =~ s/\.$//;
 
@@ -141,6 +141,7 @@ include "/etc/bind/named.conf.default-zones";
 include "named.reverse4.conf";
 include "named.master-include.conf";
 EOF
+	}
 }
 
 if ( $role eq "slave" )
