@@ -58,13 +58,18 @@ sub db_safe_quote {
 sub setwhen {
 	$now = "now()";
 	my $window = '15m';
-	if (@_ == 1) {
+	my $offset = '0s';
+	if (@_ > 0) {
 		$window = $_[0];
+	}
+	if (@_ > 1) {
+		$offset = $_[1];
 	}
 	if (defined($get_params{'now'})) {
 		$now = db_safe_quote('now') . "::timestamp ";
 		$cc{'max-age'} = "3600";
 	}
+	$now = "(" . $now . " - '" . $offset . "'::interval)";
 	$when = " time > " . $now . " - '".$window."'::interval and time < " . $now . " ";
 }
 
