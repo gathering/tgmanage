@@ -5,9 +5,7 @@
  *
  * Interface: nmsInfoBox.showWindow(windowType,optionalParameter), nmsInfoBox.hide(), nmsInfoBox.refresh()
  *
- * Any windowTypes should at a minimum implement load, unload, getTitle, getContent, getChildContent
- *
- * TODO: Implement useful update methods on windowTypes
+ * Any windowTypes should at a minimum implement load, update, unload, getTitle, getContent, getChildContent
  *
  */
 

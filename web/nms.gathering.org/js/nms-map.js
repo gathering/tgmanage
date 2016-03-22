@@ -413,6 +413,8 @@ nmsMap.canvasClick = function(e)
 		} else {
 			nmsInfoBox.click(sw);
 		}
+	} else {
+		nmsInfoBox.hide();
 	}
 };
 
