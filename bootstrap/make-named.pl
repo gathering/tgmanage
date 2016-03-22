@@ -54,6 +54,7 @@ options {
         recursion yes;
         auth-nxdomain no;
         listen-on-v6 { any; };
+	statistics-file "/etc/bind/named.rndc-stats";
 };
 
 logging {
