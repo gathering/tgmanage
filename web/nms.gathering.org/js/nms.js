@@ -376,7 +376,7 @@ function commentChange(id,state)
 	myData = JSON.stringify(myData);
 	$.ajax({
 		type: "POST",
-		url: "/api/private/comment-change",
+		url: "/api/write/comment-change",
 		dataType: "text",
 		data:myData,
 		success: function (data, textStatus, jqXHR) {
@@ -394,7 +394,7 @@ function addComment(sw,comment)
 	myData = JSON.stringify(myData);
 	$.ajax({
 		type: "POST",
-		url: "/api/private/comment-add",
+		url: "/api/write/comment-add",
 		dataType: "text",
 		data:myData,
 		success: function (data, textStatus, jqXHR) {
@@ -472,9 +472,9 @@ function initNMS() {
 	nmsData.registerSource("ticker","bananabananbanana");
 
 	// Private	
-	nmsData.registerSource("snmp","/api/private/snmp");
-	nmsData.registerSource("comments", "/api/private/comments");
-	nmsData.registerSource("smanagement","/api/private/switches-management");
+	nmsData.registerSource("snmp","/api/read/snmp");
+	nmsData.registerSource("comments", "/api/read/comments");
+	nmsData.registerSource("smanagement","/api/read/switches-management");
 
 	restoreSettings();
 	nmsMap.init();

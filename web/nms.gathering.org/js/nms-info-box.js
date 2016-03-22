@@ -129,7 +129,7 @@ nmsInfoBox._windowTypes.addSwitch = {
     var myData = JSON.stringify([{'sysname':sysname}]);
     $.ajax({
       type: "POST",
-      url: "/api/private/switch-add",
+      url: "/api/write/switch-add",
       dataType: "text",
       data:myData,
       success: function (data, textStatus, jqXHR) {
@@ -301,7 +301,7 @@ nmsInfoBox._windowTypes.switchInfo = {
     console.log(myData);
     $.ajax({
       type: "POST",
-      url: "/api/private/switch-update",
+      url: "/api/write/switch-update",
       dataType: "text",
       data:myData,
       success: function (data, textStatus, jqXHR) {

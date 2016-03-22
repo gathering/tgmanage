@@ -1,5 +1,6 @@
 web/.htpasswd
 web/.htpasswd.munin
+web/htpasswd*
 web/stream.gathering.org/hls
 web/stream.gathering.org/chiobe
 web/nms-public.gathering.org/nettkart-dhcp.png
