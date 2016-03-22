@@ -71,6 +71,7 @@
 		<li class="divider"> </li>
 		<li class="dropdown-header">View</li>
 		<li><a href="#" onclick="toggleNightMode()">Toggle Night Mode</a></li>
+		<li><a href="#" onclick="toggleConnect()">Toggle linknets</a></li>
 		<li class="divider"> </li>
 		<li class="dropdown-header">Move switches</li>
 	  	<li><a href="#" onclick="nmsMap.moveSet(true);">Enable switch moving</a></li>
@@ -169,6 +170,10 @@
 		  <td>View Disco map</td>
 		</tr>
 		<tr>
+		  <td>c</td>
+		  <td>Toggle linknet connections</td>
+		</tr>
+		<tr>
 		  <td>h</td>
 		  <td>Step 1 hour back in time</td>
 		</tr>
@@ -236,7 +241,7 @@
 	</div>
 
 	<canvas id="bgCanvas" width="1920" height="1032" style="position: absolute; z-index: 1;"> </canvas>
-	<canvas id="linkCanvas" width="1920" height="1032" style="position: absolute; z-index: 10;"> </canvas>
+	<canvas id="linkCanvas" width="1920" height="1032" style="position: absolute; z-index: 10; display: none;"> </canvas>
 	<canvas id="blurCanvas" width="1920" height="1032" style="position: absolute; z-index: 20;"> </canvas>
 	<canvas id="switchCanvas" width="1920" height="1032" style="position: absolute; z-index: 30;"> </canvas>
 	<canvas id="textCanvas" width="1920" height="1032" style="position: absolute; z-index: 40;"> </canvas>

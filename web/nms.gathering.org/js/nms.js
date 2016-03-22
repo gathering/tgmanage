@@ -38,6 +38,7 @@ var nms = {
 		'5':setMapModeFromN,
 		'6':setMapModeFromN,
 		'7':setMapModeFromN,
+		'c':toggleConnect,
 		'h':moveTimeFromKey,
 		'j':moveTimeFromKey,
 		'k':moveTimeFromKey,
@@ -343,6 +344,10 @@ function toggleLayer(layer) {
                l.style.display = '';
        else
                l.style.display = 'none';
+}
+
+function toggleConnect() {
+	toggleLayer("linkCanvas");
 }
 
 function commentInactive(id)
