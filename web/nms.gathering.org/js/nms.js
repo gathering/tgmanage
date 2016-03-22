@@ -463,6 +463,7 @@ function initNMS() {
 	nmsData.registerSource("switches","/api/public/switches");
 	nmsData.registerSource("switchstate","/api/public/switch-state");
 	nmsData.registerSource("dhcpsummary","/api/public/dhcp-summary");
+	nmsData.registerSource("dhcp","/api/public/dhcp");
 	
 	// This is a magic dummy-source, it's purpose is to give a unified
 	// way to get ticks every second. It is mainly meant to allow map
@@ -524,18 +525,21 @@ function setMapModeFromN(e,key)
 			setUpdater(handler_uplinks);
 			break;
 		case '3':
-			setUpdater(handler_temp);
+			setUpdater(handler_dhcp);
 			break;
 		case '4':
-			setUpdater(handler_traffic);
-			break;
-		case '5':
 			setUpdater(handler_comment);
 			break;
+		case '5':
+			setUpdater(handler_temp);
+			break;
 		case '6':
-			setUpdater(handler_traffic_tot);
+			setUpdater(handler_traffic);
 			break;
 		case '7':
+			setUpdater(handler_traffic_tot);
+			break;
+		case '9':
 			setUpdater(handler_disco);
 			break;
 	}

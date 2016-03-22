@@ -49,6 +49,12 @@ var handler_traffic_tot = {
 	name:"Switch traffic map"
 };
 
+var handler_dhcp = {
+	init:dhcpInit,
+	tag:"dhcp",
+	name:"DHCP map"
+};
+
 var handler_disco = {
 	init:discoInit,
 	tag:"disco",
@@ -68,7 +74,8 @@ var handlers = [
 	handler_traffic,
 	handler_disco,
 	handler_comment,
-	handler_traffic_tot
+	handler_traffic_tot,
+	handler_dhcp
 	];
 
 /*
@@ -95,12 +102,12 @@ function uplinkUpdater()
 
 		if (uplinks == 0) {
 			nmsMap.setSwitchColor(sw,"white");
-		} else if (nuplinks == uplinks) {
-			nmsMap.setSwitchColor(sw,green);
-		} else if (nuplinks - uplinks == 1) {
-			nmsMap.setSwitchColor(sw, orange);
-		} else if (nuplinks - uplinks == 2) {
+		} else if (uplinks == 1) {
 			nmsMap. setSwitchColor(sw, red);
+		} else if (uplinks == 2) {
+			nmsMap.setSwitchColor(sw, orange);
+		} else if (uplinks == 3) {
+			nmsMap.setSwitchColor(sw,green);
 		} else if (uplinks > 3) {
 			nmsMap.setSwitchColor(sw, blue);
 		}
@@ -115,9 +122,9 @@ function uplinkInit()
 	nmsData.addHandler("switches","mapHandler",uplinkUpdater);
 	nmsData.addHandler("switchstate","mapHandler",uplinkUpdater);
 	setLegend(1,"white","0 uplinks");	
-	setLegend(2,red,"2 missing");	
-	setLegend(3,orange,"1 missing");	
-	setLegend(4,green,"0 missing");	
+	setLegend(2,red,"1 uplink");	
+	setLegend(3,orange,"2 uplinks");	
+	setLegend(4,green,"3 uplinks");	
 	setLegend(5,blue,"4 uplinks");	
 }
 
@@ -337,6 +344,55 @@ function commentInit()
 	setLegend(3,red, "New");
 	setLegend(4,orange,"Active");	
 	setLegend(5,green ,"Old/inactive only");	
+}
+
+function getDhcpColor(stop)
+{
+	stop = parseInt(stop);
+	stop = stop * 0.85;
+	if (stop < 0)
+		stop = 1000;
+	if (stop > 1000)
+		stop = 1000;
+	return getColorStop(stop);
+}
+
+function dhcpUpdater()
+{
+	var realnow = Date.now();
+	var now = Math.floor(realnow / 1000);
+	if (nmsData.dhcp == undefined || nmsData.dhcp.dhcp == undefined) {
+		return
+	}
+	if (nmsData.switches == undefined || nmsData.switches.switches == undefined) {
+		return;
+	}
+	try {
+	for (var sw in nmsData.switches.switches) {
+		var c = "white";
+		if (nmsData.dhcp.dhcp[sw] == undefined) {
+			nmsMap.setSwitchColor(sw,c);
+			continue;
+		}
+		var s = nmsData.dhcp.dhcp[sw];
+		var then = parseInt(s);
+		c = getDhcpColor(now - then);
+		nmsMap.setSwitchColor(sw, c);
+	}
+	} catch(e) {
+		console.log(e);
+	}
+}
+
+function dhcpInit()
+{
+	drawGradient([green,lightgreen,orange,red]);
+	nmsData.addHandler("dhcp","mapHandler",dhcpUpdater);
+	setLegend(1,"white","Undefined");
+	setLegend(2,getDhcpColor(1),"1 Second old");
+	setLegend(3,getDhcpColor(300),"300 Seconds old");
+	setLegend(4,getDhcpColor(900),"900 Seconds old");
+	setLegend(5,getDhcpColor(1200),"1200 Seconds old");
 }
 
 /*
