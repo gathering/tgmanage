@@ -116,13 +116,25 @@ zone "infra.$nms::config::tgname.gathering.org" {
         allow-transfer { ns-xfr; };
 };
 
-zone "$nms::config::ipv6zone" {
+EOF
+
+# IPv6 PTR
+foreach my $ipv6_net (NetAddr::IP->new($nms::config::base_ipv6net)->split(32)){
+		my $ipv6 = Net::IP->new($ipv6_net);
+		(my $ipv6zone = $ipv6->reverse_ip()) =~ s/\.$//;
+
+		print NFILE <<EOF;
+zone "$ipv6zone" {
         type master;
         allow-update { key DHCP_UPDATER; };
         notify yes;
-        file "$nms::config::ipv6zone.zone";
+        file "$ipv6zone.zone";
         allow-transfer { ns-xfr; ext-xfr; };
 };
+
+EOF
+
+	print NFILE <<EOF;
 
 include "/etc/bind/named.conf.default-zones";
 include "named.reverse4.conf";
@@ -150,14 +162,27 @@ zone "infra.$nms::config::tgname.gathering.org" {
 	masters { master_ns; };
 };
 
-zone "$nms::config::ipv6zone" {
+EOF
+
+	# IPv6 PTR
+	foreach my $ipv6_net (NetAddr::IP->new($nms::config::base_ipv6net)->split(32)){
+		my $ipv6 = Net::IP->new($ipv6_net);
+		(my $ipv6zone = $ipv6->reverse_ip()) =~ s/\.$//;
+
+		print NFILE <<EOF;
+zone "$ipv6zone" {
         type slave;
         notify no;
 	masters { master_ns; };
-        file "slave/$nms::config::ipv6zone:";
+        file "slave/$ipv6zone";
         allow-transfer { ns-xfr; ext-xfr; };
 };
 
+EOF
+	}
+
+	print NFILE <<EOF;
+	
 include "named.conf.default-zones";
 include "named.slave-reverse4.conf";
 include "named.slave-include.conf";
