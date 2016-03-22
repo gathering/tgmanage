@@ -201,12 +201,10 @@ nmsInfoBox._windowTypes.switchInfo = {
 
   },
 	update: function(type) {
-		console.log("Updating switch info: " + type);
 		switch (type) {
 			case 'comments':
 				if(this.activeView == "comments" && this.commentsHash != nmsData.comments.hash) {
 					nmsInfoBox._windowTypes.switchInfo.showComments();
-					console.log("change");
 				}
 				break;
 		}
@@ -232,19 +230,15 @@ nmsInfoBox._windowTypes.switchInfo = {
       commentbox.innerHTML = '<div class="input-group"><input type="text" class="form-control" placeholder="Comment" id="' + this.sw + '-comment"><span class=\"input-group-btn\"><button class="btn btn-default" onclick="addComment(\'' + this.sw + '\',document.getElementById(\'' + this.sw + '-comment\').value); document.getElementById(\'' + this.sw + '-comment\').value = \'\'; document.getElementById(\'' + this.sw + '-comment\').placeholder = \'Comment added. Wait for next refresh.\';">Add comment</button></span></div>';
 
 			// If we have no switch data, so just show comment form
-			if(!nmsData.comments || !nmsData.comments.comments || !nmsData.comments.comments[this.sw]) {
+			if(!nmsData.comments || !nmsData.comments.comments) {
 				this.commentsHash = false;
-				domObj.appendChild(commentbox);
-				this.childContent = domObj;
-				nmsInfoBox.refresh();
-				return;
 
 			// We have data, but its old, so don't change data
-			} else if(this.commentsHash == nmsData.comments.hash) {
+			} else if(this.commentsHash != false && this.commentsHash == nmsData.comments.hash) {
 				return;
 
-			// We have new data, refresh
-			} else {
+			// We have data, refresh
+			} else if(nmsData.comments.comments[this.sw]) {
 				this.commentsHash = nmsData.comments.hash;
 				for (var c in nmsData.comments.comments[this.sw]["comments"]) {
 					var comment = nmsData.comments.comments[this.sw]["comments"][c];
@@ -259,6 +253,10 @@ nmsInfoBox._windowTypes.switchInfo = {
 					domObj.appendChild(commenttable);
 					$(function () { $('[data-toggle="popover"]').popover({placement:"top",continer:'body'}) })
 				}
+
+			// We have no data for this switch, but its still correct
+			} else {
+				this.commentsHash = nmsData.comments.hash;
 			}
 
       domObj.appendChild(commentbox);
@@ -337,6 +335,7 @@ nmsInfoBox._windowTypes.switchInfo = {
   },
   unload: function() {
     this.childContent = false;
+		this.commentsHash = false;
 		this.activeView = "";
   },
   save: function() {
