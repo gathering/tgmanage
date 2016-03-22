@@ -133,6 +133,8 @@ function uplinkInit()
  */
 function trafficInit()
 {
+	nmsData.addHandler("switches","mapHandler",trafficUpdater);
+	nmsData.addHandler("switchstate","mapHandler",trafficUpdater);
 	var m = 1024 * 1024 / 8;
 	drawGradient([lightgreen,green,orange,red]);
 	setLegend(1,colorFromSpeed(0),"0 (N/A)");	
@@ -144,33 +146,28 @@ function trafficInit()
 
 function trafficUpdater()
 {
-	if (!nms.switches_now["switches"])
+	if (!nmsData.switchstate.switches || !nmsData.switchstate.then)
 		return;
-	for (var sw in nms.switches_now["switches"]) {
+	for (var sw in nmsData.switchstate.switches) {
 		var speed = 0;
-		for (var port in nms.switches_now["switches"][sw]["ports"]) {
-			if (/ge-0\/0\/44$/.exec(port) ||
-			    /ge-0\/0\/45$/.exec(port) ||
-			    /ge-0\/0\/46$/.exec(port) ||
-			    /ge-0\/0\/47$/.exec(port))
-			 {
-				 if (!nms.switches_then["switches"][sw] ||
-				     !nms.switches_then["switches"][sw]["ports"] ||
-				     !nms.switches_then["switches"][sw]["ports"][port])
-					 continue;
-				 var t = nms.switches_then["switches"][sw]["ports"][port];
-				 var n = nms.switches_now["switches"][sw]["ports"][port];
-				 speed += (parseInt(t["ifhcoutoctets"]) -parseInt(n["ifhcoutoctets"])) / (parseInt(t["time"] - n["time"]));
-				 speed += (parseInt(t["ifhcinoctets"]) -parseInt(n["ifhcinoctets"])) / (parseInt(t["time"] - n["time"]));
-			 }
-		}
+		try {
+			var t = parseInt(nmsData.switchstate.then[sw].uplinks.ifHCOutOctets);
+			var n = parseInt(nmsData.switchstate.switches[sw].uplinks.ifHCOutOctets);
+			var tt = parseInt(nmsData.switchstate.then[sw].time);
+			var nt = parseInt(nmsData.switchstate.switches[sw].time);
+		} catch (e) { continue;};
+		var tdiff = nt - tt;
+		var diff = n - t;
+		speed = diff / tdiff;
                 if(!isNaN(speed))
-                        setSwitchColor(sw,colorFromSpeed(speed));
+                        nmsMap.setSwitchColor(sw,colorFromSpeed(speed));
 	}
 }
 
 function trafficTotInit()
 {
+	nmsData.addHandler("switches","mapHandler",trafficTotUpdater);
+	nmsData.addHandler("switchstate","mapHandler",trafficTotUpdater);
 	var m = 1024 * 1024 / 8;
 	drawGradient([lightgreen,green,orange,red]);
 	setLegend(1,colorFromSpeed(0),"0 (N/A)");	
@@ -182,20 +179,21 @@ function trafficTotInit()
 
 function trafficTotUpdater()
 {
-	if (!nms.switches_now["switches"])
+	if (!nmsData.switchstate.switches || !nmsData.switchstate.then)
 		return;
-	for (var sw in nms.switches_now["switches"]) {
+	for (var sw in nmsData.switchstate.switches) {
 		var speed = 0;
-		for (var port in nms.switches_now["switches"][sw]["ports"]) {
-			if (!nms.switches_then["switches"][sw] ||
-			    !nms.switches_then["switches"][sw]["ports"] ||
-			    !nms.switches_then["switches"][sw]["ports"][port])
-				continue;
-			var t = nms.switches_then["switches"][sw]["ports"][port];
-			var n = nms.switches_now["switches"][sw]["ports"][port];
-			speed += (parseInt(t["ifhcoutoctets"]) -parseInt(n["ifhcoutoctets"])) / (parseInt(t["time"] - n["time"]));
-		}
-		setSwitchColor(sw,colorFromSpeed(speed,5));
+		try {
+			var t = parseInt(nmsData.switchstate.then[sw].totals.ifHCOutOctets);
+			var n = parseInt(nmsData.switchstate.switches[sw].totals.ifHCOutOctets);
+			var tt = parseInt(nmsData.switchstate.then[sw].time);
+			var nt = parseInt(nmsData.switchstate.switches[sw].time);
+		} catch (e) { continue;};
+		var tdiff = nt - tt;
+		var diff = n - t;
+		speed = diff / tdiff;
+                if(!isNaN(speed))
+                        nmsMap.setSwitchColor(sw,colorFromSpeed(speed));
 	}
 }
 
