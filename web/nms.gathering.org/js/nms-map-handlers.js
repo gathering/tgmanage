@@ -292,6 +292,8 @@ function commentUpdater()
 	if (nmsData.comments == undefined || nmsData.comments.comments == undefined) {
 		return
 	}
+	if(!nmsData.switches) 
+		return;
 	for (var sw in nmsData.switches.switches) {
 		var c = "white";
 		if (nmsData.comments.comments[sw] == undefined) {
