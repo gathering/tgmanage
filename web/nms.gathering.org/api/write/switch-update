@@ -22,7 +22,8 @@ my @dups;
 
 my $sth = $nms::web::dbh->prepare("SELECT sysname FROM switches WHERE sysname=?");
 
-my @fields = ('ip', 'sysname', 'last_updated', 'locked', 'poll_frequency', 'community', 'lldp_chassis_id', 'secondary_ip', 'subnet4', 'subnet6', 'placement', 'distro', 'secondary_ip');
+
+my @fields = ( 'community', 'current_mac', 'distro_name', 'distro_phy_port', 'lldp_chassis_id', 'mgmt_v4_addr', 'mgmt_v4_gw', 'mgmt_v4_netsize', 'mgmt_v6_addr', 'mgmt_v6_gw', 'mgmt_v6_netsize', 'mgmt_vlan', 'placement', 'poll_frequency', 'subnet4', 'subnet6', 'switchtype', 'sysname', 'traffic_vlan');
 
 sub convertplace
 {

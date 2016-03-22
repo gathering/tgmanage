@@ -15,7 +15,7 @@ my $dbh = nms::db_connect();
 $dbh->{AutoCommit} = 0;
 $dbh->{RaiseError} = 1;
 
-my $q = $dbh->prepare("SELECT switch,host(ip) as ip,host(secondary_ip) as secondary_ip FROM switches WHERE ip is not null ORDER BY random()");
+my $q = $dbh->prepare("SELECT switch,host(mgmt_v4_addr) as ip,host(mgmt_v6_addr) as secondary_ip FROM switches WHERE mgmt_v4_addr is not null ORDER BY random()");
 my $lq = $dbh->prepare("SELECT linknet,addr1,addr2 FROM linknets");
 
 while (1) {

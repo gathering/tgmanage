@@ -23,13 +23,13 @@ $dbh->{RaiseError} = 1;
 my $qualification = <<"EOF";
 (last_updated IS NULL OR now() - last_updated > poll_frequency)
 AND (locked='f' OR now() - last_updated > '15 minutes'::interval)
-AND ip is not null
+AND mgmt_v4_addr is not null
 EOF
 
 # Borrowed from snmpfetch.pl 
 our $qswitch = $dbh->prepare(<<"EOF")
 SELECT 
-  sysname,switch,host(ip) as ip,community,
+  sysname,switch,host(mgmt_v4_addr) as ip,community,
   DATE_TRUNC('second', now() - last_updated - poll_frequency) AS overdue
 FROM
   switches
