@@ -1,5 +1,6 @@
 #!/usr/bin/perl -I /root/tgmanage
 use strict;
+use NetAddr::IP;
 
 BEGIN {
         require "include/config.pm";
@@ -124,6 +125,7 @@ EOF
 		my $ipv6 = Net::IP->new($ipv6_net);
 		(my $ipv6zone = $ipv6->reverse_ip()) =~ s/\.$//;
 
+
 		print NFILE <<EOF;
 zone "$ipv6zone" {
         type master;
@@ -134,14 +136,15 @@ zone "$ipv6zone" {
 };
 
 EOF
-
+	}
+	
 	print NFILE <<EOF;
 
 include "/etc/bind/named.conf.default-zones";
 include "named.reverse4.conf";
 include "named.master-include.conf";
 EOF
-	}
+	
 }
 
 if ( $role eq "slave" )
