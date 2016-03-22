@@ -93,7 +93,8 @@ RUN a2enmod cgi
 RUN sed -i 's/Listen 80/Listen 8080/g' /etc/apache2/ports.conf
 RUN ln -s /srv/tgmanage/web/etc/apache2/nms.tg16.gathering.org.conf /etc/apache2/sites-enabled/
 #(no, not for production, it's just demo:demo during development)
-RUN echo 'demo:$apr1$IKrQYF6x$0zmRciLR7Clc2tEEosyHV.' > /srv/tgmanage/web/.htpasswd
+RUN echo 'demo:$apr1$IKrQYF6x$0zmRciLR7Clc2tEEosyHV.' > /srv/tgmanage/web/htpasswd-read
+RUN echo 'demo:$apr1$IKrQYF6x$0zmRciLR7Clc2tEEosyHV.' > /srv/tgmanage/web/htpasswd-write
 RUN systemctl enable apache2
 
 # Varnish shait
