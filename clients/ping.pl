@@ -21,7 +21,7 @@ my $lq = $dbh->prepare("SELECT linknet,addr1,addr2 FROM linknets");
 while (1) {
 	# ping loopbacks
 	my $ping = Net::Oping->new;
-	$ping->timeout(0.2);
+	$ping->timeout(0.4);
 
 	$q->execute;
 	my %ip_to_switch = ();
@@ -73,7 +73,7 @@ while (1) {
 	$dbh->commit;
 	# ping linknets
 	$ping = Net::Oping->new;
-	$ping->timeout(0.2);
+	$ping->timeout(0.4);
 
 	$lq->execute;
 	my @linknets = ();

@@ -223,8 +223,8 @@ function tempUpdater()
 	for (sw in nmsData.switches["switches"]) {
 		var t = "white";
 		var temp = "";
-
-		if(!nmsData.snmp || !nmsData.snmp.snmp[sw]["misc"] || !nmsData.snmp.snmp[sw]["misc"]["enterprises.2636.3.1.13.1.7.7.1.0.0"])
+		
+		if(!nmsData.snmp || !nmsData.snmp.snmp || ! nmsData.snmp.snmp[sw] || !nmsData.snmp.snmp[sw]["misc"] || !nmsData.snmp.snmp[sw]["misc"]["enterprises.2636.3.1.13.1.7.7.1.0.0"])
 			continue;
 
 		tempObj = nmsData.snmp.snmp[sw]["misc"]["enterprises.2636.3.1.13.1.7.7.1.0.0"];

@@ -422,6 +422,15 @@ nmsInfoBox._searchSmart = function(id, sw) {
 				}
 			}
 		}
+		if (nmsData.smanagement.switches[sw].ip.match(id)) {
+			return true;
+		}
+		if (nmsData.smanagement.switches[sw].subnet4.match(id)) {
+			return true;
+		}
+		if (nmsData.smanagement.switches[sw].subnet6.match(id)) {
+			return true;
+		}
 		if (nmsData.snmp.snmp[sw].misc.sysDescr[0].match(id)) {
 			return true;
 		}
@@ -445,20 +454,14 @@ nmsInfoBox._search = function() {
 	if(id) {
 		nmsMap.enableHighlights();
 		for(var sw in nmsData.switches.switches) {
-			if (id[0] == "/") {
-				if (nmsInfoBox._searchSmart(id.slice(1),sw)) {
-					matches.push(sw);
-					nmsMap.setSwitchHighlight(sw,true);
-				} else {
-					nmsMap.setSwitchHighlight(sw,false);
-				}
+			if(sw.indexOf(id) > -1) {
+				matches.push(sw);
+				nmsMap.setSwitchHighlight(sw,true);
+			} else if (nmsInfoBox._searchSmart(id,sw)) {
+				matches.push(sw);
+				nmsMap.setSwitchHighlight(sw,true);
 			} else {
-				if(sw.indexOf(id) > -1) {
-					matches.push(sw);
-					nmsMap.setSwitchHighlight(sw,true);
-				} else {
-					nmsMap.setSwitchHighlight(sw,false);
-				}
+				nmsMap.setSwitchHighlight(sw,false);
 			}
 		}
 	} else {
