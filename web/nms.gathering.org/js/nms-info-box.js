@@ -164,7 +164,11 @@ nmsInfoBox._windowTypes.switchInfo = {
       this.sw = sw;
     }
     this.swi = nmsData.switches["switches"][this.sw];
-    this.swm = nmsData.smanagement.switches[this.sw];
+		try {
+			this.swm = nmsData.smanagement.switches[this.sw];
+		} catch(e) {
+			this.swm = [];
+		}
 
     var content = [];
 
@@ -200,7 +204,7 @@ nmsInfoBox._windowTypes.switchInfo = {
   showComments: function() {
       var domObj = document.createElement("div");
       var comments = [];
-      if (nmsData.comments.comments != undefined && nmsData.comments.comments[this.sw] != undefined) {
+			if(!(!nmsData.comments || !nmsData.comments.comments || !nmsData.comments.comments[this.sw])) {
         for (var c in nmsData.comments.comments[this.sw]["comments"]) {
           var comment = nmsData.comments.comments[this.sw]["comments"][c];
           if (comment["state"] == "active" || comment["state"] == "persist" || comment["state"] == "inactive") {
