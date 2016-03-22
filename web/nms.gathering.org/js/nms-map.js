@@ -50,19 +50,20 @@ var nmsMap = nmsMap || {
 	_highlight: { },
 	_highlightActive: false,
 	_c: {}
-}
+};
 
 nmsMap._loadEvent = function(e) {
 	nmsMap._init = false;
 	nmsMap._drawAllSwitches();
-}
+};
+
 nmsMap.init = function() {
 	this._initContexts();
 	this._init = true;
 	nmsData.addHandler("switches","nmsMap",function(){nmsMap._resizeEvent();});
 	window.addEventListener('resize',nmsMap._resizeEvent,true);
 	window.addEventListener('load',nmsMap._loadEvent,true);
-}
+};
 
 nmsMap.setSwitchColor = function(sw, color) {
 	if (this._color[sw] != color) {
@@ -72,26 +73,30 @@ nmsMap.setSwitchColor = function(sw, color) {
 	} else {
 		this.stats.colorSame++;
 	}
-}
+};
+
 
 nmsMap.setSwitchHighlight = function(sw, highlight) {
-	if(highlight)
-		highlight == true;
-	if (this._highlight[sw] != highlight) {
-		this.stats.highlightChange++;
-		this._highlight[sw] = highlight;
-	}
-	this._drawSwitch(sw);
-}
+    if( highlight )
+        highlight = true;
+    if ( this._highlight[sw] != highlight ) {
+        this.stats.highlightChange++;
+        this._highlight[sw] = highlight;
+    }
+    this._drawSwitch(sw);
+};
+
 
 nmsMap.enableHighlights = function() {
-	this._highlightActive = true;
-}
+    this._highlightActive = true;
+};
+
 
 nmsMap.disableHighlights = function() {
-	this._highlightActive = false;
-	this._drawAllSwitches();
-}
+    this._highlightActive = false;
+    this._drawAllSwitches();
+};
+
 
 nmsMap.reset = function() {
 	for (var sw in this._color) {
@@ -100,7 +105,7 @@ nmsMap.reset = function() {
 	for (var sw in this._info) {
 		nmsMap.setSwitchInfo(sw, undefined);
 	}
-}
+};
 
 nmsMap.setSwitchInfo = function(sw,info) {
 	if (this._info[sw] != info) {
@@ -110,19 +115,19 @@ nmsMap.setSwitchInfo = function(sw,info) {
 	} else {
 		this.stats.switchInfoSame++;
 	}
-}
+};
 
 nmsMap._initContext = function(name) {
 	this._c[name] = {};
 	this._c[name].c = document.getElementById(name + "Canvas");
 	this._c[name].ctx = this._c[name].c.getContext('2d');
-}
+};
 
 nmsMap._initContexts = function() {
 	for (var context in this.contexts) {
 		this._initContext(this.contexts[context]);
 	}
-}
+};
 
 nmsMap._resizeEvent = function() {
 	var width = window.innerWidth - nmsMap._c.bg.c.offsetLeft;
@@ -155,7 +160,7 @@ nmsMap._resizeEvent = function() {
 		nmsMap.drawNow();
 		nmsMap.stats.resizeEvents++;
 	}
-}
+};
 
 /*
  * Draw current time-window
@@ -183,10 +188,10 @@ nmsMap.drawNow = function ()
 	ctx.fillStyle = "white";
 	ctx.strokeStyle = "black";
 	ctx.lineWidth = nms.fontLineFactor;
-	ctx.strokeText(now, 0 + this._settings.textMargin, 25);
-	ctx.fillText(now, 0 + this._settings.textMargin, 25);
+	ctx.strokeText(now, this._settings.textMargin, 25);
+	ctx.fillText(now, this._settings.textMargin, 25);
 	ctx.restore();
-}
+};
 
 nmsMap.setNightMode = function(toggle) {
 	if (this._nightmode == toggle)
@@ -202,14 +207,14 @@ nmsMap.setNightMode = function(toggle) {
 		this._c.blur.c.style.display = "";
 	}
 	nmsMap._drawBG();
-}
+};
 
 nmsMap._drawBG = function() {
 	var imageObj = document.getElementById('source');
 	this._c.bg.ctx.drawImage(imageObj, 0, 0, nmsMap._canvas.width, nmsMap._canvas.height);
 	if(this._nightmode)
 		nmsMap._invertBG();
-}
+};
 
 nmsMap._invertBG = function() {
 	var imageData = this._c.bg.ctx.getImageData(0, 0, nmsMap._canvas.width, nmsMap._canvas.height);
@@ -221,7 +226,7 @@ nmsMap._invertBG = function() {
 		data[i + 2] = 255 - data[i + 2];
 	}
 	this._c.bg.ctx.putImageData(imageData, 0, 0);
-}
+};
 
 nmsMap._getBox = function(sw) {
 	var box = nmsData.switches.switches[sw]['placement'];
@@ -230,7 +235,7 @@ nmsMap._getBox = function(sw) {
 	box.width = parseInt(box.width);
 	box.height = parseInt(box.height);
 	return box;
-}
+};
 
 nmsMap._drawSwitchBlur = function(sw)
 {
@@ -241,10 +246,11 @@ nmsMap._drawSwitchBlur = function(sw)
 	this._c.blur.ctx.fillStyle = "red";
 	this._c.blur.ctx.shadowBlur = 30;
 	this._c.blur.ctx.shadowColor = "white";
-	this._c.blur.ctx.scale(this.scale, this.scale); // FIXME
+	this._c.blur.ctx.scale(this.scale, this.scale); // FIXME <- fix what?!
 	this._c.blur.ctx.fillRect(box['x'],box['y'],box['width'],box['height']);
 	this._c.blur.ctx.restore();
-}
+};
+
 nmsMap._drawSwitch = function(sw)
 {
 	// XXX: If a handler sets a color before switches are loaded... The
@@ -267,7 +273,7 @@ nmsMap._drawSwitch = function(sw)
 	this._drawBox(this._c.switch.ctx, box['x'],box['y'],box['width'],box['height']);
 	this._c.switch.ctx.shadowBlur = 0;
 	this._drawText(this._c.text.ctx, sw,box);
-}
+};
 
 nmsMap._drawSwitchInfo = function(sw) {
 	var box = this._getBox(sw);
@@ -276,14 +282,14 @@ nmsMap._drawSwitchInfo = function(sw) {
 	} else {
 		this._drawText(this._c.textInfo.ctx, this._info[sw], box, "right");
 	}
-}
+};
 
 nmsMap._clearBox = function(ctx,box) {
 	ctx.save();
 	ctx.scale(this.scale,this.scale);
 	ctx.clearRect(box['x'], box['y'], box['width'], box['height']);
 	ctx.restore();
-}
+};
 
 nmsMap._drawText = function(ctx, text, box, align) {
 	var rotate = false;
@@ -319,7 +325,7 @@ nmsMap._drawText = function(ctx, text, box, align) {
 	ctx.strokeText(text, 0, 0);
 	ctx.fillText(text, 0, 0);
 	ctx.restore();
-}
+};
 
 nmsMap._drawAllSwitches = function() {
 	if (nmsData.switches == undefined) {
@@ -331,7 +337,7 @@ nmsMap._drawAllSwitches = function() {
 	}
 	if (this._nightmode)
 		this._drawAllBlur();
-}
+};
 
 nmsMap._drawAllBlur = function() {
 	if (nmsMap._blurDrawn == true)
@@ -340,22 +346,22 @@ nmsMap._drawAllBlur = function() {
 	for (var sw in nmsData.switches.switches) {
 		nmsMap._drawSwitchBlur(sw);
 	}
-}
+};
 
 nmsMap._drawBox = function(ctx, x, y, boxw, boxh) {
 	ctx.save();
-	ctx.scale(this.scale, this.scale); // FIXME
+	ctx.scale(this.scale, this.scale); // FIXME <- what?!
 	ctx.fillRect(x,y, boxw, boxh);
 	ctx.lineWidth = 1;
 	ctx.strokeStyle = "#000000";
 	ctx.strokeRect(x,y, boxw, boxh);
 	ctx.restore();
-}
+};
 
 nmsMap._connectSwitches = function(sw1, sw2, color1, color2) {
 	nmsMap._connectBoxes(this._getBox(sw1), this._getBox(sw2),
 			     color1, color2);
-}
+};
 
 /*
  * Draw a line between two boxes, with a gradient going from color1 to
@@ -382,13 +388,13 @@ nmsMap._connectBoxes = function(box1, box2,color1, color2) {
 	ctx.lineWidth = 5;
 	ctx.stroke();
 	ctx.restore();
-}
+};
 
 nmsMap.moveSet = function(toggle) {
 	nmsMap._moveInProgress = toggle;
 	if (!toggle)
 		nmsMap._moveStopListen();
-}
+};
 
 /*
  * onclick handler for the canvas.
@@ -405,7 +411,7 @@ nmsMap.canvasClick = function(e)
 			nmsInfoBox.click(sw);
 		}
 	}
-}
+};
 
 nmsMap._clearOld = function(box) {
 	if (box) {
@@ -415,7 +421,7 @@ nmsMap._clearOld = function(box) {
 		nmsMap._c.top.ctx.clearRect(box['x'] - 5, box['y'] - 5, box['width'] + 10, box['height'] + 10);
 		nmsMap._c.top.ctx.restore();
 	}
-}
+};
 
 nmsMap._moveMove = function(e) {
 	nmsMap._moveX = (e.pageX - e.target.offsetLeft) / nmsMap.scale;
@@ -433,13 +439,13 @@ nmsMap._moveMove = function(e) {
 	nmsMap._c.top.ctx.fillStyle = "red";
 	nmsMap._drawBox(nmsMap._c.top.ctx, box['x'], box['y'], box['width'], box['height']);
 	nmsMap._c.top.ctx.restore();
-}
+};
 
 nmsMap._moveSubmit = function() {
 	var data = {
 		sysname: nmsMap._moving,
 		placement: nmsMap._moveOldBox
-	}
+	};
 	var myData = JSON.stringify([data]);
 	$.ajax({
 		type: "POST",
@@ -450,11 +456,12 @@ nmsMap._moveSubmit = function() {
 			nmsData.invalidate("switches");
 		}
 	});
-}
+};
+
 nmsMap._moveStopListen = function() {
 	nmsMap._c.input.c.removeEventListener('mousemove',nmsMap._moveMove, true);
 	nmsMap._c.input.c.removeEventListener('mouseup',nmsMap._moveDone, true);
-}
+};
 
 nmsMap._moveDone = function(e) {
 	nmsMap._moveStopListen();
@@ -463,7 +470,7 @@ nmsMap._moveDone = function(e) {
 	}
 	nmsMap._moveSubmit();
 	nmsMap._clearOld(nmsMap._moveOldBox);
-}
+};
 
 nmsMap._moveStart = function(sw, e)
 {
@@ -474,7 +481,7 @@ nmsMap._moveStart = function(sw, e)
 	nmsMap._moveBox = nmsData.switches.switches[sw].placement;
 	nmsMap._c.input.c.addEventListener('mousemove',nmsMap._moveMove,true);
 	nmsMap._c.input.c.addEventListener('mouseup',nmsMap._moveDone,true);
-}
+};
 
 
 /*

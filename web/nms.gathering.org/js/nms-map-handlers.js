@@ -84,7 +84,7 @@ function uplinkUpdater()
 		return;
 	if (!nmsData.switchstate.switches)
 		return;
-	for (sw in nmsData.switches.switches) {
+	for (var sw in nmsData.switches.switches) {
 		var uplinks=0;
 		if (nmsData.switchstate.switches[sw] == undefined || nmsData.switchstate.switches[sw].uplinks == undefined) {
 			uplinks=0;
@@ -139,9 +139,9 @@ function trafficUpdater()
 {
 	if (!nms.switches_now["switches"])
 		return;
-	for (sw in nms.switches_now["switches"]) {
+	for (var sw in nms.switches_now["switches"]) {
 		var speed = 0;
-		for (port in nms.switches_now["switches"][sw]["ports"]) {
+		for (var port in nms.switches_now["switches"][sw]["ports"]) {
 			if (/ge-0\/0\/44$/.exec(port) ||
 			    /ge-0\/0\/45$/.exec(port) ||
 			    /ge-0\/0\/46$/.exec(port) ||
@@ -177,9 +177,9 @@ function trafficTotUpdater()
 {
 	if (!nms.switches_now["switches"])
 		return;
-	for (sw in nms.switches_now["switches"]) {
+	for (var sw in nms.switches_now["switches"]) {
 		var speed = 0;
-		for (port in nms.switches_now["switches"][sw]["ports"]) {
+		for (var port in nms.switches_now["switches"][sw]["ports"]) {
 			if (!nms.switches_then["switches"][sw] ||
 			    !nms.switches_then["switches"][sw]["ports"] ||
 			    !nms.switches_then["switches"][sw]["ports"][port])
@@ -220,14 +220,14 @@ function tempUpdater()
 	if(!nmsData.switches)
 		return;
 
-	for (sw in nmsData.switches["switches"]) {
+	for ( var sw in nmsData.switches["switches"]) {
 		var t = "white";
 		var temp = "";
 		
 		if(!nmsData.snmp || !nmsData.snmp.snmp || ! nmsData.snmp.snmp[sw] || !nmsData.snmp.snmp[sw]["misc"] || !nmsData.snmp.snmp[sw]["misc"]["enterprises.2636.3.1.13.1.7.7.1.0.0"])
 			continue;
 
-		tempObj = nmsData.snmp.snmp[sw]["misc"]["enterprises.2636.3.1.13.1.7.7.1.0.0"];
+		var tempObj = nmsData.snmp.snmp[sw]["misc"]["enterprises.2636.3.1.13.1.7.7.1.0.0"];
 		Object.keys(tempObj).forEach(function (key) {
 			if(key == "") {
 				temp = tempObj[key] + "°C";
@@ -259,6 +259,7 @@ function pingUpdater()
 	}
 	for (var sw in nmsData.switches.switches) {
 		try {
+            var c;
 			if (nmsData.ping.switches[sw].age > 0) {
 				c = red;
 			} else {

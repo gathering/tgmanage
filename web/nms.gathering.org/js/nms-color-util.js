@@ -89,6 +89,5 @@ function getColor(x,y) {
 	var data = imageData.data;
 	if (data.length < 4)
 		return false;
-	var ret = 'rgb(' + data[0] + ',' + data[1] + ',' + data[2] + ')';
-	return ret;
+    return 'rgb(' + data[0] + ',' + data[1] + ',' + data[2] + ')';
 }
