@@ -235,15 +235,13 @@ function tempUpdater()
 			continue;
 
 		var tempObj = nmsData.snmp.snmp[sw]["misc"]["enterprises.2636.3.1.13.1.7.7.1.0.0"];
-		Object.keys(tempObj).forEach(function (key) {
-			if(key == "") {
-				temp = tempObj[key] + "°C";
-				t = temp_color(temp);
-			}
-		});
+		if(tempObj[""]) {
+			temp = tempObj[""] + "°C";
+			t = temp_color(temp);
+			nmsMap.setSwitchColor(sw, t);
+			nmsMap.setSwitchInfo(sw, temp);
+		}
 
-		nmsMap.setSwitchColor(sw, t);
-		nmsMap.setSwitchInfo(sw, temp);
 	}
 }
 

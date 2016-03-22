@@ -5,9 +5,7 @@
  *
  * Interface: nmsInfoBox.showWindow(windowType,optionalParameter), nmsInfoBox.hide(), nmsInfoBox.refresh()
  *
- * Any windowTypes should at a minimum implement load, unload, getTitle, getContent, getChildContent
- *
- * TODO: Implement useful update methods on windowTypes
+ * Any windowTypes should at a minimum implement load, update, unload, getTitle, getContent, getChildContent
  *
  */
 
@@ -88,6 +86,7 @@ nmsInfoBox._show = function(argument) {
   }
   this._container.appendChild(panel);
   this._container.style.display = "block";
+	$('[data-toggle="popover"]').popover({placement:"top",container:'body'});
 };
 
 /*
@@ -251,7 +250,6 @@ nmsInfoBox._windowTypes.switchInfo = {
 					var commenttable = nmsInfoBox._makeCommentTable(comments);
 					commenttable.id = "info-switch-comments-table";
 					domObj.appendChild(commenttable);
-					$(function () { $('[data-toggle="popover"]').popover({placement:"top",continer:'body'}) })
 				}
 
 			// We have no data for this switch, but its still correct

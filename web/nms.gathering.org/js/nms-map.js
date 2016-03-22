@@ -275,6 +275,9 @@ nmsMap._drawSwitch = function(sw)
 	this._drawBox(this._c.switch.ctx, box['x'],box['y'],box['width'],box['height']);
 	this._c.switch.ctx.shadowBlur = 0;
 	this._drawText(this._c.text.ctx, sw,box);
+
+	if(this._info[sw])
+		this._drawSwitchInfo(sw);
 };
 
 nmsMap._drawSwitchInfo = function(sw) {
@@ -448,6 +451,8 @@ nmsMap.canvasClick = function(e)
 		} else {
 			nmsInfoBox.click(sw);
 		}
+	} else {
+		nmsInfoBox.hide();
 	}
 };
 
