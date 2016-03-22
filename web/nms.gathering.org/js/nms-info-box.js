@@ -438,7 +438,7 @@ nmsInfoBox._makeCommentTable = function(content) {
 
 nmsInfoBox._searchSmart = function(id, sw) {
 	try {
-		if (nmsData.smanagement.switches[sw].distro == id) {
+		if (nmsData.switches.switches[sw].distro_name == id) {
 			return true;
 		}
 		if (id.match("active")) {
@@ -463,15 +463,22 @@ nmsInfoBox._searchSmart = function(id, sw) {
 				}
 			}
 		}
-		if (nmsData.smanagement.switches[sw].ip.match(id)) {
-			return true;
-		}
-		if (nmsData.smanagement.switches[sw].subnet4.match(id)) {
-			return true;
-		}
-		if (nmsData.smanagement.switches[sw].subnet6.match(id)) {
-			return true;
-		}
+		try {
+			if (nmsData.smanagement.switches[sw].mgmt_v4_addr.match(id)) {
+				return true;
+			}
+			if (nmsData.smanagement.switches[sw].mgmt_v6_addr.match(id)) {
+				return true;
+			}
+		} catch (e) {}
+		try {
+			if (nmsData.smanagement.switches[sw].subnet4.match(id)) {
+				return true;
+			}
+			if (nmsData.smanagement.switches[sw].subnet6.match(id)) {
+				return true;
+			}
+		} catch (e) {}
 		if (nmsData.snmp.snmp[sw].misc.sysDescr[0].match(id)) {
 			return true;
 		}
