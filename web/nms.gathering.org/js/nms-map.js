@@ -10,7 +10,8 @@
  * nmsMap.setSwitchColor(switch,color)
  * nmsMap.setSwitchInfo(switch,info)
  * nmsMap.setSwitchHighlight(switch,true/false)
- * nmsMap.removeAllSwitchHighlights()
+ * nmsMap.enableHighlights()
+ * nmsMap.disableHighlights()
  */
 
 
@@ -47,6 +48,7 @@ var nmsMap = nmsMap || {
 
 	_color: { },
 	_highlight: { },
+	_highlightActive: false,
 	_c: {}
 };
 
@@ -73,20 +75,28 @@ nmsMap.setSwitchColor = function(sw, color) {
 	}
 };
 
+
 nmsMap.setSwitchHighlight = function(sw, highlight) {
-	if(highlight)
-		highlight == true;
-	if (this._highlight[sw] != highlight) {
-		this._highlight[sw] = highlight;
-		this._drawSwitch(sw);
-		this.stats.highlightChange++;
-	}
+    if( highlight )
+        highlight = true;
+    if ( this._highlight[sw] != highlight ) {
+        this.stats.highlightChange++;
+        this._highlight[sw] = highlight;
+    }
+    this._drawSwitch(sw);
 };
 
-nmsMap.removeAllSwitchHighlights = function() {
-	for(var sw in this._highlight)
-		this.setSwitchHighlight(sw,false);
+
+nmsMap.enableHighlights = function() {
+    this._highlightActive = true;
 };
+
+
+nmsMap.disableHighlights = function() {
+    this._highlightActive = false;
+    this._drawAllSwitches();
+};
+
 
 nmsMap.reset = function() {
 	for (var sw in this._color) {
@@ -236,7 +246,7 @@ nmsMap._drawSwitchBlur = function(sw)
 	this._c.blur.ctx.fillStyle = "red";
 	this._c.blur.ctx.shadowBlur = 30;
 	this._c.blur.ctx.shadowColor = "white";
-	this._c.blur.ctx.scale(this.scale, this.scale); // FIXME
+	this._c.blur.ctx.scale(this.scale, this.scale); // FIXME <- fix what?!
 	this._c.blur.ctx.fillRect(box['x'],box['y'],box['width'],box['height']);
 	this._c.blur.ctx.restore();
 };
@@ -249,8 +259,12 @@ nmsMap._drawSwitch = function(sw)
 		return;
 	var box = this._getBox(sw);
 	var color = nmsMap._color[sw];
-	if(nmsMap._highlight[sw]) {
-		color = red;
+	if(this._highlightActive) {
+		if(nmsMap._highlight[sw]) {
+			color = green;
+		} else {
+			color = white;
+		}
 	}
 	if (color == undefined) {
 		color = blue;
@@ -336,7 +350,7 @@ nmsMap._drawAllBlur = function() {
 
 nmsMap._drawBox = function(ctx, x, y, boxw, boxh) {
 	ctx.save();
-	ctx.scale(this.scale, this.scale); // FIXME
+	ctx.scale(this.scale, this.scale); // FIXME <- what?!
 	ctx.fillRect(x,y, boxw, boxh);
 	ctx.lineWidth = 1;
 	ctx.strokeStyle = "#000000";

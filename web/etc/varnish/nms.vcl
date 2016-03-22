@@ -22,9 +22,6 @@ sub vcl_recv {
         return (synth(418,"LOLOLOL"));
     }
 
-    # Hardcoded for testing
-    set req.http.host = "nms.tg16.gathering.org"; 
-
     if (req.method != "GET" && req.method != "HEAD") {
         /* We only deal with GET and HEAD by default */
         return (pass);

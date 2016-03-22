@@ -251,6 +251,8 @@ nmsInfoBox._windowTypes.switchInfo = {
       content.push([v, html]);
     }
 
+		content.sort();
+
     var table = nmsInfoBox._makeTable(content, "edit");
     domObj.appendChild(table);
 
@@ -318,6 +320,7 @@ nmsInfoBox._windowTypes.switchInfo = {
 nmsInfoBox.click = function(sw)
 {
   this.showWindow("switchInfo",sw);
+  this._windowTypes.switchInfo.showComments();
 };
 
 /*
@@ -394,33 +397,37 @@ nmsInfoBox._makeCommentTable = function(content) {
 };
 
 nmsInfoBox._searchSmart = function(id, sw) {
-	if (nmsData.smanagement.switches[sw].distro == id) {
-		console.log("ieh");
-		return true;
-	}
-	if (id.match("[a-z]+.active")) {
-		console.log("hei: " + sw);
-		var family = id.match("[a-z]+");
-		var limit = id;
-		limit = limit.replace(family + ".active>","");
-		limit = limit.replace(family + ".active<","");
-		limit = limit.replace(family + ".active=","");
-		var operator = id.replace(family + ".active","")[0];
-		if (limit == parseInt(limit)) {
-			if (operator == ">" ) {
-				if (nmsData.switchstate.switches[sw][family].live > limit) {
-					return true;
-				}
-			} else if (operator == "<") {
-				if (nmsData.switchstate.switches[sw][family].live < limit) {
-					return true;
-				}
-			} else if (operator == "=") {
-				if (nmsData.switchstate.switches[sw][family].live == limit) {
-					return true;
+	try {
+		if (nmsData.smanagement.switches[sw].distro == id) {
+			return true;
+		}
+		if (id.match("active")) {
+			var limit = id;
+			limit = limit.replace("active>","");
+			limit = limit.replace("active<","");
+			limit = limit.replace("active=","");
+			var operator = id.replace("active","")[0];
+			if (limit == parseInt(limit)) {
+				if (operator == ">" ) {
+					if (nmsData.switchstate.switches[sw]['totals'].live > limit) {
+						return true;
+					}
+				} else if (operator == "<") {
+					if (nmsData.switchstate.switches[sw]['totals'].live < limit) {
+						return true;
+					}
+				} else if (operator == "=") {
+					if (nmsData.switchstate.switches[sw]['totals'].live == limit) {
+						return true;
+					}
 				}
 			}
 		}
+		if (nmsData.snmp.snmp[sw].misc.sysDescr[0].match(id)) {
+			return true;
+		}
+	} catch (e) {
+		return false;
 	}
 	return false;
 };
@@ -437,6 +444,7 @@ nmsInfoBox._search = function() {
 		id = el.value;
 	}
 	if(id) {
+		nmsMap.enableHighlights();
 		for(var sw in nmsData.switches.switches) {
 			if (id[0] == "/") {
 				if (nmsInfoBox._searchSmart(id.slice(1),sw)) {
@@ -455,23 +463,32 @@ nmsInfoBox._search = function() {
 			}
 		}
 	} else {
-		nmsMap.removeAllSwitchHighlights();
+		nmsMap.disableHighlights();
 	}
 	if(matches.length == 1) {
 		document.getElementById("searchbox-submit").classList.add("btn-primary");
 		document.getElementById("searchbox").dataset.match = matches[0];
-		document.getElementById("searchbox").addEventListener("keydown",nmsInfoBox._searchKeyListener,false);
 	} else {
 		document.getElementById("searchbox-submit").classList.remove("btn-primary");
 		document.getElementById("searchbox").dataset.match = '';
-		document.getElementById("searchbox").removeEventListener("keydown",nmsInfoBox._searchKeyListener,false);
 	}
 };
 
 nmsInfoBox._searchKeyListener = function(e) {
-	if(e.keyCode == 13) {
-		var sw = document.getElementById("searchbox").dataset.match;
-		nmsInfoBox.showWindow("switchInfo",sw);
+	switch (e.keyCode) {
+		case 13:
+			var sw = document.getElementById("searchbox").dataset.match;
+			if(sw != '') {
+				nmsInfoBox.showWindow("switchInfo",sw);
+				this._windowTypes.switchInfo.showComments();
+			}
+			break;
+		case 27:
+			document.getElementById("searchbox").dataset.match = '';
+			document.getElementById("searchbox").value = '';
+			nmsInfoBox._search();
+			nmsInfoBox.hide();
+			break;
 	}
 };
 
