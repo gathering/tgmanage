@@ -5,6 +5,10 @@ BEGIN {
         require "include/config.pm";
 }
 
+use JSON -support_by_pp;
+use LWP 5.64;
+use LWP::UserAgent;
+use Net::SSL; # needed, else LWP goes into emo-mode
 use Net::IP;
 use NetAddr::IP;
 use Getopt::Long;
@@ -18,75 +22,81 @@ if (@ARGV > 0) {
 }
 
 # Use this to generate nsupdate for all edge switches
-# Expects joined input from switches.txt and patchlist.txt
-## paste -d' ' switches.txt <(cut -d' ' -f3- patchlist.txt) > working-area/switches-patchlist.txt
 
-print "server $nms::config::pri_v4\n";
+# fetch PI API content
+sub get_url{
+        my $url = shift;
 
-while (<STDIN>){
-	# e73-4 151.216.160.64/26 2a02:ed02:160b::/64 151.216.181.141/26 2a02:ed02:181c::141/64 1734 distro6 @ports
-	my ( $swname, $client_v4, $client_v6, $sw_v4, $sw_v6, $vlan, $distro, @ports ) = split;
+	$ENV{PERL_LWP_SSL_VERIFY_HOSTNAME} = 0; # just to be sure :-D
+	my $ua = LWP::UserAgent->new;
+	my $req = HTTP::Request->new(GET => $url);
+	$req->authorization_basic("server", "fusentast");
+
+	return $ua->request($req)->content();
+}
+
+my $json_obj = new JSON;
+my $json_content = get_url("https://nms.tg16.gathering.org/api/read/switches-management");
+if($json_content){
+	my $json = $json_obj->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($json_content);
 	
-	(my $v4gw = NetAddr::IP->new($client_v4)->first()) =~ s/\/[0-9]{1,2}//;
-	(my $v6gw = NetAddr::IP->new($client_v6)->first()) =~ s/\/[0-9]{1,2}//;
+	print "server $nms::config::pri_v4\n";
 	
-	(my $v4mgmt = $sw_v4) =~ s/\/[0-9]{1,2}//;
-	(my $v6mgmt = $sw_v6) =~ s/\/[0-9]{1,2}//;
+	foreach my $switch (values %{$json->{switches}}){
+		next unless ($switch->{subnet4}); # require at least IPv4 client subnet
+		next unless ($switch->{sysname} =~ m/^e[0-9]+?\-/); # only rows
+		
+		(my $v4mgmt = $switch->{mgmt_v4_addr}) =~ s/\/[0-9]{1,2}//;
+		(my $v6mgmt = $switch->{mgmt_v6_addr}) =~ s/\/[0-9]{1,2}//;
+		(my $v4gw = NetAddr::IP->new($switch->{subnet4})->first()) =~ s/\/[0-9]{1,2}//;
+		(my $v6gw = NetAddr::IP->new($switch->{subnet6})->first()) =~ s/\/[0-9]{1,2}//;
+		
+		my $fqdn = $switch->{sysname} . "." . $nms::config::tgname . ".gathering.org.";
+		my $sw_fqdn = "sw." . $fqdn;
+		my $gw_fqdn = "gw." . $fqdn;
 	
-	my $fqdn = $swname . "." . $nms::config::tgname . ".gathering.org.";
-	my $sw_fqdn = "sw." . $fqdn;
-	my $gw_fqdn = "gw." . $fqdn;
-	my $text_info = $distro . ", vlan $vlan, " . join(' + ', @ports);
-	
-	# A and AAAA-record to the switch
-	if($delete){
-		print "update delete $sw_fqdn \t IN A\n";
-		print "update delete $sw_fqdn \t IN AAAA\n";
-	} else {
-		print "update add $sw_fqdn \t 3600 IN A \t $v4mgmt\n";
-		print "update add $sw_fqdn \t 3600 IN AAAA \t $v6mgmt\n";
-	}
-	print "send\n";
-
-	# PTR to the switch
-	if($delete){
-		print "update delete " . Net::IP->new($v4mgmt)->reverse_ip() . " \t IN PTR\n";
+		# A and AAAA-record to the switch
+		if($delete){
+			print "update delete $sw_fqdn \t IN A\n";
+			print "update delete $sw_fqdn \t IN AAAA\n";
+		} else {
+			print "update add $sw_fqdn \t 3600 IN A \t $v4mgmt\n";
+			print "update add $sw_fqdn \t 3600 IN AAAA \t $v6mgmt\n";
+		}
 		print "send\n";
-		print "update delete " . Net::IP->new($v6mgmt)->reverse_ip() . " \t IN PTR\n";
-	} else {
-		print "update add " . Net::IP->new($v4mgmt)->reverse_ip() . " \t 3600 IN PTR \t $sw_fqdn\n";
-		print "send\n";
-		print "update add " . Net::IP->new($v6mgmt)->reverse_ip() . " \t 3600 IN PTR \t $sw_fqdn\n";
-	}
-	print "send\n";
 
-	# TXT-record with details
-	if($delete){
-		print "update delete $sw_fqdn \t IN TXT\n";
-	} else {
-		print "update add $sw_fqdn \t 3600 IN TXT \t \"" . $text_info . "\"\n";
-	}
-	print "send\n";
-
-	# A and AAAA-record to the gateway/router
-	if($delete){
-		print "update delete $gw_fqdn \t IN A\n";
-		print "update delete $gw_fqdn \t IN AAAA\n";
-	} else {
-	        print "update add $gw_fqdn \t 3600 IN A \t $v4gw\n";
-	        print "update add $gw_fqdn \t 3600 IN AAAA \t $v6gw\n";
-	}
-	print "send\n";
-
-	# PTR to the gateway/router
-	if($delete){
-		print "update delete " . Net::IP->new($v4gw)->reverse_ip() . " \t IN PTR\n";
+		# PTR to the switch
+		if($delete){
+			print "update delete " . Net::IP->new($v4mgmt)->reverse_ip() . " \t IN PTR\n" if $v4mgmt;
+			print "send\n" if $v4mgmt;
+			print "update delete " . Net::IP->new($v6mgmt)->reverse_ip() . " \t IN PTR\n" if $v6mgmt
+		} else {
+			print "update add " . Net::IP->new($v4mgmt)->reverse_ip() . " \t 3600 IN PTR \t $sw_fqdn\n" if $v4mgmt;
+			print "send\n" if $v4mgmt;
+			print "update add " . Net::IP->new($v6mgmt)->reverse_ip() . " \t 3600 IN PTR \t $sw_fqdn\n" if $v6mgmt;
+		}
 		print "send\n";
-		print "update delete " . Net::IP->new($v6gw)->reverse_ip() . " \t IN PTR\n";
-	} else {
-	        print "update add " . Net::IP->new($v4gw)->reverse_ip() . " \t 3600 IN PTR \t $gw_fqdn\n";
+
+		# A and AAAA-record to the gateway/router
+		if($delete){
+			print "update delete $gw_fqdn \t IN A\n";
+			print "update delete $gw_fqdn \t IN AAAA\n";
+		} else {
+		        print "update add $gw_fqdn \t 3600 IN A \t $v4gw\n" if $v4gw;
+		        print "update add $gw_fqdn \t 3600 IN AAAA \t $v6gw\n" if $v6gw;
+		}
 		print "send\n";
-	        print "update add " . Net::IP->new($v6gw)->reverse_ip() . " \t 3600 IN PTR \t $gw_fqdn\n";
+
+		# PTR to the gateway/router
+		if($delete){
+			print "update delete " . Net::IP->new($v4gw)->reverse_ip() . " \t IN PTR\n" if $v4gw;
+			print "send\n" if $v4gw;
+			print "update delete " . Net::IP->new($v6gw)->reverse_ip() . " \t IN PTR\n" if $v6gw;
+		} else {
+		        print "update add " . Net::IP->new($v4gw)->reverse_ip() . " \t 3600 IN PTR \t $gw_fqdn\n" if $v4gw;
+			print "send\n" if $v4gw;
+		        print "update add " . Net::IP->new($v6gw)->reverse_ip() . " \t 3600 IN PTR \t $gw_fqdn\n" if $v6gw;
+		}
+	        print "send\n";
 	}
-        print "send\n";
 }
