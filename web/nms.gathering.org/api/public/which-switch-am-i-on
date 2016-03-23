@@ -8,8 +8,7 @@ use warnings;
 use Data::Dumper;
 
 #my $query = $nms::web::dbh->prepare("select * from switches where '185.110.150.7' << subnet4");
-my $query = $nms::web::dbh->prepare("select * from switches where '88.92.5.67' << subnet4");
-$query->execute();
+my $query = $nms::web::dbh->prepare("select * from switches where ? << subnet4");
 
 print "Cache-Control: max-age=0";
 print "Content-Type: text/html";
@@ -17,7 +16,11 @@ print "\n\n";
 
 # get user ip from somewhere.
 # HTTP_X_FORWARDED_FOR is set by varnish. When using varnish, the REMOTE_ADDR will always be localhost.
-my $addr = $ENV{HTTP_X_FORWARDED_FOR} // $ENV{REMOTE_ADDR};
+
+my @xff = split(",",$ENV{HTTP_X_FORWARDED_FOR});
+my $addr = $xff[0] // $ENV{REMOTE_ADDR};
+
+$query->execute($addr);
 
 # add start html: header + body etc.
 print "
@@ -31,6 +34,7 @@ print "" . $addr ."<br \>";
 # print switch name and distroname.
 while ( my $ref = $query->fetchrow_hashref() ) {
     print $ref->{sysname}. " @ " . $ref->{distro};
+    print "<br />";
 }
 
 # add end html
