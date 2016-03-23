@@ -5,9 +5,7 @@
  *
  * Interface: nmsInfoBox.showWindow(windowType,optionalParameter), nmsInfoBox.hide(), nmsInfoBox.refresh()
  *
- * Any windowTypes should at a minimum implement load, unload, getTitle, getContent, getChildContent
- *
- * TODO: Implement useful update methods on windowTypes
+ * Any windowTypes should at a minimum implement load, update, unload, getTitle, getContent, getChildContent
  *
  */
 
@@ -88,6 +86,7 @@ nmsInfoBox._show = function(argument) {
   }
   this._container.appendChild(panel);
   this._container.style.display = "block";
+	$('[data-toggle="popover"]').popover({placement:"top",container:'body'});
 };
 
 /*
@@ -210,7 +209,7 @@ nmsInfoBox._windowTypes.switchInfo = {
 		}
 	},
   getTitle: function() {
-    return '<button type="button" class="edit btn btn-xs btn-warning" onclick="nmsInfoBox._windowTypes.switchInfo.showEdit(\'' + this.sw + '\');">Edit</button> <button type="button" class="comments btn btn-xs btn-default" onclick="nmsInfoBox._windowTypes.switchInfo.showComments(\'' + this.sw + '\');">Comments</button> <button type="button" class="edit btn btn-xs btn-default" onclick="nmsInfoBox._windowTypes.switchInfo.showSNMP(\'ports\');">Ports</button> <button type="button" class="edit btn btn-xs btn-default" onclick="nmsInfoBox._windowTypes.switchInfo.showSNMP(\'misc\');">Misc</button> ' + this.sw + '';
+    return '<h4>' + this.sw + '</h4><button type="button" class="edit btn btn-xs btn-warning" onclick="nmsInfoBox._windowTypes.switchInfo.showEdit(\'' + this.sw + '\');">Edit</button> <button type="button" class="comments btn btn-xs btn-default" onclick="nmsInfoBox._windowTypes.switchInfo.showComments(\'' + this.sw + '\');">Comments</button> <button type="button" class="edit btn btn-xs btn-default" onclick="nmsInfoBox._windowTypes.switchInfo.showSNMP(\'ports\');">Ports</button> <button type="button" class="edit btn btn-xs btn-default" onclick="nmsInfoBox._windowTypes.switchInfo.showSNMP(\'misc\');">Misc</button>';
   },
   getContent: function() {
     return this.content;
@@ -219,6 +218,7 @@ nmsInfoBox._windowTypes.switchInfo = {
     return this.childContent;
   },
   showComments: function() {
+			var oldView = this.activeView;
 			this.activeView = "comments";
       var domObj = document.createElement("div");
       var comments = [];
@@ -232,10 +232,6 @@ nmsInfoBox._windowTypes.switchInfo = {
 			// If we have no switch data, so just show comment form
 			if(!nmsData.comments || !nmsData.comments.comments) {
 				this.commentsHash = false;
-
-			// We have data, but its old, so don't change data
-			} else if(this.commentsHash != false && this.commentsHash == nmsData.comments.hash) {
-				return;
 
 			// We have data, refresh
 			} else if(nmsData.comments.comments[this.sw]) {
@@ -251,7 +247,6 @@ nmsInfoBox._windowTypes.switchInfo = {
 					var commenttable = nmsInfoBox._makeCommentTable(comments);
 					commenttable.id = "info-switch-comments-table";
 					domObj.appendChild(commenttable);
-					$(function () { $('[data-toggle="popover"]').popover({placement:"top",continer:'body'}) })
 				}
 
 			// We have no data for this switch, but its still correct
@@ -334,9 +329,14 @@ nmsInfoBox._windowTypes.switchInfo = {
     nmsInfoBox.refresh();
   },
   unload: function() {
-    this.childContent = false;
+		this.title = '';
+		this.content = '';
+		this.childContent = false;
+		this.sw = '';
+		this.swi = '';
+		this.swm = '';
 		this.commentsHash = false;
-		this.activeView = "";
+		this.activeView = '';
   },
   save: function() {
     var myData = nmsInfoBox._editStringify(this.sw);
@@ -346,6 +346,10 @@ nmsInfoBox._windowTypes.switchInfo = {
       dataType: "text",
       data:myData,
       success: function (data, textStatus, jqXHR) {
+        var result = JSON.parse(data);
+        if(result.switches_updated.length > 0) { // FIXME unresolved variable switches_addded
+          nmsInfoBox.hide();
+        }
         nmsData.invalidate("switches");
         nmsData.invalidate("smanagement");
       }
@@ -385,6 +389,7 @@ nmsInfoBox._makeTable = function(content, caption) {
 	}
 	for (var v in content) { 
 		tr = table.insertRow(-1);
+		tr.className = content[v][0].toLowerCase();
 		td1 = tr.insertCell(0);
 		td2 = tr.insertCell(1);
 		td1.innerHTML = content[v][0];
@@ -438,7 +443,7 @@ nmsInfoBox._makeCommentTable = function(content) {
 
 nmsInfoBox._searchSmart = function(id, sw) {
 	try {
-		if (nmsData.smanagement.switches[sw].distro == id) {
+		if (nmsData.switches.switches[sw].distro_name == id) {
 			return true;
 		}
 		if (id.match("active")) {
@@ -463,15 +468,22 @@ nmsInfoBox._searchSmart = function(id, sw) {
 				}
 			}
 		}
-		if (nmsData.smanagement.switches[sw].ip.match(id)) {
-			return true;
-		}
-		if (nmsData.smanagement.switches[sw].subnet4.match(id)) {
-			return true;
-		}
-		if (nmsData.smanagement.switches[sw].subnet6.match(id)) {
-			return true;
-		}
+		try {
+			if (nmsData.smanagement.switches[sw].mgmt_v4_addr.match(id)) {
+				return true;
+			}
+			if (nmsData.smanagement.switches[sw].mgmt_v6_addr.match(id)) {
+				return true;
+			}
+		} catch (e) {}
+		try {
+			if (nmsData.smanagement.switches[sw].subnet4.match(id)) {
+				return true;
+			}
+			if (nmsData.smanagement.switches[sw].subnet6.match(id)) {
+				return true;
+			}
+		} catch (e) {}
 		if (nmsData.snmp.snmp[sw].misc.sysDescr[0].match(id)) {
 			return true;
 		}

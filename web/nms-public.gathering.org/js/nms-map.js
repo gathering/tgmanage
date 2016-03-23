@@ -158,6 +158,7 @@ nmsMap._resizeEvent = function() {
 		nmsMap._blurDrawn = false;
 		nmsMap._drawBG();
 		nmsMap._drawAllSwitches();
+		nmsMap._drawAllLinknets();
 		nmsMap.drawNow();
 		nmsMap.stats.resizeEvents++;
 	}
@@ -274,6 +275,9 @@ nmsMap._drawSwitch = function(sw)
 	this._drawBox(this._c.switch.ctx, box['x'],box['y'],box['width'],box['height']);
 	this._c.switch.ctx.shadowBlur = 0;
 	this._drawText(this._c.text.ctx, sw,box);
+
+	if(this._info[sw])
+		this._drawSwitchInfo(sw);
 };
 
 nmsMap._drawSwitchInfo = function(sw) {
@@ -328,9 +332,38 @@ nmsMap._drawText = function(ctx, text, box, align) {
 	ctx.restore();
 };
 
+nmsMap._setLinknetColor = function(l, color1, color2)
+{
+	var oldcolor1;
+	var oldcolor2;
+	try {
+		oldcolor1 = nmsMap._linknets[l].sysname1;
+		oldcolor2 = nmsMap._linknets[l].sysname2;
+		if (oldcolor1 == color1 && oldcolor2 == color2) {
+			return ;
+		}
+	} catch (e) {}
+	nmsMap._linknets[l] = {};
+	nmsMap._linknets[l].sysname1 = color1;
+	nmsMap._linknets[l].sysname2 = color2;
+	nmsMap._drawLinknet(l)
+}
+
+nmsMap._drawLinknet = function(l) {
+	try {
+		var color1 = blue;
+		var color2 = blue;
+		try {
+			color1 = nmsMap._linknets[l].sysname1;
+			color2 = nmsMap._linknets[l].sysname2;
+		} catch(e) { }
+		nmsMap._connectSwitches(nmsData.switches.linknets[l].sysname1, nmsData.switches.linknets[l].sysname2, color1, color2);
+	} catch(e) { }
+}
+
 nmsMap._drawAllLinknets = function() {
 	for (var l in nmsData.switches.linknets) {
-		nmsMap._connectSwitches(nmsData.switches.linknets[l].switch1, nmsData.switches.linknets[l].switch2);
+		nmsMap._drawLinknet(l);
 	}
 }
 nmsMap._drawAllSwitches = function() {
@@ -389,10 +422,12 @@ nmsMap._connectBoxes = function(box1, box2,color1, color2) {
 	gradient.addColorStop(0, color1);
 	gradient.addColorStop(1, color2);
 	ctx.strokeStyle = gradient;
+	ctx.beginPath();
 	ctx.moveTo(x0,y0);
 	ctx.lineTo(x1,y1); 
 	ctx.lineWidth = 5;
 	ctx.stroke();
+	ctx.closePath();
 	ctx.restore();
 };
 
@@ -416,6 +451,8 @@ nmsMap.canvasClick = function(e)
 		} else {
 			nmsInfoBox.click(sw);
 		}
+	} else {
+		nmsInfoBox.hide();
 	}
 };
 

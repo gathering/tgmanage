@@ -38,6 +38,9 @@ var nms = {
 		'5':setMapModeFromN,
 		'6':setMapModeFromN,
 		'7':setMapModeFromN,
+		'8':setMapModeFromN,
+		'9':setMapModeFromN,
+		'c':toggleConnect,
 		'h':moveTimeFromKey,
 		'j':moveTimeFromKey,
 		'k':moveTimeFromKey,
@@ -345,6 +348,10 @@ function toggleLayer(layer) {
                l.style.display = 'none';
 }
 
+function toggleConnect() {
+	toggleLayer("linkCanvas");
+}
+
 function commentInactive(id)
 {
 	commentChange(id,"inactive");
@@ -533,6 +540,9 @@ function setMapModeFromN(e,key)
 			break;
 		case '7':
 			setUpdater(handler_traffic_tot);
+			break;
+		case '8':
+			setUpdater(handler_snmp);
 			break;
 		case '9':
 			setUpdater(handler_disco);

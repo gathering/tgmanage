@@ -67,6 +67,12 @@ var handler_comment = {
 	name:"Fresh comment spotter"
 };
 
+var handler_snmp = {
+	init:snmpInit,
+	tag:"snmp",
+	name:"SNMP state"
+};
+
 var handlers = [
 	handler_uplinks,
 	handler_temp,
@@ -75,7 +81,8 @@ var handlers = [
 	handler_disco,
 	handler_comment,
 	handler_traffic_tot,
-	handler_dhcp
+	handler_dhcp,
+	handler_snmp
 	];
 
 /*
@@ -133,6 +140,8 @@ function uplinkInit()
  */
 function trafficInit()
 {
+	nmsData.addHandler("switches","mapHandler",trafficUpdater);
+	nmsData.addHandler("switchstate","mapHandler",trafficUpdater);
 	var m = 1024 * 1024 / 8;
 	drawGradient([lightgreen,green,orange,red]);
 	setLegend(1,colorFromSpeed(0),"0 (N/A)");	
@@ -144,33 +153,28 @@ function trafficInit()
 
 function trafficUpdater()
 {
-	if (!nms.switches_now["switches"])
+	if (!nmsData.switchstate.switches || !nmsData.switchstate.then)
 		return;
-	for (var sw in nms.switches_now["switches"]) {
+	for (var sw in nmsData.switchstate.switches) {
 		var speed = 0;
-		for (var port in nms.switches_now["switches"][sw]["ports"]) {
-			if (/ge-0\/0\/44$/.exec(port) ||
-			    /ge-0\/0\/45$/.exec(port) ||
-			    /ge-0\/0\/46$/.exec(port) ||
-			    /ge-0\/0\/47$/.exec(port))
-			 {
-				 if (!nms.switches_then["switches"][sw] ||
-				     !nms.switches_then["switches"][sw]["ports"] ||
-				     !nms.switches_then["switches"][sw]["ports"][port])
-					 continue;
-				 var t = nms.switches_then["switches"][sw]["ports"][port];
-				 var n = nms.switches_now["switches"][sw]["ports"][port];
-				 speed += (parseInt(t["ifhcoutoctets"]) -parseInt(n["ifhcoutoctets"])) / (parseInt(t["time"] - n["time"]));
-				 speed += (parseInt(t["ifhcinoctets"]) -parseInt(n["ifhcinoctets"])) / (parseInt(t["time"] - n["time"]));
-			 }
-		}
+		try {
+			var t = parseInt(nmsData.switchstate.then[sw].uplinks.ifHCOutOctets);
+			var n = parseInt(nmsData.switchstate.switches[sw].uplinks.ifHCOutOctets);
+			var tt = parseInt(nmsData.switchstate.then[sw].time);
+			var nt = parseInt(nmsData.switchstate.switches[sw].time);
+		} catch (e) { continue;};
+		var tdiff = nt - tt;
+		var diff = n - t;
+		speed = diff / tdiff;
                 if(!isNaN(speed))
-                        setSwitchColor(sw,colorFromSpeed(speed));
+                        nmsMap.setSwitchColor(sw,colorFromSpeed(speed));
 	}
 }
 
 function trafficTotInit()
 {
+	nmsData.addHandler("switches","mapHandler",trafficTotUpdater);
+	nmsData.addHandler("switchstate","mapHandler",trafficTotUpdater);
 	var m = 1024 * 1024 / 8;
 	drawGradient([lightgreen,green,orange,red]);
 	setLegend(1,colorFromSpeed(0),"0 (N/A)");	
@@ -182,20 +186,21 @@ function trafficTotInit()
 
 function trafficTotUpdater()
 {
-	if (!nms.switches_now["switches"])
+	if (!nmsData.switchstate.switches || !nmsData.switchstate.then)
 		return;
-	for (var sw in nms.switches_now["switches"]) {
+	for (var sw in nmsData.switchstate.switches) {
 		var speed = 0;
-		for (var port in nms.switches_now["switches"][sw]["ports"]) {
-			if (!nms.switches_then["switches"][sw] ||
-			    !nms.switches_then["switches"][sw]["ports"] ||
-			    !nms.switches_then["switches"][sw]["ports"][port])
-				continue;
-			var t = nms.switches_then["switches"][sw]["ports"][port];
-			var n = nms.switches_now["switches"][sw]["ports"][port];
-			speed += (parseInt(t["ifhcoutoctets"]) -parseInt(n["ifhcoutoctets"])) / (parseInt(t["time"] - n["time"]));
-		}
-		setSwitchColor(sw,colorFromSpeed(speed,5));
+		try {
+			var t = parseInt(nmsData.switchstate.then[sw].totals.ifHCOutOctets);
+			var n = parseInt(nmsData.switchstate.switches[sw].totals.ifHCOutOctets);
+			var tt = parseInt(nmsData.switchstate.then[sw].time);
+			var nt = parseInt(nmsData.switchstate.switches[sw].time);
+		} catch (e) { continue;};
+		var tdiff = nt - tt;
+		var diff = n - t;
+		speed = diff / tdiff;
+                if(!isNaN(speed))
+                        nmsMap.setSwitchColor(sw,colorFromSpeed(speed));
 	}
 }
 
@@ -231,19 +236,15 @@ function tempUpdater()
 		var t = "white";
 		var temp = "";
 		
-		if(!nmsData.snmp || !nmsData.snmp.snmp || ! nmsData.snmp.snmp[sw] || !nmsData.snmp.snmp[sw]["misc"] || !nmsData.snmp.snmp[sw]["misc"]["enterprises.2636.3.1.13.1.7.7.1.0.0"])
+		if(!nmsData.switchstate || !nmsData.switchstate.switches || !nmsData.switchstate.switches[sw] || !nmsData.switchstate.switches[sw].temp)
 			continue;
 
-		var tempObj = nmsData.snmp.snmp[sw]["misc"]["enterprises.2636.3.1.13.1.7.7.1.0.0"];
-		Object.keys(tempObj).forEach(function (key) {
-			if(key == "") {
-				temp = tempObj[key] + "°C";
-				t = temp_color(temp);
-			}
-		});
-
+		var t = nmsData.switchstate.switches[sw].temp;
+		temp = t + "°C";
+		t = temp_color(temp);
 		nmsMap.setSwitchColor(sw, t);
 		nmsMap.setSwitchInfo(sw, temp);
+
 	}
 }
 
@@ -428,3 +429,24 @@ function discoInit()
 	setLegend(5,"white","!");
 }
 
+function snmpUpdater() {
+	for (var sw in nmsData.switches.switches) {
+		if (nmsData.snmp.snmp[sw] == undefined || nmsData.snmp.snmp[sw].misc == undefined) {
+			nmsMap.setSwitchColor(sw, red);
+		} else if (nmsData.snmp.snmp[sw].misc.sysName[0] != sw) {
+			nmsMap.setSwitchColor(sw, orange);
+		} else {
+			nmsMap.setSwitchColor(sw, green);
+		}
+	}
+}
+function snmpInit() {
+	nmsData.addHandler("snmp", "mapHandler", snmpUpdater);
+	
+	setLegend(1,green,"OK");	
+	setLegend(2,orange, "Sysname mismatch");
+	setLegend(3,red,"No SNMP data");
+	setLegend(4,green, "");
+	setLegend(5,green,"");
+
+}
