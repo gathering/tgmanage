@@ -8,7 +8,7 @@ use warnings;
 use Data::Dumper;
 
 #my $query = $nms::web::dbh->prepare("select * from switches where '185.110.150.7' << subnet4");
-my $query = $nms::web::dbh->prepare("select * from switches where ? << subnet4");
+my $query = $nms::web::dbh->prepare("select * from switches where ? << subnet4 or ? << subnet6");
 
 print "Cache-Control: max-age=0";
 print "Content-Type: text/html";
@@ -20,7 +20,7 @@ print "\n\n";
 my @xff = split(",",$ENV{HTTP_X_FORWARDED_FOR});
 my $addr = $xff[0] // $ENV{REMOTE_ADDR};
 
-$query->execute($addr);
+$query->execute($addr,$addr);
 
 # add start html: header + body etc.
 print "

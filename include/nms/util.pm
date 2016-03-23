@@ -15,10 +15,9 @@ sub parse_switch {
 		'sysname' => "$switch",
 		'subnet4' => "$subnet4",
 		'subnet6' => "$subnet6",
-		'mgtmt4' => "$mgtmt4",
-		'mgtmt6' => "$mgtmt6",
-		'lolid' => "$lolid",
-		'ip' => "$mgtmt4",
+		'mgmt_v4_addr' => "$mgtmt4",
+		'mgmt_v6_addr' => "$mgtmt6",
+		'traffic_vlan' => "$lolid",
 		'distro' => "$distro"
 	);
 	%{$ret{'placement'}} = guess_placement($switch);
@@ -91,7 +90,7 @@ sub guess_placement {
 		$yy -= 20 if ($e >= 79 and $s == 1);
 		$yy -= 30 if ($e >= 81 and $s == 1);
 
-	} elsif ($name =~ /^sw(\d+)-creativia$/) {
+	} elsif ($name =~ /^creativia(\d+)$/) {
 		my ($s) = ($1);
 		$src = "creativia";
 		$x = 1535;
