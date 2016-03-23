@@ -21,4 +21,5 @@ $nms::web::cc{'max-age'} = '0';
 $nms::web::cc{'stale-while-revalidate'} = '0';
 $nms::web::json{'state'} = 'ok';
 
+print "X-ban: /api/read/comments\n";
 finalize_output();

@@ -11,6 +11,9 @@ backend default {
 
 # Sort magi.
 sub vcl_recv {
+    if (req.url ~ "^/where" || req.url ~ "^/location") {
+	set req.url = "/api/public/location";
+    }
     if (req.method != "GET" &&
         req.method != "HEAD" &&
         req.method != "PUT" &&
