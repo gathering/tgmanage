@@ -233,10 +233,6 @@ nmsInfoBox._windowTypes.switchInfo = {
 			if(!nmsData.comments || !nmsData.comments.comments) {
 				this.commentsHash = false;
 
-			// We have data, but its old, so don't change data
-			} else if(oldView == "comments" && this.commentsHash != false && this.commentsHash == nmsData.comments.hash) {
-				return;
-
 			// We have data, refresh
 			} else if(nmsData.comments.comments[this.sw]) {
 				this.commentsHash = nmsData.comments.hash;
@@ -333,9 +329,14 @@ nmsInfoBox._windowTypes.switchInfo = {
     nmsInfoBox.refresh();
   },
   unload: function() {
-    this.childContent = false;
+		this.title = '';
+		this.content = '';
+		this.childContent = false;
+		this.sw = '';
+		this.swi = '';
+		this.swm = '';
 		this.commentsHash = false;
-		this.activeView = "";
+		this.activeView = '';
   },
   save: function() {
     var myData = nmsInfoBox._editStringify(this.sw);
