@@ -344,6 +344,10 @@ nmsInfoBox._windowTypes.switchInfo = {
       dataType: "text",
       data:myData,
       success: function (data, textStatus, jqXHR) {
+        var result = JSON.parse(data);
+        if(result.switches_updated.length > 0) { // FIXME unresolved variable switches_addded
+          nmsInfoBox.hide();
+        }
         nmsData.invalidate("switches");
         nmsData.invalidate("smanagement");
       }
