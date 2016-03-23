@@ -218,6 +218,7 @@ nmsInfoBox._windowTypes.switchInfo = {
     return this.childContent;
   },
   showComments: function() {
+			var oldView = this.activeView;
 			this.activeView = "comments";
       var domObj = document.createElement("div");
       var comments = [];
@@ -231,10 +232,6 @@ nmsInfoBox._windowTypes.switchInfo = {
 			// If we have no switch data, so just show comment form
 			if(!nmsData.comments || !nmsData.comments.comments) {
 				this.commentsHash = false;
-
-			// We have data, but its old, so don't change data
-			} else if(this.commentsHash != false && this.commentsHash == nmsData.comments.hash) {
-				return;
 
 			// We have data, refresh
 			} else if(nmsData.comments.comments[this.sw]) {
@@ -332,9 +329,14 @@ nmsInfoBox._windowTypes.switchInfo = {
     nmsInfoBox.refresh();
   },
   unload: function() {
-    this.childContent = false;
+		this.title = '';
+		this.content = '';
+		this.childContent = false;
+		this.sw = '';
+		this.swi = '';
+		this.swm = '';
 		this.commentsHash = false;
-		this.activeView = "";
+		this.activeView = '';
   },
   save: function() {
     var myData = nmsInfoBox._editStringify(this.sw);
