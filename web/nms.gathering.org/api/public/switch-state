@@ -32,7 +32,6 @@ while ( my $ref = $q->fetchrow_hashref() ) {
 			}
 			$json{'switches'}{$sysname}{'uplinks'}{'total'} += 1;
 		}
-
 		$json{'switches'}{$sysname}{ifs}{$smallport}{'ifHCInOctets'} += $port{'ifHCInOctets'};
 		$json{'switches'}{$sysname}{ifs}{$smallport}{'ifHCOutOctets'} += $port{'ifHCOutOctets'};
 		$json{'switches'}{$sysname}{totals}{'ifHCInOctets'} += $port{'ifHCInOctets'};
@@ -43,6 +42,7 @@ while ( my $ref = $q->fetchrow_hashref() ) {
 		}
 		$json{'switches'}{$sysname}{totals}{'total'} += 1;
 	}
+	$json{'switches'}{$sysname}{'temp'} = $data{'misc'}{'enterprises.2636.3.1.13.1.7.7.1.0.0'}{''};
 	$json{'switches'}{$sysname}{'time'} = $ref->{'time'};
 }
 
@@ -83,6 +83,7 @@ while ( my $ref = $q2->fetchrow_hashref() ) {
 		}
 		$json{'then'}{$sysname}{totals}{'total'} += 1;
 	}
+	$json{'then'}{$sysname}{'temp'} = $data{'misc'}{'enterprises.2636.3.1.13.1.7.7.1.0.0'}{''};
 	$json{'then'}{$sysname}{'time'} = $ref->{'time'};
 }
 $nms::web::cc{'max-age'} = "5";
