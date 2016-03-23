@@ -26,16 +26,19 @@
       <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
       <![endif]-->
       <style type="text/css">
-	canvas {
-	  -webkit-touch-callout: none;
-	  -webkit-user-select: none;
-	  -khtml-user-select: none;
-	  -moz-user-select: none;
-	  -ms-user-select: none;
-	  user-select: none;
-	  outline: none;
-	  -webkit-tap-highlight-color: rgba(255, 255, 255, 0); /* mobile webkit */
-	}   
+				canvas {
+					-webkit-touch-callout: none;
+					-webkit-user-select: none;
+					-khtml-user-select: none;
+					-moz-user-select: none;
+					-ms-user-select: none;
+					user-select: none;
+					outline: none;
+					-webkit-tap-highlight-color: rgba(255, 255, 255, 0); /* mobile webkit */
+				}
+				tr.mgmt_v4_addr {
+					font-weight: 700;
+				}
       </style>
   </head>
 
@@ -64,6 +67,7 @@
 		<li><a href="#temp" onclick="setUpdater(handler_temp)">Temperature map</a></li>
 		<li><a href="#traffic" onclick="setUpdater(handler_traffic)">Traffic map</a></li>
 		<li><a href="#traffictot" onclick="setUpdater(handler_traffic_tot)">Total switch traffic</a></li>
+		<li><a href="#snmp" onclick="setUpdater(handler_snmp)">SNMP map</a></li>
 		<li><a href="#disco" onclick="setUpdater(handler_disco)">DISCO</a></li>
 		<li class="divider"> </li>
 		<li><a href="#" onclick="toggleLayer('nowPickerBox');startNowPicker();">Travel in time</a></li>
@@ -71,6 +75,7 @@
 		<li class="divider"> </li>
 		<li class="dropdown-header">View</li>
 		<li><a href="#" onclick="toggleNightMode()">Toggle Night Mode</a></li>
+		<li><a href="#" onclick="toggleConnect()">Toggle linknets</a></li>
 		<li class="divider"> </li>
 		<li class="dropdown-header">Move switches</li>
 	  	<li><a href="#" onclick="nmsMap.moveSet(true);">Enable switch moving</a></li>
@@ -165,8 +170,16 @@
 		  <td>View total switch traffic map</td>
 		</tr>
 		<tr>
+		  <td>8</td>
+		  <td>View SNMP map</td>
+		</tr>
+		<tr>
 		  <td>9</td>
 		  <td>View Disco map</td>
+		</tr>
+		<tr>
+		  <td>c</td>
+		  <td>Toggle linknet connections</td>
 		</tr>
 		<tr>
 		  <td>h</td>
@@ -236,7 +249,7 @@
 	</div>
 
 	<canvas id="bgCanvas" width="1920" height="1032" style="position: absolute; z-index: 1;"> </canvas>
-	<canvas id="linkCanvas" width="1920" height="1032" style="position: absolute; z-index: 10;"> </canvas>
+	<canvas id="linkCanvas" width="1920" height="1032" style="position: absolute; z-index: 10; display: none;"> </canvas>
 	<canvas id="blurCanvas" width="1920" height="1032" style="position: absolute; z-index: 20;"> </canvas>
 	<canvas id="switchCanvas" width="1920" height="1032" style="position: absolute; z-index: 30;"> </canvas>
 	<canvas id="textCanvas" width="1920" height="1032" style="position: absolute; z-index: 40;"> </canvas>
