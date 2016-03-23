@@ -19,6 +19,42 @@ Currently error handling sucks.
 This document is in no way complete, but it's a start. It will be updated
 as time permits and API's stabilize.
 
+Public
+......
+
+Use URL https://nms-public.tg16.gathering.org
+
+/api/public/ping
+----------------
+
+Methods: GET
+Update frequency: every second or so.
+
+Used to report linknet latency.
+
+The switch latency is being integrated into switch-state.pl and linknet
+latency will similarly be moved.
+
+/api/public/switches
+--------------------
+
+Methods: GET
+Update frequency: Infrequent (on topology/config changes)
+
+List all switches and map positions.
+
+Used to draw switches on a map and provide static information.
+
+/api/public/switch-state
+------------------------
+
+Methods: GET
+Update frequency: Every second
+
+Provides state for each switch, including total port speed, uplink port
+speed, latency and temperature.
+
+
 Private
 .......
 
@@ -77,37 +113,3 @@ Accepts an array of switches.
 Magic: If you set placement to be "reset", it will re-calculate placement
 based on sysname. For new switches, this is redundant as an empty
 placement-field will trigger the same behavior.
-
-
-Public
-......
-
-/api/public/ping
-----------------
-
-Methods: GET
-Update frequency: every second or so.
-
-Used to report linknet latency.
-
-The switch latency is being integrated into switch-state.pl and linknet
-latency will similarly be moved.
-
-/api/public/switches
---------------------
-
-Methods: GET
-Update frequency: Infrequent (on topology/config changes)
-
-List all switches and map positions.
-
-Used to draw switches on a map and provide static information.
-
-/api/public/switch-state
-------------------------
-
-Methods: GET
-Update frequency: Every second
-
-Provides state for each switch, including total port speed, uplink port
-speed, latency and temperature.
