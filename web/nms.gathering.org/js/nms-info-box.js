@@ -209,7 +209,7 @@ nmsInfoBox._windowTypes.switchInfo = {
 		}
 	},
   getTitle: function() {
-    return '<button type="button" class="edit btn btn-xs btn-warning" onclick="nmsInfoBox._windowTypes.switchInfo.showEdit(\'' + this.sw + '\');">Edit</button> <button type="button" class="comments btn btn-xs btn-default" onclick="nmsInfoBox._windowTypes.switchInfo.showComments(\'' + this.sw + '\');">Comments</button> <button type="button" class="edit btn btn-xs btn-default" onclick="nmsInfoBox._windowTypes.switchInfo.showSNMP(\'ports\');">Ports</button> <button type="button" class="edit btn btn-xs btn-default" onclick="nmsInfoBox._windowTypes.switchInfo.showSNMP(\'misc\');">Misc</button> ' + this.sw + '';
+    return '<h4>' + this.sw + '</h4><button type="button" class="edit btn btn-xs btn-warning" onclick="nmsInfoBox._windowTypes.switchInfo.showEdit(\'' + this.sw + '\');">Edit</button> <button type="button" class="comments btn btn-xs btn-default" onclick="nmsInfoBox._windowTypes.switchInfo.showComments(\'' + this.sw + '\');">Comments</button> <button type="button" class="edit btn btn-xs btn-default" onclick="nmsInfoBox._windowTypes.switchInfo.showSNMP(\'ports\');">Ports</button> <button type="button" class="edit btn btn-xs btn-default" onclick="nmsInfoBox._windowTypes.switchInfo.showSNMP(\'misc\');">Misc</button>';
   },
   getContent: function() {
     return this.content;
@@ -387,6 +387,7 @@ nmsInfoBox._makeTable = function(content, caption) {
 	}
 	for (var v in content) { 
 		tr = table.insertRow(-1);
+		tr.className = content[v][0].toLowerCase();
 		td1 = tr.insertCell(0);
 		td2 = tr.insertCell(1);
 		td1.innerHTML = content[v][0];
