@@ -218,6 +218,7 @@ nmsInfoBox._windowTypes.switchInfo = {
     return this.childContent;
   },
   showComments: function() {
+			var oldView = this.activeView;
 			this.activeView = "comments";
       var domObj = document.createElement("div");
       var comments = [];
@@ -233,7 +234,7 @@ nmsInfoBox._windowTypes.switchInfo = {
 				this.commentsHash = false;
 
 			// We have data, but its old, so don't change data
-			} else if(this.commentsHash != false && this.commentsHash == nmsData.comments.hash) {
+			} else if(oldView == "comments" && this.commentsHash != false && this.commentsHash == nmsData.comments.hash) {
 				return;
 
 			// We have data, refresh
