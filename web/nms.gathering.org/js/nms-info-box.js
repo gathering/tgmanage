@@ -209,7 +209,16 @@ nmsInfoBox._windowTypes.switchInfo = {
 		}
 	},
   getTitle: function() {
-    return '<h4>' + this.sw + '</h4><button type="button" class="edit btn btn-xs btn-warning" onclick="nmsInfoBox._windowTypes.switchInfo.showEdit(\'' + this.sw + '\');">Edit</button> <button type="button" class="comments btn btn-xs btn-default" onclick="nmsInfoBox._windowTypes.switchInfo.showComments(\'' + this.sw + '\');">Comments</button> <button type="button" class="edit btn btn-xs btn-default" onclick="nmsInfoBox._windowTypes.switchInfo.showSNMP(\'ports\');">Ports</button> <button type="button" class="edit btn btn-xs btn-default" onclick="nmsInfoBox._windowTypes.switchInfo.showSNMP(\'misc\');">Misc</button>';
+		var sshButton = '';
+		try {
+			sshButton = nmsInfoBox._window.swm.mgmt_v4_addr;
+		} catch(e) {
+			console.log(e);
+		}
+		if(sshButton != null && sshButton != undefined && sshButton != '') {
+			sshButton = ' <button type="button" class="ssh btn btn-xs btn-default"><a href="ssh://' + sshButton + '">SSH</a></button>';
+		}
+    return '<h4>' + this.sw + '</h4><button type="button" class="edit btn btn-xs btn-warning" onclick="nmsInfoBox._windowTypes.switchInfo.showEdit(\'' + this.sw + '\');">Edit</button> <button type="button" class="comments btn btn-xs btn-default" onclick="nmsInfoBox._windowTypes.switchInfo.showComments(\'' + this.sw + '\');">Comments</button> <button type="button" class="edit btn btn-xs btn-default" onclick="nmsInfoBox._windowTypes.switchInfo.showSNMP(\'ports\');">Ports</button> <button type="button" class="edit btn btn-xs btn-default" onclick="nmsInfoBox._windowTypes.switchInfo.showSNMP(\'misc\');">Misc</button>' + sshButton;
   },
   getContent: function() {
     return this.content;
