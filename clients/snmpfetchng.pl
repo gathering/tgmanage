@@ -9,13 +9,12 @@ use Data::Dumper;
 use lib '../include';
 use nms;
 
+SNMP::initMib();
 SNMP::addMibDirs("/srv/tgmanage/mibs");
-SNMP::loadModules('SNMPv2-MIB');
-SNMP::loadModules('ENTITY-MIB');
-SNMP::loadModules('IF-MIB');
-SNMP::loadModules('LLDP-MIB');
-SNMP::loadModules('IP-MIB');
-SNMP::loadModules('IP-FORWARD-MIB');
+SNMP::addMibDirs("/srv/tgmanage/mibs/StandardMibs");
+SNMP::addMibDirs("/srv/tgmanage/mibs/JuniperMibs");
+SNMP::loadModules('ALL');
+
 our $dbh = nms::db_connect();
 $dbh->{AutoCommit} = 0;
 $dbh->{RaiseError} = 1;
