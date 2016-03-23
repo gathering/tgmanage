@@ -211,7 +211,8 @@ nmsInfoBox._windowTypes.switchInfo = {
   getTitle: function() {
 		var sshButton = '';
 		try {
-			sshButton = nmsInfoBox._window.swm.mgmt_v4_addr;
+			var mgmt = nmsInfoBox._window.swm.mgmt_v4_addr;
+			sshButton = mgmt.split("/")[0];
 		} catch(e) {
 			console.log(e);
 		}
