@@ -236,16 +236,14 @@ function tempUpdater()
 		var t = "white";
 		var temp = "";
 		
-		if(!nmsData.snmp || !nmsData.snmp.snmp || ! nmsData.snmp.snmp[sw] || !nmsData.snmp.snmp[sw]["misc"] || !nmsData.snmp.snmp[sw]["misc"]["enterprises.2636.3.1.13.1.7.7.1.0.0"])
+		if(!nmsData.switchstate || !nmsData.switchstate.switches || !nmsData.switchstate.switches[sw] || !nmsData.switchstate.switches[sw].temp)
 			continue;
 
-		var tempObj = nmsData.snmp.snmp[sw]["misc"]["enterprises.2636.3.1.13.1.7.7.1.0.0"];
-		if(tempObj[""]) {
-			temp = tempObj[""] + "°C";
-			t = temp_color(temp);
-			nmsMap.setSwitchColor(sw, t);
-			nmsMap.setSwitchInfo(sw, temp);
-		}
+		var t = nmsData.switchstate.switches[sw].temp;
+		temp = t + "°C";
+		t = temp_color(temp);
+		nmsMap.setSwitchColor(sw, t);
+		nmsMap.setSwitchInfo(sw, temp);
 
 	}
 }
