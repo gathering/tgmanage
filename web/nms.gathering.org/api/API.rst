@@ -22,7 +22,23 @@ as time permits and API's stabilize.
 Public
 ......
 
-Use URL https://nms-public.tg16.gathering.org
+Use URL https://nms-public.tg16.gathering.org/api/public
+
+/api/public/dhcp
+----------------
+
+Methods: GET
+Update frequency: every second or so.
+
+Used to report time since last dhcp lease.
+
+/api/public/dhcp-summary
+------------------------
+
+Methods: GET
+Update frequency: every second or so.
+
+Used to report dhcp lease stats. Both recent stats, and total stats.
 
 /api/public/ping
 ----------------
