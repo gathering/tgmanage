@@ -67,6 +67,12 @@ var handler_comment = {
 	name:"Fresh comment spotter"
 };
 
+var handler_snmp = {
+	init:snmpInit,
+	tag:"snmp",
+	name:"SNMP state"
+};
+
 var handlers = [
 	handler_uplinks,
 	handler_temp,
@@ -75,7 +81,8 @@ var handlers = [
 	handler_disco,
 	handler_comment,
 	handler_traffic_tot,
-	handler_dhcp
+	handler_dhcp,
+	handler_snmp
 	];
 
 /*
@@ -424,3 +431,24 @@ function discoInit()
 	setLegend(5,"white","!");
 }
 
+function snmpUpdater() {
+	for (var sw in nmsData.switches.switches) {
+		if (nmsData.snmp.snmp[sw] == undefined || nmsData.snmp.snmp[sw].misc == undefined) {
+			nmsMap.setSwitchColor(sw, red);
+		} else if (nmsData.snmp.snmp[sw].misc.sysName[0] != sw) {
+			nmsMap.setSwitchColor(sw, orange);
+		} else {
+			nmsMap.setSwitchColor(sw, green);
+		}
+	}
+}
+function snmpInit() {
+	nmsData.addHandler("snmp", "mapHandler", snmpUpdater);
+	
+	setLegend(1,green,"OK");	
+	setLegend(2,orange, "Sysname mismatch");
+	setLegend(3,red,"No SNMP data");
+	setLegend(4,green, "");
+	setLegend(5,green,"");
+
+}
