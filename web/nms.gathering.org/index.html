@@ -77,10 +77,14 @@
 		<li><a href="#" onclick="toggleNightMode()">Toggle Night Mode</a></li>
 		<li><a href="#" onclick="toggleConnect()">Toggle linknets</a></li>
 		<li class="divider"> </li>
-		<li class="dropdown-header">Move switches</li>
+		<li class="dropdown-header">Switches</li>
 	  	<li><a href="#" onclick="nmsMap.moveSet(true);">Enable switch moving</a></li>
 	  	<li><a href="#" onclick="nmsMap.moveSet(false);">Disable switch moving</a></li>
 	  	<li><a href="#" onclick="nmsInfoBox.showWindow('addSwitch')">Add switch</a></li>
+		<li class="divider"> </li>
+		<li class="dropdown-header">Inventory lists</li>
+	  	<li><a href="#" onclick="nmsInfoBox.showWindow('inventoryListing','distro_name');">Distro names</a></li>
+	  	<li><a href="#" onclick="nmsInfoBox.showWindow('inventoryListing','sysDescr')">System description</a></li>
 		<li class="divider"> </li>
 		<li class="dropdown-header">Help</li>
 	  	<li><a href="#" onclick="toggleLayer('aboutKeybindings');" >Keyboard Shortcuts</a></li>

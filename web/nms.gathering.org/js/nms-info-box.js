@@ -37,10 +37,10 @@ nmsInfoBox.showWindow = function (windowName,argument) {
 /*
  * Refresh the active window
  */
-nmsInfoBox.refresh = function() {
+nmsInfoBox.refresh = function(argument) {
 	if(!nmsInfoBox._window)
 		return;
-  nmsInfoBox._show();
+  nmsInfoBox._show(argument);
 };
 nmsInfoBox.update = function(argument) {
 	if(!nmsInfoBox._window)
@@ -57,7 +57,8 @@ nmsInfoBox._show = function(argument) {
   nmsData.addHandler("smanagement","switchshower",nmsInfoBox.update,'smanagement');
   nmsData.addHandler("snmp","switchshower",nmsInfoBox.update,'snmp');
 
-  this._window.load(argument);
+	if(argument != "soft")
+		this._window.load(argument);
 
   this._container = document.getElementById("info-panel-container");
   var panel = document.createElement("div");
@@ -365,6 +366,110 @@ nmsInfoBox._windowTypes.switchInfo = {
       }
     });
   }
+};
+
+/*
+ * Window type: Show inventory listing
+ *
+ * Basic window that displays a list of all devices with simple summary information
+ *
+ * TODO: Set up more complex views with more columns, sorting, etc.
+ *
+ */
+nmsInfoBox._windowTypes.inventoryListing = {
+  content:  '',
+  childContent: false,
+	activeView: '',
+  getTitle: function() {
+    return '<h4>Inventory listing</h4><button type="button" class="distro-name btn btn-xs btn-default" onclick="nmsInfoBox.showWindow(\'inventoryListing\',\'distro_name\');">Distro name</button> <button type="button" class="distro-name btn btn-xs btn-default" onclick="nmsInfoBox.showWindow(\'inventoryListing\',\'sysDescr\');">System Description</button>';
+  },
+  getContent: function() {
+    return this.content;
+  },
+  getChildContent: function() {
+    return this.childContent;
+  },
+  load: function(list) {
+		var hasSnmp = false;
+		var targetArray = [];
+		var listTitle = '';
+		var needRefresh = false;
+		var needSnmp = false;
+
+		if(!nmsData.switches || !nmsData.switches.switches)
+			return;
+		if(!(!nmsData.snmp || !nmsData.snmp.snmp)) {
+			hasSnmp = true;
+		}
+		if(list == 'soft') {
+			list = this.activeView;
+			needRefresh = true;
+		}
+
+		switch (list) {
+			case 'distro_name':
+				targetArray = nmsData.switches.switches;
+				listTitle = 'Distro names';
+				break;
+			case 'sysDescr':
+				if(hasSnmp)
+					targetArray = nmsData.snmp.snmp;
+				listTitle = 'System description';
+				needSnmp = true;
+				break;
+			default:
+				targetArray = nmsData.switches.switches;
+				listTitle = 'Distro names';
+				list = 'distro_name';
+		}
+		this.activeView = list;
+
+		if(needSnmp && !hasSnmp) {
+			this.content = "No SNMP data loaded. Reloading shortly.";
+			nmsData.addHandler("snmp","inventoryListing",nmsInfoBox._windowTypes.inventoryListing.update,'soft');
+			return;
+		}
+
+		var resultArray = [];
+		for(var sw in targetArray) {
+			var value = '';
+			try {
+				switch (list) {
+					case 'distro_name':
+						value = targetArray[sw]["distro_name"];
+						break;
+					case 'sysDescr':
+						value = targetArray[sw]["misc"]["sysDescr"][0];
+						break;
+				}
+			} catch (e) {
+				//console.log(e);
+			}
+			resultArray.push([sw, value]);
+		}
+
+		resultArray.sort();
+
+		var infotable = nmsInfoBox._makeTable(resultArray,listTitle);
+		infotable.id = "inventory-table";
+
+		this.content = infotable;
+		if(needRefresh)
+			nmsInfoBox.refresh("soft");
+  },
+	update: function(type) {
+		if(type == "soft") {
+			nmsData.unregisterHandler("snmp","inventoryListing");
+			nmsInfoBox._windowTypes.inventoryListing.load('soft');
+		}
+	},
+  unload: function() {
+		nmsData.unregisterHandler("snmp","inventoryListing");
+		this.content = '';
+		this.activeView = '';
+  },
+  save: function() {
+	}
 };
 
 /*
