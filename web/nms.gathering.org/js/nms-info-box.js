@@ -574,9 +574,11 @@ nmsInfoBox._makeCommentTable = function(content) {
 
 nmsInfoBox._searchSmart = function(id, sw) {
 	try {
-		if (nmsData.switches.switches[sw].distro_name.toLowerCase() == id) {
-			return true;
-		}
+		try {
+			if (nmsData.switches.switches[sw].distro_name.toLowerCase() == id) {
+				return true;
+			}
+		} catch (e) {}
 		if (id.match("active")) {
 			var limit = id;
 			limit = limit.replace("active>","");
