@@ -215,15 +215,19 @@ function colorFromSpeed(speed,factor)
 	return getColorStop( 1000 * (speed / (factor * (1000 * m))));
 }
 
-
+/*
+ * Tweaked this to scale from roughly 20C to 35C. Hence the -20  and /15
+ * thing (e.g., "0" is 20 and "15" is 35 by the time we pass it to
+ * rgb_from_max());
+ */
 function temp_color(t)
 {
 	if (t == undefined) {
 		console.log("Temp_color, but temp is undefined");
 		return blue;
 	}
-	t = parseInt(t);
-	t = Math.floor(t * 10);
+	t = parseInt(t) - 12;
+	t = Math.floor((t / 23) * 1000);
 	return getColorStop(t);
 }
 
@@ -251,12 +255,12 @@ function tempUpdater()
 function tempInit()
 { 
 	//Padded the gradient with extra colors for the upper unused values
-	drawGradient([blue,lightgreen,green,orange,red,red,red,red,red,red]);
-	setLegend(1,temp_color(0),"0 °C");	
-	setLegend(2,temp_color(15),"15 °C");	
+	drawGradient(["black",blue,lightblue,lightgreen,green,orange,red]);
+	setLegend(1,temp_color(15),"15 °C");	
+	setLegend(2,temp_color(20),"20 °C");	
 	setLegend(3,temp_color(25),"25 °C");	
-	setLegend(4,temp_color(35),"35 °C");	
-	setLegend(5,temp_color(45),"45 °C");	
+	setLegend(4,temp_color(30),"30 °C");	
+	setLegend(5,temp_color(35),"35 °C");	
 	nmsData.addHandler("switchstate","mapHandler",tempUpdater);
 }
 
