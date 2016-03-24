@@ -152,9 +152,9 @@ function trafficInit()
 	var m = 1024 * 1024 / 8;
 	drawGradient([lightgreen,green,orange,red]);
 	setLegend(1,colorFromSpeed(0),"0 (N/A)");	
-	setLegend(5,colorFromSpeed(2000 * m) , "2000Mb/s");	
-	setLegend(4,colorFromSpeed(1500 * m),"1500Mb/s");	
-	setLegend(3,colorFromSpeed(500 * m),"500Mb/s");	
+	setLegend(5,colorFromSpeed(1100 * m) , "1100Mb/s");	
+	setLegend(4,colorFromSpeed(600 * m),"600Mb/s");	
+	setLegend(3,colorFromSpeed(300 * m),"300Mb/s");	
 	setLegend(2,colorFromSpeed(10 * m),"10Mb/s");	
 }
 
@@ -173,8 +173,10 @@ function trafficUpdater()
 		var tdiff = nt - tt;
 		var diff = n - t;
 		speed = diff / tdiff;
-                if(!isNaN(speed))
+                if(!isNaN(speed)) {
                         nmsMap.setSwitchColor(sw,colorFromSpeed(speed));
+			nmsMap.setSwitchInfo(sw,byteCount(speed*8,0));
+		}
 	}
 }
 
@@ -215,7 +217,7 @@ function colorFromSpeed(speed,factor)
 {
 	var m = 1024 * 1024 / 8;
 	if (factor == undefined)
-		factor = 2;
+		factor = 1.1;
 	if (speed == 0)
 		return blue;
 	speed = speed < 0 ? 0 : speed;

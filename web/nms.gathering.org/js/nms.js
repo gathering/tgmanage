@@ -100,14 +100,16 @@ function nmsTimer(handler, interval, name, description) {
  * Convenience function that doesn't support huge numbers, and it's easier
  * to comment than to fix. But not really, but I'm not fixing it anyway.
  */
-function byteCount(bytes) {
+function byteCount(bytes,precision) {
+	if (precision ==undefined)
+		precision = 1;
 	var units = ['', 'K', 'M', 'G', 'T', 'P'];
 	var i = 0;
 	while (bytes > 1024) {
 		bytes = bytes / 1024;
 		i++;
 	}
-	return bytes.toFixed(1) + units[i];
+	return bytes.toFixed(precision) + units[i];
 }
 
 /*
