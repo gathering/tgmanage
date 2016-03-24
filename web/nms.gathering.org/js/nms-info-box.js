@@ -380,6 +380,7 @@ nmsInfoBox._windowTypes.inventoryListing = {
   content:  '',
   childContent: false,
 	activeView: '',
+	activeFilter: '',
   getTitle: function() {
     return '<h4>Inventory listing</h4><button type="button" class="distro-name btn btn-xs btn-default" onclick="nmsInfoBox.showWindow(\'inventoryListing\',\'distro_name\');">Distro name</button> <button type="button" class="distro-name btn btn-xs btn-default" onclick="nmsInfoBox.showWindow(\'inventoryListing\',\'sysDescr\');">System Description</button>';
   },
@@ -389,36 +390,45 @@ nmsInfoBox._windowTypes.inventoryListing = {
   getChildContent: function() {
     return this.childContent;
   },
+	setFilter: function(filter) {
+		this.activeFilter = filter.toLowerCase();
+		nmsInfoBox._windowTypes.inventoryListing.load("refresh");
+	},
+	getFilter: function() {
+		return this.activeFilter;
+	},
   load: function(list) {
 		var hasSnmp = false;
 		var targetArray = [];
 		var listTitle = '';
 		var needRefresh = false;
 		var needSnmp = false;
+		var contentObj = document.createElement("div");
+		var inputObj = document.createElement("div");
+		inputObj.innerHTML = '<div class="input-group"><input type="text" class="form-control" placeholder="Filter" id="inventorylisting-filter" value="' + this.activeFilter + '" onkeyup="if (event.keyCode == 13) {nmsInfoBox._windowTypes.inventoryListing.setFilter(document.getElementById(\'inventorylisting-filter\').value);}"><span class=\"input-group-btn\"><button class="btn btn-default" onclick="nmsInfoBox._windowTypes.inventoryListing.setFilter(document.getElementById(\'inventorylisting-filter\').value);">Filtrer</button></span></div>';
+		contentObj.appendChild(inputObj);
+
 
 		if(!nmsData.switches || !nmsData.switches.switches)
 			return;
 		if(!(!nmsData.snmp || !nmsData.snmp.snmp)) {
 			hasSnmp = true;
 		}
-		if(list == 'soft') {
+		if(list == "refresh") {
 			list = this.activeView;
 			needRefresh = true;
 		}
 
 		switch (list) {
 			case 'distro_name':
-				targetArray = nmsData.switches.switches;
 				listTitle = 'Distro names';
 				break;
 			case 'sysDescr':
 				if(hasSnmp)
-					targetArray = nmsData.snmp.snmp;
 				listTitle = 'System description';
 				needSnmp = true;
 				break;
 			default:
-				targetArray = nmsData.switches.switches;
 				listTitle = 'Distro names';
 				list = 'distro_name';
 		}
@@ -426,20 +436,24 @@ nmsInfoBox._windowTypes.inventoryListing = {
 
 		if(needSnmp && !hasSnmp) {
 			this.content = "No SNMP data loaded. Reloading shortly.";
-			nmsData.addHandler("snmp","inventoryListing",nmsInfoBox._windowTypes.inventoryListing.update,'soft');
+			nmsData.addHandler("snmp","inventoryListing",nmsInfoBox._windowTypes.inventoryListing.update,"snmp-request");
 			return;
 		}
 
 		var resultArray = [];
-		for(var sw in targetArray) {
+		for(var sw in nmsData.switches.switches) {
 			var value = '';
+			if(this.activeFilter != '') {
+				if(sw.toLowerCase().indexOf(this.activeFilter) == -1 && !nmsInfoBox._searchSmart(this.activeFilter,sw))
+					continue;
+			}
 			try {
 				switch (list) {
 					case 'distro_name':
-						value = targetArray[sw]["distro_name"];
+						value = nmsData.switches.switches[sw]["distro_name"];
 						break;
 					case 'sysDescr':
-						value = targetArray[sw]["misc"]["sysDescr"][0];
+						value = nmsData.snmp.snmp[sw]["misc"]["sysDescr"][0];
 						break;
 				}
 			} catch (e) {
@@ -453,20 +467,22 @@ nmsInfoBox._windowTypes.inventoryListing = {
 		var infotable = nmsInfoBox._makeTable(resultArray,listTitle);
 		infotable.id = "inventory-table";
 
-		this.content = infotable;
+		contentObj.appendChild(infotable);
+		this.content = contentObj;
 		if(needRefresh)
 			nmsInfoBox.refresh("soft");
   },
 	update: function(type) {
-		if(type == "soft") {
+		if(type == "snmp-request") {
 			nmsData.unregisterHandler("snmp","inventoryListing");
-			nmsInfoBox._windowTypes.inventoryListing.load('soft');
+			nmsInfoBox._windowTypes.inventoryListing.load("refresh");
 		}
 	},
   unload: function() {
 		nmsData.unregisterHandler("snmp","inventoryListing");
 		this.content = '';
 		this.activeView = '';
+		this.activeFilter = '';
   },
   save: function() {
 	}
@@ -661,7 +677,6 @@ nmsInfoBox._searchKeyListener = function(e) {
 			break;
 	}
 };
-
 
 nmsInfoBox._nullBlank = function(x) {
 	if (x == null || x == false || x == undefined)
