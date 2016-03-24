@@ -59,7 +59,7 @@ while ( my $ref = $q2->fetchrow_hashref() ) {
 	for my $porti (keys %{$data{'ports'}}) {
 		my %port = %{$data{'ports'}{$porti}};
 		my $smallport = $porti;
-		if (not $smallport =~ m/^ae/) {
+		if (not $smallport =~ m/^ae/ and not $smallport =~ m/^et/) {
 			$smallport =~ s/[0-9-].*$//;
 		} else {
 			$json{'then'}{$sysname}{ifs}{$smallport}{'ifAlias'} = $port{'ifAlias'};
