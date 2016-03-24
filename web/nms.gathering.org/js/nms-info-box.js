@@ -558,7 +558,7 @@ nmsInfoBox._makeCommentTable = function(content) {
 
 nmsInfoBox._searchSmart = function(id, sw) {
 	try {
-		if (nmsData.switches.switches[sw].distro_name == id) {
+		if (nmsData.switches.switches[sw].distro_name.toLowerCase() == id) {
 			return true;
 		}
 		if (id.match("active")) {
@@ -599,7 +599,7 @@ nmsInfoBox._searchSmart = function(id, sw) {
 				return true;
 			}
 		} catch (e) {}
-		if (nmsData.snmp.snmp[sw].misc.sysDescr[0].match(id)) {
+		if (nmsData.snmp.snmp[sw].misc.sysDescr[0].toLowerCase().match(id)) {
 			return true;
 		}
 	} catch (e) {
@@ -617,12 +617,12 @@ nmsInfoBox._search = function() {
 	var id = false;
 	var matches = [];
 	if (el) {
-		id = el.value;
+		id = el.value.toLowerCase();
 	}
 	if(id) {
 		nmsMap.enableHighlights();
 		for(var sw in nmsData.switches.switches) {
-			if(sw.indexOf(id) > -1) {
+			if(sw.toLowerCase().indexOf(id) > -1) {
 				matches.push(sw);
 				nmsMap.setSwitchHighlight(sw,true);
 			} else if (nmsInfoBox._searchSmart(id,sw)) {
