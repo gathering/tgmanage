@@ -172,10 +172,16 @@ nmsMap._resizeEvent = function() {
  *
  * FIXME: 2: Should really just use _drawText() instead somehow. Font size
  * being an issue.
+ *
+ * FIXME 3: Currently assuming that time from api is UTC and converting to
+ * local time zone with js. Should find a more robust solution.
+ *
  */
 nmsMap.drawNow = function ()
 {
 	var now = nmsData.now;
+	now = new Date(nmsData.now); //Date assumes UTC
+	now = now.toString().split(' ').splice(1,4).join(' '); //Date returns local time
 	if (nmsMap._lastNow == now) {
 		nmsMap.stats.nowDups++;
 		return;
