@@ -383,7 +383,7 @@ function dhcpUpdater()
 	}
 	try {
 	for (var sw in nmsData.switches.switches) {
-		var c = "white";
+		var c = blue;
 		if (nmsData.dhcp.dhcp[sw] == undefined) {
 			nmsMap.setSwitchColor(sw,c);
 			continue;
