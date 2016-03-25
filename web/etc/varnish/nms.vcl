@@ -37,6 +37,7 @@ sub vcl_recv {
     return (hash);
 }
 
+
 # Rosa magi
 sub vcl_hash {
     # Wheee. Legg til authorization-headeren i hashen.
@@ -49,5 +50,9 @@ sub vcl_backend_response {
     set beresp.http.x-url = bereq.url;
     if (beresp.http.x-ban) {
         ban("obj.http.x-url ~ " + beresp.http.x-ban);
+    }
+    if (beresp.status != 200) {
+        set beresp.uncacheable = false;
+        set beresp.ttl = 5s;
     }
 }
