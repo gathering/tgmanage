@@ -37,10 +37,10 @@ nmsInfoBox.showWindow = function (windowName,argument) {
 /*
  * Refresh the active window
  */
-nmsInfoBox.refresh = function() {
+nmsInfoBox.refresh = function(argument) {
 	if(!nmsInfoBox._window)
 		return;
-  nmsInfoBox._show();
+  nmsInfoBox._show(argument);
 };
 nmsInfoBox.update = function(argument) {
 	if(!nmsInfoBox._window)
@@ -57,7 +57,8 @@ nmsInfoBox._show = function(argument) {
   nmsData.addHandler("smanagement","switchshower",nmsInfoBox.update,'smanagement');
   nmsData.addHandler("snmp","switchshower",nmsInfoBox.update,'snmp');
 
-  this._window.load(argument);
+	if(argument != "soft")
+		this._window.load(argument);
 
   this._container = document.getElementById("info-panel-container");
   var panel = document.createElement("div");
@@ -209,7 +210,17 @@ nmsInfoBox._windowTypes.switchInfo = {
 		}
 	},
   getTitle: function() {
-    return '<h4>' + this.sw + '</h4><button type="button" class="edit btn btn-xs btn-warning" onclick="nmsInfoBox._windowTypes.switchInfo.showEdit(\'' + this.sw + '\');">Edit</button> <button type="button" class="comments btn btn-xs btn-default" onclick="nmsInfoBox._windowTypes.switchInfo.showComments(\'' + this.sw + '\');">Comments</button> <button type="button" class="edit btn btn-xs btn-default" onclick="nmsInfoBox._windowTypes.switchInfo.showSNMP(\'ports\');">Ports</button> <button type="button" class="edit btn btn-xs btn-default" onclick="nmsInfoBox._windowTypes.switchInfo.showSNMP(\'misc\');">Misc</button>';
+		var sshButton = '';
+		try {
+			var mgmt = nmsInfoBox._window.swm.mgmt_v4_addr;
+			sshButton = mgmt.split("/")[0];
+		} catch(e) {
+			console.log(e);
+		}
+		if(sshButton != null && sshButton != undefined && sshButton != '') {
+			sshButton = ' <button type="button" class="ssh btn btn-xs btn-default"><a href="ssh://' + sshButton + '">SSH</a></button>';
+		}
+    return '<h4>' + this.sw + '</h4><button type="button" class="edit btn btn-xs btn-warning" onclick="nmsInfoBox._windowTypes.switchInfo.showEdit(\'' + this.sw + '\');">Edit</button> <button type="button" class="comments btn btn-xs btn-default" onclick="nmsInfoBox._windowTypes.switchInfo.showComments(\'' + this.sw + '\');">Comments</button> <button type="button" class="edit btn btn-xs btn-default" onclick="nmsInfoBox._windowTypes.switchInfo.showSNMP(\'ports\');">Ports</button> <button type="button" class="edit btn btn-xs btn-default" onclick="nmsInfoBox._windowTypes.switchInfo.showSNMP(\'misc\');">Misc</button>' + sshButton;
   },
   getContent: function() {
     return this.content;
@@ -358,6 +369,126 @@ nmsInfoBox._windowTypes.switchInfo = {
 };
 
 /*
+ * Window type: Show inventory listing
+ *
+ * Basic window that displays a list of all devices with simple summary information
+ *
+ * TODO: Set up more complex views with more columns, sorting, etc.
+ *
+ */
+nmsInfoBox._windowTypes.inventoryListing = {
+  content:  '',
+  childContent: false,
+	activeView: '',
+	activeFilter: '',
+  getTitle: function() {
+    return '<h4>Inventory listing</h4><button type="button" class="distro-name btn btn-xs btn-default" onclick="nmsInfoBox.showWindow(\'inventoryListing\',\'distro_name\');">Distro name</button> <button type="button" class="distro-name btn btn-xs btn-default" onclick="nmsInfoBox.showWindow(\'inventoryListing\',\'sysDescr\');">System Description</button>';
+  },
+  getContent: function() {
+    return this.content;
+  },
+  getChildContent: function() {
+    return this.childContent;
+  },
+	setFilter: function(filter) {
+		this.activeFilter = filter.toLowerCase();
+		nmsInfoBox._windowTypes.inventoryListing.load("refresh");
+	},
+	getFilter: function() {
+		return this.activeFilter;
+	},
+  load: function(list) {
+		var hasSnmp = false;
+		var targetArray = [];
+		var listTitle = '';
+		var needRefresh = false;
+		var needSnmp = false;
+		var contentObj = document.createElement("div");
+		var inputObj = document.createElement("div");
+		inputObj.innerHTML = '<div class="input-group"><input type="text" class="form-control" placeholder="Filter" id="inventorylisting-filter" value="' + this.activeFilter + '" onkeyup="if (event.keyCode == 13) {nmsInfoBox._windowTypes.inventoryListing.setFilter(document.getElementById(\'inventorylisting-filter\').value);}"><span class=\"input-group-btn\"><button class="btn btn-default" onclick="nmsInfoBox._windowTypes.inventoryListing.setFilter(document.getElementById(\'inventorylisting-filter\').value);">Filtrer</button></span></div>';
+		contentObj.appendChild(inputObj);
+
+
+		if(!nmsData.switches || !nmsData.switches.switches)
+			return;
+		if(!(!nmsData.snmp || !nmsData.snmp.snmp)) {
+			hasSnmp = true;
+		}
+		if(list == "refresh") {
+			list = this.activeView;
+			needRefresh = true;
+		}
+
+		switch (list) {
+			case 'distro_name':
+				listTitle = 'Distro names';
+				break;
+			case 'sysDescr':
+				if(hasSnmp)
+				listTitle = 'System description';
+				needSnmp = true;
+				break;
+			default:
+				listTitle = 'Distro names';
+				list = 'distro_name';
+		}
+		this.activeView = list;
+
+		if(needSnmp && !hasSnmp) {
+			this.content = "No SNMP data loaded. Reloading shortly.";
+			nmsData.addHandler("snmp","inventoryListing",nmsInfoBox._windowTypes.inventoryListing.update,"snmp-request");
+			return;
+		}
+
+		var resultArray = [];
+		for(var sw in nmsData.switches.switches) {
+			var value = '';
+			if(this.activeFilter != '') {
+				if(sw.toLowerCase().indexOf(this.activeFilter) == -1 && !nmsInfoBox._searchSmart(this.activeFilter,sw))
+					continue;
+			}
+			try {
+				switch (list) {
+					case 'distro_name':
+						value = nmsData.switches.switches[sw]["distro_name"];
+						break;
+					case 'sysDescr':
+						value = nmsData.snmp.snmp[sw]["misc"]["sysDescr"][0];
+						break;
+				}
+			} catch (e) {
+				//console.log(e);
+			}
+			resultArray.push([sw, value]);
+		}
+
+		resultArray.sort();
+
+		var infotable = nmsInfoBox._makeTable(resultArray,listTitle);
+		infotable.id = "inventory-table";
+
+		contentObj.appendChild(infotable);
+		this.content = contentObj;
+		if(needRefresh)
+			nmsInfoBox.refresh("soft");
+  },
+	update: function(type) {
+		if(type == "snmp-request") {
+			nmsData.unregisterHandler("snmp","inventoryListing");
+			nmsInfoBox._windowTypes.inventoryListing.load("refresh");
+		}
+	},
+  unload: function() {
+		nmsData.unregisterHandler("snmp","inventoryListing");
+		this.content = '';
+		this.activeView = '';
+		this.activeFilter = '';
+  },
+  save: function() {
+	}
+};
+
+/*
  * Click a switch and display it
  * it.
  */
@@ -443,9 +574,11 @@ nmsInfoBox._makeCommentTable = function(content) {
 
 nmsInfoBox._searchSmart = function(id, sw) {
 	try {
-		if (nmsData.switches.switches[sw].distro_name == id) {
-			return true;
-		}
+		try {
+			if (nmsData.switches.switches[sw].distro_name.toLowerCase() == id) {
+				return true;
+			}
+		} catch (e) {}
 		if (id.match("active")) {
 			var limit = id;
 			limit = limit.replace("active>","");
@@ -484,7 +617,7 @@ nmsInfoBox._searchSmart = function(id, sw) {
 				return true;
 			}
 		} catch (e) {}
-		if (nmsData.snmp.snmp[sw].misc.sysDescr[0].match(id)) {
+		if (nmsData.snmp.snmp[sw].misc.sysDescr[0].toLowerCase().match(id)) {
 			return true;
 		}
 	} catch (e) {
@@ -502,12 +635,12 @@ nmsInfoBox._search = function() {
 	var id = false;
 	var matches = [];
 	if (el) {
-		id = el.value;
+		id = el.value.toLowerCase();
 	}
 	if(id) {
 		nmsMap.enableHighlights();
 		for(var sw in nmsData.switches.switches) {
-			if(sw.indexOf(id) > -1) {
+			if(sw.toLowerCase().indexOf(id) > -1) {
 				matches.push(sw);
 				nmsMap.setSwitchHighlight(sw,true);
 			} else if (nmsInfoBox._searchSmart(id,sw)) {
@@ -546,7 +679,6 @@ nmsInfoBox._searchKeyListener = function(e) {
 			break;
 	}
 };
-
 
 nmsInfoBox._nullBlank = function(x) {
 	if (x == null || x == false || x == undefined)

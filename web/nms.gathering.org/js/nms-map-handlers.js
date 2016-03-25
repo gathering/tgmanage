@@ -73,6 +73,12 @@ var handler_snmp = {
 	name:"SNMP state"
 };
 
+var handler_cpu = {
+	init:cpuInit,
+	tag:"cpu",
+	name:"CPU utilization"
+};
+
 var handlers = [
 	handler_uplinks,
 	handler_temp,
@@ -82,7 +88,8 @@ var handlers = [
 	handler_comment,
 	handler_traffic_tot,
 	handler_dhcp,
-	handler_snmp
+	handler_snmp,
+	handler_cpu
 	];
 
 /*
@@ -145,9 +152,9 @@ function trafficInit()
 	var m = 1024 * 1024 / 8;
 	drawGradient([lightgreen,green,orange,red]);
 	setLegend(1,colorFromSpeed(0),"0 (N/A)");	
-	setLegend(5,colorFromSpeed(2000 * m) , "2000Mb/s");	
-	setLegend(4,colorFromSpeed(1500 * m),"1500Mb/s");	
-	setLegend(3,colorFromSpeed(500 * m),"500Mb/s");	
+	setLegend(5,colorFromSpeed(1100 * m) , "1100Mb/s");	
+	setLegend(4,colorFromSpeed(600 * m),"600Mb/s");	
+	setLegend(3,colorFromSpeed(300 * m),"300Mb/s");	
 	setLegend(2,colorFromSpeed(10 * m),"10Mb/s");	
 }
 
@@ -166,8 +173,10 @@ function trafficUpdater()
 		var tdiff = nt - tt;
 		var diff = n - t;
 		speed = diff / tdiff;
-                if(!isNaN(speed))
+                if(!isNaN(speed)) {
                         nmsMap.setSwitchColor(sw,colorFromSpeed(speed));
+			nmsMap.setSwitchInfo(sw,byteCount(speed*8,0));
+		}
 	}
 }
 
@@ -208,7 +217,7 @@ function colorFromSpeed(speed,factor)
 {
 	var m = 1024 * 1024 / 8;
 	if (factor == undefined)
-		factor = 2;
+		factor = 1.1;
 	if (speed == 0)
 		return blue;
 	speed = speed < 0 ? 0 : speed;
@@ -453,4 +462,30 @@ function snmpInit() {
 	setLegend(4,green, "");
 	setLegend(5,green,"");
 
+}
+function cpuUpdater() {
+	for (var sw in nmsData.switches.switches) {
+		try {
+			var cpu = 0;
+			for (var u in nmsData.snmp.snmp[sw].misc.jnxOperatingCPU) {
+				var local = nmsData.snmp.snmp[sw].misc['jnxOperatingCPU'][u];
+				cpu = Math.max(nmsData.snmp.snmp[sw].misc.jnxOperatingCPU[u],cpu);
+			}
+			nmsMap.setSwitchColor(sw, getColorStop(cpu * 10));
+			nmsMap.setSwitchInfo(sw, cpu + " % ");
+		} catch (e) {
+			nmsMap.setSwitchColor(sw, "white");
+			nmsMap.setSwitchInfo(sw, "N/A");
+		}
+	}
+}
+
+function cpuInit() {
+	nmsData.addHandler("snmp", "mapHandler", cpuUpdater);
+	drawGradient([green,orange,red]);
+	setLegend(1,getColorStop(0),"0 %");
+	setLegend(2,getColorStop(250),"25 %");
+	setLegend(3,getColorStop(600),"60 %");
+	setLegend(4,getColorStop(1000),"100 %");
+	setLegend(5,"white","N/A");
 }
