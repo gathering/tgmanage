@@ -16,7 +16,7 @@ $dbh->{AutoCommit} = 0;
 $dbh->{RaiseError} = 1;
 
 my $q = $dbh->prepare("SELECT switch,host(mgmt_v4_addr) as ip,host(mgmt_v6_addr) as secondary_ip FROM switches WHERE mgmt_v4_addr is not null ORDER BY random()");
-my $lq = $dbh->prepare("SELECT linknet,addr1,addr2 FROM linknets");
+my $lq = $dbh->prepare("SELECT linknet,addr1,addr2 FROM linknets WHERE addr1 is not null and addr2 is not null");
 
 while (1) {
 	# ping loopbacks
