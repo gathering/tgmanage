@@ -16,7 +16,8 @@ var nms = {
 	 * FIXME: Should just stop using these.
 	 */
 	timers: {
-		playback:false
+		playback:false,
+		tvmode: false
     },
 	
 	menuShowing:true,
@@ -59,7 +60,14 @@ var nms = {
 		playing: false,
 		replayTime: 0,
 		replayIncrement: 60 * 60
-	 }
+	},
+	tvmode: {
+		handlers: [],
+		currentIndex: 0,
+		interval: 20000,
+		hideMenu: false,
+		nightMode: false
+	}
 };
 
 /*
@@ -318,6 +326,43 @@ function setLegend(x,color,name)
 }
 
 /*
+ * Start TV-mode
+ *
+ * Loops trough a list of views/updaters at a set interval.
+ * Arguments: array of views, interval in seconds, use nightmode, hide menus
+ */
+nms.tvmode.start = function(views,interval,nightMode,hideMenus) {
+	if(interval > 0)
+		nms.tvmode.interval = interval * 1000;
+	setNightMode(nightMode);
+	if(nms.menuShowing && hideMenus)
+		toggleMenu();
+	nms.tvmode.handlers = [];
+	for(var view in views) {
+		for(var handler in handlers) {
+			if(views[view] == handlers[handler].tag) {
+				nms.tvmode.handlers.push(handlers[handler]);
+			}
+		}
+	}
+	if (nms.tvmode.handlers.length > 1) {
+		nms.timers.tvmode = new nmsTimer(nms.tvmode.tick, nms.tvmode.interval, "TV-mode ticker", "Handler used to advance tv-mode");
+		nms.timers.tvmode.start();
+		nms.tvmode.tick();
+	}
+}
+nms.tvmode.tick = function() {
+	if(nms.tvmode.currentIndex > nms.tvmode.handlers.length - 1) {
+		nms.tvmode.currentIndex = 0;
+	}
+	setUpdater(nms.tvmode.handlers[nms.tvmode.currentIndex]);
+	nms.tvmode.currentIndex++;
+}
+nms.tvmode.stop = function() {
+	nms.timers.tvmode.stop();
+}
+
+/*
  * Change map handler (e.g., change from uplink map to ping map)
  */
 function setUpdater(fo)
@@ -499,7 +544,22 @@ function detectHandler() {
 			return;
 		}
 	}
+	if(document.location.hash == "#tvmode") {
+		var views = getUrlVars()["views"];
+		views = views.split(",");
+		var interval = parseInt(getUrlVars()["interval"]);
+		nms.tvmode.start(views,interval,true,false);
+		return;
+	}
 	setUpdater(handler_ping);
+}
+
+function getUrlVars() {
+	var vars = {};
+	var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
+		vars[key] = value;
+	});
+	return vars;
 }
 
 function setMenu()
