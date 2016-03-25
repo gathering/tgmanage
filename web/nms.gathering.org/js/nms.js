@@ -66,7 +66,9 @@ var nms = {
 		currentIndex: 0,
 		interval: 20000,
 		hideMenu: false,
-		nightMode: false
+		active: false,
+		nightMode: false,
+		vertical: false
 	}
 };
 
@@ -321,7 +323,11 @@ function getNowEpoch() {
  */
 function setLegend(x,color,name)
 {
-	var el = document.getElementById("legend-" + x);
+	if(nms.tvmode.active) {
+		var el = document.getElementById("tv-mode-legend-" + x);
+	} else {
+		var el = document.getElementById("legend-" + x);
+	}
 	el.style.background = color;
 	el.title = name;
 	el.textContent = name;
@@ -333,12 +339,7 @@ function setLegend(x,color,name)
  * Loops trough a list of views/updaters at a set interval.
  * Arguments: array of views, interval in seconds, use nightmode, hide menus
  */
-nms.tvmode.start = function(views,interval,nightMode,hideMenus) {
-	if(interval > 0)
-		nms.tvmode.interval = interval * 1000;
-	setNightMode(nightMode);
-	if(nms.menuShowing && hideMenus)
-		toggleMenu();
+nms.tvmode.start = function(views,interval,nightMode,hideMenus,displayVertical) {
 	nms.tvmode.handlers = [];
 	for(var view in views) {
 		for(var handler in handlers) {
@@ -348,9 +349,21 @@ nms.tvmode.start = function(views,interval,nightMode,hideMenus) {
 		}
 	}
 	if (nms.tvmode.handlers.length > 1) {
+		if(interval > 0)
+			nms.tvmode.interval = interval * 1000;
+		setNightMode(nightMode);
+		if(nms.menuShowing && hideMenus)
+			toggleMenu();
+		if(displayVertical)
+			nms.tvmode.vertical = true;
 		nms.timers.tvmode = new nmsTimer(nms.tvmode.tick, nms.tvmode.interval, "TV-mode ticker", "Handler used to advance tv-mode");
 		nms.timers.tvmode.start();
 		nms.tvmode.tick();
+		nms.tvmode.active = true;
+
+		document.body.classList.add("tvmode");
+		if(nms.tvmode.vertical)
+			document.body.classList.add("vertical");
 	}
 }
 nms.tvmode.tick = function() {
@@ -362,6 +375,9 @@ nms.tvmode.tick = function() {
 }
 nms.tvmode.stop = function() {
 	nms.timers.tvmode.stop();
+	document.body.classList.remove("tvmode");
+	document.body.classList.remove("vertical");
+	nms.tvmode.active = false;
 }
 
 /*
@@ -384,6 +400,8 @@ function setUpdater(fo)
 	}
 	var foo = document.getElementById("updater_name");
 	foo.innerHTML = fo.name + "   ";
+	var foo = document.getElementById("map-mode-title");
+	foo.innerHTML = fo.name;
 	document.location.hash = fo.tag;
 }
 
@@ -496,8 +514,10 @@ function setNightMode(toggle) {
 	var nav = document.getElementsByTagName("nav")[0];
 	if (toggle) {
 		nav.classList.add('navbar-inverse');
+		document.body.classList.add("nightmode");
 	} else {
 		nav.classList.remove('navbar-inverse');
+		document.body.classList.remove("nightmode");
 	}
 	nmsMap.setNightMode(toggle);
 }
@@ -548,12 +568,27 @@ function detectHandler() {
 	}
 	if(document.location.hash == "#tvmode") {
 		var views = getUrlVars()["views"];
-		views = views.split(",");
+		var nightMode = parseInt(getUrlVars()["nightmode"]);
+		var vertical = parseInt(getUrlVars()["vertical"]);
 		var interval = parseInt(getUrlVars()["interval"]);
-		nms.tvmode.start(views,interval,true,false);
+
+		views = views.split(",");
+		if(nightMode == "0") {
+			nightMode = false;
+		} else {
+			nightMode = true;
+		}
+		if(vertical == 1) {
+			vertical = true;
+		} else {
+			vertical = false;
+		}
+
+		nms.tvmode.start(views,interval,nightMode,true,vertical);
 		return;
+	} else {
+		setUpdater(handler_ping);
 	}
-	setUpdater(handler_ping);
 }
 
 function getUrlVars() {
