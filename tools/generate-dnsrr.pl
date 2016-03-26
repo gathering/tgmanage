@@ -19,6 +19,9 @@
 #  Command-syntax to send this to nsupdate, running it on the DNS server:
 #  cat file.txt | tools/generate-dnsrr.pl --dom foo -ns | ssh $dnsserver "nsupdate -k /etc/bind/Kdhcp_updater.+157+XXXXX"
 #
+#  Generate DNS for linknets:
+#  cat /tmp/linknets.txt | perl -wple 's,;, ,g' | perl tools/make-linknet-hosts.pl | tools/generate-dnsrr.pl --domain tgXX.gathering.org -ns -rev | ssh $dnsserver "nsupdate -k /etc/bind/Kdhcp_updater.XXXXX"
+#
 # Format of input:
 # hostname  ipv4-adress ipv6-address
 #  If any of ipv4-address or ipv6-address are NOT set for the host, specify "nope"
@@ -99,7 +102,6 @@ sub print_ptr{
 	unless ( $ipv4 eq "nope" ) {
 		my $v4 = new Net::IP($ipv4);
 		
-		print "prereq nxdomain " . $v4->reverse_ip() . "\n" unless $delete;
 		print "update add " . $v4->reverse_ip() . " 3600 IN PTR " . $hostname . $domain .".\n" unless $delete;
 		print "update delete "  . $v4->reverse_ip() . " IN PTR\n" if $delete;
 		print "send\n";
@@ -109,7 +111,6 @@ sub print_ptr{
 	if (( not ($ipv6 eq "nope") ) && ( $ipv6 )) {
 		my $v6 = new Net::IP($ipv6);
 		
-		print "prereq nxdomain " . $v6->reverse_ip() . "\n" unless $delete;
 		print "update add " . $v6->reverse_ip() . " 3600 IN PTR " . $hostname . $domain . ".\n" unless $delete;
 		print "update delete " . $v6->reverse_ip() . " IN PTR\n" if $delete;
 		print "send\n";
