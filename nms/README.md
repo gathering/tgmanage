@@ -18,7 +18,6 @@ And make sure that your user is in the docker group, so that you can run docker 
 
 - Start front end node:
 -- with cgroup: `docker run -v /sys/fs/cgroup:/sys/fs/cgroup:ro --privileged --rm -ti --name=front --link=db:db nms-front`
-
 -- getting to prompt(without cgroup): 
 `docker run -v "/home/kiro/repos/tgmanage:/srv/tgmanage" -v "/home/kiro/repos/tgmanage/nms/.bashrc:/root/.bashrc" -w "/srv/tgmanage/web/nms.gathering.org" \
 -rm=true -ti --name=front --privileged nms-front /bin/bash`
@@ -30,3 +29,4 @@ And make sure that your user is in the docker group, so that you can run docker 
 - Open the nms-front ip in the web browser.
 http://172.17.0.2:8080/
 
+- Note: `docker run -v /sys/fs/cgroup:/sys/fs/cgroup:ro --rm -ti`
