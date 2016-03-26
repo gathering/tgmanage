@@ -19,6 +19,9 @@ while ( my $ref = $q->fetchrow_hashref() ) {
 	for my $porti (keys %{$data{'ports'}}) {
 		my %port = %{$data{'ports'}{$porti}};
 		my $smallport = $porti;
+		if ($porti =~ m/\.0$/) {
+			next;
+		}
 		if (not $smallport =~ m/^ae/ and not $smallport =~ m/^et/) {
 			$smallport =~ s/[0-9-].*$//;
 		} else {
@@ -59,6 +62,9 @@ while ( my $ref = $q2->fetchrow_hashref() ) {
 	for my $porti (keys %{$data{'ports'}}) {
 		my %port = %{$data{'ports'}{$porti}};
 		my $smallport = $porti;
+		if ($porti =~ m/\.0$/) {
+			next;
+		}
 		if (not $smallport =~ m/^ae/ and not $smallport =~ m/^et/) {
 			$smallport =~ s/[0-9-].*$//;
 		} else {

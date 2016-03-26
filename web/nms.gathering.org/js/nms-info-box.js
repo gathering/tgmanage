@@ -742,6 +742,7 @@ nmsInfoBox._searchSmart = function(id, sw) {
 				return true;
 			}
 		} catch (e) {}
+		try {
 		if (id.match("active")) {
 			var limit = id;
 			limit = limit.replace("active>","");
@@ -749,21 +750,24 @@ nmsInfoBox._searchSmart = function(id, sw) {
 			limit = limit.replace("active=","");
 			var operator = id.replace("active","")[0];
 			if (limit == parseInt(limit)) {
+				var ports = parseInt(nmsData.switchstate.switches[sw].ifs.ge.live);
+				limit = parseInt(limit);
 				if (operator == ">" ) {
-					if (nmsData.switchstate.switches[sw]['totals'].live > limit) {
+					if (ports > limit) {
 						return true;
 					}
 				} else if (operator == "<") {
-					if (nmsData.switchstate.switches[sw]['totals'].live < limit) {
+					if (ports < limit) {
 						return true;
 					}
 				} else if (operator == "=") {
-					if (nmsData.switchstate.switches[sw]['totals'].live == limit) {
+					if (ports == limit) {
 						return true;
 					}
 				}
 			}
 		}
+		} catch (e) {}
 		try {
 			if (nmsData.smanagement.switches[sw].mgmt_v4_addr.match(id)) {
 				return true;
