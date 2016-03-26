@@ -15,6 +15,6 @@ while ( my $ref = $q->fetchrow_hashref() ) {
 	$json{'dhcp'}{$ref->{'sysname'}} = $ref->{'time'};
 }
 
-$nms::web::cc{'max-age'} = "5";
+$nms::web::cc{'max-age'} = "10";
 $nms::web::cc{'stale-while-revalidate'} = "30";
 finalize_output();

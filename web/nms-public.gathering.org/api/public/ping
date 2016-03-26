@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use nms::web;
 
-#nms::web::setwhen('1s');
+nms::web::setwhen('10s');
 
 my $q = $nms::web::dbh->prepare("SELECT DISTINCT ON (sysname) (now() - time) as age,sysname, latency_ms FROM ping NATURAL JOIN switches WHERE time in (select max(time) from ping where "
         . $nms::web::when . " group by switch)");
@@ -32,6 +32,6 @@ while ( my $ref = $lq->fetchrow_hashref() ) {
     $nms::web::json{'linknets'}{$ref->{'linknet'}} = [ $ref->{'latency1_ms'}, $ref->{'latency2_ms'} ];
 }
 
-$nms::web::cc{'max-age'} = "1";
-$nms::web::cc{'stale-while-revalidate'} = "5";
+$nms::web::cc{'max-age'} = "2";
+$nms::web::cc{'stale-while-revalidate'} = "15";
 finalize_output();
