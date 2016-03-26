@@ -88,6 +88,9 @@ nmsInfoBox._show = function(argument) {
   this._container.appendChild(panel);
   this._container.style.display = "block";
 	$('[data-toggle="popover"]').popover({placement:"top",container:'body'});
+	$(".collapse-controller").on("click", function(e) {
+		$(e.target.dataset.target).collapse('toggle');
+	});
 };
 
 /*
@@ -325,19 +328,55 @@ nmsInfoBox._windowTypes.switchInfo = {
   showSNMP: function(tree) {
 		this.activeView = "snmp";
     var domObj = document.createElement("div");
+		domObj.classList.add("panel-group");
 
-    var output = document.createElement("output");
-    output.id = "edit-output";
-    output.style = "white-space: pre;";
-    try {
-      output.value = JSON.stringify(nmsData.snmp.snmp[this.sw][tree],null,4);
-    } catch(e) {
-      output.value = "(no recent data (yet)?)";
-    }
-    domObj.appendChild(output);
+		try {
+			var snmpJson = nmsData.snmp.snmp[this.sw][tree];
+		} catch(e) {
+			this.content = "(no recent data (yet)?)";
+			return;
+		}
 
-    this.childContent = domObj;
-    nmsInfoBox.refresh();
+		/*
+		 * This html-generation code seems unnecessary complex. Must be a
+		 * cleaner way to do this. But not today.
+		 */
+		for(var obj in snmpJson) {
+
+			var cleanObj = obj.replace(/\W+/g, "");
+
+			var groupObj = document.createElement("div");
+			groupObj.classList.add("panel","panel-default");
+			groupObj.innerHTML = '<a class="panel-heading collapse-controller" style="display:block;" role="button" data-toggle="collapse" href="#'+cleanObj+'-group">' + obj + '</a>';
+
+			var groupObjCollapse = document.createElement("div");
+			groupObjCollapse.id = cleanObj + "-group";
+			groupObjCollapse.classList.add("collapse");
+
+			var panelBodyObj = document.createElement("div");
+			panelBodyObj.classList.add("panel-body");
+
+			var tableObj = document.createElement("table");
+			tableObj.classList.add("table","table-condensed");
+
+			var tbody = document.createElement("tbody");
+
+			for(var prop in snmpJson[obj]) {
+				var propObj = document.createElement("tr");
+				propObj.innerHTML = '<td>' + prop + '</td><td>' + snmpJson[obj][prop] + '</td>';
+				tbody.appendChild(propObj);
+			}
+
+			tableObj.appendChild(tbody);
+			panelBodyObj.appendChild(tableObj);
+			groupObjCollapse.appendChild(panelBodyObj);
+			groupObj.appendChild(groupObjCollapse);
+			domObj.appendChild(groupObj);
+
+		}
+		this.content = domObj;
+		
+    nmsInfoBox.refresh("soft");
   },
   unload: function() {
 		this.title = '';
