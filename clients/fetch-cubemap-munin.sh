@@ -1,10 +1,17 @@
 #!/bin/bash
-#cp -p "/var/cache/munin/www/tg15.gathering.org/seamus.tg15.gathering.org/cubemap-day.png" "/root/tgmanage/examples/tg15/streamstats/cubemap_seamus_-`date +%Y%m%d_%H%M`.png"
-#cp -p "/var/cache/munin/www/tg15.gathering.org/maggie.tg15.gathering.org/cubemap-day.png" "/root/tgmanage/examples/tg15/streamstats/cubemap_maggie_-`date +%Y%m%d_%H%M`.png"
+tgyear="tg16"
+reflector1="finn"
+reflector2="rey"
 
-epoch_to=`date +%s`
+if [ $# -eq 0 ]; then
+	epoch_to=`date +%s`
+	epoch_date="`date +%Y%m%d-%H%M`"
+else 
+	epoch_to=`date --date "$1" +%s`
+	epoch_date="`date --date \"$1\" +%Y%m%d-%H%M`"
+fi
 let "epoch_from = epoch_to - (60 * 60 * 24)"
 
-wget -qO"/root/tgmanage/examples/tg15/streamstats/cubemap_maggie_detailed-`date +%Y%m%d-%H%M`.png" "http://munin.tg15.gathering.org/munin-cgi/munin-cgi-graph/tg15.gathering.org/maggie.tg15.gathering.org/cubemap-pinpoint=$epoch_from,$epoch_to.png?&lower_limit=&upper_limit=&size_x=1280&size_y=720"
-wget -qO"/root/tgmanage/examples/tg15/streamstats/cubemap_seamus_detailed-`date +%Y%m%d-%H%M`.png" "http://munin.tg15.gathering.org/munin-cgi/munin-cgi-graph/tg15.gathering.org/seamus.tg15.gathering.org/cubemap-pinpoint=$epoch_from,$epoch_to.png?&lower_limit=&upper_limit=&size_x=1280&size_y=720"
+wget -qO"/root/tgmanage/examples/$tgyear/streams/streamstats/cubemap_${reflector1}_detailed-$epoch_date.png" "http://munin.$tgyear.gathering.org/munin-cgi/munin-cgi-graph/$tgyear.gathering.org/${reflector1}.$tgyear.gathering.org/cubemap-pinpoint=$epoch_from,$epoch_to.png?&lower_limit=&upper_limit=&size_x=1280&size_y=720"
+wget -qO"/root/tgmanage/examples/$tgyear/streams/streamstats/cubemap_${reflector2}_detailed-$epoch_date.png" "http://munin.$tgyear.gathering.org/munin-cgi/munin-cgi-graph/$tgyear.gathering.org/${reflector2}.$tgyear.gathering.org/cubemap-pinpoint=$epoch_from,$epoch_to.png?&lower_limit=&upper_limit=&size_x=1280&size_y=720"
 
