@@ -17,7 +17,8 @@ var nms = {
 	 */
 	timers: {
 		playback:false,
-	},
+		tvmode: false
+    },
 	
 	menuShowing:true,
 	/*
@@ -29,7 +30,7 @@ var nms = {
 		'menuShowing'
 	],
 	keyBindings:{
-		'?':toggleMenu,
+		'-':toggleMenu,
 		'n':toggleNightMode,
 		'1':setMapModeFromN,
 		'2':setMapModeFromN,
@@ -38,12 +39,17 @@ var nms = {
 		'5':setMapModeFromN,
 		'6':setMapModeFromN,
 		'7':setMapModeFromN,
+		'8':setMapModeFromN,
+		'9':setMapModeFromN,
+		'c':toggleConnect,
 		'h':moveTimeFromKey,
 		'j':moveTimeFromKey,
 		'k':moveTimeFromKey,
 		'l':moveTimeFromKey,
 		'p':moveTimeFromKey,
-		'r':moveTimeFromKey
+		'r':moveTimeFromKey,
+		'Escape':hideWindow,
+		'?':toggleHelp
 	},
 	/*
 	 * Playback controllers and variables
@@ -54,7 +60,16 @@ var nms = {
 		playing: false,
 		replayTime: 0,
 		replayIncrement: 60 * 60
-	 }
+	},
+	tvmode: {
+		handlers: [],
+		currentIndex: 0,
+		interval: 20000,
+		hideMenu: false,
+		active: false,
+		nightMode: false,
+		vertical: false
+	}
 };
 
 /*
@@ -82,7 +97,7 @@ function nmsTimer(handler, interval, name, description) {
 		};
 
 	this.setInterval = function(interval) {
-		var started = this.handle == false ? false : true;
+		var started = this.handle != false;
 		this.stop();
 		this.interval = parseInt(interval);
 		if (started)
@@ -95,14 +110,16 @@ function nmsTimer(handler, interval, name, description) {
  * Convenience function that doesn't support huge numbers, and it's easier
  * to comment than to fix. But not really, but I'm not fixing it anyway.
  */
-function byteCount(bytes) {
+function byteCount(bytes,precision) {
+	if (precision ==undefined)
+		precision = 1;
 	var units = ['', 'K', 'M', 'G', 'T', 'P'];
 	var i = 0;
 	while (bytes > 1024) {
 		bytes = bytes / 1024;
 		i++;
 	}
-	return bytes.toFixed(1) + units[i];
+	return bytes.toFixed(precision) + units[i];
 }
 
 /*
@@ -160,27 +177,27 @@ function stringToEpoch(t)
 function epochToString(t)
 {
 	// Adjust for timezone when converting from epoch (UTC) to string (local)
-	var d = new Date(parseInt(t) * parseInt(1000));
-	var timezoneOffset = d.getTimezoneOffset() * -60;
+	var date = new Date(parseInt(t) * parseInt(1000));
+	var timezoneOffset = date.getTimezoneOffset() * -60;
 	t = t - timezoneOffset;
 
-	var d = new Date(parseInt(t) * parseInt(1000));
-	var str = d.getFullYear() + "-";
-	if (parseInt(d.getMonth()) < 9)
+    date = new Date(parseInt(t) * parseInt(1000));
+	var str = date.getFullYear() + "-";
+	if (parseInt(date.getMonth()) < 9)
 		str += "0";
-	str += (parseInt(d.getMonth())+1) + "-";
-	if (d.getDate() < 10)
+	str += (parseInt(date.getMonth())+1) + "-";
+	if (date.getDate() < 10)
 		str += "0";
-	str += d.getDate() + "T";
-	if (d.getHours() < 10)
+	str += date.getDate() + "T";
+	if (date.getHours() < 10)
 		str += "0";
-	str += d.getHours() + ":";
-	if (d.getMinutes() < 10)
+	str += date.getHours() + ":";
+	if (date.getMinutes() < 10)
 		str += "0";
-	str += d.getMinutes() + ":";
-	if (d.getSeconds() < 10)
+	str += date.getMinutes() + ":";
+	if (date.getSeconds() < 10)
 		str += "0";
-	str += d.getSeconds();
+	str += date.getSeconds();
 
 	return str;
 }
@@ -205,7 +222,7 @@ nms.playback.startReplay = function(startTime,stopTime) {
 	nms.playback.stopTime = stringToEpoch(stopTime);
 	nms.now = epochToString(nms.playback.startTime);
 	nms.playback.play();
-}
+};
 
 /*
  * Pause playback
@@ -213,7 +230,7 @@ nms.playback.startReplay = function(startTime,stopTime) {
 nms.playback.pause = function() {
 	nms.timers.playback.stop();
 	nms.playback.playing = false;
-}
+};
 
 /*
  * Start playback
@@ -222,7 +239,7 @@ nms.playback.play = function() {
 	nms.playback.tick();
 	nms.timers.playback.start();
 	nms.playback.playing = true;
-}
+};
 
 /*
  * Toggle playback
@@ -233,19 +250,18 @@ nms.playback.toggle = function() {
 	} else {
 		nms.playback.play();
 	}
-}
+};
 
 /*
  * Jump to place in time
  */
 nms.playback.setNow = function(now) {
-	var now = parseNow(now);
-	nms.now = now;
+	nms.now = parseNow(now);
 
 	nms.playback.stopTime = false;
 	nms.playback.startTime = false;
 	nms.playback.tick();
-}
+};
 
 /*
  * Step forwards or backwards in timer
@@ -258,7 +274,7 @@ nms.playback.stepTime = function(n)
 
 	if(!nms.playback.playing)
 		nms.playback.tick();
-}
+};
 
 /*
  * Ticker to trigger updates, and advance time if replaying
@@ -286,7 +302,7 @@ nms.playback.tick = function()
 	if(nms.now !== false && nms.playback.playing) {
 		nms.playback.stepTime(nms.playback.replayIncrement);
 	}
-}
+};
 
 /*
  * Helper function for safely getting a valid now-epoch
@@ -307,10 +323,61 @@ function getNowEpoch() {
  */
 function setLegend(x,color,name)
 {
-	var el = document.getElementById("legend-" + x);
+	if(nms.tvmode.active) {
+		var el = document.getElementById("tv-mode-legend-" + x);
+	} else {
+		var el = document.getElementById("legend-" + x);
+	}
 	el.style.background = color;
 	el.title = name;
 	el.textContent = name;
+}
+
+/*
+ * Start TV-mode
+ *
+ * Loops trough a list of views/updaters at a set interval.
+ * Arguments: array of views, interval in seconds, use nightmode, hide menus
+ */
+nms.tvmode.start = function(views,interval,nightMode,hideMenus,displayVertical) {
+	nms.tvmode.handlers = [];
+	for(var view in views) {
+		for(var handler in handlers) {
+			if(views[view] == handlers[handler].tag) {
+				nms.tvmode.handlers.push(handlers[handler]);
+			}
+		}
+	}
+	if (nms.tvmode.handlers.length > 1) {
+		if(interval > 0)
+			nms.tvmode.interval = interval * 1000;
+		setNightMode(nightMode);
+		if(nms.menuShowing && hideMenus)
+			toggleMenu();
+		if(displayVertical)
+			nms.tvmode.vertical = true;
+		nms.timers.tvmode = new nmsTimer(nms.tvmode.tick, nms.tvmode.interval, "TV-mode ticker", "Handler used to advance tv-mode");
+		nms.timers.tvmode.start();
+		nms.tvmode.tick();
+		nms.tvmode.active = true;
+
+		document.body.classList.add("tvmode");
+		if(nms.tvmode.vertical)
+			document.body.classList.add("vertical");
+	}
+}
+nms.tvmode.tick = function() {
+	if(nms.tvmode.currentIndex > nms.tvmode.handlers.length - 1) {
+		nms.tvmode.currentIndex = 0;
+	}
+	setUpdater(nms.tvmode.handlers[nms.tvmode.currentIndex]);
+	nms.tvmode.currentIndex++;
+}
+nms.tvmode.stop = function() {
+	nms.timers.tvmode.stop();
+	document.body.classList.remove("tvmode");
+	document.body.classList.remove("vertical");
+	nms.tvmode.active = false;
 }
 
 /*
@@ -333,6 +400,8 @@ function setUpdater(fo)
 	}
 	var foo = document.getElementById("updater_name");
 	foo.innerHTML = fo.name + "   ";
+	var foo = document.getElementById("map-mode-title");
+	foo.innerHTML = fo.name;
 	document.location.hash = fo.tag;
 }
 
@@ -342,6 +411,10 @@ function toggleLayer(layer) {
                l.style.display = '';
        else
                l.style.display = 'none';
+}
+
+function toggleConnect() {
+	toggleLayer("linkCanvas");
 }
 
 function commentInactive(id)
@@ -375,7 +448,7 @@ function commentChange(id,state)
 	myData = JSON.stringify(myData);
 	$.ajax({
 		type: "POST",
-		url: "/api/private/comment-change",
+		url: "/api/write/comment-change",
 		dataType: "text",
 		data:myData,
 		success: function (data, textStatus, jqXHR) {
@@ -393,7 +466,7 @@ function addComment(sw,comment)
 	myData = JSON.stringify(myData);
 	$.ajax({
 		type: "POST",
-		url: "/api/private/comment-add",
+		url: "/api/write/comment-add",
 		dataType: "text",
 		data:myData,
 		success: function (data, textStatus, jqXHR) {
@@ -410,11 +483,7 @@ function addComment(sw,comment)
  */
 function isIn(box, x, y)
 {
-	if ((x >= box.x) && (x <= (box.x + box.width)) && (y >= box.y) && (y <= (box.y + box.height))) {
-		return true;
-	}
-	return false;
-
+    return ((x >= box.x) && (x <= (box.x + box.width)) && (y >= box.y) && (y <= (box.y + box.height)));
 }
 
 /*
@@ -445,8 +514,10 @@ function setNightMode(toggle) {
 	var nav = document.getElementsByTagName("nav")[0];
 	if (toggle) {
 		nav.classList.add('navbar-inverse');
+		document.body.classList.add("nightmode");
 	} else {
 		nav.classList.remove('navbar-inverse');
+		document.body.classList.remove("nightmode");
 	}
 	nmsMap.setNightMode(toggle);
 }
@@ -465,6 +536,8 @@ function initNMS() {
 	nmsData.registerSource("ping", "/api/public/ping");
 	nmsData.registerSource("switches","/api/public/switches");
 	nmsData.registerSource("switchstate","/api/public/switch-state");
+	nmsData.registerSource("dhcpsummary","/api/public/dhcp-summary");
+	nmsData.registerSource("dhcp","/api/public/dhcp");
 	
 	// This is a magic dummy-source, it's purpose is to give a unified
 	// way to get ticks every second. It is mainly meant to allow map
@@ -474,26 +547,56 @@ function initNMS() {
 	nmsData.registerSource("ticker","bananabananbanana");
 
 	// Private	
-	nmsData.registerSource("snmp","/api/private/snmp");
-	nmsData.registerSource("comments", "/api/private/comments");
-	nmsData.registerSource("smanagement","/api/private/switches-management");
+	nmsData.registerSource("snmp","/api/read/snmp");
+	nmsData.registerSource("comments", "/api/read/comments");
+	nmsData.registerSource("smanagement","/api/read/switches-management");
 
 	restoreSettings();
 	nmsMap.init();
 	detectHandler();
 	nms.playback.play();
 	setupKeyhandler();
+	setupSearchKeyHandler();
 }
 
 function detectHandler() {
-	var url = document.URL;
 	for (var i in handlers) {
 		if (('#' + handlers[i].tag) == document.location.hash) {
 			setUpdater(handlers[i]);
 			return;
 		}
 	}
-	setUpdater(handler_ping);
+	if(document.location.hash == "#tvmode") {
+		var views = getUrlVars()["views"];
+		var nightMode = parseInt(getUrlVars()["nightmode"]);
+		var vertical = parseInt(getUrlVars()["vertical"]);
+		var interval = parseInt(getUrlVars()["interval"]);
+
+		views = views.split(",");
+		if(nightMode == "0") {
+			nightMode = false;
+		} else {
+			nightMode = true;
+		}
+		if(vertical == 1) {
+			vertical = true;
+		} else {
+			vertical = false;
+		}
+
+		nms.tvmode.start(views,interval,nightMode,true,vertical);
+		return;
+	} else {
+		setUpdater(handler_ping);
+	}
+}
+
+function getUrlVars() {
+	var vars = {};
+	var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
+		vars[key] = value;
+	});
+	return vars;
 }
 
 function setMenu()
@@ -508,6 +611,13 @@ function toggleMenu()
 	setMenu();
 	saveSettings();
 }
+function hideWindow(e,key)
+{
+	nmsInfoBox.hide();
+}
+function toggleHelp(e,key) {
+	toggleLayer('aboutKeybindings');
+}
 
 function setMapModeFromN(e,key)
 {
@@ -519,18 +629,24 @@ function setMapModeFromN(e,key)
 			setUpdater(handler_uplinks);
 			break;
 		case '3':
-			setUpdater(handler_temp);
+			setUpdater(handler_dhcp);
 			break;
 		case '4':
-			setUpdater(handler_traffic);
-			break;
-		case '5':
 			setUpdater(handler_comment);
 			break;
+		case '5':
+			setUpdater(handler_temp);
+			break;
 		case '6':
-			setUpdater(handler_traffic_tot);
+			setUpdater(handler_traffic);
 			break;
 		case '7':
+			setUpdater(handler_traffic_tot);
+			break;
+		case '8':
+			setUpdater(handler_snmp);
+			break;
+		case '9':
 			setUpdater(handler_disco);
 			break;
 	}
@@ -568,7 +684,26 @@ function keyPressed(e)
 	if (e.target.nodeName == "INPUT") {
 		return false;
 	}
-	var key = String.fromCharCode(e.keyCode);
+	if(e.key) {
+		var key = e.key;
+	} else {
+		var key = e.keyCode;
+		switch(key) {
+			case 187:
+				key = '?';
+				break;
+			case 189:
+				key = '-';
+				break;
+			case 27:
+				key = 'Escape';
+				break;
+			default:
+				key = String.fromCharCode(key);
+				key = key.toLowerCase();
+				break;
+		}
+	}
 	if (nms.keyBindings[key])
 		return nms.keyBindings[key](e,key);
 	if (nms.keyBindings['default'])
@@ -579,7 +714,16 @@ function keyPressed(e)
 function setupKeyhandler()
 {
 	var b = document.getElementsByTagName("body")[0];
-	b.onkeypress = function(e){keyPressed(e);};
+	$( "body" ).keyup(function(e) {
+		keyPressed(e);
+	});
+}
+
+function setupSearchKeyHandler()
+{
+	$("#searchbox").keyup(function(e) {
+		nmsInfoBox._searchKeyListener(e);
+	});
 }
 
 
@@ -599,8 +743,8 @@ function getCookie(cname) {
 function saveSettings()
 {
 	var foo={};
-	for (var v in nms.settingsList) {
-		foo[nms.settingsList[v]] = nms[nms.settingsList[v]];
+	for ( var v in nms.settingsList ) {
+		foo[ nms.settingsList[v] ] = nms[ nms.settingsList[v] ];
 	}
 	document.cookie = 'nms='+btoa(JSON.stringify(foo));
 }

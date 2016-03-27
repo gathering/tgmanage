@@ -11,6 +11,9 @@ backend default {
 
 # Sort magi.
 sub vcl_recv {
+    if (req.url ~ "^/where" || req.url ~ "^/location") {
+	set req.url = "/api/public/location";
+    }
     if (req.method != "GET" &&
         req.method != "HEAD" &&
         req.method != "PUT" &&
@@ -21,9 +24,6 @@ sub vcl_recv {
         # Vi hater alt som er gøy.
         return (synth(418,"LOLOLOL"));
     }
-
-    # Hardcoded for testing
-    set req.http.host = "nms.tg16.gathering.org"; 
 
     if (req.method != "GET" && req.method != "HEAD") {
         /* We only deal with GET and HEAD by default */
@@ -37,6 +37,7 @@ sub vcl_recv {
     return (hash);
 }
 
+
 # Rosa magi
 sub vcl_hash {
     # Wheee. Legg til authorization-headeren i hashen.
@@ -49,5 +50,9 @@ sub vcl_backend_response {
     set beresp.http.x-url = bereq.url;
     if (beresp.http.x-ban) {
         ban("obj.http.x-url ~ " + beresp.http.x-ban);
+    }
+    if (beresp.status != 200) {
+        set beresp.uncacheable = false;
+        set beresp.ttl = 5s;
     }
 }

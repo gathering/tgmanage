@@ -24,21 +24,35 @@ while (<STDIN>) {
 	
 	my ($ipv4_raw, $ipv6_raw, $from, $to) = split;
 		
-	# v4 
-	my $ipv4_first = NetAddr::IP->new($ipv4_raw);
-	my $ipv4_second = $ipv4_first + 1;
-	
-	# v6
-	my $ipv6_first = NetAddr::IP->new($ipv6_raw);
-	my $ipv6_second = $ipv6_first + 1;
+	my ($ipv4_first, $ipv4_second, $ipv6_first, $ipv6_second);
+	if($ipv6_raw =~ m/nope/){
+		$ipv6_first = "nope";
+		$ipv6_second = "nope";
+	} else {
+		my $ipv6 = NetAddr::IP->new($ipv6_raw);
+		$ipv6_first = $ipv6->addr();
+		$ipv6++;
+		$ipv6_second = $ipv6->addr();
+	}
+
+	if($ipv4_raw =~ m/nope/){
+		$ipv4_first = "";
+                $ipv4_second = "";
+	} else {
+		my $ipv4 = NetAddr::IP->new($ipv4_raw);
+		$ipv4_first = $ipv4->addr();
+		$ipv4++;
+		$ipv4_second = $ipv4->addr;
+	}
+
 
 	# generate-dnsrr.pl format:
 	# hostname ipv4 ipv6
 	if($first){
-		printf("%s %s %s\n", $from, $ipv4_first->addr, $ipv6_first->addr);
-		printf("%s %s %s\n", $to, $ipv4_second->addr, $ipv6_second->addr);
+		printf("%s %s %s\n", $from, $ipv4_first, $ipv6_first);
+		printf("%s %s %s\n", $to, $ipv4_second, $ipv6_second);
 	} else {
-		printf("%s-%s %s %s\n", $from, $to, $ipv4_first->addr, $ipv6_first->addr);
-		printf("%s-%s %s %s\n", $to, $from, $ipv4_second->addr, $ipv6_second->addr);
+		printf("%s-%s %s %s\n", $from, $to, $ipv4_first, $ipv6_first);
+		printf("%s-%s %s %s\n", $to, $from, $ipv4_second, $ipv6_second);
 	}
 }

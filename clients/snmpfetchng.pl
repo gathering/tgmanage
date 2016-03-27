@@ -9,13 +9,12 @@ use Data::Dumper;
 use lib '../include';
 use nms;
 
-SNMP::addMibDirs("/tmp/tmp.esQYrkg9MW/v2");
-SNMP::loadModules('SNMPv2-MIB');
-SNMP::loadModules('ENTITY-MIB');
-SNMP::loadModules('IF-MIB');
-SNMP::loadModules('LLDP-MIB');
-SNMP::loadModules('IP-MIB');
-SNMP::loadModules('IP-FORWARD-MIB');
+SNMP::initMib();
+SNMP::addMibDirs("/srv/tgmanage/mibs/StandardMibs");
+SNMP::addMibDirs("/srv/tgmanage/mibs/JuniperMibs");
+SNMP::addMibDirs("/srv/tgmanage/mibs");
+SNMP::loadModules('ALL');
+
 our $dbh = nms::db_connect();
 $dbh->{AutoCommit} = 0;
 $dbh->{RaiseError} = 1;
@@ -23,13 +22,13 @@ $dbh->{RaiseError} = 1;
 my $qualification = <<"EOF";
 (last_updated IS NULL OR now() - last_updated > poll_frequency)
 AND (locked='f' OR now() - last_updated > '15 minutes'::interval)
-AND ip is not null
+AND mgmt_v4_addr is not null
 EOF
 
 # Borrowed from snmpfetch.pl 
 our $qswitch = $dbh->prepare(<<"EOF")
 SELECT 
-  sysname,switch,host(ip) as ip,community,
+  sysname,switch,host(mgmt_v4_addr) as ip,community,
   DATE_TRUNC('second', now() - last_updated - poll_frequency) AS overdue
 FROM
   switches
@@ -48,8 +47,6 @@ my @switches = ();
 
 my $sth = $dbh->prepare("INSERT INTO snmp (switch,data) VALUES((select switch from switches where sysname=?), ?)");
 
-our $outstanding = 0;
-
 sub mylog
 {
 	my $msg = shift;
@@ -61,17 +58,10 @@ sub mylog
 sub populate_switches
 {
 	@switches = ();
-	my $limit = $nms::config::snmp_max - $outstanding;
-	if ($limit < 0) {
-		mylog("Something wrong. Too many outstanding polls going.");
-		$limit = 1;
-	}
-	if ($outstanding > 0) {
-		mylog("Outstanding polls: $outstanding . Current limit: $limit");
-	}
+	my $limit = $nms::config::snmp_max;
 	$qswitch->execute($limit)
 		or die "Couldn't get switch";
-	
+	$dbh->commit;
 	while (my $ref = $qswitch->fetchrow_hashref()) {
 		push @switches, {
 			'sysname' => $ref->{'sysname'},
@@ -87,7 +77,6 @@ sub inner_loop
 	populate_switches();
 	my $poll_todo = "";
 	for my $refswitch (@switches) {
-		$outstanding++;
 		my %switch = %{$refswitch};
 		$poll_todo .= "$switch{'sysname'} ";
 
@@ -102,11 +91,10 @@ sub inner_loop
 		my $ret = $s->bulkwalk(0, 10, @nms::config::snmp_objects, sub{ callback(\%switch, @_); });
 		if (!defined($ret)) {
 			mylog("Fudge: ".  $s->{'ErrorStr'});
-			$outstanding--;
 		}
 	}
 	mylog( "Polling " . @switches . " switches: $poll_todo");
-	SNMP::MainLoop(5);
+	SNMP::MainLoop(10);
 }
 
 sub callback{
@@ -146,8 +134,7 @@ sub callback{
 	$qunlock->execute($switch{'id'})
 		or die "Couldn't unlock switch";
 	$dbh->commit;
-	$outstanding--;
-	mylog( "Polled $switch{'sysname'} in " . (time - $switch{'start'}) . "s. ($outstanding outstanding polls)");
+	mylog( "Polled $switch{'sysname'} in " . (time - $switch{'start'}) . "s.");
 }
 while (1) {
 	inner_loop();

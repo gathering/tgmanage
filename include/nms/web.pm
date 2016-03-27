@@ -57,14 +57,19 @@ sub db_safe_quote {
 # endpoints it is better to return no data than old data (e.g.: ping).
 sub setwhen {
 	$now = "now()";
-	my $window = '15m';
-	if (@_ == 1) {
+	my $window = '8m';
+	my $offset = '0s';
+	if (@_ > 0) {
 		$window = $_[0];
+	}
+	if (@_ > 1) {
+		$offset = $_[1];
 	}
 	if (defined($get_params{'now'})) {
 		$now = db_safe_quote('now') . "::timestamp ";
 		$cc{'max-age'} = "3600";
 	}
+	$now = "(" . $now . " - '" . $offset . "'::interval)";
 	$when = " time > " . $now . " - '".$window."'::interval and time < " . $now . " ";
 }
 
@@ -81,7 +86,9 @@ sub finalize_output {
 	printcc;
 	
 	print "Etag: $hash\n";
-	print "Content-Type: text/jso; charset=utf-8\n\n";
+	print "Access-Control-Allow-Origin: *\n";
+	print "Access-Control-Allow-Methods: HEAD, GET\n";
+	print "Content-Type: text/json; charset=utf-8\n\n";
 	print JSON::XS::encode_json(\%json);
 	print "\n";
 }

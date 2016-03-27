@@ -26,16 +26,64 @@
       <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
       <![endif]-->
       <style type="text/css">
-	canvas {
-	  -webkit-touch-callout: none;
-	  -webkit-user-select: none;
-	  -khtml-user-select: none;
-	  -moz-user-select: none;
-	  -ms-user-select: none;
-	  user-select: none;
-	  outline: none;
-	  -webkit-tap-highlight-color: rgba(255, 255, 255, 0); /* mobile webkit */
-	}   
+				canvas {
+					-webkit-touch-callout: none;
+					-webkit-user-select: none;
+					-khtml-user-select: none;
+					-moz-user-select: none;
+					-ms-user-select: none;
+					user-select: none;
+					outline: none;
+					-webkit-tap-highlight-color: rgba(255, 255, 255, 0); /* mobile webkit */
+				}
+				tr.mgmt_v4_addr {
+					font-weight: 700;
+				}
+				h1.map-mode-title {
+					font-weight: 700;
+					font-size: 55px;
+					color: black;
+					display: none;
+					z-index: 999;
+				}
+				.vertical h1.map-mode-title {
+					left: 30px;
+					bottom: 0px;
+					position: absolute;
+					transform-origin: 0px 0% 0px;
+					transform: rotate(-90deg);
+				}
+				.tvmode h1.map-mode-title {
+					display: block;
+				}
+				.nightmode h1.map-mode-title {
+					color: white;
+				}
+				.tvmode #topCanvas {
+					display: none;
+				}
+				div.map-mode-legend {
+					display: none;
+					position: fixed;
+					bottom: 5%;
+					right: 5%;
+					z-index: 999;
+				}
+				.vertical div.map-mode-legend {
+					top: -10px;
+					right: 30px;
+					position: absolute;
+					transform-origin: 100% 100% 0;
+					transform: rotate(-90deg);
+					height: 40px;
+				}
+				div.map-mode-legend button {
+					font-size: 20px;
+					font-weight: 700;
+				}
+				.tvmode div.map-mode-legend {
+					display: block;
+				}
       </style>
   </head>
 
@@ -59,10 +107,13 @@
 	      <ul class="dropdown-menu" role="menu">
 		<li><a href="#ping" onclick="setUpdater(handler_ping)">Ping map</a></li>
 		<li><a href="#uplink" onclick="setUpdater(handler_uplinks)">Uplink map</a></li>
+		<li><a href="#dhcp" onclick="setUpdater(handler_dhcp)">DHCP map</a></li>
+		<li><a href="#comment" onclick="setUpdater(handler_comment)">Comment spotter</a></li>
 		<li><a href="#temp" onclick="setUpdater(handler_temp)">Temperature map</a></li>
 		<li><a href="#traffic" onclick="setUpdater(handler_traffic)">Traffic map</a></li>
-		<li><a href="#comment" onclick="setUpdater(handler_comment)">Comment spotter</a></li>
 		<li><a href="#traffictot" onclick="setUpdater(handler_traffic_tot)">Total switch traffic</a></li>
+		<li><a href="#snmp" onclick="setUpdater(handler_snmp)">SNMP map</a></li>
+		<li><a href="#cpu" onclick="setUpdater(handler_cpu)">CPU map</a></li>
 		<li><a href="#disco" onclick="setUpdater(handler_disco)">DISCO</a></li>
 		<li class="divider"> </li>
 		<li><a href="#" onclick="toggleLayer('nowPickerBox');startNowPicker();">Travel in time</a></li>
@@ -70,10 +121,16 @@
 		<li class="divider"> </li>
 		<li class="dropdown-header">View</li>
 		<li><a href="#" onclick="toggleNightMode()">Toggle Night Mode</a></li>
+		<li><a href="#" onclick="toggleConnect()">Toggle linknets</a></li>
 		<li class="divider"> </li>
-		<li class="dropdown-header">Move switches</li>
+		<li class="dropdown-header">Switches</li>
 	  	<li><a href="#" onclick="nmsMap.moveSet(true);">Enable switch moving</a></li>
 	  	<li><a href="#" onclick="nmsMap.moveSet(false);">Disable switch moving</a></li>
+	  	<li><a href="#" onclick="nmsInfoBox.showWindow('addSwitch')">Add switch</a></li>
+		<li class="divider"> </li>
+		<li class="dropdown-header">Inventory lists</li>
+	  	<li><a href="#" onclick="nmsInfoBox.showWindow('inventoryListing','distro_name');">Distro names</a></li>
+	  	<li><a href="#" onclick="nmsInfoBox.showWindow('inventoryListing','sysDescr')">System description</a></li>
 		<li class="divider"> </li>
 		<li class="dropdown-header">Help</li>
 	  	<li><a href="#" onclick="toggleLayer('aboutKeybindings');" >Keyboard Shortcuts</a></li>
@@ -91,7 +148,7 @@
 	      <div class="input-group input-group-sm">
 		<input id="searchbox" type="text" class="form-control" placeholder="Filter" oninput="nmsInfoBox._search()" />
 		  <span class="input-group-btn">
-		  <button class="btn btn-default" type="button" onclick="nmsInfoBox.show(document.getElementById('searchbox').value);">Go!</button>
+		  <button id="searchbox-submit" class="btn btn-default" type="button" onclick="nmsInfoBox.showWindow('switchInfo',document.getElementById('searchbox').value);">Go!</button>
 		</span>
 	      </div>
 	    </div>
@@ -104,7 +161,7 @@
       </div>
     </nav>
 
-    <div class="container-fluid">
+    <div class="container-fluid" id="wrap">
 
       <div class="row-fluid">
 	<div class="span12">
@@ -124,6 +181,10 @@
 		</tr>
 		<tr>
 		  <td>?</td>
+		  <td>Toggle this help window</td>
+		</tr>
+		<tr>
+		  <td>-</td>
 		  <td>Toggle navigation bar</td>
 		</tr>
 		<tr>
@@ -140,23 +201,35 @@
 		</tr>
 		<tr>
 		  <td>3</td>
-		  <td>View temperature map</td>
+		  <td>View DHCP map</td>
 		</tr>
 		<tr>
 		  <td>4</td>
-		  <td>View uplink traffic map</td>
-		</tr>
-		<tr>
-		  <td>5</td>
 		  <td>View comment spotter map</td>
 		</tr>
 		<tr>
+		  <td>5</td>
+		  <td>View temperature map</td>
+		</tr>
+		<tr>
 		  <td>6</td>
-		  <td>View total switch traffic map</td>
+		  <td>View uplink traffic map</td>
 		</tr>
 		<tr>
 		  <td>7</td>
+		  <td>View total switch traffic map</td>
+		</tr>
+		<tr>
+		  <td>8</td>
+		  <td>View SNMP map</td>
+		</tr>
+		<tr>
+		  <td>9</td>
 		  <td>View Disco map</td>
+		</tr>
+		<tr>
+		  <td>c</td>
+		  <td>Toggle linknet connections</td>
 		</tr>
 		<tr>
 		  <td>h</td>
@@ -221,14 +294,20 @@
 	      </div>
 	    </div>
 	  </div>
-	  <div id="info-switch-parent" class="panel panel-default col-md-5" style="display: none; position: absolute; z-index: 120;">
-	    <div class="panel-heading"> <h3 class="panel-title" id="info-switch-title"></h3> </div>
-	    <div id="info-switch-panel-body"> <table class="table" id="info-switch-table"></table> </div>
+	  <div id="info-panel-container" class="col-md-5" style="display: none; position: absolute; z-index: 120;">
 	  </div>
 	</div>
 
+	<h1 id="map-mode-title" class="map-mode-title"></h1>
+	<div class="map-mode-legend form-group">
+		<button class="btn btn-default btn-sm" id="tv-mode-legend-1"></button>
+		<button class="btn btn-default btn-sm" id="tv-mode-legend-2"></button>
+		<button class="btn btn-default btn-sm" id="tv-mode-legend-3"></button>
+		<button class="btn btn-default btn-sm" id="tv-mode-legend-4"></button>
+		<button class="btn btn-default btn-sm" id="tv-mode-legend-5"></button>
+	</div>
 	<canvas id="bgCanvas" width="1920" height="1032" style="position: absolute; z-index: 1;"> </canvas>
-	<canvas id="linkCanvas" width="1920" height="1032" style="position: absolute; z-index: 10;"> </canvas>
+	<canvas id="linkCanvas" width="1920" height="1032" style="position: absolute; z-index: 10; display: none;"> </canvas>
 	<canvas id="blurCanvas" width="1920" height="1032" style="position: absolute; z-index: 20;"> </canvas>
 	<canvas id="switchCanvas" width="1920" height="1032" style="position: absolute; z-index: 30;"> </canvas>
 	<canvas id="textCanvas" width="1920" height="1032" style="position: absolute; z-index: 40;"> </canvas>
@@ -238,7 +317,7 @@
 	</canvas>
 	<canvas id="hiddenCanvas" width="1000" height="10" style="display: none; position: absolute; z-index: 1000 "></canvas>
 
-	<div style="display:none;"><img id="source" src="img/tg15-salkart-clean-big.png" ></div>
+	<div style="display:none;"><img id="source" src="img/tg16-salkart-clean-big.png" ></div>
       </div>
     </div><!--/.fluid-container-->
     <script src="js/jquery.min.js" type="text/javascript"></script>
