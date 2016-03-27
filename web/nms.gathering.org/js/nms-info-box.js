@@ -546,7 +546,7 @@ nmsInfoBox._windowTypes.inventoryListing = {
 	activeView: '',
 	activeFilter: '',
   getTitle: function() {
-    return '<h4>Inventory listing</h4><button type="button" class="distro-name btn btn-xs btn-default" onclick="nmsInfoBox.showWindow(\'inventoryListing\',\'distro_name\');">Distro name</button> <button type="button" class="distro-name btn btn-xs btn-default" onclick="nmsInfoBox.showWindow(\'inventoryListing\',\'sysDescr\');">System Description</button>';
+    return '<h4>Inventory listing</h4><button type="button" class="distro-name btn btn-xs btn-default" onclick="nmsInfoBox.showWindow(\'inventoryListing\',\'distro_name\');">Distro name</button> <button type="button" class="distro-name btn btn-xs btn-default" onclick="nmsInfoBox.showWindow(\'inventoryListing\',\'sysDescr\');">System Description</button><button type="button" class="distro-name btn btn-xs btn-default" onclick="nmsInfoBox.showWindow(\'inventoryListing\',\'jnxBoxSerialNo\');">Serial Numbers</button>';
   },
   getContent: function() {
     return this.content;
@@ -592,6 +592,11 @@ nmsInfoBox._windowTypes.inventoryListing = {
 				listTitle = 'System description';
 				needSnmp = true;
 				break;
+			case 'jnxBoxSerialNo':
+				if(hasSnmp)
+				listTitle = 'Serial Numbers';
+				needSnmp = true;
+				break;
 			default:
 				listTitle = 'Distro names';
 				list = 'distro_name';
@@ -618,6 +623,9 @@ nmsInfoBox._windowTypes.inventoryListing = {
 						break;
 					case 'sysDescr':
 						value = nmsData.snmp.snmp[sw]["misc"]["sysDescr"][0];
+						break;
+					case 'jnxBoxSerialNo':
+						value = nmsData.snmp.snmp[sw]["misc"]["jnxBoxSerialNo"][0];
 						break;
 				}
 			} catch (e) {
