@@ -6,7 +6,7 @@ package nms::config;
 
 # DB
 our $db_name = "nms";
-our $db_host = "185.110.148.10";
+our $db_host = "bb-8.tg16.gathering.org";
 our $db_username = "nms";
 our $db_password = "<removed>";
 
@@ -90,17 +90,17 @@ our $rec_net = "185.110.148.0/22";
 # extra networks that are outside the normal ranges
 # that should be added to DNS
 our @extra_nets = (
-        '185.110.148.0/24',
-        '185.110.149.0/24',
-        '185.110.150.0/24',
-        '185.110.151.0/24',
+	'185.110.148.0/24',
+	'185.110.149.0/24',
+	'185.110.150.0/24',
+	'185.110.151.0/24',
 );
 
 # add WLC's
 our $wlc1 = "185.110.148.14";
 
 # add VOIP-server
-our $voip1 = "134.90.150.162";
+our $voip1 = "<removed>";
 
 # PXE-server (rest of bootstrap assumes $sec_v4/$sec_v6)
 our $pxe_server_v4 = $sec_v4;
