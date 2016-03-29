@@ -51,8 +51,8 @@ if (exists($streams{$stream})) {
 	} else {
 		#$port_del = 80;
 		$extinf .= "Unicasted";
-        $url = $base_url;
-		$url_path = $streams{$stream}->{url};
+	        $url = $base_url;
+		$url_path = $streams{$stream}->{main_url};
 		if($streams{$stream}->{ts_enabled} eq 1) {
 			$url_path =~ s/.flv/.ts/;
 		}
