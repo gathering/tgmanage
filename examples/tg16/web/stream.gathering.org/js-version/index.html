@@ -1,0 +1,168 @@
+<!--
+	Resource links:
+	 * http://docs.videojs.com/docs/api/player.html#src
+	 * http://foundation.zurb.com/sites/docs/grid.html
+	 * http://stackoverflow.com/a/18197341/929999
+-->
+<html>
+	<head>
+		<!-- Style Sheets -->
+		<link rel="stylesheet" href="//dhbhdrzi4tiry.cloudfront.net/cdn/sites/foundation.min.css">
+		<link href="//vjs.zencdn.net/5.8/video-js.min.css" rel="stylesheet">
+
+		<!-- Load dependencies for video-js -->
+		<script src="//code.jquery.com/jquery-1.11.2.min.js"></script>
+
+		<!-- Emedded styles instead of a .css simply because
+			we're not using that much CSS anyway (speeds up the page-load)
+		-->
+		<style type="text/css">
+			body {
+				background-color: #C2C2C2;
+			}
+
+			footer.fixed .callout {
+				position: absolute;
+				bottom: 0px;
+				width: 100%;
+				margin: 0px;
+
+				text-align: center;
+			}
+
+			.stream-icon.download:hover {
+				cursor: pointer;
+			}
+
+			.vjs-big-play-button {
+				position: absolute;
+				left: 50% !important;
+				top: 50% !important;
+				margin-left: -45px;
+				margin-top: 60px;
+			}
+
+			.link_block {
+				background-color: #CACACA;
+			}
+		</style>
+
+		<!-- Same for JavaScript, embedding it will speed
+			up load-times on the page. And since there's not much
+			JavaScript to talk about we'd might as well embed it.
+		-->
+		<script type="text/javascript">
+
+			function generate_vlc(resource, title) {
+				var element = document.createElement('a');
+				element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent("#EXTM3U\n#EXTINF:-1,"+ title+"\n" + resource));
+				element.setAttribute('download', title+".vlc");
+
+				element.style.display = 'none';
+				document.body.appendChild(element);
+
+				element.click();
+
+				document.body.removeChild(element);
+			}
+
+			function swapVideo(title) {
+				/** -- Because updating a global scope variable in JavaScript is a PITA,
+				 we'll just go ahead and grab another copy of the config. It should be
+				 cached anyway in the browser and the server should respond with a 302.
+				**/
+				$.getJSON("config.json", function( config ) {
+					var player = videojs('stream', {techOrder: ["flash", "html5"]});
+					player.pause();
+					player.src(config['STREAMS'][title]['SOURCES']);
+					player.play();
+
+				});
+			}
+
+			$(document).ready(function() {
+				$.getJSON("config.json", function( config ) {
+					/** -- config.json
+					 Perform any tasks that utelize the config here.
+					 Mainly because updating global scope variables
+					 ina nested javascript functions is a nightmare.
+					 Especially when using asyncronous ajax calls
+					 (code using config might run before it's retrieved)
+					**/
+
+					/** -- Initialize the player (using DEFAULT_VIDEO index)
+					**/
+					var player = videojs('stream', {techOrder: ["flash", "html5"]});
+					player.src(config['STREAMS'][config['DEFAULT_VIDEO']]['SOURCES']);
+
+					/** -- If auto-play is true, press play
+					**/
+					if (config["VIDEO_AUTO_PLAY"] === true)
+						player.play();
+
+					/** -- Loop over the event streams
+					 now, we'll store them in two string containers
+					 during the loop, because we want to separate them
+					 into different <div>'s later.
+					**/
+					var event_streams = '';
+					var camera_streams = '';
+
+					$.each(config['STREAMS'], function(key, stream_conf) {
+						var template = '<div class="stream-item"> \
+											<img class="stream-icon" src="/img/icon_' + stream_conf['QUALITY'] + '.png"> \
+											<img class="stream-icon download" src="/resources/images/vlc.png" onClick="generate_vlc(\'' + stream_conf['VLC_LINK'] + '\', \'' + stream_conf['TITLE'] + '\');"> \
+											<img class="stream-icon" src="/img/icon_' + stream_conf['TYPE'] + '.png"> \
+											<a class="stream-link-content" href="#" onclick="swapVideo(\'' + key + '\');">' + stream_conf['TITLE'] + '</a> \
+										</div>';
+
+						if (stream_conf['TYPE'] == 'event')
+							event_streams += template;
+						else
+							camera_streams += template;
+					});
+
+					$('#event_links').append(event_streams);
+					$('#camera_links').append(camera_streams);
+				});
+
+			});
+
+		</script>
+	</head>
+<body>
+	<header>
+		<div class="row">
+			<div class="medium-12 columns">
+				<img src="http://stream.tg16.gathering.org/resources/images/thegathering.png" alt="company logo">
+			</div>
+		</div>
+	</header>
+	<div class="row">
+		<div class="medium-8 columns">
+			<video id=stream width=780 height=439 class="video-js vjs-default-skin" poster="/resources/images/loading.png" controls>
+				
+			</video>
+		</div>
+		<div class="medium-4 columns">
+			<div id="event_links" class="link_block" style="width: 100%; padding: 10px;">
+			</div>
+			<br>
+			<div id="camera_links" class="link_block" style="width: 100%; padding: 10px;">
+			</div>
+		</div>
+	</div>
+
+	<footer class="fixed">
+		<div class="row expanded callout secondary">
+			Problems with the non game streams? The easiest way to get a hold of us is to message <a href="irc://efnet.xs4all.nl:6667/#tg">ViD or DoXiD @EFNet (IRC)</a>.
+		</div>
+	</footer>	
+
+	<script src="//vjs.zencdn.net/5.8/video.js"></script>
+	<script type="text/javascript" src="./js/videojs-contrib-hls.js"></script>
+	<script type="text/javascript" src="./js/videojs-contrib-media-sources.js"></script>
+
+</body>
+</html>
+

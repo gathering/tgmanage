@@ -1,0 +1,85 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+use POSIX;
+
+my $dhcpd_cmd="/usr/local/bin/dhcpd-pools";
+my $dhcpd_lf="/var/lib/dhcp/dhcpd6.leases";
+my $dhcpd_cf="/etc/dhcp/dhcpd6.conf";
+
+my @output = `$dhcpd_cmd -c $dhcpd_cf -l $dhcpd_lf`;
+
+my $line;
+my $subnet;
+
+for $line (@output) {
+
+#All networks        2a06:5840:65::1000                      - 2a06:5840:65::9999                      35226    25      0.071      1    26     0.074
+#All networks        2a06:5840:66::1000                      - 2a06:5840:66::9999                      35226    44      0.125      0    44     0.125
+
+
+  next if ($line =~ /^(shared net name|Ranges|name|Shared networks|Sum of all)/) or (length $line <=  1);
+
+    if ($line =~ /([a-zA-Z0-9]+\:[a-zA-Z0-9]+\:[a-zA-Z0-9]+\::[a-zA-Z0-9]+)\s+\-\s([a-zA-Z0-9]+\:[a-zA-Z0-9]+\:[a-zA-Z0-9]+\::[a-zA-Z0-9]+)\s+([\d]+)\s+([\d]+)\s+([\d]+\.[\d]+)/) {
+
+      my $first_ip=$1;
+      my $last_ip=$2;
+      my $max=$3;
+      my $current=$4;
+      my $percent=ceil($5);     
+
+      my $octet;
+      my @octets;
+
+	print "IP: $percent\n";
+	
+	my $octet_count=0;
+        for $octet (@octets=(split('\::',$first_ip))) {
+	  if ($octet_count == 2) {
+	     $octet_count=0;
+	     $subnet = $first_ip;
+	     substr($subnet,-length($octet)) = ($octet-4);     
+	     $subnet =~ s/\./_/g;
+		
+	       if (defined $ARGV[0] && $ARGV[0] eq "config") {
+        	  print_config($subnet);
+	       } else {
+		print "dhcp_pool_${subnet}.value $percent\n";
+	     }
+        
+	 }
+
+	$octet_count++;  
+       
+	}
+
+   }
+
+}
+
+sub print_config {
+
+my $graph_name;
+
+$graph_name = shift;
+
+print <<EOF;
+graph_args --upper-limit 100 -l 0
+graph_title DHCP IPv4 Pools Status
+graph_vlabel %
+graph_category DHCP
+dhcp_pool_${graph_name}.label $graph_name
+EOF
+
+}
+
+# print_config;
+
+#shared net name     first ip           last ip            max   cur    percent  touch   t+c  t+c perc
+# All networks        88.92.0.4        - 88.92.0.62          59    26     44.068      2    28    47.458
+
+#}
+
+
+

@@ -17,6 +17,7 @@ include/tgmanage.cfg.sh
 planning/planning
 fap/tools/generate_distro_config_ae_event-options/
 nms/build/
+mibs/
 
 # OS-crap
 .DS_Store
