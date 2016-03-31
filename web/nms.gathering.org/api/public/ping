@@ -6,7 +6,7 @@ use nms::web;
 
 nms::web::setwhen('15s');
 
-my $q = $nms::web::dbh->prepare("SELECT DISTINCT ON (sysname) (now() - time) as age,sysname, latency_ms FROM ping NATURAL JOIN switches WHERE time in (select max(time) from ping where "
+my $q = $nms::web::dbh->prepare("SELECT DISTINCT ON (sysname) (" . $nms::web::now . " - time) as age,sysname, latency_ms FROM ping NATURAL JOIN switches WHERE time in (select max(time) from ping where "
         . $nms::web::when . " group by switch)");
 
 $q->execute();

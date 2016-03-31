@@ -373,14 +373,13 @@ function getDhcpColor(stop)
 
 function dhcpUpdater()
 {
-	var realnow = Date.now();
-	var now = Math.floor(realnow / 1000);
 	if (nmsData.dhcp == undefined || nmsData.dhcp.dhcp == undefined) {
 		return
 	}
 	if (nmsData.switches == undefined || nmsData.switches.switches == undefined) {
 		return;
 	}
+	var now = nmsData.dhcp.time;
 	try {
 	for (var sw in nmsData.switches.switches) {
 		var c = blue;
