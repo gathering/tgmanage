@@ -1,24 +1,13 @@
 # vim: ts=8:expandtab:sw=4:softtabstop=4
 
-# Magi.
 vcl 4.0;
 
-# Mer magi.
 backend default {
     .host = "127.0.0.1";
     .port = "8080";
 }
-acl yoda {
-    "185.110.148.11";
-    "127.0.0.1";
-    "::1";
-    "2a06:5841:1337::11";
-}
-# Sort magi.
+
 sub vcl_recv {
-    if (client.ip !~ yoda) {
-        return (synth(418,"GET RECKT"));
-    }
     if (req.url ~ "^/where" || req.url ~ "^/location") {
 	set req.url = "/api/public/location";
     }
