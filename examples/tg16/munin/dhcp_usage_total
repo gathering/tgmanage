@@ -1,0 +1,78 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+use POSIX;
+
+my $dhcpd_cmd="/usr/local/bin/dhcpd-pools";
+my $dhcpd_lf="/var/lib/dhcp/dhcpd.leases";
+my $dhcpd_cf="/etc/dhcp/dhcpd.conf";
+
+my @output = `$dhcpd_cmd -c $dhcpd_cf -l $dhcpd_lf`;
+
+my $line;
+my $max;
+my $current;
+my $percent;
+
+#Sum of all ranges:
+#name                   max   cur     percent  touch    t+c  t+c perc
+#All networks         22776  6348     27.871    3973  10321    45.315
+
+
+my $count=0;
+
+for $line (@output) {
+
+$count=1 if ($line =~ /^Sum of all ranges:/);
+
+if ($count >= 1 and $count <= 3) {
+
+   #print "DEBUG: $line\n";
+
+  if ($line =~ /\s+([\d]+)\s+([\d]+)\s+([\d]+\.[\d]+)/) {
+         $max=($1-$2);
+         $current=$2;
+         $percent=ceil($3);
+     
+	       if (defined $ARGV[0] && $ARGV[0] eq "config") {
+        	  print_config();
+	       } else {
+		print "dhcp_lease_total_current.value $current\n";
+		print "dhcp_lease_total_current_max.value $max\n";
+	     }
+        
+	 }
+$count++;
+	}
+
+}
+
+sub print_config {
+
+print <<EOF;
+graph_title DHCP Total leases
+graph_vlabel Total leases
+graph_category DHCP
+dhcp_lease_total_current.label Currently used IPv4 Leases
+dhcp_lease_total_current.min 0
+dhcp_lease_total_current.draw AREASTACK
+dhcp_lease_total_current_max.label IPv4 leases
+dhcp_lease_total_current_max.draw  AREASTACK
+dhcp_lease_total_current_max.label Total available IPv4 Leases 
+EOF
+
+}
+
+# print_config;
+
+#shared net name     first ip           last ip            max   cur    percent  touch   t+c  t+c perc
+# All networks        88.92.0.4        - 88.92.0.62          59    26     44.068      2    28    47.458
+
+#}
+
+#
+# dhcp_lease_total_current_max.colour #ff0000
+# dhcp_lease_total_current_max.label Totalt IPv4 Leases
+# dhcp_lease_total_current.colour #ff7000
+# pts.draw AREASTACK

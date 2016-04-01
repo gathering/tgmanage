@@ -1,4 +1,4 @@
-#!/usr/bin/perl -I /root/tgmanage/web/stream.gathering.org/streamlib
+#!/usr/bin/perl -I /root/tgmanage/web/stream.gathering.org/streamlib/
 use warnings;
 use strict;
 use CGI;
@@ -11,15 +11,20 @@ use HTML::Template;
 # apt-get install libhtml-template-perl
 use stream;
 use stream::config;
-use MIME::Base64;
+#use MIME::Base64;
+use URI::Escape;
 
 my $client = CGI->new;
-
+my $video_url_mp4;
 my $v4net = $stream::config::v4net;
 my $v6net = $stream::config::v6net;
 my $tg = $stream::config::tg;
 my $tg_full = $stream::config::tg_full;
 my $video_url = $stream::config::video_url;
+my $video_url_fallback = $stream::config::video_url_fallback;
+if($stream::config::video_url_mp4) {
+$video_url_mp4 = $stream::config::video_url_mp4;
+}
 my %streams = %stream::config::streams;
 
 my $force_unicast = $client->param('forceunicast');
@@ -47,16 +52,30 @@ $template->param(STREAMS => \@streams);
 $template->param(CAMSTREAMS => \@camstreams);
 $template->param(NOHEADER => $no_header);
 if(exists $input{url}) {
-	my $decodedUrl = decode_base64($input{url});
-	# Check against XS-scripting:
-	if (index($decodedUrl, 'cubemap.tg15.gathering.org/') != -1) {
-		$template->param(VIDEO_URL => $decodedUrl);
-	} else {
-		$template->param(VIDEO_URL => $video_url);
+	my $url = uri_unescape($input{url});
+
+	if ($url ~~ %streams) {
+		$template->param(VIDEO_URL_MAIN => $streams{$url}->{main_url});
+		$template->param(VIDEO_URL_FALLBACK => $streams{$url}->{fallback_url});
+                if($streams{$url}->{mp4_url}) {
+                $template->param(VIDEO_URL_MP4 => $streams{$url}->{mp4_url});
+                }
 	}
+	# Check against XS-scripting:
+	#if (index($decodedUrl, 'cubemap.tg16.gathering.org/') != -1) {
+	#	$template->param(VIDEO_URL => $decodedUrl);
+	#} elsif (index($decodedUrl, 'stream.tg16.gathering.org/') != -1) {
+	#	$template->param(VIDEO_URL => $decodedUrl);
+	#} else {
+	#	$template->param(VIDEO_URL => $video_url);
+	#}
 	$template->param(VIDEO_AUTO_PLAY => 'true');
 } else {
-	$template->param(VIDEO_URL => $video_url);
+	$template->param(VIDEO_URL_MAIN => $video_url);
+	$template->param(VIDEO_URL_FALLBACK => $video_url_fallback);
+        if($video_url_mp4) {
+        $template->param(VIDEO_URL_MP4 => $video_url_mp4);
+        }
 	$template->param(VIDEO_AUTO_PLAY => 'false');
 }
 print $template->output();
@@ -71,7 +90,7 @@ sub loop_webcams() {
 			$multicast = "unicast" if (defined $force_unicast && $force_unicast == 1 || not $is_local);
 
 			my $vlc_link = sprintf($vlc_url, $multicast, $streams{$name}->{interlaced});
-			my $href_link = '<a class="stream-link-content" href="#" onclick="swapVideo(\'' . $streams{$name}->{url} . '\');">';
+			my $href_link = '<a class="stream-link-content" href="#" onclick="swapVideo(\'' . $name . '\');">';
 
 			my %hash = (
 				'href' => $href_link,

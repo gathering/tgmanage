@@ -1,0 +1,80 @@
+$ORIGIN .
+$TTL 3600	; 1 hour
+1.4.8.5.6.0.a.2.ip6.arpa IN SOA	r2-d2.tg16.gathering.org. abuse.gathering.org. (
+				2016032258 ; serial
+				3600       ; refresh (1 hour)
+				1800       ; retry (30 minutes)
+				608400     ; expire (1 week 1 hour)
+				3600       ; minimum (1 hour)
+				)
+			NS	c-3po.tg16.gathering.org.
+			NS	r2-d2.tg16.gathering.org.
+$ORIGIN 0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.7.3.3.1.1.4.8.5.6.0.a.2.ip6.arpa.
+2			PTR	c-3po.tg16.gathering.org.
+3			PTR	anakin.tg16.gathering.org.
+4			PTR	padme.tg16.gathering.org.
+5			PTR	luke.tg16.gathering.org.
+6			PTR	leia.tg16.gathering.org.
+7			PTR	han.tg16.gathering.org.
+8			PTR	rey.tg16.gathering.org.
+			PTR	cubemap.tg16.gathering.org.
+9			PTR	finn.tg16.gathering.org.
+			PTR	cubemap.tg16.gathering.org.
+$ORIGIN 1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.7.3.3.1.1.4.8.5.6.0.a.2.ip6.arpa.
+0			PTR	bb-8.tg16.gathering.org.
+1			PTR	nms6.tg16.gathering.org.
+			PTR	yoda.tg16.gathering.org.
+2			PTR	obi-wan.tg16.gathering.org.
+3			PTR	chewbacca.tg16.gathering.org.
+4			PTR	fortiwlc-tg01.tg16.gathering.org.
+5			PTR	fortiwlc-tg02.tg16.gathering.org.
+6			PTR	fortimgmt-tg01.tg16.gathering.org.
+7			PTR	spock.tg16.gathering.org.
+8			PTR	funnyfart.tg16.gathering.org.
+9			PTR	kvm-rack2.tg16.gathering.org.
+$ORIGIN 2.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.7.3.3.1.1.4.8.5.6.0.a.2.ip6.arpa.
+0			PTR	kvm-rack3.tg16.gathering.org.
+1			PTR	mitm.tg16.gathering.org.
+2			PTR	kirk.tg16.gathering.org.
+3			PTR	cage.tg16.gathering.org.
+4			PTR	luring.tg16.gathering.org.
+5			PTR	lyn.tg16.gathering.org.
+6			PTR	rakker.tg16.gathering.org.
+7			PTR	wc.tg16.gathering.org.
+$ORIGIN 6.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.b.8.4.1.1.4.8.5.6.0.a.2.ip6.arpa.
+4			PTR	telegw.tg16.gathering.org.
+5			PTR	nocgw.tg16.gathering.org.
+6			PTR	coregw.tg16.gathering.org.
+7			PTR	standgw.tg16.gathering.org.
+$ORIGIN 7.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.b.8.4.1.1.4.8.5.6.0.a.2.ip6.arpa.
+0			PTR	southgw.tg16.gathering.org.
+1			PTR	swinggw.tg16.gathering.org.
+2			PTR	loggw.tg16.gathering.org.
+3			PTR	northgw.tg16.gathering.org.
+4			PTR	creativiagw.tg16.gathering.org.
+5			PTR	stagegw.tg16.gathering.org.
+6			PTR	crewgw.tg16.gathering.org.
+7			PTR	audgw.tg16.gathering.org.
+8			PTR	gamestagegw.tg16.gathering.org.
+$ORIGIN 0.1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.b.8.4.1.1.4.8.5.6.0.a.2.ip6.arpa.
+0			PTR	distro0.tg16.gathering.org.
+1			PTR	distro1.tg16.gathering.org.
+2			PTR	distro2.tg16.gathering.org.
+3			PTR	distro3.tg16.gathering.org.
+4			PTR	distro4.tg16.gathering.org.
+5			PTR	distro5.tg16.gathering.org.
+6			PTR	distro6.tg16.gathering.org.
+7			PTR	distro7.tg16.gathering.org.
+$ORIGIN 0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.6.7.1.0.c.8.4.1.1.4.8.5.6.0.a.2.ip6.arpa.
+1			PTR	telefw-telegw-outside.tg16.gathering.org.
+2			PTR	telegw-telefw-outside.tg16.gathering.org.
+$ORIGIN 0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.8.7.1.0.c.8.4.1.1.4.8.5.6.0.a.2.ip6.arpa.
+1			PTR	telefw-telegw-inside.tg16.gathering.org.
+2			PTR	telegw-telefw-inside.tg16.gathering.org.
+$ORIGIN 9.4.1.1.4.8.5.6.0.a.2.ip6.arpa.
+2.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.a PTR r2-d2.tg16.gathering.org.
+$ORIGIN 6.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.b.9.4.1.1.4.8.5.6.0.a.2.ip6.arpa.
+6			PTR	palpatine.tg16.gathering.org.
+7			PTR	grievous.tg16.gathering.org.
+8			PTR	kylo.tg16.gathering.org.
+9			PTR	dooku.tg16.gathering.org.

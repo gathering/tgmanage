@@ -1,0 +1,144 @@
++++ Statistics Dump +++ (1459075501)
+++ Incoming Requests ++
+            77937908 QUERY
+             1113362 UPDATE
+++ Incoming Queries ++
+            54702588 A
+               79660 NS
+                 275 CNAME
+              147201 SOA
+             3342226 PTR
+                 263 MX
+              121555 TXT
+            18258507 AAAA
+             1111552 SRV
+                 162 NAPTR
+                 802 A6
+                 458 DS
+                 448 DNSKEY
+                   1 SPF
+               57800 IXFR
+               39269 ANY
+               75141 Others
+++ Outgoing Queries ++
+[View: default]
+             8006697 A
+               38680 NS
+                 265 CNAME
+                4138 SOA
+              833291 PTR
+                 169 MX
+               47342 TXT
+             2176948 AAAA
+               40378 SRV
+                  42 NAPTR
+                   2 DS
+                   1 DNSKEY
+                   1 SPF
+                1863 ANY
+                2010 Others
+[View: _bind]
+++ Name Server Statistics ++
+            66754784 IPv4 requests received
+            12296489 IPv6 requests received
+             1837622 requests with EDNS(0) received
+             1112010 requests with TSIG received
+               76579 TCP requests received
+                 426 auth queries rejected
+             3209095 recursive queries rejected
+               15797 update requests rejected
+            78686956 responses sent
+               24167 truncated responses sent
+             1837579 responses with EDNS(0) sent
+             1112010 responses with TSIG sent
+            65327152 queries resulted in successful answer
+            12741294 queries resulted in authoritative answer
+            61472984 queries resulted in non authoritative answer
+                 551 queries resulted in referral answer
+             4200038 queries resulted in nxrrset
+              149792 queries resulted in SERVFAIL
+             4686537 queries resulted in NXDOMAIN
+             8325033 queries caused recursion
+              302525 duplicate queries received
+                3992 queries dropped
+             3209521 other query failures
+               57800 requested transfers completed
+              666138 updates completed
+              431427 updates failed
+              393042 updates rejected due to prerequisite failure
+                   2 responses dropped for rate limits
+++ Zone Maintenance Statistics ++
+               64165 IPv4 notifies sent
+               64165 IPv6 notifies sent
+++ Resolver Statistics ++
+[Common]
+                  27 mismatch responses received
+[View: default]
+             9768682 IPv4 queries sent
+             1383145 IPv6 queries sent
+             9541352 IPv4 responses received
+             1353472 IPv6 responses received
+              316937 NXDOMAIN received
+               42389 SERVFAIL received
+                2404 FORMERR received
+              262513 other errors received
+                4612 EDNS(0) query failures
+               11063 truncated responses received
+               10648 lame delegations received
+              685118 query retries
+              261444 query timeouts
+              312925 IPv4 NS address fetches
+              301586 IPv6 NS address fetches
+                6118 IPv4 NS address fetch failed
+              233646 IPv6 NS address fetch failed
+             2450534 queries with RTT < 10ms
+             4729567 queries with RTT 10-100ms
+             3696215 queries with RTT 100-500ms
+                6941 queries with RTT 500-800ms
+                  94 queries with RTT 800-1600ms
+                  27 queries with RTT > 1600ms
+[View: _bind]
+++ Cache DB RRsets ++
+[View: default]
+               50345 A
+              146641 NS
+               12048 CNAME
+                   3 SOA
+               81483 PTR
+                   3 MX
+                 328 TXT
+                6287 AAAA
+                  14 SRV
+                   2 NAPTR
+                1299 DS
+               25955 RRSIG
+               22671 NSEC
+                   1 DNSKEY
+                  14 !A
+                   1 !MX
+                 533 !AAAA
+               37220 NXDOMAIN
+[View: _bind (Cache: _bind)]
+++ Socket I/O Statistics ++
+             9823665 UDP/IPv4 sockets opened
+             1417260 UDP/IPv6 sockets opened
+                5931 TCP/IPv4 sockets opened
+                5137 TCP/IPv6 sockets opened
+             9823649 UDP/IPv4 sockets closed
+             1417252 UDP/IPv6 sockets closed
+               23798 TCP/IPv4 sockets closed
+               64961 TCP/IPv6 sockets closed
+                2068 UDP/IPv4 socket bind failures
+                  90 UDP/IPv6 socket bind failures
+                  20 UDP/IPv6 socket connect failures
+             9762754 UDP/IPv4 connections established
+             1378010 UDP/IPv6 connections established
+                5549 TCP/IPv4 connections established
+                5084 TCP/IPv6 connections established
+               17871 TCP/IPv4 connections accepted
+               59826 TCP/IPv6 connections accepted
+               10626 UDP/IPv4 recv errors
+                1225 UDP/IPv6 recv errors
+                  14 TCP/IPv4 recv errors
+++ Per Zone Query Statistics ++
+--- Statistics Dump --- (1459075501)

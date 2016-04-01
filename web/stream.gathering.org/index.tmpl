@@ -6,15 +6,14 @@
 
 	<!-- Mobile specific
 	---------------------->
-	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="viewport" content="width=device-width, initial-scale=0.35">
 
 	<!-- CSS specifics
 	-------------------->
-	<link rel="stylesheet" href="/resources/css/normalize.css">
-	<link rel="stylesheet" href="/resources/css/skeleton.css">
-	<link rel="stylesheet" href="/resources/css/core.css">
-	<link rel="stylesheet" href="/resources/css/button-styles.css">
-	<link rel="stylesheet" href="/resources/css/video-js.css">
+	<link rel="stylesheet" href="./resources/css/normalize.css">
+	<link rel="stylesheet" href="./resources/css/skeleton.css">
+	<link rel="stylesheet" href="./resources/css/core.css">
+	<link rel="stylesheet" href="./resources/css/button-styles.css">
 
 	<style type="text/css">
 		.vjs-big-play-button {
@@ -28,14 +27,13 @@
 
 	<!-- JavaScript specifics
 	---------------------------->
-	<script type="text/javascript" src="/resources/js/jwplayer.js"></script> 
-	<script type="text/javascript" src="/resources/js/video.js"></script>
-	<script type="text/javascript" src="/resources/js/video-quality-selector.js"></script>
 	<script src="//code.jquery.com/jquery-1.11.2.min.js"></script>
+	<link href="//vjs.zencdn.net/5.8/video-js.min.css" rel="stylesheet">
+	<script type="text/javascript" src="//www.gstatic.com/cv/js/sender/v1/cast_sender.js"></script>
 	
 	<script type="text/javascript">
 		function swapVideo (url) {
-			window.location = '/?url=' + window.btoa(url);
+			window.location = '/?url=' + encodeURIComponent(url);//window.btoa(url);
 		}
 
 		var _float = true;
@@ -78,7 +76,7 @@
 			right: 0px;
 			width: 531px;
 			height: 396px;
-			background-image: url('/resources/images/pixel-white.png');
+			//background-image: url('/resources/images/floater.svg');
 			background-size: cover;
 		}
 
@@ -94,26 +92,21 @@
 		}
 	</style>
 
+<!-- creative, event och game -->
 </head>
 <body>
 	<div id="header">
-		<h1>The Gathering <TMPL_VAR NAME=TG_FULL> Streams</h1>
-	</div>
-	<div id="floater">
-		
-	</div>
-	<div id="bubble">
-		<div class="bubble">
-			If you hate me, click me!
-		</div>
+		<img src="resources/images/thegathering.png" width="400">
 	</div>
 	<div class="section">
 		<div class="container">
 			<div class="row">
 				<div class="twelve columns">
 					<TMPL_UNLESS NAME=NOHEADER>
-						<video id="stream" class="videoframe video-js vjs-default-skin" controls preload="auto" poster="/resources/images/loading.png" data-setup='{ "autoplay": <TMPL_VAR NAME=VIDEO_AUTO_PLAY>, "plugins" : { "resolutionSelector" : { "default_res" : "720", "force_typesz" : [ "video/flv" ] } } }'>
-							<source src="<TMPL_VAR NAME=VIDEO_URL>" id="videodata" type="video/flv" data-res="720">
+						<video id="stream" class="videoframe video-js vjs-default-skin" controls preload="auto" poster="/resources/images/loading.png" data-setup='{ "autoplay" : <TMPL_VAR NAME=VIDEO_AUTO_PLAY>, "techOrder": ["flash", "html5"]}'>
+							<source src="<TMPL_VAR NAME=VIDEO_URL_MAIN>" id="videodata" type="video/flv" data-res="720">
+							<TMPL_IF NAME=VIDEO_URL_MP4><source src="<TMPL_VAR NAME=VIDEO_URL_MP4>" id="videodata" type="video/mp4" data-res="720"></TMPL_IF>
+							<source src="<TMPL_VAR NAME=VIDEO_URL_FALLBACK>" id="videodata" type="application/x-mpegURL" data-res="720">
 							<p class="vjs-no-js">
 								To view this video please enable JavaScript, and consider upgrading to a web browser that <a href="http://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a>
 							</p>
@@ -158,6 +151,80 @@
 		</div>
 	</div>
 
+
+<script src="//vjs.zencdn.net/5.8/video.js"></script>
+<script src="./resources/js/videojs-contrib-hls.js"></script>
+<script>
+
+// GOOGLE CAST
+
+var current_media;
+var session;
+
+function show_castposter() {
+	stop_loader();
+	castposter.style.display = 'block';
+	loader.style.display = 'none';
+	video.style.display = 'none';
+}
+
+function hide_castposter() {
+	castposter.style.display = 'none';
+	loader.style.display = 'none';
+	video.style.display = 'inline';
+}
+
+function stop_casting() {
+	hide_castposter();
+	if (current_media) {
+		var media = current_media;
+		current_media = null;
+		media.stop();
+	}
+	if (session) {
+		session.stop();
+		session = null;
+	}
+}
+
+function cast_current_video() {
+	if (session === undefined || selected_stream === undefined) {
+		return;
+	}
+	var title = streams[selected_stream].name;
+	var url = streams[selected_stream].url;
+	document.getElementById('casttarget').textContent = session.receiver.friendlyName;
+	show_castposter();
+	video.pause();
+	// If we are already casting this, do nothing.
+	if (current_media && current_media.media.contentId === url) {
+		console.log("Already casting " + url + " to " + session.receiver.friendlyName + " (" + current_media.playerState + ")");
+		return;
+	}
+	if (current_media) {
+		current_media = null;  // Signal to on_media_status_update.
+	}
+	var media_info = new chrome.cast.media.MediaInfo(url, "video/mp4");
+	media_info.metadata = new chrome.cast.media.GenericMediaMetadata();
+	media_info.metadata.title = global_title;  //  + ': ' + title;
+	var request = new chrome.cast.media.LoadRequest(media_info);
+	session.loadMedia(request,
+		on_media_discovered.bind(this, 'loadMedia'),
+		on_media_error);
+}
+
+var techOrder = ["html5", "flash"];
+if (navigator.userAgent.match(/Trident|Edge|OPR/)) {
+	console.log("hit!");
+        techOrder = ["flash", "html5"];
+	//var video = document.getElementById('video');
+	//video.src = "http://bleh";
+}
+var player = videojs('stream', {
+  techOrder: techOrder
+});
+player.play();
+</script>
 </body>
 </html>
 

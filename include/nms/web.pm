@@ -15,7 +15,7 @@ package nms::web;
 use base 'Exporter';
 our %get_params;
 our %json;
-our @EXPORT = qw(finalize_output json $dbh db_safe_quote %get_params get_input %json);
+our @EXPORT = qw(finalize_output now json $dbh db_safe_quote %get_params get_input %json);
 our $dbh;
 our $now;
 our $when;
@@ -66,7 +66,7 @@ sub setwhen {
 		$offset = $_[1];
 	}
 	if (defined($get_params{'now'})) {
-		$now = db_safe_quote('now') . "::timestamp ";
+		$now = db_safe_quote('now') . "::timestamp with time zone ";
 		$cc{'max-age'} = "3600";
 	}
 	$now = "(" . $now . " - '" . $offset . "'::interval)";
@@ -77,10 +77,10 @@ sub finalize_output {
 	my $query;
 	my $hash = Digest::SHA::sha512_base64(FreezeThaw::freeze(%json));
 	$dbh->commit;
-	$query = $dbh->prepare('select to_char(' . $now . ', \'YYYY-MM-DD"T"HH24:MI:SS\') as time;');
+	$query = $dbh->prepare('select extract(epoch from date_trunc(\'seconds\', ' . $now . ')) as time;');
 	$query->execute();
 
-	$json{'time'} = $query->fetchrow_hashref()->{'time'};
+	$json{'time'} = int($query->fetchrow_hashref()->{'time'});
 	$json{'hash'} = $hash;
 	
 	printcc;

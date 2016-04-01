@@ -1,38 +1,52 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
+	<meta charset="utf-8">
 	<title>The Gathering <TMPL_VAR NAME=TG_FULL> Streams</title>
-	<link rel="stylesheet" type="text/css" href="pre-tg15/style.css" media="all">
-	<script type="text/javascript" src="pre-tg15/jwplayer.js"></script> 
+        <script src="//code.jquery.com/jquery-1.11.2.min.js"></script>
+        <link href="//vjs.zencdn.net/5.8/video-js.min.css" rel="stylesheet">
+	<script type="text/javascript" src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js"></script>
+	<link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Droid+Sans" />
+	<style>
+
+body {
+	margin: 0;
+}
+
+.video-js {
+	padding-bottom: 55%; /* video dimensions - height/width */
+	height: 100%;
+	width: 100%;
+}
+	</style>
 </head>
 <body>
-	<div id="innhold">
-		<TMPL_UNLESS NAME=NOHEADER>
-			<h1>The Gathering <TMPL_VAR NAME=TG_FULL> Streams</h1>
-			<embed type="application/x-shockwave-flash" src="pre-tg15/player.swf"
-				width="800" height="450" style="undefined" id="mplf" name="mplf" quality="high"
-				allowfullscreen="true" allowscriptaccess="always" wmode="opaque"
-				stretching="exactfit"
-				flashvars="stretching=exactfit&amp;file=http://wat.gathering.org:9094/southcam.flv&amp;autostart=true"></embed>
-			<p>&nbsp;</p>
-		</TMPL_UNLESS>
-		
-		<TMPL_LOOP NAME="STREAMS">
-			<div class="stream-link">
-				<div class="stream-icon"><img src="img/icon_<TMPL_VAR NAME=QUALITY>.png" /> <img src="img/icon_<TMPL_VAR NAME=TYPE>.png" /> <TMPL_IF NAME=LOCATION><img src="img/icon_<TMPL_VAR NAME=LOCATION>.png"></TMPL_IF></div>
-				<div class="stream-link-content">
-					<a href="<TMPL_VAR NAME=TITLE_LINK>"><TMPL_VAR NAME=TITLE></a><br>
-					Source: <TMPL_VAR NAME=SOURCE><br>
-					Delivery: <TMPL_VAR NAME=delivery> <TMPL_IF NAME=IS_MULTICAST>(<a href='<TMPL_VAR NAME=UNICAST_LINK>'>problems? try unicast vlc link here</a>)</TMPL_IF>
-					
-				</div>
-			</div>
-		</TMPL_LOOP>
-	</div>
+<div class="losvideos">
+					<TMPL_UNLESS NAME=NOHEADER>
+						<video id="stream" class="videoframe video-js vjs-default-skin" controls preload="auto" poster="/resources/images/loading.png" data-setup='{ "autoplay" : true }'>
+							<TMPL_IF NAME=VIDEO_URL_MP4><source src="<TMPL_VAR NAME=VIDEO_URL_MP4>" id="videodata" type="video/mp4"></TMPL_IF>
+							<source src="<TMPL_VAR NAME=VIDEO_URL_MAIN>" id="videodata" type="video/flv">
+							<source src="<TMPL_VAR NAME=VIDEO_URL_FALLBACK>" id="videodata" type="application/x-mpegURL">
+							<p class="vjs-no-js">
+								To view this video please enable JavaScript, and consider upgrading to a web browser that <a href="http://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a>
+							</p>
+						</video>
+					</TMPL_UNLESS>
+</div>
+<script src="//vjs.zencdn.net/5.8/video.js"></script>
+<script src="./resources/js/videojs-contrib-hls.js"></script>
+<script>
 
+var techOrder = ["html5", "flash"];
+if (navigator.userAgent.match(/Trident|Edge/)) {
+	techOrder = ["flash", "html5"];
+}
 
-	<p>Problems with the non game streams? The easiest way to get a hold of us is on IRC (EFNet); Either of ViD or DoXiD should be available if there's too much traffic on #tg to be heard.</p>
-	<p><a target="_blank" href="http://stream.tg<TMPL_VAR NAME="TG">.gathering.org">http://stream.tg<TMPL_VAR NAME="TG">.gathering.org</a></p>
-
+var player = videojs('stream', {
+  techOrder: techOrder
+});
+player.play();
+</script>
 </body>
 </html>
 

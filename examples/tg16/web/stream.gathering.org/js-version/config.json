@@ -1,0 +1,28 @@
+{
+	"TG" : "16",
+	"TG_FULL" : "2016",
+	"VIDEO_AUTO_PLAY" : "false",
+	"DEFAULT_VIDEO" : "mainstage",
+	"STREAMS" : {
+		"mainstage" : {"TYPE" : "event",
+					   "SOURCES" : [{"src" : "http://cubemap.tg16.gathering.org/event.flv", "type": "video/flv"}, {"src": "http://stream.tg16.gathering.org/hls/event.m3u8", "type" : "application/x-mpegURL"}],
+					   "TITLE" : "Event/Stage (1080p)",
+					   "QUALITY" : "hd",
+					   "VLC_LINK" : "http://cubemap.tg16.gathering.org/southcam.ts"
+					  },
+
+		"south-raw" : {"TYPE" : "camera",
+					   "SOURCES" : [{"src" : "http://cubemap.tg16.gathering.org/southcam.flv", "type": "video/flv"}, {"src": "http://stream.tg16.gathering.org/hls/southcamlb.m3u8", "type" : "application/x-mpegURL"}],
+					   "TITLE" : "Webcam South (720p)",
+					   "QUALITY" : "hd",
+					   "VLC_LINK" : "http://cubemap.tg16.gathering.org/southcam.ts"
+					  },
+
+		"noccam" : {"TYPE" : "camera",
+					"SOURCES" : [{"src" : "http://cubemap.tg16.gathering.org/noccam.flv", "type": "video/flv"}, {"src": "http://stream.tg16.gathering.org/hls/noccam.m3u8", "type" : "application/x-mpegURL"}],
+					"TITLE" : "Webcam NOC (720p)",
+					"QUALITY" : "hd",
+					"VLC_LINK" : "http://cubemap.tg16.gathering.org/noccam.ts"
+				   }
+		}
+}

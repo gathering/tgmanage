@@ -1,5 +1,5 @@
 body {
-  background-color: rgb(32, 32, 64);
+  background-color: rgb(54, 54, 54);
   color: #FFFFFF;
 }
 
@@ -65,9 +65,9 @@ body {
   padding-top: 150px;
 }
 
-.videoframe {
-  left: 50%;
-}
+/*.videoframe {*/
+/*  left: 50%;*/
+/*}*/
 
 .section {
   padding: 8rem 0 7rem;
@@ -98,6 +98,10 @@ body {
   min-height: 540px;
   margin-bottom: 10px;
   border: 1px solid #000000;
+}
+
+.vjs-poster {
+  background-size: cover !important;
 }
 
 .footer {
@@ -164,11 +168,11 @@ body {
     min-width: 320px;
     min-height: 183px;
   }
-    .videoframe {
+    /*.videoframe {
       margin-left: -160px;
-    }
-    .videoframe:-webkit-full-screen { margin-left: 0px; }
-    .videoframe:-moz-full-screen { margin-left: 0px; }
+    }*/
+    /*.videoframe:-webkit-full-screen { margin-left: 0px; }
+    .videoframe:-moz-full-screen { margin-left: 0px; }*/
 }
 
 /* Bigger than 920 */
@@ -188,11 +192,13 @@ body {
     min-width: 500px;
     min-height: 280px;
   }
+	/*
     .videoframe {
-      margin-left: -250px;
+      margin-left: -490px;
     }
     .videoframe:-webkit-full-screen { margin-left: 0px; }
     .videoframe:-moz-full-screen { margin-left: 0px; }
+*/
 }
 
 /* Bigger than 1200 */
@@ -210,11 +216,13 @@ body {
     min-width: 700px;
     min-height: 393px;
   }
+/*
     .videoframe {
       margin-left: -350px;
     }
     .videoframe:-webkit-full-screen { margin-left: 0px; }
     .videoframe:-moz-full-screen { margin-left: 0px; }
+*/
 }
 
 /* Bigger than 1600 */
@@ -234,9 +242,11 @@ body {
     height: 540px;
     min-height: 540px;
   }
+/*
     .videoframe {
       margin-left: -480px;
     }
     .videoframe:-webkit-full-screen { margin-left: 0px; }
     .videoframe:-moz-full-screen { margin-left: 0px; }
+*/
 }

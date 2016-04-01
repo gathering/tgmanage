@@ -1,0 +1,410 @@
+<html>
+  <head>
+    <title>Steinar-style Videostream</title>
+    <link rel="stylesheet" href="reset.css" type="text/css" media="screen"/>
+    <link rel="stylesheet" href="style.css" type="text/css" media="screen"/>
+    <link rel="stylesheet" href="media-queries.css" type="text/css" media="screen"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+  </head>
+<body>
+  <style>
+    #videowrapper {
+      margin-top: 0.5em;
+      margin-left: auto;
+      margin-right: auto;
+      position: relative;
+    }
+    #video {
+      max-height: 100%;
+      max-width: 100%;
+      width: auto;
+      border: 1px solid black;
+    }
+    #loader {
+      width: 100%;
+      display: none;
+      background: black;
+      border: 1px solid black;
+    }
+    #castposter {
+      width: 100%;
+      display: none;
+      background: black;
+      border: 1px solid black;
+    }
+    #castposteri {
+      margin-top: 0; 
+      margin-bottom: 0;
+      position: relative;
+    }
+    #castposteri:after {
+      padding-top: 56.25%;  /* 16:9 aspect */
+      display: block;
+      content: '';
+    }
+    #castposterii {
+      position: absolute; top: 0; bottom: 0; left: 0; right: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    #castposteriii {
+      color: white;
+    }
+    #castposteriii p { margin-bottom: 0; }
+    #streamchoice {
+      margin-bottom: 0;
+    }
+  </style>
+
+<p id="streamchoice"></p>
+
+<div id="videowrapper">
+  <canvas id="loader"></canvas>
+  <div id="castposter"><div id="castposteri"><div id="castposterii"><div id="castposteriii"><p id="nowcasting">Now casting to <strong id="casttarget"></strong></p><p><a href="javascript:stop_casting();">Stop casting</a></p></div></div></div></div>
+  <video controls="controls" id="video" preload="none"> 
+    <source src="http://cubemap.tg16.gathering.org/event.mp4" type="video/mp4">
+  </video>
+</div>
+
+<p style="margin-top: 1em; margin-bottom: 0">For use with a non-web player (e.g. VLC), use
+  <a id="vlcurl"></a> (MP4) or <a id="vlchlsurl"></a> (HLS).
+  Also <a href="https://chrome.google.com/webstore/detail/google-cast/boadgeojelhgndaghljhdicfkmllpafd" id="casturl">Google Cast</a> enabled.</p>
+
+<script type="text/javascript" src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js"></script>
+<script>
+<!--
+
+// CONFIG
+
+var global_title = 'Scenesat live stream';
+var enable_loader = false;
+var streams = [
+	{
+		name: "720p (2.0 Mbit/sec)",
+		url: "http://cubemap.tg16.gathering.org/event.mp4",
+		hlsurl: "http://stream.tg16.gathering.org/hls/event.m3u8",
+		width: 1280,
+		height: 720
+	},
+];
+
+// GLOBALS
+
+var video = document.getElementById('video');
+var loader = document.getElementById('loader');
+var castposter = document.getElementById('castposter');
+var use_hls;
+
+// LOADER PICTURE
+
+// C64 font. Yes, mixing up Amiga and C64 is a sin, I know.
+var text = [
+	' xx       xxxx     xx    xxxx     xxxx   xx  xx   xxxx                          ',
+	' xx      xx  xx   xxxx   xx xx     xx    xxx xx  xx  xx                         ',
+	' xx      xx  xx  xx  xx  xx  xx    xx    xxxxxx  xx                             ',
+	' xx      xx  xx  xxxxxx  xx  xx    xx    xxxxxx  xx xxx                         ',
+	' xx      xx  xx  xx  xx  xx  xx    xx    xx xxx  xx  xx                         ',
+	' xx      xx  xx  xx  xx  xx xx     xx    xx  xx  xx  xx    xx      xx      xx   ',
+	' xxxxxx   xxxx   xx  xx  xxxx     xxxx   xx  xx   xxxx     xx      xx      xx   '
+];
+
+function raster() {
+	var ctx = loader.getContext("2d");
+	var width = 352;  // overscan
+	var height = 288;  // overscan
+	var border_width = 18;  // really 16
+	var border_height = 24;  // really 16
+	var scalefac_w = loader.width/width;
+	var scalefac_h = loader.height/height;
+
+	for (var y = 0; y < height; ++y) {
+		var r = Math.round(Math.random() * 16).toString(16);
+		var g = Math.round(Math.random() * 16).toString(16);
+		var b = Math.round(Math.random() * 16).toString(16);
+		ctx.fillStyle = '#' + r + r + g + g + b + b;
+
+		var start_y = Math.round(y * scalefac_h);
+		var next_y = Math.round((y + 1) * scalefac_h);
+		if (y < border_height || y >= height-border_height) {
+			ctx.fillRect(0, start_y, loader.width, next_y - start_y);
+		} else {
+			ctx.fillRect(0, start_y, border_width * scalefac_w, next_y - start_y);
+			ctx.fillRect((width - border_width) * scalefac_w, start_y, border_width * scalefac_w, next_y - start_y);
+		}
+	}
+
+	// Use the same scalefactor to get square pixels despite the changed aspect.
+	var scalefac_ch = Math.round(scalefac_h);
+	if (scalefac_ch < 1) scalefac_ch = 1;
+	var offset_y = Math.round(loader.height / 2 - text.length * scalefac_ch / 2);
+	var offset_x = Math.round(loader.width / 2 - text[0].length * scalefac_ch / 2);
+
+	ctx.fillStyle = '#ffffff';
+	for (var line = 0; line < text.length; ++line) {
+		var start_y = Math.round(line * scalefac_ch) + offset_y;
+		for (var ch = 0; ch < text[line].length; ++ch) {
+			if (text[line].substr(ch, 1) === ' ') {
+				continue;
+			}
+
+			var start_x = Math.round(ch * scalefac_ch) + offset_x;
+			ctx.fillRect(start_x, start_y, scalefac_ch, scalefac_ch);
+		}
+	}
+}
+
+var loader_interval = null;
+
+function start_loader() {
+	if (!enable_loader) return;
+
+	if (video.readyState === 4) {
+		// No need to show a loader screen. This can happen because we call start_loader()
+		// on the 'play' event, but we could already have enough buffering (especially on
+		// mobile, where the play event is delayed), so we'd never get the 'canplay' event.
+		console.log("Not starting loader screen, already enough to play");
+		return;
+	}
+
+	console.log("STARTING LOADER SCREEN");
+	var ctx = loader.getContext("2d");
+	ctx.clearRect(0, 0, loader.width, loader.height);
+	loader_interval = setInterval(raster, 1000/20);  // 20 fps ought to be enough for anyone
+
+	loader.style.display = 'inline';
+	video.style.display = 'none';
+	castposter.style.display = 'none';
+}
+
+function stop_loader() {
+	if (!enable_loader) return;
+	
+	console.log("STOPPING LOADER SCREEN");
+	clearInterval(loader_interval);
+
+	if (castposter.style.display !== 'block') {
+		loader.style.display = 'none';
+		video.style.display = 'inline';
+		castposter.style.display = 'none';
+	}
+}
+
+// GOOGLE CAST
+
+var current_media;
+var session;
+
+function show_castposter() {
+	stop_loader();
+	castposter.style.display = 'block';
+	loader.style.display = 'none';
+	video.style.display = 'none';
+}
+
+function hide_castposter() {
+	castposter.style.display = 'none';
+	loader.style.display = 'none';
+	video.style.display = 'inline';
+}
+
+function stop_casting() {
+	hide_castposter();
+	if (current_media) {
+		var media = current_media;
+		current_media = null;
+		media.stop();
+	}
+	if (session) {
+		session.stop();
+		session = null;
+	}
+}
+
+function cast_current_video() {
+	if (session === undefined || selected_stream === undefined) {
+		return;
+	}
+	var title = streams[selected_stream].name;
+	var url = streams[selected_stream].url;
+	document.getElementById('casttarget').textContent = session.receiver.friendlyName;
+	show_castposter();
+	video.pause();
+	// If we are already casting this, do nothing.
+	if (current_media && current_media.media.contentId === url) {
+		console.log("Already casting " + url + " to " + session.receiver.friendlyName + " (" + current_media.playerState + ")");
+		return;
+	}
+	if (current_media) {
+		current_media = null;  // Signal to on_media_status_update.
+	}
+	var media_info = new chrome.cast.media.MediaInfo(url, "video/mp4");
+	media_info.metadata = new chrome.cast.media.GenericMediaMetadata();
+	media_info.metadata.title = global_title;  //  + ': ' + title;
+	var request = new chrome.cast.media.LoadRequest(media_info);
+	session.loadMedia(request,
+		on_media_discovered.bind(this, 'loadMedia'),
+		on_media_error);
+}
+
+function on_media_status_update(active) {
+	console.log("media status update: " + active);
+	if (current_media !== null && !active) {  // If current_media is null, we intended to stop it, so don't bother.
+		console.log("Unexpected end, quitting.");
+		stop_casting();
+	}
+}
+
+function on_media_discovered(how, media) {
+	console.log("media discovered, how: " + how);
+	console.log(media);
+	current_media = media;
+	cast_current_video();
+	media.addUpdateListener(on_media_status_update);
+}
+
+function on_media_error(e) {
+	console.log("media error:");
+	console.log(e);
+}
+
+function on_session_status_update(active) {
+	console.log("session status update: " + active);
+	if (!active) {
+		stop_casting();
+	}
+}
+
+function session_listener(e) {
+	session = e;
+	if (session.media.length != 0) {
+		on_media_discovered('onRequestSessionSuccess', session.media[0]);
+	}
+	session.addUpdateListener(on_session_status_update);
+	cast_current_video();
+}
+
+function receiver_listener(e) {
+//	console.log("receiver status: " + e);
+}
+
+function on_cast_init_success() {
+	document.getElementById('casturl').href = "javascript:chrome.cast.requestSession(session_listener)";
+}
+
+function on_cast_init_error() {
+	console.log("google cast init error");
+}
+
+var initialize_cast_api = function() {
+	var session_request = new chrome.cast.SessionRequest(
+		chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID);
+	var api_config = new chrome.cast.ApiConfig(
+		session_request,
+		session_listener,
+		receiver_listener);
+	chrome.cast.initialize(api_config, on_cast_init_success, on_cast_init_error);
+};
+
+window['__onGCastApiAvailable'] = function(loaded, error_info) {
+	if (loaded) {
+		initialize_cast_api();
+	} else {
+		console.log(error_info);
+	}
+}
+
+// ACTUAL VIDEO STUFF
+
+if (navigator.userAgent.match(/iPad|iPhone|iPod/)) {
+	// iOS claims to support video/mp4, but it doesn't work for these streams.
+	// They play the HLS fine, though.
+	use_hls = true;
+} else if (navigator.userAgent.match(/Safari/) && !navigator.userAgent.match(/Chrome/)) {
+	// Same with Safari (on OS X; not on Windows, but who cares about Safari on Windows).
+	use_hls = true;
+} else if (video.canPlayType('video/mp4') === '' && video.canPlayType('application/vnd.apple.mpegURL') !== '') {
+	// Explicitly no MP4 support, but HLS support.
+	use_hls = true;
+} else {
+	// Default to the normal stream (less latency, less muxer overhead).
+	use_hls = false;
+}
+
+var selected_stream;
+
+function update_stream_list() {
+	var stream_html = "";
+	for (var i = 0; i < streams.length; ++i) {
+		if (i != 0) {
+			stream_html += " | ";
+		}
+		if (i == selected_stream) {
+			stream_html += "<strong>" + streams[i].name + "</strong>";
+		} else {
+			stream_html += "<a href=\"javascript:select_stream(" + i + ")\">" + streams[i].name + "</a>";
+		}
+	}
+	document.getElementById('streamchoice').innerHTML = stream_html;
+}
+function select_stream(s) {
+	selected_stream = s;
+	update_stream_list();
+
+	var vlcurl = document.getElementById('vlcurl');
+	vlcurl.href = streams[s].url;
+	vlcurl.innerHTML = streams[s].url;
+
+	var vlchlsurl = document.getElementById('vlchlsurl');
+	vlchlsurl.href = streams[s].hlsurl;
+	vlchlsurl.innerHTML = streams[s].hlsurl;
+
+	var videowrapper = document.getElementById('videowrapper');
+	var video = document.getElementById('video');
+	var url = streams[s].url;
+	if (use_hls && streams[s].hlsurl) {
+		url = streams[s].hlsurl;
+	}
+	loader.width = streams[s].width;
+	loader.height = streams[s].height;
+	loader.style.maxWidth = streams[s].width + "px";
+	loader.style.maxHeight = streams[s].height + "px";
+	castposter.style.maxWidth = streams[s].width + "px";
+	castposter.style.maxHeight = streams[s].height + "px";
+	videowrapper.style.maxWidth = streams[s].width + "px";
+	videowrapper.style.maxHeight = streams[s].height + "px";
+
+	if (session) {
+		cast_current_video();
+	} else {
+		video.src = url;
+		video.load();
+		video.play();
+	}
+}
+
+function setup_listeners() {
+	video.addEventListener('pause', on_pause);
+	video.addEventListener('play', start_loader);
+	video.addEventListener('canplay', stop_loader);
+	video.addEventListener('error', stop_loader);
+}
+
+var on_pause;
+on_pause = function(e) {
+	// The only real way to make it reload without buffering up
+	// the current content.
+	video.outerHTML = video.outerHTML;
+	video = document.getElementById('video');
+	setup_listeners();  // Since we have a new object.
+
+	stop_loader();
+};
+
+setup_listeners();
+select_stream(0);
+
+//alert("MP4: " + video.canPlayType('video/mp4') + "; HLS: " + video.canPlayType('application/vnd.apple.mpegURL'));
+-->
+</script>
+
