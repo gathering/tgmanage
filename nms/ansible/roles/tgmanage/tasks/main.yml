@@ -1,0 +1,14 @@
+---
+  - name: Git core
+    apt: name=git-core state=present
+    
+  # Note the update!
+  # 
+  # The idea here is that you run this playbook repeatedly on whatever
+  # "production" site is in use instead of manually logging in and doing
+  # changes.
+  - name: tgmanage repo
+    git: repo=https://github.com/tech-server/tgmanage.git dest=/srv/tgmanage update=true accept_hostkey=yes track_submodules=no
+  
+  - name: "Copy config.pm.dist to config.pm"
+    template: src=config.pm.j2 dest=/srv/tgmanage/include/config.pm mode=0644
