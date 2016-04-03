@@ -10,10 +10,10 @@
  */
 
 var nmsInfoBox = nmsInfoBox || {
-  stats: {},
-  _container: false, //Container window
-  _window: false, //Active window (reference to _windowTypes object or false)
-  _windowTypes: [] //List of all avaliable window types
+	stats: {},
+	_container: false, //Container window
+	_window: false, //Active window (reference to _windowTypes object or false)
+	_windowTypes: [] //List of all avaliable window types
 };
 
 /*
@@ -24,14 +24,14 @@ nmsInfoBox.showWindow = function (windowName,argument) {
 		nmsInfoBox.hide();
 		return;
 	}
-  nmsInfoBox.hide();
-  for(var win in this._windowTypes) {
-    if(windowName == win) {
-      this._window = this._windowTypes[win];
-      this._show(argument);
-      return;
-    }
-  }
+	nmsInfoBox.hide();
+	for(var win in this._windowTypes) {
+		if(windowName == win) {
+			this._window = this._windowTypes[win];
+			this._show(argument);
+			return;
+		}
+	}
 };
 
 /*
@@ -40,7 +40,7 @@ nmsInfoBox.showWindow = function (windowName,argument) {
 nmsInfoBox.refresh = function(argument) {
 	if(!nmsInfoBox._window)
 		return;
-  nmsInfoBox._show(argument);
+	nmsInfoBox._show(argument);
 };
 nmsInfoBox.update = function(argument) {
 	if(!nmsInfoBox._window)
@@ -52,41 +52,41 @@ nmsInfoBox.update = function(argument) {
  * Internal function to show the active _window and pass along any arguments
  */
 nmsInfoBox._show = function(argument) {
-  nmsData.addHandler("comments","switchshower",nmsInfoBox.update,'comments');
-  nmsData.addHandler("switches","switchshower",nmsInfoBox.update,'switches');
-  nmsData.addHandler("smanagement","switchshower",nmsInfoBox.update,'smanagement');
-  nmsData.addHandler("snmp","switchshower",nmsInfoBox.update,'snmp');
+	nmsData.addHandler("comments","switchshower",nmsInfoBox.update,'comments');
+	nmsData.addHandler("switches","switchshower",nmsInfoBox.update,'switches');
+	nmsData.addHandler("smanagement","switchshower",nmsInfoBox.update,'smanagement');
+	nmsData.addHandler("snmp","switchshower",nmsInfoBox.update,'snmp');
 
 	if(argument != "soft")
 		this._window.load(argument);
 
-  this._container = document.getElementById("info-panel-container");
-  var panel = document.createElement("div");
-  panel.classList.add("panel", "panel-default");
-  var title = document.createElement("div");
-  title.classList.add("panel-heading");
-  var body = document.createElement("div");
-  body.classList.add("panel-body");
+	this._container = document.getElementById("info-panel-container");
+	var panel = document.createElement("div");
+	panel.classList.add("panel", "panel-default");
+	var title = document.createElement("div");
+	title.classList.add("panel-heading");
+	var body = document.createElement("div");
+	body.classList.add("panel-body");
 
-  title.innerHTML = this._window.getTitle() + '<button type="button" class="close" aria-label="Close" onclick="nmsInfoBox.hide();" style="float: right;"><span aria-hidden="true">&times;</span></button>';
-  var content = this._window.getContent();
-  if(!content.nodeName) {
-    body.innerHTML = this._window.content;
-  } else {
-    body.appendChild(content);
-  }
-  var childContent = this._window.getChildContent();
-  if(childContent != false) {
-    body.appendChild(childContent);
-  }
+	title.innerHTML = this._window.getTitle() + '<button type="button" class="close" aria-label="Close" onclick="nmsInfoBox.hide();" style="float: right;"><span aria-hidden="true">&times;</span></button>';
+	var content = this._window.getContent();
+	if(!content.nodeName) {
+		body.innerHTML = this._window.content;
+	} else {
+		body.appendChild(content);
+	}
+	var childContent = this._window.getChildContent();
+	if(childContent != false) {
+		body.appendChild(childContent);
+	}
 
-  panel.appendChild(title);
-  panel.appendChild(body);
-  while(this._container.firstChild) {
-    this._container.removeChild(this._container.firstChild);
-  }
-  this._container.appendChild(panel);
-  this._container.style.display = "block";
+	panel.appendChild(title);
+	panel.appendChild(body);
+	while(this._container.firstChild) {
+		this._container.removeChild(this._container.firstChild);
+	}
+	this._container.appendChild(panel);
+	this._container.style.display = "block";
 	$('[data-toggle="popover"]').popover({placement:"top",container:'body'});
 	$(".collapse-controller").on("click", function(e) {
 		$(e.target.dataset.target).collapse('toggle');
@@ -97,11 +97,11 @@ nmsInfoBox._show = function(argument) {
  * Hide the active window and tell it to unload
  */
 nmsInfoBox.hide = function() {
-  if(!this._container || !this._window)
-    return;
-  this._container.style.display = "none";
-  this._window.unload();
-  this._window = false;
+	if(!this._container || !this._window)
+		return;
+	this._container.style.display = "none";
+	this._window.unload();
+	this._window = false;
 	nmsData.unregisterHandler("comments","switchshower");
 	nmsData.unregisterHandler("switches","switchshower");
 	nmsData.unregisterHandler("smanagement","switchshower");
@@ -115,42 +115,42 @@ nmsInfoBox.hide = function() {
  *
  */
 nmsInfoBox._windowTypes.addSwitch = {
-  title: 'Add new switch',
-  content:  '<input type="text" class="form-control" id="create-sysname" placeholder="Sysname id"><button class="btn btn-default" onclick="nmsInfoBox._windowTypes.addSwitch.save();">Add switch</button>',
-  childContent: false,
-  getTitle: function() {
-    return this.title;
-  },
-  getContent: function() {
-    return this.content;
-  },
-  getChildContent: function() {
-    return this.childContent;
-  },
-  load: function(argument) {
-  },
+	title: 'Add new switch',
+	content:  '<input type="text" class="form-control" id="create-sysname" placeholder="Sysname id"><button class="btn btn-default" onclick="nmsInfoBox._windowTypes.addSwitch.save();">Add switch</button>',
+	childContent: false,
+	getTitle: function() {
+		return this.title;
+	},
+	getContent: function() {
+		return this.content;
+	},
+	getChildContent: function() {
+		return this.childContent;
+	},
+	load: function(argument) {
+	},
 	update: function(type) {
 	},
-  unload: function() {
-  },
-  save: function() {
-    var sysname = document.getElementById('create-sysname').value;
-    var myData = JSON.stringify([{'sysname':sysname}]);
-    $.ajax({
-      type: "POST",
-      url: "/api/write/switch-add",
-      dataType: "text",
-      data:myData,
-      success: function (data, textStatus, jqXHR) {
-        var result = JSON.parse(data);
-        if(result.switches_addded.length > 0) { // FIXME unresolved variable switches_addded
-          nmsInfoBox.hide();
-        }
-        nmsData.invalidate("switches");
-        nmsData.invalidate("smanagement");
-      }
-    });
-  }
+	unload: function() {
+	},
+	save: function() {
+		var sysname = document.getElementById('create-sysname').value;
+		var myData = JSON.stringify([{'sysname':sysname}]);
+		$.ajax({
+			type: "POST",
+			url: "/api/write/switch-add",
+			dataType: "text",
+			data:myData,
+			success: function (data, textStatus, jqXHR) {
+				var result = JSON.parse(data);
+				if(result.switches_addded.length > 0) { // FIXME unresolved variable switches_addded
+					nmsInfoBox.hide();
+				}
+				nmsData.invalidate("switches");
+				nmsData.invalidate("smanagement");
+			}
+		});
+	}
 };
 
 /*
@@ -321,7 +321,7 @@ nmsInfoBox._windowTypes.switchInfo = {
 		this.activeView = "infotable";
 		var content = [];
 
-		for (var v in this.swi) { 
+		for (var v in this.swi) {
 			if (v == "placement") {
 				var place = JSON.stringify(this.swi[v]);
 				content.push([v,place]);
@@ -330,7 +330,7 @@ nmsInfoBox._windowTypes.switchInfo = {
 			content.push([v, this.swi[v]]);
 		}
 
-		for (var v in this.swm) { 
+		for (var v in this.swm) {
 			content.push([v, this.swm[v]]);
 		}
 		content.sort();
@@ -541,19 +541,19 @@ nmsInfoBox._windowTypes.switchInfo = {
  *
  */
 nmsInfoBox._windowTypes.inventoryListing = {
-  content:  '',
-  childContent: false,
+	content:  '',
+	childContent: false,
 	activeView: '',
 	activeFilter: '',
-  getTitle: function() {
-    return '<h4>Inventory listing</h4><button type="button" class="distro-name btn btn-xs btn-default" onclick="nmsInfoBox.showWindow(\'inventoryListing\',\'distro_name\');">Distro name</button> <button type="button" class="distro-name btn btn-xs btn-default" onclick="nmsInfoBox.showWindow(\'inventoryListing\',\'sysDescr\');">System Description</button><button type="button" class="distro-name btn btn-xs btn-default" onclick="nmsInfoBox.showWindow(\'inventoryListing\',\'jnxBoxSerialNo\');">Serial Numbers</button>';
-  },
-  getContent: function() {
-    return this.content;
-  },
-  getChildContent: function() {
-    return this.childContent;
-  },
+	getTitle: function() {
+		return '<h4>Inventory listing</h4><button type="button" class="distro-name btn btn-xs btn-default" onclick="nmsInfoBox.showWindow(\'inventoryListing\',\'distro_name\');">Distro name</button> <button type="button" class="distro-name btn btn-xs btn-default" onclick="nmsInfoBox.showWindow(\'inventoryListing\',\'sysDescr\');">System Description</button><button type="button" class="distro-name btn btn-xs btn-default" onclick="nmsInfoBox.showWindow(\'inventoryListing\',\'jnxBoxSerialNo\');">Serial Numbers</button>';
+	},
+	getContent: function() {
+		return this.content;
+	},
+	getChildContent: function() {
+		return this.childContent;
+	},
 	setFilter: function(filter) {
 		this.activeFilter = filter.toLowerCase();
 		nmsInfoBox._windowTypes.inventoryListing.load("refresh");
@@ -561,7 +561,7 @@ nmsInfoBox._windowTypes.inventoryListing = {
 	getFilter: function() {
 		return this.activeFilter;
 	},
-  load: function(list) {
+	load: function(list) {
 		var hasSnmp = false;
 		var targetArray = [];
 		var listTitle = '';
@@ -589,12 +589,12 @@ nmsInfoBox._windowTypes.inventoryListing = {
 				break;
 			case 'sysDescr':
 				if(hasSnmp)
-				listTitle = 'System description';
+					listTitle = 'System description';
 				needSnmp = true;
 				break;
 			case 'jnxBoxSerialNo':
 				if(hasSnmp)
-				listTitle = 'Serial Numbers';
+					listTitle = 'Serial Numbers';
 				needSnmp = true;
 				break;
 			default:
@@ -643,20 +643,20 @@ nmsInfoBox._windowTypes.inventoryListing = {
 		this.content = contentObj;
 		if(needRefresh)
 			nmsInfoBox.refresh("soft");
-  },
+	},
 	update: function(type) {
 		if(type == "snmp-request") {
 			nmsData.unregisterHandler("snmp","inventoryListing");
 			nmsInfoBox._windowTypes.inventoryListing.load("refresh");
 		}
 	},
-  unload: function() {
+	unload: function() {
 		nmsData.unregisterHandler("snmp","inventoryListing");
 		this.content = '';
 		this.activeView = '';
 		this.activeFilter = '';
-  },
-  save: function() {
+	},
+	save: function() {
 	}
 };
 
@@ -666,7 +666,7 @@ nmsInfoBox._windowTypes.inventoryListing = {
  */
 nmsInfoBox.click = function(sw)
 {
-  this.showWindow("switchInfo",sw);
+	this.showWindow("switchInfo",sw);
 };
 
 /*
@@ -689,7 +689,7 @@ nmsInfoBox._makeTable = function(content, caption) {
 		cap.textContent = caption;
 		table.appendChild(cap);
 	}
-	for (var v in content) { 
+	for (var v in content) {
 		tr = table.insertRow(-1);
 		tr.className = content[v][0].toLowerCase();
 		td1 = tr.insertCell(0);
@@ -713,7 +713,7 @@ nmsInfoBox._makeCommentTable = function(content) {
 	var cap = document.createElement("caption");
 	cap.textContent = "Comments"
 	table.appendChild(cap);
-	for (var commentid in content) { 
+	for (var commentid in content) {
 		var tr;
 		var td1;
 		var td2;
@@ -860,7 +860,6 @@ nmsInfoBox._nullBlank = function(x) {
 	return x;
 };
 
-
 nmsInfoBox._editChange = function(sw, v) {
 	var el = document.getElementById("edit-" + sw + "-" + v);
 	var val = el.value;
@@ -882,6 +881,6 @@ nmsInfoBox._editChange = function(sw, v) {
 };
 
 nmsInfoBox._editStringify = function(sw) {
-    nmsInfoBox._editValues['sysname'] = sw;
-    return JSON.stringify([nmsInfoBox._editValues]);
+	nmsInfoBox._editValues['sysname'] = sw;
+	return JSON.stringify([nmsInfoBox._editValues]);
 };
