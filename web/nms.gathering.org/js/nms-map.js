@@ -180,7 +180,11 @@ nmsMap._resizeEvent = function() {
 nmsMap.drawNow = function ()
 {
 	var now = nmsData.now;
-	now = new Date(nmsData.now); //Date assumes UTC
+	if(String(now).indexOf('T') == -1) { //If now does not contain 'T' we assume its in epoch format
+		now = new Date(nmsData.now * 1000);
+	} else {
+		now = new Date(nmsData.now); //Date assumes UTC
+	}
 	now = now.toString().split(' ').splice(1,4).join(' '); //Date returns local time
 	if (nmsMap._lastNow == now) {
 		nmsMap.stats.nowDups++;
