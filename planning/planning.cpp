@@ -5,7 +5,7 @@
 // Given D distro switches and N access switches, complexity is approx. O(dn³)
 // (runs n iterations, each iteration is O(VE), V is O(n), E is O(dn))).
 //
-// g++ -std=gnu++11 -Wall -g -O3 -fopenmp -DOUTPUT_FILES=1 -o planning planning.cpp && ./planning -3 8 -9 16 25 -26 -32 35
+// g++ -std=gnu++11 -Wall -g -O3 -fopenmp -DOUTPUT_FILES=1 -o planning planning.cpp && ./planning -4 6 14 -23 24 -30 32 37 -38
 
 #include <stdio.h>
 #include <math.h>
@@ -25,10 +25,10 @@
 #include <string>
 #include <queue>
 
-#define NUM_DISTRO 8
-#define NUM_ROWS 43
+#define NUM_DISTRO 9
+#define NUM_ROWS 41
 #define SWITCHES_PER_ROW 4
-#define PORTS_PER_DISTRO 38
+#define PORTS_PER_DISTRO 31
 
 #define TRUNCATE_METRIC 1
 #define EXTENSION_COST 70
@@ -148,9 +148,9 @@ struct VerticalGap {
 // After row 20: 4.0m+0.1m slack = 1.7m cost
 // After row 29: 3.6m+0.1m slack = 1.3m cost
 vector<VerticalGap> vertical_gaps = {
-	{ 12, 23 },
-	{ 20, 17 },
-	{ 29, 13 },
+	{ 10, 23 },
+	{ 18, 17 },
+	{ 27, 13 },
 };
 
 class Planner {
@@ -249,24 +249,29 @@ Inventory Planner::find_inventory(Switch from_where, int distro)
 		inv.horiz_gap_crossings = 1;
 	}
 
-	// Don't cross row 6/7 on the east side
-	if ((abs(distro_placements[distro]) <= 6) == (from_where.row >= 7) &&
-	    distro_placements[distro] < 0) {
+	// // Don't cross row 4/5? on the east side
+	// if ((abs(distro_placements[distro]) <= 4) == (from_where.row >= 5) &&
+	//     distro_placements[distro] < 0) {
+	// 	inv.vert_chasm_crossings = 1;
+	// }
+	
+	// TG17: distribute evenly between distro6+7 an distro5+8
+	if ((abs(distro_placements[distro]) <= 34) == (from_where.row >= 35)) {
 		inv.vert_chasm_crossings = 1;
 	}
-
+	
 	// Gap over the scene
-	if ((abs(distro_placements[distro]) <= 12) == (from_where.row >= 13)) {
+	if ((abs(distro_placements[distro]) <= 10) == (from_where.row >= 11)) {
 		inv.vert_chasm_crossings = 1;
 	}
 
 	// Gaps between fire gates
-	if ((abs(distro_placements[distro]) <= 20) == (from_where.row >= 21)) {
+	if ((abs(distro_placements[distro]) <= 18) == (from_where.row >= 19)) {
 		inv.vert_chasm_crossings = 1;
 	}
 	
 	// Gaps between fire gates
-	if ((abs(distro_placements[distro]) <= 29) == (from_where.row >= 30)) {
+	if ((abs(distro_placements[distro]) <= 27) == (from_where.row >= 28)) {
 		inv.vert_chasm_crossings = 1;
 	}
 
@@ -347,43 +352,34 @@ void Planner::init_switches()
 {
 	switches.clear();
 	for (unsigned i = 1; i <= NUM_ROWS; ++i) {
-		if (i >= 1 && i <= 2) {
+		if (i == 1) {
 			switches.push_back(Switch(i, 2));
 			switches.push_back(Switch(i, 3));
 		}
 
-		if (i == 3) {
-			switches.push_back(Switch(i, 1));
-			switches.push_back(Switch(i, 2));
-			switches.push_back(Switch(i, 3));
-		}
-
-		if (i >= 4 && i <= 12) {
+		if (i >= 2 && i <= 10) {
 			switches.push_back(Switch(i, 0));
 			switches.push_back(Switch(i, 1));
 			switches.push_back(Switch(i, 2));
 			switches.push_back(Switch(i, 3));
 		}
 
-		if (i >= 13 && i <= 20) {
+		if (i >= 11 && i <= 18) {
 			switches.push_back(Switch(i, 0));
 			switches.push_back(Switch(i, 1));
 		}
 
-		if (i >= 21 && i <= 34) {
+		if (i >= 19 && i <= 40) {
 			switches.push_back(Switch(i, 0));
 			switches.push_back(Switch(i, 1));
 			switches.push_back(Switch(i, 2));
 			switches.push_back(Switch(i, 3));
 		}
 
-		if (i >= 35 && i <= 41) {
-			switches.push_back(Switch(i, 0));
+		if (i == 41) {
 			switches.push_back(Switch(i, 1));
-		}
-
-		if (i >= 42 && i <= 43) {
-			switches.push_back(Switch(i, 1));
+			switches.push_back(Switch(i, 2));
+			switches.push_back(Switch(i, 3));
 		}
 	}
 }
