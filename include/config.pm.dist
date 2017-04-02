@@ -8,7 +8,7 @@ package nms::config;
 our $db_name = "nms";
 our $db_host = "bb-8.tg16.gathering.org";
 our $db_username = "nms";
-our $db_password = "<removed>";
+our $db_password = "<removed>"; # TODO: Remove before publishing "goodiebag"
 
 # NMS: What SNMP objects to fetch.
 # Some basics
@@ -46,8 +46,8 @@ our $dhcp_server1 = "185.110.149.2"; # primary
 our $dhcp_server2 = "185.110.148.2"; # secondary
 
 # TACACS-login for NMS
-our $tacacs_user = "<removed>";
-our $tacacs_pass = "<removed>";
+our $tacacs_user = "<removed>"; # TODO: Remove before publishing "goodiebag"
+our $tacacs_pass = "<removed>"; # TODO: Remove before publishing "goodiebag"
 
 # Telnet-timeout for smanagrun
 our $telnet_timeout = 300;
@@ -74,8 +74,8 @@ our $ext_xfer  = "193.0.0.0/22; 2001:610:240::/48; 2001:67c:2e8::/48";
 our $noc_net  = "185.110.150.0/25; 2a06:5841:150a::1/64";
 
 # To generate new dnssec-key for ddns:
-# dnssec-keygen -a HMAC-MD5 -b 128 -n HOST DHCP_UPDATER
-our $ddns_key = "<removed>";
+# dnssec-keygen -a HMAC-MD5 -b 512 -n HOST DHCP_UPDATER
+our $ddns_key = "<removed>"; # TODO: Remove before publishing "goodiebag"
 our $ddns_to  = "127.0.0.1"; # just use localhost
 
 # Base networks
@@ -85,7 +85,9 @@ our $ipv6zone = "0.4.8.5.6.0.a.2.ip6.arpa";
 
 # extra networks that are outside the normal ranges
 # that should have recursive DNS access
-our $rec_net = "185.110.148.0/22";
+our @rec_net = (
+	'185.110.148.0/22',
+);
 
 # extra networks that are outside the normal ranges
 # that should be added to DNS
@@ -100,7 +102,7 @@ our @extra_nets = (
 our $wlc1 = "185.110.148.14";
 
 # add VOIP-server
-our $voip1 = "<removed>";
+our $voip1 = "<removed>"; # TODO: Remove before publishing "goodiebag"
 
 # PXE-server (rest of bootstrap assumes $sec_v4/$sec_v6)
 our $pxe_server_v4 = $sec_v4;
