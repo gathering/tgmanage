@@ -29,8 +29,11 @@ DHCPD_PID=/var/run/dhcpd.pid
 OPTIONS="-4"
 
 # On what interfaces should the DHCP server (dhcpd) serve DHCP requests?
-#	Separate multiple interfaces with spaces, e.g. "eth0 eth1".
-INTERFACES="eth0"
+# Separate multiple interfaces with spaces, e.g. "eth0 eth1".
+# If no interface names are specified, dhcpd will identify all network interfaces
+# which are up, eliminating non-broadcast interfaces if possible, and listen
+# for DHCP broadcasts on each interface.
+INTERFACES=""
 _EOF
 
 cat > ${DHCP6_DEFAULT}<<'_EOF'
@@ -46,8 +49,11 @@ DHCPD_PID=/var/run/dhcpd6.pid
 OPTIONS="-6"
 
 # On what interfaces should the DHCP server (dhcpd) serve DHCP requests?
-#	Separate multiple interfaces with spaces, e.g. "eth0 eth1".
-INTERFACES="eth0"
+# Separate multiple interfaces with spaces, e.g. "eth0 eth1".
+# If no interface names are specified, dhcpd will identify all network interfaces
+# which are up, eliminating non-broadcast interfaces if possible, and listen
+# for DHCP broadcasts on each interface.
+INTERFACES=""
 _EOF
 
 set +e
