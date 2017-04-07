@@ -68,10 +68,10 @@ our $sec_net_v6 = "2a06:5841:1337::/64";
 
 # for RIPE to get reverse zones via DNS AXFR
 # https://www.ripe.net/data-tools/dns/reverse-dns/how-to-set-up-reverse-delegation
-our $ext_xfer  = "193.0.0.0/22; 2001:610:240::/48; 2001:67c:2e8::/48";
+our $ext_xfer = "193.0.0.0/22; 2001:610:240::/48; 2001:67c:2e8::/48";
 
 # allow XFR from NOC
-our $noc_net  = "185.110.150.0/25; 2a06:5841:150a::1/64";
+our $noc_net = "185.110.150.0/25; 2a06:5841:150a::1/64";
 
 # To generate new dnssec-key for ddns:
 # dnssec-keygen -a HMAC-MD5 -b 512 -n HOST DHCP_UPDATER
@@ -113,5 +113,19 @@ our $pxe_server_v6 = $sec_v6;
 # FAP-server (Gondul)
 our $fap_server_v4 = "<removed>"; # TODO: Remove before publishing "goodiebag"
 our $fap_server_v6 = "<removed>"; # TODO: Remove before publishing "goodiebag"
+our @fap_networks = (
+	'88.92.54.0/26',	# distro0
+	'88.92.54.64/26',       # distro1
+	'88.92.54.128/26',      # distro2
+	'88.92.54.192/26',      # distro3
+	'88.92.55.0/26',        # distro4
+	'88.92.55.64/26',       # distro5
+	'88.92.55.128/26',      # distro6
+	'88.92.55.192/26',      # distro7
+	'88.92.56.0/26',        # distro8
+	'88.92.56.64/26',       # vc1.ring
+);
+
+
 
 1;
