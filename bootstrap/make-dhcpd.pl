@@ -19,6 +19,7 @@ my $dhcpd_conf = $dhcpd_base . "dhcpd.conf";
 my $dhcpd_pxeconf = $dhcpd_base . "v4-pxe-boot.conf";
 my $dhcpd_wlc_conf = $dhcpd_base . "v4-wlc.conf";
 my $dhcpd_voip_conf = $dhcpd_base . "v4-voip.conf";
+my $dhcpd_fap_conf = $dhcpd_base . "v4-fap.conf";
 
 # primary
 my $pri_range = Net::IP->new($nms::config::pri_net_v4) or die ("pri_range fail");
@@ -101,6 +102,7 @@ include "/etc/dhcp/v4-generated-include.conf";
 include "$dhcpd_pxeconf";
 include "$dhcpd_wlc_conf";
 include "$dhcpd_voip_conf";
+include "$dhcpd_fap_conf";
 
 EOF
 		close DHCPDFILE;
@@ -144,7 +146,7 @@ class "access-points" {
 	# I.e  if "Access Point", you have to use (0, 12)
 	match if substring (option vendor-class-identifier, 0, 12) = "Access Point";
 	vendor-option-space WLC;
-	option WLC.controller-address "$nms::config::wlc1";
+	option WLC.controller-address "$nms::config::wlc1_v4";
 }
 EOF
 		close WLCFILE;
@@ -164,18 +166,72 @@ class "cisco-voip-lan" {
 	match if substring (option vendor-class-identifier, 0, 28) = "Cisco Systems, Inc. IP Phone";
 	vendor-option-space CiscoVOIP;
 	log( info, concat( "LOLOPHONE: " , option vendor-class-identifier )); 
-	option CiscoVOIP.cm-tftp-server $nms::config::voip1;
-	next-server $nms::config::voip1;
+	option CiscoVOIP.cm-tftp-server $nms::config::voip1_v4;
+	next-server $nms::config::voip1_v4;
 }
 
 class "cisco-voip-wlan" {
         match if substring (option vendor-class-identifier, 0, 33) = "Cisco Systems Inc. Wireless Phone";
         vendor-option-space CiscoVOIP;
         log( info, concat( "BANANAPHONE: " , option vendor-class-identifier ));
-        option CiscoVOIP.cm-tftp-server $nms::config::voip1;
-        next-server $nms::config::voip1;
+        option CiscoVOIP.cm-tftp-server $nms::config::voip1_v4;
+        next-server $nms::config::voip1_v4;
 }
 EOF
 		close VOIPFILE;
 }
+
+# Create FAP/Gondul config
+if ( not -f $dhcpd_fap_conf )
+{
+		print STDERR "Creating file " . $dhcpd_fap_conf . "\n";
+		open FAPFILE, ">" . $dhcpd_fap_conf or die ( $! . " " . $dhcpd_fap_conf);
+
+		print FAPFILE <<"EOF";
+# Define structure of option 43 ( Zero Touch Protocol options)
+option space ztp;
+#option ztp.image-file-name code 0 = text;
+option ztp.config-file-name code 1 = text;
+option ztp.image-file-type code 2 = text;
+option ztp.transfer-mode code 3 = text;
+option ztp.alt-image-file-name code 4 = text;
+option ztp-encapsulation code 43 = encapsulate ztp;
+
+# define option 150 - TFTP server (used for defining HTTP server for option 43)
+option option-150 code 150 = { ip-address };
+
+# define option 60 - used for classifying ZTP clients ("vendor class identifier")
+option vendor-class-identifier code 60 = text;
+
+# set short leasetime, so that it times out at reboot
+default-lease-time 120;
+max-lease-time 120;
+
+# define ranges
+group {
+        # No DDNS
+	ddns-updates off;
+	ddns-hostname = none;
+	ddns-domainname = none;
+	
+	# supershort leasetime
+	default-lease-time 120;
+	max-lease-time 120;
+
+        # ZTP Settings
+        option option-150 $nms::config::fap_server_v4;
+        option tftp-server-name "$nms::config::fap_server_v4";
+        option ztp.transfer-mode "http";
+        option ztp.config-file-name = concat("api/config/", (option agent.circuit-id));
+
+        #option ztp.image-file-name "files/jinstall-ex-2200-14.1X53-D15.2-domestic-signed.tgz";
+	
+
+}
+
+EOF
+		close FAPFILE;
+}
+
+
 

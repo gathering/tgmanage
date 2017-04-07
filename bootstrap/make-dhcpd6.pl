@@ -134,7 +134,7 @@ set vendor-string = option vendor-class-identifier;
 class "access-points" {
        match if substring (option vendor-class-identifier, 0, 8) = "Access Point";
        vendor-option-space AP;
-       option AP.server-address $nms::config::wlc1;
+       option AP.server-address $nms::config::wlc1_v6;
 }
 EOF
 		close WLCFILE;
@@ -154,16 +154,16 @@ class "cisco-voip-lan" {
         match if substring (option vendor-class-identifier, 0, 28) = "Cisco Systems, Inc. IP Phone";
 	vendor-option-space CiscoVOIP;
 	log( info, concat( "LOLOPHONE: " , option vendor-class-identifier )); 
-	option CiscoVOIP.cm-tftp-server $nms::config::voip1;
-	next-server $nms::config::voip1;
+	option CiscoVOIP.cm-tftp-server $nms::config::voip1_v6;
+	next-server $nms::config::voip1_v6;
 }
 
 class "cisco-voip-wlan" {
         match if substring (option vendor-class-identifier, 0, 33) = "Cisco Systems Inc. Wireless Phone";
         vendor-option-space CiscoVOIP;
         log( info, concat( "BANANAPHONE: " , option vendor-class-identifier ));
-        option CiscoVOIP.cm-tftp-server $nms::config::voip1;
-        next-server $nms::config::voip1;
+        option CiscoVOIP.cm-tftp-server $nms::config::voip1_v6;
+        next-server $nms::config::voip1_v6;
 }
 EOF
 		close VOIPFILE;
