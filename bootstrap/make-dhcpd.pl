@@ -205,6 +205,13 @@ option option-150 code 150 = { ip-address };
 # define option 60 - used for classifying ZTP clients ("vendor class identifier")
 option vendor-class-identifier code 60 = text;
 
+# only allow FAP "clients"
+class "FAP" {
+	# Vendor-Class Option 60, length 21: "Juniper-ex2200-48t-4g"
+	match if substring (option vendor-class-identifier, 0, 10) = "Juniper-ex";
+	log( info, concat( "FAP: " , option vendor-class-identifier , " - " , option hostname , " - " , option agent.circuit-id )); 
+}
+
 group {
         # No DDNS
 	ddns-updates off;
@@ -215,7 +222,7 @@ group {
 	default-lease-time 120;
 	max-lease-time 120;
 
-	# set short leasetime, so that it times out at reboot
+	# set short leasetime, so that it times out while the switch rebooting
 	default-lease-time 120;
 	max-lease-time 120;
 
@@ -242,9 +249,12 @@ EOF
 		
 		print FAPFILE <<"EOF";
 	subnet $fap_subnet netmask $fap_mask {
-	        range $fap_first $fap_last;
 		option subnet-mask $fap_mask;
 	        option routers $fap_gw;
+		pool {
+		        range $fap_first $fap_last;
+			allow members of "FAP";
+		}
 	}
 EOF
 
