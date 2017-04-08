@@ -215,16 +215,24 @@ set hostmac = concat (
 	suffix (concat ("0", binary-to-ascii (16, 8, "", substring(hardware,6,1))),2)
 );
 
+# extract only the OUI-part
+set ouimac = substring(hostmac, 0, 8);
+
 # only allow FAP "clients"
 class "fap-vendor-class" {
 	# Vendor-Class Option 60, length 21: "Juniper-ex2200-48t-4g"
 	# Vendor-Class Option 60, length 21: "Juniper-ex3300-48p"
-	match if substring (option vendor-class-identifier, 0, 10) = "Juniper-ex";
+	match if substring(option vendor-class-identifier, 0, 10) = "Juniper-ex";
 	log( info, concat( "FAP: ", hostmac, " (", option host-name, ") - ", option agent.circuit-id, " - ", option vendor-class-identifier ));
 }
 class "fap-mac" {
 	# some Juniper switches won't send vendor-class-identifier
-	match if binary-to-ascii(16,8,":",substring(hardware, 1, 3)) = "44:f4:77";
+	match if not exists vendor-class-identifier
+		and (
+			( ouimac = "44:f4:77" ) or
+			( ouimac = "f0:1c:2d" )
+		);
+		
 	log( info, concat( "FAP: ", hostmac, " (", option host-name, ") - ", option agent.circuit-id ));
 }
 
