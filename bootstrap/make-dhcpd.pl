@@ -206,7 +206,7 @@ option option-150 code 150 = { ip-address };
 option vendor-class-identifier code 60 = text;
 
 # binary-to-ascii remove leading 0 rebuild the complete MAC
-set tempmac = concat ( 
+set hostmac = concat ( 
 	suffix (concat ("0", binary-to-ascii (16, 8, "", substring(hardware,1,1))),2), ":",
 	suffix (concat ("0", binary-to-ascii (16, 8, "", substring(hardware,2,1))),2), ":",
 	suffix (concat ("0", binary-to-ascii (16, 8, "", substring(hardware,3,1))),2), ":",
@@ -214,9 +214,6 @@ set tempmac = concat (
 	suffix (concat ("0", binary-to-ascii (16, 8, "", substring(hardware,5,1))),2), ":",
 	suffix (concat ("0", binary-to-ascii (16, 8, "", substring(hardware,6,1))),2)
 );
-
-# extract the only first 8 chars 
-set hostmac = substring(tempmac, 0, 8);
 
 # only allow FAP "clients"
 class "fap-vendor-class" {
