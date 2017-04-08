@@ -205,17 +205,30 @@ option option-150 code 150 = { ip-address };
 # define option 60 - used for classifying ZTP clients ("vendor class identifier")
 option vendor-class-identifier code 60 = text;
 
+# binary-to-ascii remove leading 0 rebuild the complete MAC
+set tempmac = concat ( 
+	suffix (concat ("0", binary-to-ascii (16, 8, "", substring(hardware,1,1))),2), ":",
+	suffix (concat ("0", binary-to-ascii (16, 8, "", substring(hardware,2,1))),2), ":",
+	suffix (concat ("0", binary-to-ascii (16, 8, "", substring(hardware,3,1))),2), ":",
+	suffix (concat ("0", binary-to-ascii (16, 8, "", substring(hardware,4,1))),2), ":",
+	suffix (concat ("0", binary-to-ascii (16, 8, "", substring(hardware,5,1))),2), ":",
+	suffix (concat ("0", binary-to-ascii (16, 8, "", substring(hardware,6,1))),2)
+);
+
+# extract the only first 8 chars 
+set hostmac = substring(tempmac, 0, 8);
+
 # only allow FAP "clients"
 class "fap-vendor-class" {
 	# Vendor-Class Option 60, length 21: "Juniper-ex2200-48t-4g"
 	# Vendor-Class Option 60, length 21: "Juniper-ex3300-48p"
 	match if substring (option vendor-class-identifier, 0, 10) = "Juniper-ex";
-	log( info, concat( "FAP: ", binary-to-ascii(16,8,":",hardware), " (", option host-name, ") - ", option agent.circuit-id, " - ", option vendor-class-identifier ));
+	log( info, concat( "FAP: ", hostmac, " (", option host-name, ") - ", option agent.circuit-id, " - ", option vendor-class-identifier ));
 }
 class "fap-mac" {
 	# some Juniper switches won't send vendor-class-identifier
 	match if binary-to-ascii(16,8,":",substring(hardware, 1, 3)) = "44:f4:77";
-	log( info, concat( "FAP: ", binary-to-ascii(16,8,":",hardware), " (", option host-name, ") - ", option agent.circuit-id ));
+	log( info, concat( "FAP: ", hostmac, " (", option host-name, ") - ", option agent.circuit-id ));
 }
 
 group {
