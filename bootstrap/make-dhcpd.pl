@@ -210,12 +210,12 @@ class "fap-vendor-class" {
 	# Vendor-Class Option 60, length 21: "Juniper-ex2200-48t-4g"
 	# Vendor-Class Option 60, length 21: "Juniper-ex3300-48p"
 	match if substring (option vendor-class-identifier, 0, 10) = "Juniper-ex";
-	log( info, concat( "FAP: " , option vendor-class-identifier , " - " , hardware , " (" , option host-name , ") - " , option agent.circuit-id ));
+	log( info, concat( "FAP: ", binary-to-ascii(16,8,":",hardware), " (", option host-name, ") - ", option agent.circuit-id, " - ", option vendor-class-identifier ));
 }
 class "fap-mac" {
 	# some Juniper switches won't send vendor-class-identifier
 	match if binary-to-ascii(16,8,":",substring(hardware, 1, 3)) = "44:f4:77";
-	log( info, concat( "FAP: " , hardware , " (" , option host-name , ") - " , option agent.circuit-id ));
+	log( info, concat( "FAP: ", binary-to-ascii(16,8,":",hardware), " (", option host-name, ") - ", option agent.circuit-id ));
 }
 
 group {
