@@ -209,7 +209,7 @@ option vendor-class-identifier code 60 = text;
 class "FAP" {
 	# Vendor-Class Option 60, length 21: "Juniper-ex2200-48t-4g"
 	match if substring (option vendor-class-identifier, 0, 10) = "Juniper-ex";
-	log( info, concat( "FAP: " , option vendor-class-identifier , " - " , option host-name , " - " , option agent.circuit-id )); 
+	log( info, concat( "FAP: " , option vendor-class-identifier , " - " , hardware , " (" , option host-name , ") - " , option agent.circuit-id )); 
 }
 
 group {
