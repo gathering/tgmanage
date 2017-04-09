@@ -228,9 +228,9 @@ class "fap-mac" {
 		( binary-to-ascii(16, 8, ":", substring(hardware, 1, 3)) = "44:f4:77" ) or
 		( binary-to-ascii(16, 8, ":", substring(hardware, 1, 3)) = "f0:1c:2d" )
 	);
-	if not exists vendor-class-identifier (
+	if not exists vendor-class-identifier {
 		log( info, concat( "FAP: ", hostmac, " (", option host-name, ") - ", option agent.circuit-id ));
-	);
+	}
 }
 
 group {
