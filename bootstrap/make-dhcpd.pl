@@ -215,9 +215,6 @@ set hostmac = concat (
 	suffix (concat ("0", binary-to-ascii (16, 8, "", substring(hardware,6,1))),2)
 );
 
-# extract only the OUI-part
-set ouimac = substring(hostmac, 0, 8);
-
 # only allow FAP "clients"
 class "fap-vendor-class" {
 	# Vendor-Class Option 60, length 21: "Juniper-ex2200-48t-4g"
@@ -227,13 +224,13 @@ class "fap-vendor-class" {
 }
 class "fap-mac" {
 	# some Juniper switches won't send vendor-class-identifier
-	match if not exists vendor-class-identifier
-		and (
-			( ouimac = "44:f4:77" ) or
-			( ouimac = "f0:1c:2d" )
-		);
-		
-	log( info, concat( "FAP: ", hostmac, " (", option host-name, ") - ", option agent.circuit-id ));
+	match if (
+		( binary-to-ascii(16, 8, ":", substring(hardware, 1, 3)) = "44:f4:77" ) or
+		( binary-to-ascii(16, 8, ":", substring(hardware, 1, 3)) = "f0:1c:2d" )
+	);
+	if not exists vendor-class-identifier (
+		log( info, concat( "FAP: ", hostmac, " (", option host-name, ") - ", option agent.circuit-id ));
+	);
 }
 
 group {
@@ -241,10 +238,6 @@ group {
 	ddns-updates off;
 	ddns-hostname = none;
 	ddns-domainname = none;
-
-	# supershort leasetime
-	default-lease-time 120;
-	max-lease-time 120;
 
 	# set short leasetime, so that it times out while the switch rebooting
 	default-lease-time 120;
