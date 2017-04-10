@@ -155,8 +155,13 @@ class "access-points" {
 	# Number of characters has to match the substring
 	# I.e  if "Access Point", you have to use (0, 12)
 	match if substring (option vendor-class-identifier, 0, 12) = "Access Point";
-	log( info, concat( "AP: ", hostmac, " (", option host-name, ") - ", option agent.circuit-id, " - ", option vendor-class-identifier ));
-
+	
+	if exists agent.circuit-id {
+		log( info, concat( "AP: ", hostmac, " - ", option vendor-class-identifier, " - ", option agent.circuit-id ));
+	} else {
+		log( info, concat( "AP: ", hostmac, " - ", option vendor-class-identifier ));
+	}
+	
 	vendor-option-space WLC;
 	option WLC.controller-address "$nms::config::wlc1_v4";
 }
