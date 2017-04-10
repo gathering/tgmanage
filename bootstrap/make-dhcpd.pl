@@ -67,6 +67,17 @@ if exists host-name {
         ddns-hostname = binary-to-ascii(10, 8, "-", leased-address);
 }
 
+# set 'hardware' option to a variable
+# rebuilds the complete MAC in cases where you have a leading 0
+set hostmac = concat ( 
+	suffix (concat ("0", binary-to-ascii (16, 8, "", substring(hardware,1,1))),2), ":",
+	suffix (concat ("0", binary-to-ascii (16, 8, "", substring(hardware,2,1))),2), ":",
+	suffix (concat ("0", binary-to-ascii (16, 8, "", substring(hardware,3,1))),2), ":",
+	suffix (concat ("0", binary-to-ascii (16, 8, "", substring(hardware,4,1))),2), ":",
+	suffix (concat ("0", binary-to-ascii (16, 8, "", substring(hardware,5,1))),2), ":",
+	suffix (concat ("0", binary-to-ascii (16, 8, "", substring(hardware,6,1))),2)
+);
+
 # Domain name (unless overriden elsewhere)
 option domain-name "$nms::config::tgname.gathering.org";
 option domain-name-servers $nms::config::pri_v4, $nms::config::sec_v4;
@@ -139,12 +150,13 @@ if ( not -f $dhcpd_wlc_conf )
 	print WLCFILE <<"EOF";
 option space WLC;
 option WLC.controller-address code 43 = text;
-set vendor-string = option vendor-class-identifier;
 
 class "access-points" {
 	# Number of characters has to match the substring
 	# I.e  if "Access Point", you have to use (0, 12)
 	match if substring (option vendor-class-identifier, 0, 12) = "Access Point";
+	log( info, concat( "AP: ", hostmac, " (", option host-name, ") - ", option agent.circuit-id, " - ", option vendor-class-identifier ));
+
 	vendor-option-space WLC;
 	option WLC.controller-address "$nms::config::wlc1_v4";
 }
@@ -164,16 +176,18 @@ option CiscoVOIP.cm-tftp-server code 150  = array of ip-address;
 
 class "cisco-voip-lan" {
 	match if substring (option vendor-class-identifier, 0, 28) = "Cisco Systems, Inc. IP Phone";
-	vendor-option-space CiscoVOIP;
 	log( info, concat( "LOLOPHONE: " , option vendor-class-identifier )); 
+
+	vendor-option-space CiscoVOIP;
 	option CiscoVOIP.cm-tftp-server $nms::config::voip1_v4;
 	next-server $nms::config::voip1_v4;
 }
 
 class "cisco-voip-wlan" {
         match if substring (option vendor-class-identifier, 0, 33) = "Cisco Systems Inc. Wireless Phone";
-        vendor-option-space CiscoVOIP;
         log( info, concat( "BANANAPHONE: " , option vendor-class-identifier ));
+
+        vendor-option-space CiscoVOIP;
         option CiscoVOIP.cm-tftp-server $nms::config::voip1_v4;
         next-server $nms::config::voip1_v4;
 }
@@ -192,28 +206,17 @@ if ( not -f $dhcpd_fap_conf )
 
 # Define structure of option 43 ( Zero Touch Protocol options)
 option space ztp;
-#option ztp.image-file-name code 0 = text;
+option ztp.image-file-name code 0 = text;
 option ztp.config-file-name code 1 = text;
 option ztp.image-file-type code 2 = text;
 option ztp.transfer-mode code 3 = text;
 option ztp.alt-image-file-name code 4 = text;
-option ztp-encapsulation code 43 = encapsulate ztp;
 
 # define option 150 - TFTP server (used for defining HTTP server for option 43)
 option option-150 code 150 = { ip-address };
 
 # define option 60 - used for classifying ZTP clients ("vendor class identifier")
 option vendor-class-identifier code 60 = text;
-
-# binary-to-ascii remove leading 0 rebuild the complete MAC
-set hostmac = concat ( 
-	suffix (concat ("0", binary-to-ascii (16, 8, "", substring(hardware,1,1))),2), ":",
-	suffix (concat ("0", binary-to-ascii (16, 8, "", substring(hardware,2,1))),2), ":",
-	suffix (concat ("0", binary-to-ascii (16, 8, "", substring(hardware,3,1))),2), ":",
-	suffix (concat ("0", binary-to-ascii (16, 8, "", substring(hardware,4,1))),2), ":",
-	suffix (concat ("0", binary-to-ascii (16, 8, "", substring(hardware,5,1))),2), ":",
-	suffix (concat ("0", binary-to-ascii (16, 8, "", substring(hardware,6,1))),2)
-);
 
 # only allow FAP "clients"
 class "fap-vendor-class" {
@@ -234,7 +237,7 @@ class "fap-mac" {
 }
 
 group {
-        # No DDNS
+	# No DDNS
 	ddns-updates off;
 	ddns-hostname = none;
 	ddns-domainname = none;
@@ -244,13 +247,12 @@ group {
 	max-lease-time 120;
 
         # ZTP Settings
-        option option-150 $nms::config::fap_server_v4;
-        option tftp-server-name "$nms::config::fap_server_v4";
-        option ztp.transfer-mode "http";
-        option ztp.config-file-name = concat("api/config/", (option agent.circuit-id));
-
-        #option ztp.image-file-name "files/jinstall-ex-2200-14.1X53-D15.2-domestic-signed.tgz";
-
+	vendor-option-space ztp;
+	option option-150 $nms::config::fap_server_v4;
+	option tftp-server-name "$nms::config::fap_server_v4";
+	option ztp.transfer-mode "http";
+	option ztp.config-file-name = concat("api/config/", (option agent.circuit-id));
+	#option ztp.image-file-name "files/jinstall-ex-2200-14.1X53-D15.2-domestic-signed.tgz";
 
 	### define ranges
 EOF
