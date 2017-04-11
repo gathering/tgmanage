@@ -30,13 +30,13 @@ sub get_url{
 	$ENV{PERL_LWP_SSL_VERIFY_HOSTNAME} = 0; # just to be sure :-D
 	my $ua = LWP::UserAgent->new;
 	my $req = HTTP::Request->new(GET => $url);
-	$req->authorization_basic($nms::config::nmsapi_user, $nms::config::nmsapi_pass);
+	$req->authorization_basic($nms::config::gondul_user, $nms::config::gondul_pass);
 
 	return $ua->request($req)->content();
 }
 
 my $json_obj = new JSON;
-my $json_content = get_url($nms::config::nmsapi_url . "/api/read/switches-management");
+my $json_content = get_url($nms::config::gondul_url . "/api/read/switches-management");
 if($json_content){
 	my $json = $json_obj->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($json_content);
 	

@@ -10,6 +10,11 @@ our $db_host = "bb-8.tg16.gathering.org";
 our $db_username = "nms";
 our $db_password = "<removed>"; # TODO: Remove before publishing "goodiebag"
 
+# Gondul
+our $gondul_url = "http://foo.bar"; # TODO: Remove before publishing "goodiebag"
+our $gondul_user = "secret"; # TODO: Remove before publishing "goodiebag"
+our $gondul_pass = "<removed>"; # TODO: Remove before publishing "goodiebag"
+
 # NMS: What SNMP objects to fetch.
 # Some basics
 our @snmp_objects = [
