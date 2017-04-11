@@ -13,11 +13,12 @@ use Net::IP;
 use NetAddr::IP;
 use Getopt::Long;
 
-my ($delete);
+my ($delete, $infra);
 
 if (@ARGV > 0) {
         GetOptions(
         'del|delete'            => \$delete,
+	'infra'			=> \$infra, # generate switch forward
         )
 }
 
@@ -37,6 +38,7 @@ sub get_url{
 
 my $json_obj = new JSON;
 my $json_content = get_url($nms::config::gondul_url . "/api/read/switches-management");
+
 if($json_content){
 	my $json = $json_obj->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($json_content);
 	
@@ -54,49 +56,56 @@ if($json_content){
 		my $fqdn = $switch->{sysname} . "." . $nms::config::tgname . ".gathering.org.";
 		my $sw_fqdn = "sw." . $fqdn;
 		my $gw_fqdn = "gw." . $fqdn;
-	
-		# A and AAAA-record to the switch
-		if($delete){
-			print "update delete $sw_fqdn \t IN A\n";
-			print "update delete $sw_fqdn \t IN AAAA\n";
+		
+		if($infra){
+			# Add A and AAAA-records for the switch to the infra.tgNN.gathering.org-zone
+			my $sw_infra = $switch->{sysname} . ".infra." . $nms::config::tgname . ".gathering.org.";
+			printf ("%-24s%s\t%s\t%s\n", $switch->{sysname}, "IN", "A", $v4mgmt);
+			printf ("%-24s%s\t%s\t%s\n", $switch->{sysname}, "IN", "AAAA", $v6mgmt);
 		} else {
-			print "update add $sw_fqdn \t 3600 IN A \t $v4mgmt\n";
-			print "update add $sw_fqdn \t 3600 IN AAAA \t $v6mgmt\n";
-		}
-		print "send\n";
+			# A and AAAA-record to the switch
+			if($delete){
+				print "update delete $sw_fqdn \t IN A\n";
+				print "update delete $sw_fqdn \t IN AAAA\n";
+			} else {
+				print "update add $sw_fqdn \t 3600 IN A \t $v4mgmt\n";
+				print "update add $sw_fqdn \t 3600 IN AAAA \t $v6mgmt\n";
+			}
+			print "send\n";
+		
+			# PTR to the switch
+			if($delete){
+				print "update delete " . Net::IP->new($v4mgmt)->reverse_ip() . " \t IN PTR\n" if $v4mgmt;
+				print "send\n" if $v4mgmt;
+				print "update delete " . Net::IP->new($v6mgmt)->reverse_ip() . " \t IN PTR\n" if $v6mgmt
+			} else {
+				print "update add " . Net::IP->new($v4mgmt)->reverse_ip() . " \t 3600 IN PTR \t $sw_fqdn\n" if $v4mgmt;
+				print "send\n" if $v4mgmt;
+				print "update add " . Net::IP->new($v6mgmt)->reverse_ip() . " \t 3600 IN PTR \t $sw_fqdn\n" if $v6mgmt;
+			}
+			print "send\n";
 
-		# PTR to the switch
-		if($delete){
-			print "update delete " . Net::IP->new($v4mgmt)->reverse_ip() . " \t IN PTR\n" if $v4mgmt;
-			print "send\n" if $v4mgmt;
-			print "update delete " . Net::IP->new($v6mgmt)->reverse_ip() . " \t IN PTR\n" if $v6mgmt
-		} else {
-			print "update add " . Net::IP->new($v4mgmt)->reverse_ip() . " \t 3600 IN PTR \t $sw_fqdn\n" if $v4mgmt;
-			print "send\n" if $v4mgmt;
-			print "update add " . Net::IP->new($v6mgmt)->reverse_ip() . " \t 3600 IN PTR \t $sw_fqdn\n" if $v6mgmt;
-		}
-		print "send\n";
+			# A and AAAA-record to the gateway/router
+			if($delete){
+				print "update delete $gw_fqdn \t IN A\n";
+				print "update delete $gw_fqdn \t IN AAAA\n";
+			} else {
+			        print "update add $gw_fqdn \t 3600 IN A \t $v4gw\n" if $v4gw;
+			        print "update add $gw_fqdn \t 3600 IN AAAA \t $v6gw\n" if $v6gw;
+			}
+			print "send\n";
 
-		# A and AAAA-record to the gateway/router
-		if($delete){
-			print "update delete $gw_fqdn \t IN A\n";
-			print "update delete $gw_fqdn \t IN AAAA\n";
-		} else {
-		        print "update add $gw_fqdn \t 3600 IN A \t $v4gw\n" if $v4gw;
-		        print "update add $gw_fqdn \t 3600 IN AAAA \t $v6gw\n" if $v6gw;
+			# PTR to the gateway/router
+			if($delete){
+				print "update delete " . Net::IP->new($v4gw)->reverse_ip() . " \t IN PTR\n" if $v4gw;
+				print "send\n" if $v4gw;
+				print "update delete " . Net::IP->new($v6gw)->reverse_ip() . " \t IN PTR\n" if $v6gw;
+			} else {
+			        print "update add " . Net::IP->new($v4gw)->reverse_ip() . " \t 3600 IN PTR \t $gw_fqdn\n" if $v4gw;
+				print "send\n" if $v4gw;
+			        print "update add " . Net::IP->new($v6gw)->reverse_ip() . " \t 3600 IN PTR \t $gw_fqdn\n" if $v6gw;
+			}
+		        print "send\n";
 		}
-		print "send\n";
-
-		# PTR to the gateway/router
-		if($delete){
-			print "update delete " . Net::IP->new($v4gw)->reverse_ip() . " \t IN PTR\n" if $v4gw;
-			print "send\n" if $v4gw;
-			print "update delete " . Net::IP->new($v6gw)->reverse_ip() . " \t IN PTR\n" if $v6gw;
-		} else {
-		        print "update add " . Net::IP->new($v4gw)->reverse_ip() . " \t 3600 IN PTR \t $gw_fqdn\n" if $v4gw;
-			print "send\n" if $v4gw;
-		        print "update add " . Net::IP->new($v6gw)->reverse_ip() . " \t 3600 IN PTR \t $gw_fqdn\n" if $v6gw;
-		}
-	        print "send\n";
 	}
 }
