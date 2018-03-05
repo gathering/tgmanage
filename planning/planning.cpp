@@ -35,6 +35,8 @@
 #include <string>
 #include <queue>
 
+#define ENFORCE_DEFINED_SWITCH_PLACEMENT 1
+
 #define NUM_DISTRO 9
 #define NUM_ROWS 38
 #define SWITCHES_PER_ROW 4
@@ -814,7 +816,7 @@ int main(int argc, char **argv)
 	int distro_placements[NUM_DISTRO];
 	
 // Set to 1 if defined switch-placements are to be "enforced"	
-#if 1
+#if ENFORCE_DEFINED_SWITCH_PLACEMENT
 	for (int i = 0; i < NUM_DISTRO; ++i) {
 		distro_placements[i] = atoi(argv[i + 1]);
 	}
