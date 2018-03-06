@@ -5,10 +5,11 @@
 // Given D distro switches and N access switches, complexity is approx. O(dn³)
 // (runs n iterations, each iteration is O(VE), V is O(n), E is O(dn))).
 //
-// g++ -std=gnu++11 -Wall -g -O3 -fopenmp -DOUTPUT_FILES=1 -o planning planning.cpp && ./planning -4 6 14 -23 24 -30 32 37 -38
+// g++ -std=gnu++11 -Wall -g -O3 -fopenmp -DOUTPUT_FILES=1 -o planning planning.cpp && ./planning -5 6 14 23 -24 35 -34
+// TG18: -5 6 14 23 -24 35 -34
 //
 // Full one-liner:
-// rm planning ; g++ -std=gnu++11 -Wall -g -O3 -fopenmp -DOUTPUT_FILES=1 -o planning planning.cpp && ./planning -4 6 14 -23 24 -30 32 37 -38 ; sort -k 2,2 -k 1,1V patchlist.txt > patchlist.txt.distrosort ; cp patchlist.txt* switches.txt ../
+// rm planning ; g++ -std=gnu++11 -Wall -g -O3 -fopenmp -DOUTPUT_FILES=1 -o planning planning.cpp && ./planning -5 6 14 23 -24 35 -34 ; sort -k 2,2 -k 1,1V patchlist.txt > patchlist.txt.distrosort ; cp patchlist.txt* switches.txt ../
 
 
 #include <stdio.h>
@@ -29,7 +30,7 @@
 #include <string>
 #include <queue>
 
-#define NUM_DISTRO 9
+#define NUM_DISTRO 7
 #define NUM_ROWS 41
 #define SWITCHES_PER_ROW 4
 #define PORTS_PER_DISTRO 31
@@ -249,9 +250,9 @@ Inventory Planner::find_inventory(Switch from_where, int distro)
 	}
 
 	// distro0-2 shouldn't cross the mid
-	if ((distro_placements[distro] >= 0) == (from_where.num >= 2)) {
-		inv.horiz_gap_crossings = 1;
-	}
+	//if ((distro_placements[distro] >= 0) == (from_where.num >= 2)) {
+	//	inv.horiz_gap_crossings = 0;
+	//}
 
 	// // Don't cross row 4/5? on the east side
 	// if ((abs(distro_placements[distro]) <= 4) == (from_where.row >= 5) &&
@@ -260,9 +261,9 @@ Inventory Planner::find_inventory(Switch from_where, int distro)
 	// }
 	
 	// TG17: distribute evenly between distro6+7 an distro5+8
-	if ((abs(distro_placements[distro]) <= 34) == (from_where.row >= 35)) {
-		inv.vert_chasm_crossings = 1;
-	}
+	//if ((abs(distro_placements[distro]) <= 34) == (from_where.row >= 35)) {
+	//	inv.vert_chasm_crossings = 0;
+	//}
 	
 	// Gap over the scene
 	if ((abs(distro_placements[distro]) <= 10) == (from_where.row >= 11)) {
@@ -324,7 +325,7 @@ void Planner::logprintf(const char *fmt, ...)
 string distro_name(unsigned distro)
 {
 	char buf[16];
-	sprintf(buf, "distro%d", distro);
+	sprintf(buf, "distro%d", distro+1);
 	return buf;
 }
 
@@ -360,8 +361,13 @@ void Planner::init_switches()
 			switches.push_back(Switch(i, 2));
 			switches.push_back(Switch(i, 3));
 		}
+		if (i == 2) {
+			switches.push_back(Switch(i,1));
+			switches.push_back(Switch(i,2));
+			switches.push_back(Switch(i,3));
+		}
 
-		if (i >= 2 && i <= 10) {
+		if (i >= 3 && i <= 10) {
 			switches.push_back(Switch(i, 0));
 			switches.push_back(Switch(i, 1));
 			switches.push_back(Switch(i, 2));
@@ -373,17 +379,20 @@ void Planner::init_switches()
 			switches.push_back(Switch(i, 1));
 		}
 
-		if (i >= 19 && i <= 40) {
+		if (i >= 19 && i <= 38) {
 			switches.push_back(Switch(i, 0));
 			switches.push_back(Switch(i, 1));
 			switches.push_back(Switch(i, 2));
 			switches.push_back(Switch(i, 3));
 		}
 
+		if (i > 38 && i <= 40) {
+			switches.push_back(Switch(i,1));
+			switches.push_back(Switch(i,2));
+			switches.push_back(Switch(i,3));
+		}
 		if (i == 41) {
 			switches.push_back(Switch(i, 1));
-			switches.push_back(Switch(i, 2));
-			switches.push_back(Switch(i, 3));
 		}
 	}
 }
@@ -566,9 +575,9 @@ void Planner::print_switch(const Graph &g, int i, int distro)
 #endif
 	} else {
 		if(distro >= 6)
-			logprintf("[%u;1m%u ", distro + 32 - 7, distro);
+			logprintf("[%u;1m%u ", distro + 32 - 7, distro+1);
 		else
-			logprintf("[%u;22m%u ", distro + 32, distro);
+			logprintf("[%u;22m%u ", distro + 32, distro+1);
 
 
 		int this_distance = find_distance(switches[i], distro);
@@ -753,7 +762,7 @@ int Planner::do_work(int distro_placements[NUM_DISTRO])
 
 	for (int i = 0; i < NUM_DISTRO; ++i) {
 		Edge *e = g.source_node.edges[i];
-		logprintf("Remaining ports on distro %d: %d\n", i, e->capacity - e->flow);
+		logprintf("Remaining ports on distro %d: %d\n", i+1, e->capacity - e->flow);
 	}
 	return total_cost;
 }
