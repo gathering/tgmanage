@@ -5,11 +5,15 @@
 // Given D distro switches and N access switches, complexity is approx. O(dn³)
 // (runs n iterations, each iteration is O(VE), V is O(n), E is O(dn))).
 //
-// g++ -std=gnu++11 -Wall -g -O3 -fopenmp -DOUTPUT_FILES=1 -o planning planning.cpp && ./planning -5 6 14 23 -24 35 -34
-// TG18: -5 6 14 23 -24 35 -34
+// g++ -std=gnu++11 -Wall -g -O3 -fopenmp -DOUTPUT_FILES=1 -o planning planning.cpp && ./planning  -4 6 14 -23 24 -30 30 35 -35
+//
+// TG18:  -4 6 14 -23 24 -30 32 37 -38
+//        -4 6 14 -23 24 -30 30 35 -35
+//
+// 
 //
 // Full one-liner:
-// rm planning ; g++ -std=gnu++11 -Wall -g -O3 -fopenmp -DOUTPUT_FILES=1 -o planning planning.cpp && ./planning -5 6 14 23 -24 35 -34 ; sort -k 2,2 -k 1,1V patchlist.txt > patchlist.txt.distrosort ; cp patchlist.txt* switches.txt ../
+// rm planning ; g++ -std=gnu++11 -Wall -g -O3 -fopenmp -DOUTPUT_FILES=1 -o planning planning.cpp && ./planning -4 6 14 -23 24 -30 30 35 -35 ; sort -k 2,2 -k 1,1V patchlist.txt > patchlist.txt.distrosort ; cp patchlist.txt* switches.txt ../
 
 
 #include <stdio.h>
@@ -30,8 +34,8 @@
 #include <string>
 #include <queue>
 
-#define NUM_DISTRO 7
-#define NUM_ROWS 41
+#define NUM_DISTRO 9
+#define NUM_ROWS 38
 #define SWITCHES_PER_ROW 4
 #define PORTS_PER_DISTRO 31
 
@@ -293,7 +297,7 @@ unsigned Planner::find_cost(Switch from_where, int distro)
 	Inventory inv = find_inventory(from_where, distro);
 	unsigned cost;
 
-#if TRUNCATE_METRIC
+#if !TRUNCATE_METRIC
 	cost = 100 * inv.num_10m + 300 * inv.num_30m + 500 * inv.num_50m + EXTENSION_COST * inv.extensions;
 	// cost = find_slack(inv, distance);
 #else
@@ -362,7 +366,6 @@ void Planner::init_switches()
 			switches.push_back(Switch(i, 3));
 		}
 		if (i == 2) {
-			switches.push_back(Switch(i,1));
 			switches.push_back(Switch(i,2));
 			switches.push_back(Switch(i,3));
 		}
