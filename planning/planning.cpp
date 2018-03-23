@@ -460,7 +460,8 @@ void Planner::construct_graph(const vector<Switch> &switches, Graph *g)
 	for (unsigned i = 0; i < switches.size(); ++i) {
 		add_edge(&g->switch_nodes[i], &g->sink_node, 1, 0, &g->edges);
 	}
-	
+
+
 	g->all_nodes.push_back(&g->source_node);
 	g->all_nodes.push_back(&g->sink_node);
 
