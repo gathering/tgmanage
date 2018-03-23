@@ -7,7 +7,8 @@
 //
 // g++ -std=gnu++11 -Wall -g -O3 -fopenmp -DOUTPUT_FILES=1 -o planning planning.cpp && ./planning  -4 6 14 -23 24 -30 30 35 -35
 //
-// TG18:  -4 6 14 -23 24 -30 32 37 -38
+// TG18:  -4 6 14 -23 24 -30 32 35 -37 < Current
+//        -4 6 14 -23 24 -30 32 37 -38
 //        -4 6 14 -23 24 -30 30 35 -35
 //
 // 
@@ -366,6 +367,8 @@ void Planner::init_switches()
 			switches.push_back(Switch(i, 3));
 		}
 		if (i == 2) {
+			switches.push_back(Switch(i,0));
+			switches.push_back(Switch(i,1));
 			switches.push_back(Switch(i,2));
 			switches.push_back(Switch(i,3));
 		}
