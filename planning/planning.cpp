@@ -818,6 +818,12 @@ int main(int argc, char **argv)
 
 // Set to 1 if defined switch-placements are to be "enforced"
 #if ENFORCE_DEFINED_SWITCH_PLACEMENT
+
+	if(argc != NUM_DISTRO + 1){
+		printf("ERR: Please enter %i distroplacements as program argument(s), when runnning with ENFORCE_DEFINED_SWITCH_PLACEMENT\n", NUM_DISTRO);
+		return 0;
+	}
+
 	for (int i = 0; i < NUM_DISTRO; ++i) {
 		distro_placements[i] = atoi(argv[i + 1]);
 	}
