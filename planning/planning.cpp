@@ -362,10 +362,10 @@ void Planner::init_switches()
 {
 	switches.clear();
 	for (unsigned i = 1; i <= NUM_ROWS; ++i) {
-		if (i == 1) {
-			switches.push_back(Switch(i, 2));
-			switches.push_back(Switch(i, 3));
-		}
+//		if (i == 1) {
+//			switches.push_back(Switch(i, 2));
+//			switches.push_back(Switch(i, 3));
+//		}
 		if (i == 2) {
 			switches.push_back(Switch(i,0));
 			switches.push_back(Switch(i,1));
