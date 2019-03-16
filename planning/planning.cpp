@@ -342,22 +342,6 @@ string port_name(unsigned distro, unsigned portnum)
 	return buf;
 }
 
-char oct_to_letter(unsigned oct)
-{
-	if(oct == 0) {
-		return 'a';
-	}
-	else if(oct == 64) {
-		return 'b';
-	}
-	else if(oct == 128) {
-		return 'c';
-	}
-	else {
-		return 'd';
-	}
-}
-
 void Planner::init_switches()
 {
 	switches.clear();
@@ -725,17 +709,14 @@ int Planner::do_work(int distro_placements[NUM_DISTRO])
 		subnet_addr4.s_addr = subnet_address;
 		mgmt_ip4.s_addr = distro_mgmt_ip[distro];
 
-		unsigned int third_oct = (subnet_address - (subnet_address / 16777216)*16777216)/65536;
-		unsigned int third_oct_mgmt = (distro_mgmt_ip[distro] - (distro_mgmt_ip[distro] / 16777216)*16777216)/65536;
-		unsigned int fourth_oct = ntohl(subnet_address) % 256;
 		unsigned int fourth_oct_mgmt = ntohl(distro_mgmt_ip[distro]) % 256;
 
 		//<switch-hostname> <v4-subnet> <v6-subnet> <v4-mgmt> <v6-mgmt> <vlan-id> <distro-hostname>
-		fprintf(switchlist, "e%u-%u %s/%u %s%u%c::/64 ",switches[i].row * 2 - 1, switches[i].num + 1,
-			inet_ntoa(subnet_addr4), SUBNET_SIZE, IPV6_PREFIX, third_oct, oct_to_letter(fourth_oct));
+		fprintf(switchlist, "e%u-%u %s/%u %se:%d%u::/64 ",switches[i].row * 2 - 1, switches[i].num + 1,
+			inet_ntoa(subnet_addr4), SUBNET_SIZE, IPV6_PREFIX, switches[i].row * 2 -1, switches[i].num +1);
 
-		fprintf(switchlist, "%s/26 %s%u%c::%u/64 1%02u%u %s\n",
-			inet_ntoa(mgmt_ip4), IPV6_PREFIX, third_oct_mgmt, oct_to_letter((fourth_oct_mgmt / 64) * 64), fourth_oct_mgmt,
+		fprintf(switchlist, "%s/26 %s%u::%u/64 1%02u%u %s\n",
+			inet_ntoa(mgmt_ip4), IPV6_PREFIX, distro + 1, fourth_oct_mgmt,
 			switches[i].row * 2 - 1, switches[i].num + 1, distro_name(distro).c_str());
 
 		subnet_address = htonl(ntohl(subnet_address) + (1ULL << (32 - SUBNET_SIZE)));
