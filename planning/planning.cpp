@@ -11,7 +11,7 @@
 //        -4 6 14 -23 24 -30 32 37 -38
 //        -4 6 14 -23 24 -30 30 35 -35
 //
-// 
+//
 //
 // Full one-liner:
 // rm planning ; g++ -std=gnu++11 -Wall -g -O3 -fopenmp -DOUTPUT_FILES=1 -o planning planning.cpp && ./planning -4 6 14 -23 24 -30 30 35 -35 ; sort -k 2,2 -k 1,1V patchlist.txt > patchlist.txt.distrosort ; cp patchlist.txt* switches.txt ../
@@ -49,10 +49,11 @@
 // 5.5m between the two half rows
 #define HORIZ_GAP_COST 55
 
-#define FIRST_SUBNET_ADDRESS "88.92.0.0"
-#define FIRST_MGMT_ADDRESS "88.92.88.0"
+#define FIRST_SUBNET_ADDRESS "88.92.80.0"
+#define FIRST_MGMT_ADDRESS "88.92.0.0"
 #define SUBNET_SIZE 26
-#define IPV6_PREFIX "2a06:5844:"
+#define IPV6_PREFIX "2a06:5844:e:"
+#define IPV6_MGMT_PREFIX "2a06:5841:d:"
 
 #define _INF 99999
 
@@ -219,7 +220,7 @@ unsigned Planner::find_distance(Switch from_where, int distro)
 	// Add 5m slack.
 	return base_cost + 50;
 }
-	
+
 Inventory Planner::find_inventory(Switch from_where, int distro)
 {
 	assert(distro != -1);
@@ -264,12 +265,12 @@ Inventory Planner::find_inventory(Switch from_where, int distro)
 	//     distro_placements[distro] < 0) {
 	// 	inv.vert_chasm_crossings = 1;
 	// }
-	
+
 	// TG17: distribute evenly between distro6+7 an distro5+8
 	//if ((abs(distro_placements[distro]) <= 34) == (from_where.row >= 35)) {
 	//	inv.vert_chasm_crossings = 0;
 	//}
-	
+
 	// Gap over the scene
 	if ((abs(distro_placements[distro]) <= 10) == (from_where.row >= 11)) {
 		inv.vert_chasm_crossings = 1;
@@ -279,7 +280,7 @@ Inventory Planner::find_inventory(Switch from_where, int distro)
 	if ((abs(distro_placements[distro]) <= 18) == (from_where.row >= 19)) {
 		inv.vert_chasm_crossings = 1;
 	}
-	
+
 	// Gaps between fire gates
 	if ((abs(distro_placements[distro]) <= 27) == (from_where.row >= 28)) {
 		inv.vert_chasm_crossings = 1;
@@ -330,7 +331,7 @@ void Planner::logprintf(const char *fmt, ...)
 string distro_name(unsigned distro)
 {
 	char buf[16];
-	sprintf(buf, "distro%d", distro+1);
+	sprintf(buf, "s%d.floor", distro+1);
 	return buf;
 }
 
@@ -442,7 +443,7 @@ void Planner::construct_graph(const vector<Switch> &switches, Graph *g)
 	for (unsigned i = 0; i < switches.size(); ++i) {
 		add_edge(&g->switch_nodes[i], &g->sink_node, 1, 0, &g->edges);
 	}
-	
+
 	g->all_nodes.push_back(&g->source_node);
 	g->all_nodes.push_back(&g->sink_node);
 
@@ -457,7 +458,7 @@ void Planner::construct_graph(const vector<Switch> &switches, Graph *g)
 	strcpy(g->source_node.name, "source");
 	strcpy(g->sink_node.name, "sink");
 	for (unsigned i = 0; i < NUM_DISTRO; ++i) {
-		sprintf(g->distro_nodes[i].name, "distro%d", i);
+		sprintf(g->distro_nodes[i].name, "s%d.floor", i);
 	}
 	for (unsigned i = 0; i < switches.size(); ++i) {
 		sprintf(g->switch_nodes[i].name, "switch%d", i);
@@ -712,11 +713,11 @@ int Planner::do_work(int distro_placements[NUM_DISTRO])
 		unsigned int fourth_oct_mgmt = ntohl(distro_mgmt_ip[distro]) % 256;
 
 		//<switch-hostname> <v4-subnet> <v6-subnet> <v4-mgmt> <v6-mgmt> <vlan-id> <distro-hostname>
-		fprintf(switchlist, "e%u-%u %s/%u %se:%d%u::/64 ",switches[i].row * 2 - 1, switches[i].num + 1,
+		fprintf(switchlist, "e%u-%u %s/%u %s%d%u::/64 ",switches[i].row * 2 - 1, switches[i].num + 1,
 			inet_ntoa(subnet_addr4), SUBNET_SIZE, IPV6_PREFIX, switches[i].row * 2 -1, switches[i].num +1);
 
 		fprintf(switchlist, "%s/26 %s%u::%u/64 1%02u%u %s\n",
-			inet_ntoa(mgmt_ip4), IPV6_PREFIX, distro + 1, fourth_oct_mgmt,
+			inet_ntoa(mgmt_ip4), IPV6_MGMT_PREFIX, distro + 1, fourth_oct_mgmt,
 			switches[i].row * 2 - 1, switches[i].num + 1, distro_name(distro).c_str());
 
 		subnet_address = htonl(ntohl(subnet_address) + (1ULL << (32 - SUBNET_SIZE)));
@@ -749,7 +750,7 @@ int Planner::do_work(int distro_placements[NUM_DISTRO])
 
 	for (int i = 0; i < NUM_DISTRO; ++i) {
 		Edge *e = g.source_node.edges[i];
-		logprintf("Remaining ports on distro %d: %d\n", i+1, e->capacity - e->flow);
+		logprintf("Remaining ports on s%d.floor: %d\n", i+1, e->capacity - e->flow);
 	}
 	return total_cost;
 }
@@ -793,8 +794,8 @@ try_again:
 int main(int argc, char **argv)
 {
 	int distro_placements[NUM_DISTRO];
-	
-// Set to 1 if defined switch-placements are to be "enforced"	
+
+// Set to 1 if defined switch-placements are to be "enforced"
 #if 1
 	for (int i = 0; i < NUM_DISTRO; ++i) {
 		distro_placements[i] = atoi(argv[i + 1]);
