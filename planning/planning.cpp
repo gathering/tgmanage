@@ -370,7 +370,7 @@ void Planner::init_switches()
 			switches.push_back(Switch(i, 3));
 		}
 
-		/* Crew seating spans from row 38 to row 40 on the west side */
+		/* Crew seating spans from row 75 to row 80 on the west side */
 		if (i >= 38 && i <= 40) {
 			switches.push_back(Switch(i,0)); // Crew seating
 			switches.push_back(Switch(i,1)); // Crew seating
