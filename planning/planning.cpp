@@ -158,9 +158,9 @@ struct VerticalGap {
 // After row 20: 4.0m+0.1m slack = 1.7m cost
 // After row 29: 3.6m+0.1m slack = 1.3m cost
 vector<VerticalGap> vertical_gaps = {
-	{ 10, 23 },
-	{ 18, 17 },
-	{ 27, 13 },
+	{ 12, 23 },
+	{ 20, 17 },
+	{ 29, 13 },
 };
 
 class Planner {
@@ -260,7 +260,7 @@ Inventory Planner::find_inventory(Switch from_where, int distro)
 	//}
 
 	// // Don't cross row 4/5? on the east side
-	// if ((abs(distro_placements[distro]) <= 4) == (from_where.row >= 5) &&
+	// if ((abs(distro_placements[distro]) <= 6) == (from_where.row >= 7) &&
 	//     distro_placements[distro] < 0) {
 	// 	inv.vert_chasm_crossings = 1;
 	// }
@@ -271,17 +271,17 @@ Inventory Planner::find_inventory(Switch from_where, int distro)
 	//}
 
 	// Gap over the scene
-	if ((abs(distro_placements[distro]) <= 10) == (from_where.row >= 11)) {
+	if ((abs(distro_placements[distro]) <= 12) == (from_where.row >= 13)) {
 		inv.vert_chasm_crossings = 1;
 	}
 
 	// Gaps between fire gates
-	if ((abs(distro_placements[distro]) <= 18) == (from_where.row >= 19)) {
+	if ((abs(distro_placements[distro]) <= 20) == (from_where.row >= 21)) {
 		inv.vert_chasm_crossings = 1;
 	}
 
 	// Gaps between fire gates
-	if ((abs(distro_placements[distro]) <= 27) == (from_where.row >= 28)) {
+	if ((abs(distro_placements[distro]) <= 29) == (from_where.row >= 30)) {
 		inv.vert_chasm_crossings = 1;
 	}
 
@@ -351,19 +351,19 @@ void Planner::init_switches()
 			switches.push_back(Switch(i,3));
 		}
 
-		if (i >= 4 && i <= 10) {
+		if (i >= 4 && i <= 12) {
 			switches.push_back(Switch(i, 0));
 			switches.push_back(Switch(i, 1));
 			switches.push_back(Switch(i, 2));
 			switches.push_back(Switch(i, 3));
 		}
 
-		if (i >= 11 && i <= 18) {
+		if (i >= 13 && i <= 20) {
 			//switches.push_back(Switch(i, 0)); // Elkjøp Area
 			switches.push_back(Switch(i, 1));
 		}
 
-		if (i >= 19 && i <= 37) {
+		if (i >= 21 && i <= 37) {
 			switches.push_back(Switch(i, 0));
 			switches.push_back(Switch(i, 1));
 			switches.push_back(Switch(i, 2));
