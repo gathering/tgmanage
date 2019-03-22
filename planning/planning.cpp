@@ -14,8 +14,7 @@
 //
 //
 // Full one-liner:
-// rm planning ; g++ -std=gnu++11 -Wall -g -O3 -fopenmp -DOUTPUT_FILES=1 -o planning planning.cpp && ./planning -4 6 14 -23 24 -30 30 35 -35 ; sort -k 2,2 -k 1,1V patchlist.txt > patchlist.txt.distrosort ; cp patchlist.txt* switches.txt ../
-
+// distros='-5 7 14 -23 24 -32 30 36 -39'; rm planning ; g++ -std=gnu++11 -Wall -g -O3 -fopenmp -DOUTPUT_FILES=1 -o planning planning.cpp && ./planning $distros ; sort -k 2,2 -k 1,1V patchlist.txt > patchlist.txt.distrosort ; cp patchlist.txt* switches.txt ../
 
 #include <stdio.h>
 #include <math.h>
@@ -36,7 +35,7 @@
 #include <queue>
 
 #define NUM_DISTRO 9
-#define NUM_ROWS 38
+#define NUM_ROWS 41
 #define SWITCHES_PER_ROW 4
 #define PORTS_PER_DISTRO 31
 
@@ -347,18 +346,12 @@ void Planner::init_switches()
 {
 	switches.clear();
 	for (unsigned i = 1; i <= NUM_ROWS; ++i) {
-//		if (i == 1) {
-//			switches.push_back(Switch(i, 2));
-//			switches.push_back(Switch(i, 3));
-//		}
-		if (i == 2) {
-			switches.push_back(Switch(i,0));
-			switches.push_back(Switch(i,1));
+		if (i >= 1 && i <= 3) {
 			switches.push_back(Switch(i,2));
 			switches.push_back(Switch(i,3));
 		}
 
-		if (i >= 3 && i <= 10) {
+		if (i >= 4 && i <= 10) {
 			switches.push_back(Switch(i, 0));
 			switches.push_back(Switch(i, 1));
 			switches.push_back(Switch(i, 2));
@@ -366,24 +359,30 @@ void Planner::init_switches()
 		}
 
 		if (i >= 11 && i <= 18) {
-			switches.push_back(Switch(i, 0));
+			//switches.push_back(Switch(i, 0)); // Elkjøp Area
 			switches.push_back(Switch(i, 1));
 		}
 
-		if (i >= 19 && i <= 38) {
+		if (i >= 19 && i <= 37) {
 			switches.push_back(Switch(i, 0));
 			switches.push_back(Switch(i, 1));
 			switches.push_back(Switch(i, 2));
 			switches.push_back(Switch(i, 3));
 		}
 
-		if (i > 38 && i <= 40) {
-			switches.push_back(Switch(i,1));
+		/* Crew seating spans from row 38 to row 40 on the west side */
+		if (i >= 38 && i <= 40) {
+			switches.push_back(Switch(i,0)); // Crew seating
+			switches.push_back(Switch(i,1)); // Crew seating
 			switches.push_back(Switch(i,2));
 			switches.push_back(Switch(i,3));
 		}
+		
+		/* Row 82 is reserved to streamers */
 		if (i == 41) {
-			switches.push_back(Switch(i, 1));
+			/* West side has crew chill and desk/shop */
+			switches.push_back(Switch(i, 2)); 
+			switches.push_back(Switch(i, 3));
 		}
 	}
 }
