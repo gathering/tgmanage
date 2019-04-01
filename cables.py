@@ -1,7 +1,5 @@
 from itertools import chain
 
-from gondul import fetch_gondul_switches
-
 cable_label_format = "%(switch_name)s-%(switch_num)s-%(cable_name)s"
 mark_twice = True
 num_tabs = 1
@@ -67,8 +65,7 @@ def write_csv(data, outfile="cable_labels.csv", split_per_num=100):
         len(split_data), outfile.replace(".", "-1.")))
 
 
-def make_cable_labels(uplinks=3):
+def make_cable_labels(switches, uplinks=3):
     print("Generating labels for cables")
-    switches = fetch_gondul_switches()
     labels = generate_labels(switches, uplinks=uplinks, aps=[])
     write_csv(labels)

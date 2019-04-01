@@ -1,5 +1,3 @@
-from gondul import fetch_gondul_switches
-
 switch_label_format = "%(switch_name)s-%(switch_num)s"
 switch_label_layout = """<!DOCTYPE html>
 <html><head>
@@ -39,8 +37,7 @@ def write_html_to_file(html, outfile="switch_labels.html"):
     print("Wrote labels to '{}'.\nOpen the file in your browser and print it.".format(outfile))
 
 
-def make_switch_labels():
+def make_switch_labels(switches):
     print("Generating labels for switches")
-    switches = fetch_gondul_switches()
     labels = generate_labels(switches)
     write_html_to_file(labels)

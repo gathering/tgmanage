@@ -61,6 +61,16 @@ def _sort_switches(switches):
     return sorted(switches, key=lambda x: (int(x[1:].split("-")[0]), x.split("-")[1]))
 
 
-def fetch_gondul_switches(match="^e(.*)"):
-    # credentials = _generate_credentials()
-    return _sort_switches(_match_switches(_do_switches_request()))
+def fetch_gondul_switches(api=None, endpoint=None, username=None, password=None, match="^e(.*)"):
+    # Use provided arg instead of environment variable if defined.
+    _api = api if api is not None else GONDUL_API
+    _endpoint = endpoint if endpoint is not None else GONDUL_SWITCHES_ENDPOINT
+    _username = username if username is not None else GONDUL_USERNAME
+    _password = password if password is not None else GONDUL_PASSWORD
+    credentials = _generate_credentials(_username, _password)
+
+    return _sort_switches(
+        _match_switches(
+            _do_switches_request(
+                api=_api, endpoint=_endpoint, credentials=credentials),
+            match=match))
