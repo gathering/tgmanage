@@ -65,7 +65,23 @@ def write_csv(data, outfile="cable_labels.csv", split_per_num=100):
         len(split_data), outfile.replace(".", "-1.")))
 
 
-def make_cable_labels(switches, uplinks=3):
+def read_aps_file(path):
+    aps = []
+    with open(path, "r") as f:
+        aps = [line.replace("\n", "").strip() for line in f.readlines()]
+
+    return aps
+
+
+def make_cable_labels(switches, ap_file=None, aps=[], copies=2, outfile="cable_labels.csv", split_per_num=100, uplinks=3):
     print("Generating labels for cables")
-    labels = generate_labels(switches, uplinks=uplinks, aps=[])
-    write_csv(labels)
+
+    list_of_aps = aps
+    if ap_file:
+        list_of_aps.extend(read_aps_file(ap_file))
+
+    if len(list_of_aps):
+        print("Generating labels for {} APs".format(len(list_of_aps)))
+
+    labels = generate_labels(switches, copies=copies, uplinks=uplinks, aps=aps)
+    write_csv(labels, outfile=outfile, split_per_num=split_per_num)

@@ -37,7 +37,7 @@ def write_html_to_file(html, outfile="switch_labels.html"):
     print("Wrote labels to '{}'.\nOpen the file in your browser and print it.".format(outfile))
 
 
-def make_switch_labels(switches):
+def make_switch_labels(switches, outfile="switch_labels.html"):
     print("Generating labels for switches")
     labels = generate_labels(switches)
-    write_html_to_file(labels)
+    write_html_to_file(labels, outfile=outfile)
