@@ -24,9 +24,9 @@ def generate_label_copies(switch, cable_name, copies=2):
     return [generate_label(switch, cable_name) for _ in range(0, copies)]
 
 
-def generate_labels(switches, copies=2, uplinks=3):
-    print("Generating {} copies of each label for {} uplinks for {} switches ({} labels)".format(
-        copies, uplinks, len(switches), len(switches) * uplinks * copies))
+def generate_labels(switches, aps=[], copies=2, uplinks=3):
+    print("Generating {} copies of each label for {} uplinks for {} switches and {} APs ({} labels)".format(
+        copies, uplinks, len(switches), len(aps), (len(switches) * uplinks + len(aps)) * copies))
 
     labels = []
     for i in range(0, len(switches)):
@@ -37,6 +37,10 @@ def generate_labels(switches, copies=2, uplinks=3):
 
         # Destructure the list of copies into a flat list
         labels.extend(chain.from_iterable(cable_labels))
+
+        if switch_name in aps:
+            labels.extend(
+                generate_label_copies(switch_name, "AP", copies=copies))
 
     return labels
 
@@ -66,5 +70,5 @@ def write_csv(data, outfile="cable_labels.csv", split_per_num=100):
 def make_cable_labels(uplinks=3):
     print("Generating labels for cables")
     switches = fetch_gondul_switches()
-    labels = generate_labels(switches, uplinks=uplinks)
+    labels = generate_labels(switches, uplinks=uplinks, aps=[])
     write_csv(labels)
