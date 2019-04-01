@@ -40,6 +40,7 @@ def write_html_to_file(html, outfile="switch_labels.html"):
 
 
 def make_switch_labels():
+    print("Generating labels for switches")
     switches = fetch_gondul_switches()
     labels = generate_labels(switches)
     write_html_to_file(labels)
