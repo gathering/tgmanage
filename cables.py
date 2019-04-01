@@ -1,12 +1,10 @@
 from itertools import chain
-import operator
 
 from gondul import fetch_gondul_switches
 
 cable_label_format = "%(switch_name)s-%(switch_num)s-%(cable_name)s"
 mark_twice = True
 num_tabs = 1
-
 
 
 def generate_label(switch, cable_name):
@@ -29,11 +27,18 @@ def generate_label_copies(switch, cable_name, copies=2):
 def generate_labels(switches, copies=2, uplinks=3):
     print("Generating {} copies of each label for {} uplinks for {} switches ({} labels)".format(
         copies, uplinks, len(switches), len(switches) * uplinks * copies))
-    labels = list(map(lambda switch:
-                      [generate_label_copies(switch[1:], i + 1, copies=copies)
-                       for i in range(0, uplinks)],
-                      switches))
-    return list(chain.from_iterable(chain.from_iterable(labels)))
+
+    labels = []
+    for i in range(0, len(switches)):
+        switch = switches[i]
+        switch_name = switch[1:]
+        cable_labels = [generate_label_copies(
+            switch_name, uplink + 1, copies=copies) for uplink in range(0, uplinks)]
+
+        # Destructure the list of copies into a flat list
+        labels.extend(chain.from_iterable(cable_labels))
+
+    return labels
 
 
 def write_to_file(data, outfile="cable_labels.csv", filenum=1):
