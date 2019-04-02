@@ -48,7 +48,7 @@ if __name__ == "__main__":
 
     if args.labler[0] == "c":
         make_cable_labels(switches,
-                          aps=args.ap,
+                          aps=args.ap if args.ap is not None else [],
                           ap_file=args.aps_file,
                           copies=args.copies,
                           outfile=args.outfile,
