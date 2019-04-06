@@ -1,7 +1,7 @@
 from itertools import chain
 
 cable_label_format = "%(switch_name)s-%(switch_num)s-%(cable_name)s"
-mark_twice = True
+mark_twice = False
 num_tabs = 1
 
 
