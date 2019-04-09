@@ -20,7 +20,7 @@ parser.add_argument("--gondul-switches", type=str,
                     help="Gondul switches endpoint. Overrides env GONDUL_SWITCHES_ENDPOINT")
 parser.add_argument("--match-switches", type=str, default="^e(.*)",
                     help="Regex for matching switches")
-parser.add_argument("--outfile", "-o", type=str, default="cable_labels.csv",
+parser.add_argument("--outfile", "-o", type=str, default=None,
                     help="Output (base) file name. Might be appended with numbers for cables.")
 
 cables_args = parser.add_argument_group("cables")
@@ -46,15 +46,19 @@ if __name__ == "__main__":
         match=args.match_switches,
     )
 
+    kwargs = {}
+    if args.outfile is not None:
+        kwargs['outfile'] = args.outfile
+
     if args.labler[0] == "c":
         make_cable_labels(switches,
                           aps=args.ap if args.ap is not None else [],
                           ap_file=args.aps_file,
                           copies=args.copies,
-                          outfile=args.outfile,
-                          split_per_num=args.split)
+                          split_per_num=args.split,
+                          **kwargs)
     elif args.labler[0] == "s":
-        make_switch_labels(switches, outfile=args.outfile)
+        make_switch_labels(switches, **kwargs)
     else:
         parser.print_help()
         sys.exit("Invalid labler operation.")
