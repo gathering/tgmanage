@@ -14,7 +14,7 @@
 //
 //
 // Full one-liner:
-// distros='-5 7 14 -23 24 -32 30 36 -39'; rm planning ; g++ -std=gnu++11 -Wall -g -O3 -fopenmp -DOUTPUT_FILES=1 -o planning planning.cpp && ./planning $distros ; sort -k 2,2 -k 1,1V patchlist.txt > patchlist.txt.distrosort ; cp patchlist.txt* switches.txt ../
+//distros='-5 8 16 -23 26 -32 30 36 -39'; rm planning ; g++ -std=gnu++11 -Wall -g -O3 -fopenmp -DOUTPUT_FILES=1 -o planning planning.cpp && ./planning $distros ; sort -k 2,2 -k 1,1V patchlist.txt > patchlist.txt.distrosort ; cp patchlist.txt* switches.txt ../
 
 #include <stdio.h>
 #include <math.h>
