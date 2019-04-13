@@ -14,7 +14,7 @@
 //
 //
 // Full one-liner:
-//distros='-5 8 16 -23 26 -32 30 36 -39'; rm planning ; g++ -std=gnu++11 -Wall -g -O3 -fopenmp -DOUTPUT_FILES=1 -o planning planning.cpp && ./planning $distros ; sort -k 2,2 -k 1,1V patchlist.txt > patchlist.txt.distrosort
+//distros='-5 8 16 -23 26 -32 30 37 -39'; rm planning ; g++ -std=gnu++11 -Wall -g -O3 -fopenmp -DOUTPUT_FILES=1 -o planning planning.cpp && ./planning $distros ; sort -k 2,2 -k 1,1V patchlist.txt > patchlist.txt.distrosort
 
 #include <stdio.h>
 #include <math.h>
@@ -347,8 +347,8 @@ void Planner::init_switches()
 	switches.clear();
 	for (unsigned i = 1; i <= NUM_ROWS; ++i) {
 		if (i >= 1 && i <= 3) {
-			switches.push_back(Switch(i,2));
-			switches.push_back(Switch(i,3));
+			// switches.push_back(Switch(i,2)); 
+			// switches.push_back(Switch(i,3));
 		}
 
 		if (i >= 4 && i <= 12) {
@@ -370,19 +370,17 @@ void Planner::init_switches()
 			switches.push_back(Switch(i, 3));
 		}
 
-		/* Crew seating spans from row 75 to row 80 on the west side */
-		if (i >= 38 && i <= 40) {
+		if (i == 38) {
 			switches.push_back(Switch(i,0)); // Crew seating
 			switches.push_back(Switch(i,1)); // Crew seating
 			switches.push_back(Switch(i,2));
 			switches.push_back(Switch(i,3));
 		}
-		
-		/* Row 82 is reserved to streamers */
-		if (i == 41) {
-			/* West side has crew chill and desk/shop */
-			switches.push_back(Switch(i, 2)); 
-			switches.push_back(Switch(i, 3));
+		/* Crew seating spans from row 75 to row 82 on the west side */
+		if (i >= 39 && i <= 41) {
+			switches.push_back(Switch(i,0)); // Crew seating
+			switches.push_back(Switch(i,2));
+			switches.push_back(Switch(i,3));
 		}
 	}
 }
