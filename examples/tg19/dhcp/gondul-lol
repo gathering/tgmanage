@@ -1,0 +1,5 @@
+#!/bin/bash
+
+{
+ time /usr/local/sbin/Gondul-DHCP-Event-Collector $*
+} >>/tmp/lol.log 2>>/tmp/lol.err &
