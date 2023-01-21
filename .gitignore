@@ -1,23 +1,4 @@
-web/.htpasswd
-web/.htpasswd.munin
-web/htpasswd*
-web/stream.gathering.org/hls
-web/stream.gathering.org/chiobe
-web/nms-public.gathering.org/nettkart-dhcp.png
-web/nms-public.gathering.org/nettkart-trafikk.png
-web/nms-public.gathering.org/weathermap
-web/nms-public.gathering.org/nettkart.json
-web/nms-public.gathering.org/ping.json
-web/nms-public.gathering.org/speedometer.json
-web/nms-public.gathering.org/switches.json
-web/nms.gathering.org/.htaccess
-working-area/
-include/config.pm
-include/tgmanage.cfg.sh
 planning/planning
-fap/tools/generate_distro_config_ae_event-options/
-nms/build/
-mibs/
 
 # OS-crap
 .DS_Store
