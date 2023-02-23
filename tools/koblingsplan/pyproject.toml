@@ -9,6 +9,7 @@ packages = [{include = "tg_cabling"}]
 [tool.poetry.dependencies]
 python = "^3.11"
 pyyaml = "^6.0"
+pynetbox = "^7.0.1"
 
 
 [build-system]
