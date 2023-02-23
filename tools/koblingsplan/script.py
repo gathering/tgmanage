@@ -8,6 +8,9 @@
 import csv
 import yaml
  
+# Holds all data. List of objects, each object represents a row in the table
+dataset = []
+
 with open('tg23-koblingsplan.csv', newline='') as csvfile:
     csv_data = csv.reader(csvfile, delimiter=',', quotechar='"')
  
@@ -16,9 +19,6 @@ with open('tg23-koblingsplan.csv', newline='') as csvfile:
  
     # Holds the data from the current iteration
     current_iteration = {}
- 
-    # Holds all data. List of objects, each object represents a row in the table
-    dataset = []
  
     for row in csv_data:
         i += 1
@@ -54,4 +54,5 @@ with open('tg23-koblingsplan.csv', newline='') as csvfile:
 
         dataset.append(current_iteration)
  
-    print(yaml.dump(dataset, default_flow_style=False, sort_keys=False, allow_unicode=True))
+with open('tg23-koblingsplan.yml', 'w') as f:
+    f.write(yaml.dump(dataset, default_flow_style=False, sort_keys=False, allow_unicode=True))
