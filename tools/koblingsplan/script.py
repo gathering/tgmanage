@@ -54,4 +54,4 @@ with open('tg23-koblingsplan.csv', newline='') as csvfile:
 
         dataset.append(current_iteration)
  
-    print(yaml.dump(dataset, default_flow_style=False, sort_keys=False))
+    print(yaml.dump(dataset, default_flow_style=False, sort_keys=False, allow_unicode=True))
