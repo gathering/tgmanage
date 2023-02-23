@@ -1,0 +1,13 @@
+= Koblingsplan
+
+Stjal scriptet til Jonas fra Confluence og la det her.
+
+== Usage
+
+Depdencies are stored in `pyproject.toml` and can be used with e.g. poetry:
+
+Install dependencies: `poetry install`
+
+Run the script: `poetry run python script.py`
+
+or `poetry shell` to have a configured shell you can run python from.
