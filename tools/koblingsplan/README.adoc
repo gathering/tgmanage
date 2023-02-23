@@ -11,3 +11,8 @@ Install dependencies: `poetry install`
 Run the script: `poetry run python script.py`
 
 or `poetry shell` to have a configured shell you can run python from.
+
+== Koblingsplan to Netbox
+
+Get yourself a NetBox API token from here: `{ NETBOX_URL }/user/api-tokens/`
+And expose it to the script (e.g. `export NETBOX_API_KEY=...token here ...`).

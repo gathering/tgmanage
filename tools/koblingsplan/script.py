@@ -50,13 +50,20 @@ with open('tg23-koblingsplan.csv', newline='') as csvfile:
         current_iteration['cable_type'] = row[10] if len(row[10].strip()) > 0 else prev_iteration['cable_type']
 
         # strip trailing data from interface sections and put it in a description field
-        extra_info = ""
         if (if_data := current_iteration['a']['interface'].split(" ")) and len(if_data) > 1:
             current_iteration['a']['interface_description'] = " ".join(if_data[1:])
             current_iteration['a']['interface'] = if_data[0]
         if (if_data := current_iteration['b']['interface'].split(" ")) and len(if_data) > 1:
             current_iteration['b']['interface_description'] = " ".join(if_data[1:])
             current_iteration['b']['interface'] = if_data[0]
+
+        # strip trailing data from node sections and put it in a description field
+        if (if_data := current_iteration['a']['node'].split(" ")) and len(if_data) > 1:
+            current_iteration['a']['node_description'] = " ".join(if_data[1:])
+            current_iteration['a']['node'] = if_data[0]
+        if (if_data := current_iteration['b']['node'].split(" ")) and len(if_data) > 1:
+            current_iteration['b']['node_description'] = " ".join(if_data[1:])
+            current_iteration['b']['node'] = if_data[0]
 
         dataset.append(current_iteration)
  
