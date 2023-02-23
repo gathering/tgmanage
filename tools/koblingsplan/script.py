@@ -42,6 +42,16 @@ with open('tg23-koblingsplan.csv', newline='') as csvfile:
         current_iteration['b_interface'] = row[8].strip() if len(row[8].strip()) > 0 else prev_iteration['b_interface']
         current_iteration['b_ae'] = row[9] if len(row[9].strip()) > 0 else prev_iteration['b_ae']
         current_iteration['cable_type'] = row[10] if len(row[10].strip()) > 0 else prev_iteration['cable_type']
+
+        # strip trailing data from interface sections and put it in a description field
+        extra_info = ""
+        if (if_data := current_iteration['a_interface'].split(" ")) and len(if_data) > 1:
+            current_iteration['a_interface_description'] = " ".join(if_data[1:])
+            current_iteration['a_interface'] = if_data[0]
+        if (if_data := current_iteration['b_interface'].split(" ")) and len(if_data) > 1:
+            current_iteration['b_interface_description'] = " ".join(if_data[1:])
+            current_iteration['b_interface'] = if_data[0]
+
         dataset.append(current_iteration)
  
     print(yaml.dump(dataset, default_flow_style=False, sort_keys=False))
