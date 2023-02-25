@@ -65,6 +65,12 @@ with open('tg23-koblingsplan.csv', newline='') as csvfile:
             current_iteration['b']['node_description'] = " ".join(if_data[1:])
             current_iteration['b']['node'] = if_data[0]
 
+        # replace multi-device with single device
+        if " x " in current_iteration['a']['model'].lower():
+            current_iteration['a']['model'] = current_iteration['a']['model'].split(' ')[-1]
+        if " x " in current_iteration['b']['model'].lower():
+            current_iteration['b']['model'] = current_iteration['b']['model'].split(' ')[-1]
+
         dataset.append(current_iteration)
  
 with open('tg23-koblingsplan.yml', 'w') as f:
