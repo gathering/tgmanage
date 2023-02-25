@@ -79,6 +79,8 @@ def get_or_create_cabling(cabling):
     cable_type = kobling['cable_type']
     if cable_type == 'Singlemode LC':
         cable_type = 'smf'
+    else:
+        cable_type = cable_type.lower()
 
     print(f"🔌 Planning cable A<->B: {a['node']} {a['interface']}<->{b['interface']} {b['node']}")
 
