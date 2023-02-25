@@ -14,9 +14,14 @@ with open('tg23-koblingsplan.yml', 'r') as f:
     koblingsplan = yaml.safe_load(f.read())
 
 def device_from_edge(edge):
+    role = edge['type']
+    if role == 'Distro':
+        role = 'Distribution Switch'
+    if role == 'Edge':
+        role = 'Access Switch'
     return {
         'name': edge['node'],
-        'role': edge['type'],
+        'role': role,
         'model': edge['model'],
     }
 
@@ -38,7 +43,7 @@ def get_or_create_device(device):
         print(f"❌ Device role {device['role']} is missing from NetBox. Please add it manually.")  # This could probably be done programatically.
         exit(1)
 
-    default_site = nb.dcim.sites.get(name='ringen')
+    default_site = nb.dcim.sites.get(name='Unknown')
     r = nb.dcim.devices.create(
         name=device['name'],
         device_role=device_role.id,
