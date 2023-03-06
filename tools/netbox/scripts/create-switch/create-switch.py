@@ -164,6 +164,9 @@ class CreateSwitch(Script):
         )
         mgmt_vlan_interface.ip_addresses.add(v4_mgmt_addr)
         mgmt_vlan_interface.ip_addresses.add(v6_mgmt_addr)
+        switch.primary_ip4 = v4_mgmt_addr
+        switch.primary_ip6 = v6_mgmt_addr
+        switch.save()
 
         num_uplinks = len(data['destination_interfaces'])
         interfaces = list(Interface.objects.filter(device=switch).exclude(type=InterfaceTypeChoices.TYPE_VIRTUAL).exclude(type=InterfaceTypeChoices.TYPE_LAG))
