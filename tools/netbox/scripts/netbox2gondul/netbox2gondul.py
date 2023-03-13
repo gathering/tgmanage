@@ -10,6 +10,7 @@ from ipam.lookups import NetContainsOrEquals
 
 import ipaddress
 import json
+import re
 import requests
 from requests.models import HTTPBasicAuth
 
@@ -25,10 +26,10 @@ class Netbox2Gondul(Script):
 
     class Meta:
         name = "Sync NetBox to Gondul"
-        description = """
+        description = re.sub(r'^\s*', '', """
             Can be done for a single network/device or a full sync. Note that this will not do 'renames' of devices, so it is best used for updating device information.
             If a device is selected, it will also sync the required networks as long as they are set up correctly (Primary IP addresses for the Switch & VLAN configured for the Prefix of those IP Addresses).
-        """
+        """)
         field_order = ['site_name', 'switch_count', 'switch_model']
 
     switch = ObjectVar(
