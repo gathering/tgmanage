@@ -177,11 +177,11 @@ class CreateSwitch(Script):
             b_interface = interfaces[(uplink_num * -1) -1]
 
             # Configure uplink as AE0
-            b_interface.parent = uplink_ae
+            b_interface.lag = uplink_ae
             b_interface.save()
 
             # Configure downlink on destination
-            a_interface.parent = destination_ae
+            a_interface.lag = destination_ae
             a_interface.save()
 
             cable = Cable.objects.create()
