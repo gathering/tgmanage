@@ -75,13 +75,13 @@ class Netbox2Gondul(Script):
 
         if prefix_v4:
             subnet4 = str(prefix_v4.prefix)
-            gw4 = ipaddress.IPv4Network(prefix_v4.prefix)[1].exploded
+            gw4 = str(ipaddress.IPv4Network(prefix_v4.prefix)[1])
         else:
             self.log_warning(f'Network for VLAN <a href="{vlan.get_absolute_url()}">{vlan.name}</a> is missing IPv4 Prefix')
 
         if prefix_v6:
             subnet6 = str(prefix_v6.prefix)
-            gw6 = ipaddress.IPv6Network(prefix_v6.prefix)[1].exploded
+            gw6 = str(ipaddress.IPv6Network(prefix_v6.prefix)[1])
         else:
             self.log_warning(f'Network for VLAN <a href="{vlan.get_absolute_url()}">{vlan.name}</a> is missing IPv6 Prefix')
 
@@ -89,9 +89,17 @@ class Netbox2Gondul(Script):
             router = IPAddress.objects.get(address=gw4)
         except IPAddress.DoesNotExist:
             self.log_warning(f'Router not found for VLAN <a href="{vlan.get_absolute_url()}">{vlan.name}</a>')
+            router = "r1.tele"
+
+        vlan_name = vlan.name
+        if 'gondul-name:' in vlan.description:
+            override = vlan.description.split('gondul-name:')[1].split()[0]
+            self.log_info(f'Overriding management vlan name with: {override} (was: {vlan_name})')
+            vlan_name = override
+        vlan_name += f".{router}"
 
         data = json.dumps([{
-            "name": vlan.name,
+            "name": vlan_name,
             "subnet4": subnet4,
             "subnet6": subnet6,
             "gw4": gw4,
@@ -102,9 +110,9 @@ class Netbox2Gondul(Script):
 
         req = requests.post(
             f"{GONDUL_URL}/api/write/networks",
-            data=data,
-            headers={'content-type': 'application/json'},
             auth=gondul_auth,
+            headers={'content-type': 'application/json'},
+            data=data,
         )
 
         if req.ok:
@@ -114,17 +122,52 @@ class Netbox2Gondul(Script):
 
     def device_to_gondul(self, device: Device):
         self.log_info(f"Posting {device.name} to Gondul")
- 
+
+        # Find distro and distro port through the cable connected on uplink ae.
+        # Assuming the uplink AE is always named 'ae0'.
+        uplink_ae: Interface = device.interfaces.get(name="ae0")
+
+        first_ae_interface: Interface = uplink_ae.member_interfaces.first()
+        cable: Cable = first_ae_interface.cable
+        # Assuming we only have one entry in the cable termination list.
+        distro_interface: Interface = cable.a_terminations[0]
+        distro = distro_interface.device
+
+        mgmt_vlan = uplink_ae.tagged_vlans.first()
+        # Could consider filtering interfaces for: filter(Q(is_management=True) | Q(description__icontains="management")).first()
+        # to make sure we only pick management VLANs
+
+        mgmt_vlan_name = mgmt_vlan.name
+        if 'gondul-name:' in mgmt_vlan.description:
+            override = mgmt_vlan.description.split('gondul-name:')[1].split()[0]
+            self.log_info(f'Overriding management vlan name with: {override} (was: {mgmt_vlan_name})')
+            mgmt_vlan_name = override
+
+        # add name of router to vlan name
+        router = "r1.tele"
+        mgmt_vlan_name += f".{router}"
+
+        data = json.dumps([{
+            # "community": "", # Not implemented
+            "tags": list(device.tags.all()),
+            "distro_name": distro.name,
+            "distro_phy_port": distro_interface.name,  # TODO: always .0 ?
+            "mgmt_v4_addr": str(device.primary_ip4.address.ip) if device.primary_ip4 is not None else None,
+            "mgmt_v6_addr": str(device.primary_ip6.address.ip) if device.primary_ip6 is not None else None,
+            "mgmt_vlan": mgmt_vlan_name,
+            # "placement": "", # Not implemented
+            # "poll_frequency": "", # Not implemented
+            "sysname": device.name,
+            # "traffic_vlan": "", # Not implemented
+            # "deleted": False,  # Not implemented
+        }])
+
         gondul_auth = HTTPBasicAuth(GONDUL_USERNAME, GONDUL_PASSWORD)
-
-        data = json.dumps([
-        ])
-
         req = requests.post(
             f"{GONDUL_URL}/api/write/switches",
-            data=data,
-            headers={'content-type': 'application/json'},
             auth=gondul_auth,
+            headers={'content-type': 'application/json'},
+            data=data,
         )
 
         if req.ok:
