@@ -67,8 +67,8 @@ class Netbox2Gondul(Script):
             router = "r1.tele"
 
         vlan_name = vlan.name
-        if 'gondul-name:' in vlan.description:
-            override = vlan.description.split('gondul-name:')[1].split()[0]
+        if vlan.custom_fields.filter(name='gondul_name').count() == 1 and vlan.cf['gondul_name']:
+            override = vlan.cf['gondul_name']
             self.log_info(f'Overriding management vlan name with: {override} (was: {vlan_name})')
             vlan_name = override
         vlan_name += f".{router}"
@@ -113,8 +113,8 @@ class Netbox2Gondul(Script):
         # to make sure we only pick management VLANs
 
         mgmt_vlan_name = mgmt_vlan.name
-        if 'gondul-name:' in mgmt_vlan.description:
-            override = mgmt_vlan.description.split('gondul-name:')[1].split()[0]
+        if mgmt_vlan.custom_fields.filter(name='gondul_name').count() == 1 and mgmt_vlan.cf['gondul_name']:
+            override = mgmt_vlan.cf['gondul_name']
             self.log_info(f'Overriding management vlan name with: {override} (was: {mgmt_vlan_name})')
             mgmt_vlan_name = override
 
