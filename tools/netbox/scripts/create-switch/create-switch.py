@@ -69,23 +69,8 @@ class CreateSwitch(Script):
         description="Management VLAN",
         model=VLAN,
         query_params={
+            'group_id': '$vlan_group',
             'vid': [666, 667],
-        }
-    )
-    mgmt_prefix_v4 = ObjectVar(
-        description="IPv4 Prefix to assign a management IP Address from",
-        model=Prefix,
-        query_params={
-            'family': 4,
-            'vlan_id': '$mgmt_vlan'
-        }
-    )
-    mgmt_prefix_v6 = ObjectVar(
-        description="IPv6 Prefix to assign a management IP Address from",
-        model=Prefix,
-        query_params={
-            'family': 6,
-            'vlan_id': '$mgmt_vlan'
         }
     )
     tags = MultiObjectVar(
@@ -159,11 +144,14 @@ class CreateSwitch(Script):
         )
         self.log_success("Created AE and VLAN interfaces for both ends")
 
+        mgmt_prefix_v4 = mgmt_vlan.prefixes.get(prefix__family=4)
+        mgmt_prefix_v6 = mgmt_vlan.prefixes.get(prefix__family=6)
+
         v4_mgmt_addr = IPAddress.objects.create(
-            address=data['mgmt_prefix_v4'].get_first_available_ip(),
+            address=mgmt_prefix_v4.get_first_available_ip(),
         )
         v6_mgmt_addr = IPAddress.objects.create(
-            address=data['mgmt_prefix_v6'].get_first_available_ip(),
+            address=mgmt_prefix_v6.get_first_available_ip(),
         )
         mgmt_vlan_interface.ip_addresses.add(v4_mgmt_addr)
         mgmt_vlan_interface.ip_addresses.add(v6_mgmt_addr)
