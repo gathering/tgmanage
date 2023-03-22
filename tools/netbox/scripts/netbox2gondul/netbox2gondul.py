@@ -36,31 +36,6 @@ class Netbox2Gondul(Script):
         model=Device,
         required=True,
     )
-    """
-    vlan = ObjectVar(
-        description="VLAN",
-        model=VLAN,
-        required=False,
-    )
-    prefix_v4 = ObjectVar(
-        description="IPv4 Prefix",
-        model=Prefix,
-        query_params={
-            'family': 4,
-            'vlan_id': '$vlan'
-        },
-        required=False,
-    )
-    prefix_v6 = ObjectVar(
-        description="IPv6 Prefix",
-        model=Prefix,
-        query_params={
-            'family': 6,
-            'vlan_id': '$vlan'
-        },
-        required=False,
-    )
-    """
 
     def network_to_gondul(self, vlan: VLAN, prefix_v4: Prefix, prefix_v6: Prefix):
         self.log_info(f"Posting {vlan.name} to Gondul")
