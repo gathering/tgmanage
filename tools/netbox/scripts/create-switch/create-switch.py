@@ -91,6 +91,7 @@ class CreateSwitch(Script):
     tags = MultiObjectVar(
         description="Tags to be sent to Gondul. These are used for templating, so be sure what they do.",
         model=Tag,
+        required=False,
     )
 
     def run(self, data, commit):
