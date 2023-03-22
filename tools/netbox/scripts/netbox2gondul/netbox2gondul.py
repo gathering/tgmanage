@@ -28,12 +28,11 @@ class Netbox2Gondul(Script):
         name = "Sync NetBox to Gondul"
         description = re.sub(r'^\s*', '', """
             Can be done for a single network/device or a full sync. Note that this will not do 'renames' of devices, so it is best used for updating device information.
-            If a device is selected, it will also sync the required networks as long as they are set up correctly (Primary IP addresses for the Switch & VLAN configured for the Prefix of those IP Addresses).
+            If a device is selected, it will also sync the required networks as long as they are set up correctly (Primary IP addresses for the Device & VLAN configured for the Prefix of those IP Addresses).
         """)
-        field_order = ['site_name', 'switch_count', 'switch_model']
 
-    switch = ObjectVar(
-        description="Switch",
+    device = ObjectVar(
+        description="Device",
         model=Device,
         required=True,
     )
@@ -135,7 +134,7 @@ class Netbox2Gondul(Script):
 
     def run(self, data, commit):
 
-        switch: Device = data['switch']
+        device: Device = data['device']
         """
         vlan: VLAN = data['vlan']
         prefix_v4: Prefix = data['prefix_v4']
@@ -147,16 +146,26 @@ class Netbox2Gondul(Script):
                 self.log_info(f"v4 not provided, default")
         """
 
-        if not (switch.primary_ip4 or switch.primary_ip6):
-            self.log_failure(f'Switch <a href="{switch.get_absolute_url()}">{switch.name}</a> is missing primary IPv4 or IPv6 address.')
+        if not device.primary_ip4 and not device.primary_ip6:
+            self.log_failure(f'Device <a href="{device.get_absolute_url()}">{device.name}</a> is missing primary IPv4 and IPv6 address.')
             return
 
-        prefix_v4 = Prefix.objects.get(NetContainsOrEquals(F('prefix'), str(switch.primary_ip4.address)))
-        prefix_v6 = Prefix.objects.get(NetContainsOrEquals(F('prefix'), str(switch.primary_ip6.address)))
+        vlan: VLAN = None
+        prefix_v4: Prefix = None
+        if device.primary_ip4:
+            prefix_v4 = Prefix.objects.get(NetContainsOrEquals(F('prefix'), str(device.primary_ip4.address)))
+            vlan = prefix_v4.vlan
+        else:
+            self.log_warning(f'Device <a href="{device.get_absolute_url()}">{device.name}</a> is missing primary IPv4 address.')
 
-        vlan = prefix_v6.vlan
+        prefix_v6: Prefix = None
+        if device.primary_ip6:
+            prefix_v6 = Prefix.objects.get(NetContainsOrEquals(F('prefix'), str(device.primary_ip6.address)))
+            vlan = prefix_v6.vlan
+        else:
+            self.log_warning(f'Device <a href="{device.get_absolute_url()}">{device.name}</a> is missing primary IPv6 address.')
 
-        if prefix_v4.vlan != prefix_v6.vlan:
+        if prefix_v4 is not None and prefix_v6 is not None and prefix_v4.vlan != prefix_v6.vlan:
             self.log_failure(f'VLANs differ for the IPv4 and IPv6 addresses.')
             return
 
@@ -164,4 +173,4 @@ class Netbox2Gondul(Script):
 
         self.log_success("All good, sending to Gondul")
 
-        self.device_to_gondul(switch)
+        self.device_to_gondul(device)
