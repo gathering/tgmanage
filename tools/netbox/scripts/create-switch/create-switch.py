@@ -9,6 +9,8 @@ from ipam.models import IPAddress, Prefix, VLAN, VLANGroup
 
 # Used for getting existing types/objects from Netbox.
 DISTRIBUTION_SWITCH_DEVICE_ROLE = 'distribution-switch' # match the name or the slug
+ROUTER_DEVICE_ROLE = 'router'
+CORE_DEVICE_ROLE = 'core'
 ACCESS_SWITCH_DEVICE_ROLE = DeviceRole.objects.get(name='Access Switch')
 DEFAULT_SITE = Site.objects.first()  # TODO: pick default site ?
 
@@ -40,7 +42,7 @@ class CreateSwitch(Script):
         description = "Destination/uplink",
         model=Device,
         query_params={
-            'role': DISTRIBUTION_SWITCH_DEVICE_ROLE,
+            'role': [DISTRIBUTION_SWITCH_DEVICE_ROLE, ROUTER_DEVICE_ROLE, CORE_DEVICE_ROLE],
         },
     )
     destination_interfaces = MultiObjectVar(
