@@ -1,3 +1,5 @@
+import os
+
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import F
 from django.utils.text import slugify
@@ -14,16 +16,56 @@ import re
 import requests
 from requests.models import HTTPBasicAuth
 
-GONDUL_URL = ""
-GONDUL_USERNAME = ""
-GONDUL_PASSWORD = ""
+class GondulConfigError(Exception):
+    def __init__(self, msg):
+        self.message = msg
+        super().__init__(self.message)
 
-def find_prefix_for_device(device) -> Prefix:
-    pass
+
+GONDUL_CONFIG_FILE = os.getenv("GONDUL_CONFIG_FILE_PATH", "/etc/netbox/scripts/gondul.json")
+
+class Gondul(object):
+    url = ""
+    username = ""
+    password = ""
+
+    def __init__(self, url, username, password) -> None:
+        self.url = url
+        self.username = username
+        self.password = password
+
+    @classmethod
+    def read_config_from_file(cls, path):
+        with open(path, 'r') as f:
+            conf = json.loads(f.read())
+
+            try:
+                url = conf['url']
+                username = conf['username']
+                password = conf['password']
+                return Gondul(url, username, password)
+            except KeyError as e:
+                raise GondulConfigError(f"Missing Gondul Configuration key: {e} in {path}")
+
+    def gondul_auth(self):
+        return HTTPBasicAuth(self.username, self.password)
+
+    def gondul_post(self, path, data):
+        return requests.post(
+            f"{self.url}{path}",
+            auth=self.gondul_auth(),
+            headers={'content-type': 'application/json'},
+            data=json.dumps(data),
+        )
+
+    def update_networks(self, networks):
+        return self.gondul_post("/api/write/networks", networks)
+
+    def update_switches(self, switches):
+        return self.gondul_post("/api/write/switches", switches)
 
 
 class Netbox2Gondul(Script):
-
     class Meta:
         name = "Sync NetBox to Gondul"
         description = re.sub(r'^\s*', '', """
@@ -37,11 +79,11 @@ class Netbox2Gondul(Script):
         required=True,
     )
 
-    def network_to_gondul(self, vlan: VLAN, prefix_v4: Prefix, prefix_v6: Prefix):
-        self.log_info(f"Posting {vlan.name} to Gondul")
+    _gondul = None
 
-        gondul_auth = HTTPBasicAuth(GONDUL_USERNAME, GONDUL_PASSWORD)
-    
+    def network_to_gondul(self, vlan: VLAN, prefix_v4: Prefix, prefix_v6: Prefix):
+        self.log_info(f"Preparing {vlan.name} for Gondul")
+
         subnet4 = None
         subnet6 = None
         gw4 = None
@@ -73,7 +115,7 @@ class Netbox2Gondul(Script):
             vlan_name = override
         vlan_name += f".{router}"
 
-        data = json.dumps([{
+        networks = [{
             "name": vlan_name,
             "subnet4": subnet4,
             "subnet6": subnet6,
@@ -81,14 +123,9 @@ class Netbox2Gondul(Script):
             "gw6": gw6,
             "router": router,
             "vlan": vlan.vid,
-        }])
+        }]
 
-        req = requests.post(
-            f"{GONDUL_URL}/api/write/networks",
-            auth=gondul_auth,
-            headers={'content-type': 'application/json'},
-            data=data,
-        )
+        req = self._gondul.update_networks(networks)
 
         if req.ok:
             self.log_success(f"Gondul said (HTTP {req.status_code}): {req.text}")
@@ -122,7 +159,7 @@ class Netbox2Gondul(Script):
         router = "r1.tele"
         mgmt_vlan_name += f".{router}"
 
-        data = json.dumps([{
+        switches = [{
             # "community": "", # Not implemented
             "tags": list(device.tags.all()),
             "distro_name": distro.name,
@@ -135,34 +172,17 @@ class Netbox2Gondul(Script):
             "sysname": device.name,
             # "traffic_vlan": "", # Not implemented
             # "deleted": False,  # Not implemented
-        }])
+        }]
 
-        gondul_auth = HTTPBasicAuth(GONDUL_USERNAME, GONDUL_PASSWORD)
-        req = requests.post(
-            f"{GONDUL_URL}/api/write/switches",
-            auth=gondul_auth,
-            headers={'content-type': 'application/json'},
-            data=data,
-        )
+        req = self._gondul.update_switches(switches)
 
         if req.ok:
             self.log_success(f"Gondul said (HTTP {req.status_code}): {req.text}")
         else:
             self.log_failure(f"Gondul said HTTP {req.status_code} and {req.text}")
 
-    def run(self, data, commit):
-
+    def run(self, data):
         device: Device = data['device']
-        """
-        vlan: VLAN = data['vlan']
-        prefix_v4: Prefix = data['prefix_v4']
-        prefix_v6: Prefix = data['prefix_v6']
-        """
-
-        """
-            if prefix_v4 is None:
-                self.log_info(f"v4 not provided, default")
-        """
 
         if not device.primary_ip4 and not device.primary_ip6:
             self.log_failure(f'Device <a href="{device.get_absolute_url()}">{device.name}</a> is missing primary IPv4 and IPv6 address.')
@@ -186,6 +206,8 @@ class Netbox2Gondul(Script):
         if prefix_v4 is not None and prefix_v6 is not None and prefix_v4.vlan != prefix_v6.vlan:
             self.log_failure(f'VLANs differ for the IPv4 and IPv6 addresses.')
             return
+
+        self._gondul = Gondul.read_config_from_file(GONDUL_CONFIG_FILE)
 
         self.network_to_gondul(vlan, prefix_v4, prefix_v6)
 
