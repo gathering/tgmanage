@@ -198,8 +198,7 @@ class CreateSwitch(Script):
                 termination_type=interface_type,
             )
             cable = Cable.objects.get(id=cable.id)
-            # TODO: fix cables being 'connected'
-            #cable.a_terminations = [a]
-            #cable.b_terminations = [b]
+            # https://github.com/netbox-community/netbox/discussions/10199
+            cable._terminations_modified = True
             cable.save()
             self.log_success(f"Cabled {data['destination_device']} {a_interface} to {switch} {b_interface}")
