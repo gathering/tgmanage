@@ -193,3 +193,5 @@ class CreateSwitch(Script):
             cable._terminations_modified = True
             cable.save()
             self.log_success(f"Cabled {data['destination_device']} {a_interface} to {switch} {b_interface}")
+
+        self.log_success(f"To create this switch in Gondul you can <a href=\"/extras/scripts/netbox2gondul.Netbox2Gondul/?device={ switch.id }\">trigger an update immediately</a> or <a href=\"{switch.get_absolute_url()}\">view the device</a> first and trigger an update from there.")
