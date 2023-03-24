@@ -8,7 +8,7 @@ from dcim.choices import DeviceStatusChoices, InterfaceModeChoices, InterfaceTyp
 from dcim.models import Cable, CableTermination, Device, DeviceRole, DeviceType, Interface, Manufacturer, Site
 from extras.scripts import *
 from ipam.models import IPAddress, Prefix, VLAN
-from ipam.lookups import NetContainsOrEquals
+from ipam.lookups import NetHostContained
 
 import ipaddress
 import json
@@ -191,14 +191,14 @@ class Netbox2Gondul(Script):
         vlan: VLAN = None
         prefix_v4: Prefix = None
         if device.primary_ip4:
-            prefix_v4 = Prefix.objects.get(NetContainsOrEquals(F('prefix'), str(device.primary_ip4.address)))
+            prefix_v4 = Prefix.objects.get(NetHostContained(F('prefix'), str(device.primary_ip4)))
             vlan = prefix_v4.vlan
         else:
             self.log_warning(f'Device <a href="{device.get_absolute_url()}">{device.name}</a> is missing primary IPv4 address.')
 
         prefix_v6: Prefix = None
         if device.primary_ip6:
-            prefix_v6 = Prefix.objects.get(NetContainsOrEquals(F('prefix'), str(device.primary_ip6.address)))
+            prefix_v6 = Prefix.objects.get(NetHostContained(F('prefix'), str(device.primary_ip6)))
             vlan = prefix_v6.vlan
         else:
             self.log_warning(f'Device <a href="{device.get_absolute_url()}">{device.name}</a> is missing primary IPv6 address.')
