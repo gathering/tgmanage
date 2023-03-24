@@ -1,13 +1,13 @@
 e15-3 d1.floor ge-0/0/0 ge-1/0/0 ge-2/0/0
 e15-4 d1.floor ge-0/0/1 ge-1/0/1 ge-2/0/1
-e17-3 d1.floor ge-0/0/2 ge-1/0/2 ge-2/0/2
-e17-4 d1.floor ge-0/0/3 ge-1/0/3 ge-2/0/3
-e19-3 d1.floor ge-0/0/4 ge-1/0/4 ge-2/0/4
-e19-4 d1.floor ge-0/0/5 ge-1/0/5 ge-2/0/5
-e21-3 d1.floor ge-0/0/6 ge-1/0/6 ge-2/0/6
-e21-4 d1.floor ge-0/0/7 ge-1/0/7 ge-2/0/7
-e23-3 d1.floor ge-0/0/8 ge-1/0/8 ge-2/0/8
-e23-4 d1.floor ge-0/0/9 ge-1/0/9 ge-2/0/9
+e17-3 d1.floor mge-0/0/24 mge-2/0/24 # multirate
+e17-4 d1.floor mge-0/0/25 mge-2/0/25 # multirate
+e19-3 d1.floor mge-0/0/26 mge-2/0/26 # multirate
+e19-4 d1.floor mge-0/0/27 mge-2/0/27 # multirate
+e21-3 d1.floor mge-0/0/28 mge-2/0/28 # multirate
+e21-4 d1.floor mge-0/0/29 mge-2/0/29 # multirate
+e23-3 d1.floor mge-0/0/30 mge-2/0/30 # multirate
+e23-4 d1.floor mge-0/0/31 mge-2/0/31 # multirate
 e15-1 d2.floor ge-0/0/0 ge-1/0/0 ge-2/0/0
 e15-2 d2.floor ge-0/0/1 ge-1/0/1 ge-2/0/1
 e17-1 d2.floor ge-0/0/2 ge-1/0/2 ge-2/0/2
