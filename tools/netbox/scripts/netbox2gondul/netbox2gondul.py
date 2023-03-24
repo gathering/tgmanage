@@ -113,7 +113,6 @@ class Netbox2Gondul(Script):
             override = vlan.cf['gondul_name']
             self.log_info(f'Overriding management vlan name with: {override} (was: {vlan_name})')
             vlan_name = override
-        vlan_name += f".{router}"
 
         networks = [{
             "name": vlan_name,
@@ -156,10 +155,6 @@ class Netbox2Gondul(Script):
             override = mgmt_vlan.cf['gondul_name']
             self.log_info(f'Overriding management vlan name with: {override} (was: {mgmt_vlan_name})')
             mgmt_vlan_name = override
-
-        # add name of router to vlan name
-        router = "r1.tele"
-        mgmt_vlan_name += f".{router}"
 
         switches = [{
             # "community": "", # Not implemented
