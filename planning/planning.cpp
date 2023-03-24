@@ -34,7 +34,7 @@
 #include <string>
 #include <queue>
 
-#define NUM_DISTRO 9
+#define NUM_DISTRO 6
 #define NUM_ROWS 41
 #define SWITCHES_PER_ROW 4
 #define PORTS_PER_DISTRO 31
@@ -276,9 +276,11 @@ Inventory Planner::find_inventory(Switch from_where, int distro)
 	}
 
 	// Gaps between fire gates
+	/* TG23: We ignore this firegap.
 	if ((abs(distro_placements[distro]) <= 20) == (from_where.row >= 21)) {
 		inv.vert_chasm_crossings = 1;
 	}
+	*/
 
 	// Gaps between fire gates
 	if ((abs(distro_placements[distro]) <= 29) == (from_where.row >= 30)) {
@@ -330,7 +332,7 @@ void Planner::logprintf(const char *fmt, ...)
 string distro_name(unsigned distro)
 {
 	char buf[16];
-	sprintf(buf, "s%d.floor", distro+1);
+	sprintf(buf, "d%d.floor", distro+1);
 	return buf;
 }
 
@@ -346,42 +348,45 @@ void Planner::init_switches()
 {
 	switches.clear();
 	for (unsigned i = 1; i <= NUM_ROWS; ++i) {
-		if (i >= 1 && i <= 3) {
-			// switches.push_back(Switch(i,2)); 
+
+	    // No seats here for TG23
+		if (i >= 1 && i <= 8) {
+			// switches.push_back(Switch(i,0));
+			// switches.push_back(Switch(i,1));
+			// switches.push_back(Switch(i,2));
 			// switches.push_back(Switch(i,3));
 		}
 
-		if (i >= 4 && i <= 12) {
+		if (i >= 8 && i <= 12) {
 			switches.push_back(Switch(i, 0));
 			switches.push_back(Switch(i, 1));
 			switches.push_back(Switch(i, 2));
 			switches.push_back(Switch(i, 3));
 		}
 
-		if (i >= 13 && i <= 20) {
-			//switches.push_back(Switch(i, 0)); // Elkjøp Area
-			switches.push_back(Switch(i, 1));
+        // 1 1/2 rader motsatt av scenen.
+		if (i >= 18 && i <= 20) {
+			switches.push_back(Switch(i, 0));
+			//switches.push_back(Switch(i, 1));
+			//switches.push_back(Switch(i, 2));
+			//switches.push_back(Switch(i, 3));
 		}
 
-		if (i >= 21 && i <= 37) {
+		if (i >= 21 && i <= 36) {
 			switches.push_back(Switch(i, 0));
 			switches.push_back(Switch(i, 1));
 			switches.push_back(Switch(i, 2));
 			switches.push_back(Switch(i, 3));
 		}
 
-		if (i == 38) {
-			switches.push_back(Switch(i,0)); // Crew seating
-			switches.push_back(Switch(i,1)); // Crew seating
-			switches.push_back(Switch(i,2));
-			switches.push_back(Switch(i,3));
+	    // No seats here for TG23
+		if (i >= 37 && i <= 41) {
+			// switches.push_back(Switch(i,0));
+			// switches.push_back(Switch(i,1));
+			// switches.push_back(Switch(i,2));
+			// switches.push_back(Switch(i,3));
 		}
-		/* Crew seating spans from row 75 to row 82 on the west side */
-		if (i >= 39 && i <= 41) {
-			switches.push_back(Switch(i,0)); // Crew seating
-			switches.push_back(Switch(i,2));
-			switches.push_back(Switch(i,3));
-		}
+
 	}
 }
 
@@ -747,7 +752,7 @@ int Planner::do_work(int distro_placements[NUM_DISTRO])
 
 	for (int i = 0; i < NUM_DISTRO; ++i) {
 		Edge *e = g.source_node.edges[i];
-		logprintf("Remaining ports on s%d.floor: %d\n", i+1, e->capacity - e->flow);
+		logprintf("Remaining ports on d%d.floor: %d\n", i+1, e->capacity - e->flow);
 	}
 	return total_cost;
 }
