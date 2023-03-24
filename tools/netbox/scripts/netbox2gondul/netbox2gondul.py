@@ -178,7 +178,7 @@ class Netbox2Gondul(Script):
         else:
             self.log_failure(f"Gondul said HTTP {req.status_code} and {req.text}")
 
-    def run(self, data):
+    def run(self, data, commit):
         device: Device = data['device']
 
         if not device.primary_ip4 and not device.primary_ip6:
