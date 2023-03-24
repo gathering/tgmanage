@@ -145,9 +145,11 @@ class Netbox2Gondul(Script):
         distro_interface: Interface = cable.a_terminations[0]
         distro = distro_interface.device
 
-        mgmt_vlan = uplink_ae.tagged_vlans.first()
-        # Could consider filtering interfaces for: filter(Q(is_management=True) | Q(description__icontains="management")).first()
-        # to make sure we only pick management VLANs
+        # This is the same way as we fetch mgmt vlan in the main run() function.
+        # We could pass it in directly to device_to_gondul().
+        mgmt_ip_addr = device.primary_ip4 if device.primary_ip4 is not None else device.primary_ip6
+        mgmt_prefix = Prefix.objects.get(NetHostContained(F('prefix'), str(mgmt_ip_addr)))
+        mgmt_vlan = mgmt_prefix.vlan
 
         mgmt_vlan_name = mgmt_vlan.name
         if mgmt_vlan.custom_fields.filter(name='gondul_name').count() == 1 and mgmt_vlan.cf['gondul_name']:
