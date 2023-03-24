@@ -51,7 +51,6 @@
 #define FIRST_SUBNET_ADDRESS "88.92.0.0"
 #define FIRST_MGMT_ADDRESS "151.216.130.0"
 #define SUBNET_SIZE 26
-#define MGMT_SUBNET_SIZE 24
 #define IPV6_PREFIX "2a06:5844:e:"
 #define IPV6_MGMT_PREFIX "2a06:5841:f:10:"
 
@@ -723,7 +722,7 @@ int Planner::do_work(int distro_placements[NUM_DISTRO])
 			inet_ntoa(mgmt_ip4), IPV6_MGMT_PREFIX, distro + 1, fourth_oct_mgmt,
 			switches[i].row * 2 - 1, switches[i].num + 1, distro_name(distro).c_str());
 
-		subnet_address = htonl(ntohl(subnet_address) + (1ULL << (32 - MGMT_SUBNET_SIZE)));
+		subnet_address = htonl(ntohl(subnet_address) + (1ULL << (32 - SUBNET_SIZE)));
 	}
 	fclose(patchlist);
 	fclose(switchlist);
