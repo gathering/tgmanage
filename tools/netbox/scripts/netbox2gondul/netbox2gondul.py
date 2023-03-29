@@ -177,7 +177,7 @@ class Netbox2Gondul(Script):
             # "placement": "", # Not implemented
             # "poll_frequency": "", # Not implemented
             "sysname": device.name,
-            "traffic_vlan": traffic_vlan_name, # Not implemented
+            "traffic_vlan": traffic_vlan_name,
             # "deleted": False,  # Not implemented
         }]
 
