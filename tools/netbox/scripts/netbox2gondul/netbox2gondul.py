@@ -156,9 +156,19 @@ class Netbox2Gondul(Script):
             self.log_info(f'Overriding management vlan name with: {override} (was: {mgmt_vlan_name})')
             mgmt_vlan_name = override
 
+        traffic_vlan_name = None
+        try:
+            traffic_vlan = VLAN.objects.get(name=device.name)
+            traffic_prefix_v4 = Prefix.objects.get(vlan=traffic_vlan, family=4)
+            traffic_prefix_v6 = Prefix.objects.get(vlan=traffic_vlan, family=6)
+
+            self.network_to_gondul(traffic_vlan, traffic_prefix_v4, traffic_prefix_v6)
+        except VLAN.DoesNotExist:
+            pass
+
         switches = [{
             # "community": "", # Not implemented
-            "tags": list(device.tags.all()),
+            "tags": [tag.slug for tag in list(device.tags.all())],
             "distro_name": distro.name,
             "distro_phy_port": distro_interface.name,  # TODO: always .0 ?
             "mgmt_v4_addr": str(device.primary_ip4.address.ip) if device.primary_ip4 is not None else None,
@@ -167,7 +177,7 @@ class Netbox2Gondul(Script):
             # "placement": "", # Not implemented
             # "poll_frequency": "", # Not implemented
             "sysname": device.name,
-            # "traffic_vlan": "", # Not implemented
+            "traffic_vlan": traffic_vlan_name, # Not implemented
             # "deleted": False,  # Not implemented
         }]
 
