@@ -424,4 +424,17 @@ class CreateSwitch(Script):
             cable.save()
             self.log_success(f"Cabled {data['destination_device']} {a_interface} to {switch} {b_interface}")
 
+        try:
+            uplink_tag = Tag.objects.get(slug=f"{num_uplinks}-uplinks")
+            switch.tags.add(uplink_tag)
+        except Tag.DoesNotExist as e:
+            self.log_error("Failed to find device tag with {num_uplinks} uplinks.")
+            raise e
+
+        uplink_type = data['uplink_type']
+        if uplink_type in [InterfaceTypeChoices.TYPE_10GE_SFP_PLUS, InterfaceTypeChoices.TYPE_10GE_FIXED]:
+            uplink_type_tag = Tag.objects.get(slug="10g-uplink")
+            switch.tags.add(uplink_type_tag)
+            self.log_info(f"Added device tag for 10g uplinks if it wasn't present already: {uplink_type_tag}")
+
         self.log_success(f"To create this switch in Gondul you can <a href=\"/extras/scripts/netbox2gondul.Netbox2Gondul/?device={ switch.id }\">trigger an update immediately</a> or <a href=\"{switch.get_absolute_url()}\">view the device</a> first and trigger an update from there.")
