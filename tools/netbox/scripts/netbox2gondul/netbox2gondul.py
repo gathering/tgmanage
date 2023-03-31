@@ -161,6 +161,7 @@ class Netbox2Gondul(Script):
             traffic_vlan = VLAN.objects.get(name=device.name)
             traffic_prefix_v4 = Prefix.objects.get(vlan=traffic_vlan, prefix__family=4)
             traffic_prefix_v6 = Prefix.objects.get(vlan=traffic_vlan, prefix__family=6)
+            traffic_vlan_name = traffic_vlan.name
 
             self.network_to_gondul(traffic_vlan, traffic_prefix_v4, traffic_prefix_v6)
         except VLAN.DoesNotExist:
