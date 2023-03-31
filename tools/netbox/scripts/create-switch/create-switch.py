@@ -27,6 +27,7 @@ ACCESS_SWITCH_DEVICE_ROLE = DeviceRole.objects.get(name='Access Switch')
 DEFAULT_SITE = Site.objects.get(slug='ring') # Site.objects.first()  # TODO: pick default site ?
 DEFAULT_L1_SWITCH = Device.objects.get(name='d1.ring') # Site.objects.first()  # TODO: pick default site ?
 DEFAULT_DEVICE_TYPE = DeviceType.objects.get(model='EX2200-48T') # Site.objects.first()  # TODO: pick default site ?
+DEFAULT_NETWORK_TAGS = [Tag.objects.get(name='dhcp-client')]
 
 UPLINK_TYPES = (
     (InterfaceTypeChoices.TYPE_10GE_SFP_PLUS, '10G SFP+'),
@@ -170,10 +171,24 @@ class CreateSwitch(Script):
     #    required=False,
     #    default='',
     #)
-    tags = MultiObjectVar(
+    device_tags = MultiObjectVar(
+        label="Device tags",
         description="Tags to be sent to Gondul. These are used for templating, so be sure what they do.",
         model=Tag,
         required=False,
+        query_params={
+            "description__ic": "for:device",
+        },
+    )
+    network_tags = MultiObjectVar(
+        label="Network tags",
+        description="Tags to be sent to Gondul. These are used for templating, so be sure what they do.",
+        default=DEFAULT_NETWORK_TAGS,
+        model=Tag,
+        required=False,
+        query_params={
+            "description__ic": "for:network",
+        },
     )
 
     nat = BooleanVar(
@@ -209,7 +224,7 @@ class CreateSwitch(Script):
             site=data['site'],
         )
         switch.save()
-        for tag in data['tags']:
+        for tag in data['device_tags']:
             switch.tags.add(tag)
         self.log_success(f"Created new switch: <a href=\"{switch.get_absolute_url()}\">{switch}</a>")
 
@@ -228,8 +243,9 @@ class CreateSwitch(Script):
                 vid=vid
             )
             vlan.save()
-  
 
+            for tag in data['network_tags']:
+                vlan.tags.add(tag)
 
         # Only do this if access switch
         if data['leveranse'].name == "Access Switch":
