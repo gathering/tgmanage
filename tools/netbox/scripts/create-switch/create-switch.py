@@ -446,6 +446,7 @@ class CreateSwitch(Script):
         try:
             uplink_tag = Tag.objects.get(slug=f"{num_uplinks}-uplinks")
             switch.tags.add(uplink_tag)
+            self.log_info(f"Added tag for number of uplinks if it wasn't present already: {uplink_tag}")
         except Tag.DoesNotExist as e:
             self.log_error("Failed to find device tag with {num_uplinks} uplinks.")
             raise e
