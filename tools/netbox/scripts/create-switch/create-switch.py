@@ -29,6 +29,10 @@ DEFAULT_L1_SWITCH = Device.objects.get(name='d1.ring') # Site.objects.first()  #
 DEFAULT_DEVICE_TYPE = DeviceType.objects.get(model='EX2200-48T') # Site.objects.first()  # TODO: pick default site ?
 DEFAULT_NETWORK_TAGS = [Tag.objects.get(name='dhcp-client')]
 
+DEFAULT_IPV4_RING_DELIVERY = Prefix.objects.get(prefix='151.216.160.0/20')
+DEFAULT_IPV6_RING_DELIVERY = Prefix.objects.get(prefix='2a06:5841:e:2000::/52')
+
+
 UPLINK_TYPES = (
     (InterfaceTypeChoices.TYPE_10GE_SFP_PLUS, '10G SFP+'),
     (InterfaceTypeChoices.TYPE_1GE_FIXED, '1G CAT'),
@@ -200,10 +204,6 @@ class CreateSwitch(Script):
     def run(self, data, commit):
 
 
-        self.log_success(f"{self.request.__dir__()}")
-        self.log_success(f"{self.request.id.__dir__()}")
-        self.log_success(f"{self.request.user}")
-        self.log_success(f"{self.request.META}")
         # Unfuck shit
         # Choice var apparently only gives you a string, not an object.
         # Or i might be stooopid
@@ -252,16 +252,25 @@ class CreateSwitch(Script):
             #
             # Prefixes Part
             #
+            prefixes = []
+            if data['site'].slug == "ring":
+                prefixes.append(DEFAULT_IPV4_RING_DELIVERY)
+                prefixes.append(DEFAULT_IPV6_RING_DELIVERY)
+            else:
+                raise AbortScript(f"Atm, i only support provisioning on Ring")
 
-            prefixes = Prefix.objects.filter(
-                site = data['site'],
-                status = PrefixStatusChoices.STATUS_CONTAINER,
-                #family = IPAddressFamilyChoices.FAMILY_4,
-                role = Role.objects.get(slug='crew').id
-            )
 
-            if len(prefixes) > 2 or len(prefixes) == 0:
-                raise AbortScript(f"Got two or none prefixes. Run to Simen and ask for help!")
+            # This is code for automatically choosing prefix based on Role and Site.
+            # We decided to hardcode this instead :)
+            #prefixes = Prefix.objects.filter(
+            #    site = data['site'],
+            #    status = PrefixStatusChoices.STATUS_CONTAINER,
+            #    #family = IPAddressFamilyChoices.FAMILY_4,
+            #    role = Role.objects.get(slug='crew').id
+            #)
+
+            #if len(prefixes) > 2 or len(prefixes) == 0:
+            #    raise AbortScript(f"Got two or none prefixes. Run to Simen and ask for help!")
 
             # Doesn't support anything else than crew networks
             for prefix in prefixes:
@@ -353,8 +362,18 @@ class CreateSwitch(Script):
         if data['leveranse'].name == "Access Switch":
             dest_ae_id = vlan.vid
         elif data['leveranse'].name == "Distribution Switch":
-            dest_ae_id = str(random.randint(5000,6000))
-            self.log_warning("SCRIPT IS GENERATING AE WITH RANDOM NUMBER. PLS FIX ACCORDING TO TEMPLATE :(")
+            match data['switch_name']:
+                case 'd1.bird':
+                    dest_ae_id = '100'
+                case 'd1.north':
+                    dest_ae_id = '101'
+                case 'd1.sponsor':
+                    dest_ae_id = '102'
+                case 'd1.resepsjon':
+                    dest_ae_id = '103'
+                case _:
+                    raise AbortScript(f"NO, this 'utskutt distro' is not supported >:(")
+
 
         destination_ae = Interface.objects.create(
             device=data['destination_device'],
@@ -363,10 +382,10 @@ class CreateSwitch(Script):
             type=InterfaceTypeChoices.TYPE_LAG,
             mode=InterfaceModeChoices.MODE_TAGGED,
         )
-        if data['leveranse'].name == "Access Switch":        
+        if data['leveranse'].name == "Access Switch":
             destination_ae.tagged_vlans.add(mgmt_vlan.id)
             destination_ae.tagged_vlans.add(vlan.id)
-        self.log_success("Created AE and VLAN interfaces for both ends")
+        self.log_success(f"Created ae{dest_ae_id} and VLAN interfaces for both ends")
 
         mgmt_prefix_v4 = mgmt_vlan.prefixes.get(prefix__family=4)
         mgmt_prefix_v6 = mgmt_vlan.prefixes.get(prefix__family=6)
