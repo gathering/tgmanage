@@ -24,3 +24,7 @@ desktop.ini
 .metadata
 *.iml
 *.ipr
+.env
+
+# Python crap
+__pycache__
