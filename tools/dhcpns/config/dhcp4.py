@@ -205,7 +205,7 @@ def base(subnet4):
                 "name": "kea-dhcp4",
                 "output_options": [
                     {
-                        "output": "/var/log/kea/debug.log",
+                        "output": "/var/log/kea/dhcp4-debug.log",
                         "maxver": 8,
                         "maxsize": 204800,
                         "flush": True,

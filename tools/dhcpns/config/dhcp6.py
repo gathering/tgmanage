@@ -8,8 +8,9 @@ def base(subnet6):
         ],
         "interfaces-config": {
             "interfaces": [
-                "{}/{}".format(os.environ.get('DHCP_INTERFACE', 'eth0'), os.environ.get('DHCP_INTERFACE_V6'))
-            ]       
+                "{}/{}".format(os.environ.get('DHCP_INTERFACE',
+                               'eth0'), os.environ.get('DHCP_INTERFACE_V6'))
+            ]
         },
         "control-socket": {
             "socket-type": "unix",
@@ -43,33 +44,49 @@ def base(subnet6):
                 "data": os.environ['DOMAIN_SEARCH']
             },
             {
-            "name": "unicast",
-            "data": os.environ.get('DHCP_INTERFACE_V6')
+                "name": "unicast",
+                "data": os.environ.get('DHCP_INTERFACE_V6')
             }
         ],
-        "subnet6": subnet6
+        "subnet6": subnet6,
+        "loggers": [
+            {
+                "name": "kea-dhcp6",
+                "output_options": [
+                    {
+                        "output": "/var/log/kea/dhcp6-debug.log",
+                        "maxver": 8,
+                        "maxsize": 204800,
+                        "flush": True,
+                        "pattern": "%d{%j %H:%M:%S.%q} %c %m\n"
+                    }
+                ],
+                "severity": "DEBUG",
+                "debuglevel": 40
+            }
+        ]
     }
 
 
 def subnet(vlan, prefix, domain_name, vlan_domain_name):
     network = ipaddress.ip_network(prefix.prefix)
     return {
-            "id": prefix.id,
-            "subnet": prefix.prefix,
-            "ddns-qualifying-suffix": vlan_domain_name,
-            "pools": [
-                {
-                    "pool": f"{network[0]}10-{network[0]}ffff"
-                }
-            ],
-            "option-data": [
-                {
-                    "name": "domain-search",
-                    "data": f"{vlan_domain_name}, {domain_name}"
-                }
-            ],
-            "user-context": {
-                "name": vlan.name,
-                "type": "clients"
+        "id": prefix.id,
+        "subnet": prefix.prefix,
+        "ddns-qualifying-suffix": vlan_domain_name,
+        "pools": [
+            {
+                "pool": f"{network[0]}10-{network[0]}ffff"
             }
+        ],
+        "option-data": [
+            {
+                "name": "domain-search",
+                "data": f"{vlan_domain_name}, {domain_name}"
+            }
+        ],
+        "user-context": {
+            "name": vlan.name,
+            "type": "clients"
         }
+    }
