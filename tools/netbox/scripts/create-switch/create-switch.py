@@ -407,11 +407,14 @@ class CreateSwitch(Script):
         if len(interfaces) < 1:
             raise AbortScript(f"You chose a device type without any {data['uplink_type']} interfaces! Pick another model :)")
         interface_type = ContentType.objects.get_for_model(Interface)
+
+        # Ask Håkon about this, idfk
         for uplink_num in range(0, num_uplinks):
             # mark last ports as uplinks
-            a_interface = data['destination_interfaces'][::-1][uplink_num]
-            b_interface = interfaces[(uplink_num * -1) -1]
-
+            a_interface = data['destination_interfaces'][uplink_num]
+            # Ask Håkon ESPECIALLY about this madness
+            b_interface = interfaces[::-1][0:4][::-1][uplink_num]
+            self.log_debug(f'a_interface: {a_interface}, b_interface: {b_interface}')
             # Fix Descriptions
             a_interface.description = f'G: {switch.name} (ae0)'
             b_interface.description = f"G: {data['destination_device'].name} (ae0)"
