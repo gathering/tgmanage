@@ -73,15 +73,25 @@ class Netbox2Gondul(Script):
             If a device is selected, it will also sync the required networks as long as they are set up correctly (Primary IP addresses for the Device & VLAN configured for the Prefix of those IP Addresses).
         """)
 
-    device = ObjectVar(
-        description="Device",
+    device = MultiObjectVar(
+        label="Switches",
+        description="Switches to update in Gondul. Leave empty to sync all devices and networks.",
         model=Device,
-        required=True,
+        required=False,
     )
 
     _gondul = None
 
-    def network_to_gondul(self, vlan: VLAN, prefix_v4: Prefix, prefix_v6: Prefix):
+    def networks_to_gondul(self, networks):
+        self.log_info(f"Posting {len(networks)} networks to Gondul")
+        req = self._gondul.update_networks(networks)
+
+        if req.ok:
+            self.log_success(f"Gondul said (HTTP {req.status_code}): {req.text}")
+        else:
+            self.log_failure(f"Gondul said HTTP {req.status_code} and {req.text}")
+
+    def network_to_gondul_format(self, vlan: VLAN, prefix_v4: Prefix, prefix_v6: Prefix):
         self.log_info(f"Preparing {vlan.name} for Gondul")
 
         subnet4 = None
@@ -113,8 +123,7 @@ class Netbox2Gondul(Script):
             override = vlan.cf['gondul_name']
             self.log_info(f'Overriding management vlan name with: {override} (was: {vlan_name})')
             vlan_name = override
-
-        networks = [{
+        return {
             "name": vlan_name,
             "subnet4": subnet4,
             "subnet6": subnet6,
@@ -122,18 +131,19 @@ class Netbox2Gondul(Script):
             "gw6": gw6,
             "router": router,
             "vlan": vlan.vid,
-        }]
+        }
 
-        req = self._gondul.update_networks(networks)
+    def switches_to_gondul(self, switches):
+        self.log_info(f"Posting {len(switches)} switches to Gondul")
+
+        req = self._gondul.update_switches(switches)
 
         if req.ok:
             self.log_success(f"Gondul said (HTTP {req.status_code}): {req.text}")
         else:
             self.log_failure(f"Gondul said HTTP {req.status_code} and {req.text}")
 
-    def device_to_gondul(self, device: Device):
-        self.log_info(f"Posting {device.name} to Gondul")
-
+    def device_to_gondul_format(self, device: Device):
         # Find distro and distro port through the cable connected on uplink ae.
         # Assuming the uplink AE is always named 'ae0'.
         uplink_ae: Interface = device.interfaces.get(name="ae0")
@@ -156,6 +166,7 @@ class Netbox2Gondul(Script):
             self.log_info(f'Overriding management vlan name with: {override} (was: {mgmt_vlan_name})')
             mgmt_vlan_name = override
 
+        traffic_network = None
         traffic_vlan_name = None
         try:
             traffic_vlan = VLAN.objects.get(name=device.name)
@@ -163,11 +174,11 @@ class Netbox2Gondul(Script):
             traffic_prefix_v6 = Prefix.objects.get(vlan=traffic_vlan, prefix__family=6)
             traffic_vlan_name = traffic_vlan.name
 
-            self.network_to_gondul(traffic_vlan, traffic_prefix_v4, traffic_prefix_v6)
+            traffic_network = self.network_to_gondul_format(traffic_vlan, traffic_prefix_v4, traffic_prefix_v6)
         except VLAN.DoesNotExist:
             pass
 
-        switches = [{
+        return {
             # "community": "", # Not implemented
             "tags": [tag.slug for tag in list(device.tags.all())],
             "distro_name": distro.name,
@@ -180,45 +191,51 @@ class Netbox2Gondul(Script):
             "sysname": device.name,
             "traffic_vlan": traffic_vlan_name,
             # "deleted": False,  # Not implemented
-        }]
-
-        req = self._gondul.update_switches(switches)
-
-        if req.ok:
-            self.log_success(f"Gondul said (HTTP {req.status_code}): {req.text}")
-        else:
-            self.log_failure(f"Gondul said HTTP {req.status_code} and {req.text}")
+        }, traffic_network
 
     def run(self, data, commit):
-        device: Device = data['device']
+        input_devices: list[Type[Device]] = data['device']
 
-        if not device.primary_ip4 and not device.primary_ip6:
-            self.log_failure(f'Device <a href="{device.get_absolute_url()}">{device.name}</a> is missing primary IPv4 and IPv6 address.')
-            return
+        if len(input_devices) == 0:
+            input_devices = Device.objects.all()
 
-        vlan: VLAN = None
-        prefix_v4: Prefix = None
-        if device.primary_ip4:
-            prefix_v4 = Prefix.objects.get(NetHostContained(F('prefix'), str(device.primary_ip4)))
-            vlan = prefix_v4.vlan
-        else:
-            self.log_warning(f'Device <a href="{device.get_absolute_url()}">{device.name}</a> is missing primary IPv4 address.')
+        networks = []
+        switches = []
 
-        prefix_v6: Prefix = None
-        if device.primary_ip6:
-            prefix_v6 = Prefix.objects.get(NetHostContained(F('prefix'), str(device.primary_ip6)))
-            vlan = prefix_v6.vlan
-        else:
-            self.log_warning(f'Device <a href="{device.get_absolute_url()}">{device.name}</a> is missing primary IPv6 address.')
+        # sanity check
+        for device in input_devices:
+            if not device.primary_ip4 and not device.primary_ip6:
+                self.log_failure(f'Device <a href="{device.get_absolute_url()}">{device.name}</a> is missing primary IPv4 and IPv6 address.')
+                return
 
-        if prefix_v4 is not None and prefix_v6 is not None and prefix_v4.vlan != prefix_v6.vlan:
-            self.log_failure(f'VLANs differ for the IPv4 and IPv6 addresses.')
-            return
+            vlan: VLAN = None
+            prefix_v4: Prefix = None
+            if device.primary_ip4:
+                prefix_v4 = Prefix.objects.get(NetHostContained(F('prefix'), str(device.primary_ip4)))
+                vlan = prefix_v4.vlan
+            else:
+                self.log_warning(f'Device <a href="{device.get_absolute_url()}">{device.name}</a> is missing primary IPv4 address.')
 
-        self._gondul = Gondul.read_config_from_file(GONDUL_CONFIG_FILE)
+            prefix_v6: Prefix = None
+            if device.primary_ip6:
+                prefix_v6 = Prefix.objects.get(NetHostContained(F('prefix'), str(device.primary_ip6)))
+                vlan = prefix_v6.vlan
+            else:
+                self.log_warning(f'Device <a href="{device.get_absolute_url()}">{device.name}</a> is missing primary IPv6 address.')
 
-        self.network_to_gondul(vlan, prefix_v4, prefix_v6)
+            if prefix_v4 is not None and prefix_v6 is not None and prefix_v4.vlan != prefix_v6.vlan:
+                self.log_failure(f'VLANs differ for the IPv4 and IPv6 addresses.')
+                return
+
+
+            networks.append(self.network_to_gondul_format(vlan, prefix_v4, prefix_v6))
+            switch, traffic_network = self.device_to_gondul_format(device)
+            if traffic_network:
+                networks.append(traffic_network)
+            switches.append(switch)
 
         self.log_success("All good, sending to Gondul")
+        self._gondul = Gondul.read_config_from_file(GONDUL_CONFIG_FILE)
 
-        self.device_to_gondul(device)
+        self.networks_to_gondul(networks)
+        self.switches_to_gondul(switches)
