@@ -171,7 +171,7 @@ class Netbox2Gondul(Script):
             # "community": "", # Not implemented
             "tags": [tag.slug for tag in list(device.tags.all())],
             "distro_name": distro.name,
-            "distro_phy_port": distro_interface.name,  # TODO: always .0 ?
+            "distro_phy_port": f"{distro_interface.name}.0",
             "mgmt_v4_addr": str(device.primary_ip4.address.ip) if device.primary_ip4 is not None else None,
             "mgmt_v6_addr": str(device.primary_ip6.address.ip) if device.primary_ip6 is not None else None,
             "mgmt_vlan": mgmt_vlan_name,
