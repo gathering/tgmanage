@@ -1,5 +1,6 @@
 import os
 import ipaddress
+import math
 
 
 def base(subnet4):
@@ -118,7 +119,7 @@ def base(subnet4):
         "client-classes": [
             {
                 "name": "client-juniper-vendor",
-                "test": "substring(option[vendor-class-identifier].hex,0,10) == 'Juniper-ex'"
+                "test": "substring(option[vendor-class-identifier].hex,0,7) == 'Juniper'"
             },
             {
                 "name": "client-juniper-mac",
@@ -198,7 +199,23 @@ def base(subnet4):
                 "boot-file-name": "netboot.xyz-undionly.kpxe"
             }
         ],
-        "subnet4": subnet4
+        "subnet4": subnet4,
+        "loggers": [
+            {
+                "name": "kea-dhcp4",
+                "output_options": [
+                    {
+                        "output": "/var/log/kea/debug.log",
+                        "maxver": 8,
+                        "maxsize": 204800,
+                        "flush": True,
+                        "pattern": "%d{%j %H:%M:%S.%q} %c %m\n"
+                    }
+                ],
+                "severity": "DEBUG",
+                "debuglevel": 40
+            }
+        ]
     }
 
 
@@ -235,9 +252,10 @@ def subnet(vlan, prefix, domain_name, vlan_domain_name):
     }
 
 
-def fap(vlan, prefix, domain_name, vlan_domain_name):
+def fap(vlan, prefix):
     network = ipaddress.ip_network(prefix.prefix)
-    gw, start_ip, end_ip = network[1], network[len(network) / 2], network[-2]
+    gw, start_ip, end_ip = network[1], network[(
+        math.ceil(network.num_addresses / 2))], network[-2]
     return {
         "id": prefix.id,
         "client-class": "fap-class",
@@ -251,14 +269,6 @@ def fap(vlan, prefix, domain_name, vlan_domain_name):
             {
                 "name": "routers",
                 "data": f"{gw}"
-            },
-            {
-                "name": "domain-name",
-                "data": f"{vlan_domain_name}, {domain_name}"
-            },
-            {
-                "name": "domain-search",
-                "data": f"{vlan_domain_name}, {domain_name}"
             }
         ],
         "user-context": {

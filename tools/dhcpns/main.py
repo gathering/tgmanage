@@ -3,22 +3,24 @@ import os
 from dotenv import load_dotenv
 import json
 from pdns import PowerDNS
+import ipaddress
+import subprocess
 
 from config.dhcp4 import base as dhcp4
 from config.dhcp6 import base as dhcp6
+from config.dhcp4 import fap
 from config.ddns import base as ddns
 from config.ddns import ddns_domain
 from config.dhcp4 import subnet as subnet4
 from config.dhcp6 import subnet as subnet6
 
-import ipaddress
 
 # Take environment variables from .env
 load_dotenv()
 
 DOMAIN_NAME = os.environ['DOMAIN_NAME']
 DOMAIN_SEARCH = os.environ['DOMAIN_SEARCH']
-NAMESERVERS = os.environ['NAMESERVERS'].strip().split(',')
+NAMESERVERS = os.environ['NAMESERVERS'].split()
 
 nb = pynetbox.api(
     os.getenv('NETBOX_URL'),
@@ -30,7 +32,7 @@ nb = pynetbox.api(
 pdns = PowerDNS(os.environ['PDNS_API_URL'], os.environ['PDNS_API_KEY'])
 
 # Load all zones to later check if a zone already exist
-zones = [ zone['name'] for zone in pdns.list_zones() ]
+zones = [zone['name'] for zone in pdns.list_zones()]
 
 rdns_zones = pdns.search("*.arpa", 2000, "zone")
 
@@ -39,7 +41,8 @@ kea6_subnets = []
 kea_ddns_domains = []
 kea_rddns_domains = []
 
-vlans = nb.ipam.vlans.filter(tag='dhcp')
+# dhcp-client
+vlans = nb.ipam.vlans.filter(tag='dhcp-client')
 for vlan in vlans:
     vlan_domain_name = f"{vlan.name}.{DOMAIN_NAME}"
     prefixes4 = []
@@ -49,17 +52,17 @@ for vlan in vlans:
     for prefix in nb.ipam.prefixes.filter(vlan_id=vlan.id, family=4):
         kea4_subnets.append(
             subnet4(vlan, prefix, DOMAIN_NAME, vlan_domain_name))
-        #prefixes4.append(prefix)
+        prefixes4.append(prefix)
 
     for prefix in nb.ipam.prefixes.filter(vlan_id=vlan.id, family=6):
         kea6_subnets.append(
             subnet6(vlan, prefix, DOMAIN_NAME, vlan_domain_name))
-        #prefixes6.append(prefix)
+        prefixes6.append(prefix)
 
     if vlan_domain_name not in zones and len(prefixes4) >= 1:
-        pdns.create_zone(vlan_domain_name, NAMESERVERS)
-        pdns.create_zone_metadata(
-            vlan_domain_name, 'TSIG-ALLOW-DNSUPDATE', 'dhcp_updater')
+        print(pdns.create_zone(f"{vlan_domain_name}.", NAMESERVERS))
+        print(pdns.create_zone_metadata(
+            f"{vlan_domain_name}.", 'TSIG-ALLOW-DNSUPDATE', 'dhcpns'))
 
         zone_rrsets = []
 
@@ -95,6 +98,14 @@ for vlan in vlans:
             rdns_rrsets.append({"name": network[-1].reverse_pointer + '.', "changetype": "replace", "type": "PTR", "records": [
                 {"content": f'broadcast-{network[-1]}.{vlan_domain_name}', "disabled": False, "type": "PTR"}], "ttl": 900})
 
+# dhcp-mgmt-edge
+vlans = nb.ipam.vlans.filter(tag='dhcp-mgmt-edge')
+for vlan in vlans:
+    prefixes4 = []
+    for prefix in nb.ipam.prefixes.filter(vlan_id=vlan.id, family=4):
+        kea4_subnets.append(
+            fap(vlan, prefix))
+
 
 for zone in rdns_zones:
     kea_rddns_domains.append(ddns_domain(zone['name'][:-1]))
@@ -102,14 +113,27 @@ for zone in rdns_zones:
 # Write DDNS
 if os.environ['KEA_DDNS_FILE'] is not None:
     with open(os.environ['KEA_DDNS_FILE'], "w") as outfile:
-        outfile.write(json.dumps({"DhcpDdns": ddns(kea_ddns_domains, kea_rddns_domains)}, indent=2))
+        outfile.write(json.dumps(
+            {"DhcpDdns": ddns(kea_ddns_domains, kea_rddns_domains)}, indent=2))
 
 # Write DHCPv4
 if os.environ['KEA_DHCP4_FILE'] is not None:
     with open(os.environ['KEA_DHCP4_FILE'], "w") as outfile:
         outfile.write(json.dumps({"Dhcp4": dhcp4(kea4_subnets)}, indent=2))
-        
-# Write DHCPv4
+
+# Write DHCPv6
 if os.environ['KEA_DHCP6_FILE'] is not None:
     with open(os.environ['KEA_DHCP6_FILE'], "w") as outfile:
-        outfile.write(json.dumps({"Dhcp6": dhcp4(kea6_subnets)}, indent=2))
+        outfile.write(json.dumps({"Dhcp6": dhcp6(kea6_subnets)}, indent=2))
+
+# Test DHCPv4
+try:
+    subprocess.check_call(['/usr/sbin/kea-dhcp4', '-t', os.environ['KEA_DHCP4_FILE']])
+except subprocess.CalledProcessError:
+    print("Failed to validate kea-dhcp4 config. What do we do now?")
+    
+# Test DHCPv6
+try:
+    subprocess.check_call(['/usr/sbin/kea-dhcp6', '-t', os.environ['KEA_DHCP6_FILE']])
+except subprocess.CalledProcessError:
+    print("Failed to validate kea-dhcp6 config. What do we do now?")

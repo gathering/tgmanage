@@ -26,13 +26,13 @@ class PowerDNS:
             request = requests.post(
                 self.base_url + uri,
                 headers=headers,
-                data=kwargs
+                json=kwargs
             )
         elif method == "PUT":
             request = requests.put(
                 self.base_url + uri,
                 headers=headers,
-                data=kwargs
+                json=kwargs
             )
         elif method == "PATCH":
             request = requests.patch(
