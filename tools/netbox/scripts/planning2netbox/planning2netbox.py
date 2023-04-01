@@ -1,36 +1,25 @@
 from django.contrib.contenttypes.models import ContentType
-from django.utils.text import slugify
 
-from dcim.choices import DeviceStatusChoices, InterfaceModeChoices, InterfaceTypeChoices, SiteStatusChoices
-from dcim.models import Cable, CableTermination, Device, DeviceRole, DeviceType, Interface, Manufacturer, Site
+from dcim.choices import InterfaceModeChoices, InterfaceTypeChoices
+from dcim.models import Cable, CableTermination, Device, DeviceRole, DeviceType, Interface, Site
 from extras.models import Tag
 from extras.scripts import *
-from ipam.models import IPAddress, Prefix, VLAN, VLANGroup, Role
-from ipam.choices import PrefixStatusChoices, IPAddressFamilyChoices
+from ipam.models import IPAddress, Prefix, VLAN, VLANGroup
 from netaddr import IPNetwork
-import random
-
-from utilities.exceptions import AbortScript
 
 
 # Used for getting existing types/objects from Netbox.
-DISTRIBUTION_SWITCH_DEVICE_ROLE = 'distribution-switch' # match the name or the slug
-ROUTER_DEVICE_ROLE = 'router'
-CORE_DEVICE_ROLE = 'core'
 ACCESS_SWITCH_DEVICE_ROLE = DeviceRole.objects.get(name='Access Switch')
 DEFAULT_SITE = Site.objects.get(slug='floor')
 DEFAULT_DEVICE_TYPE = DeviceType.objects.get(model='EX2200-48T')
-TAGS = [Tag.objects.get(name='dhcp-client')]
 FLOOR_MGMT_VLAN = VLAN.objects.get(name="edge-mgmt.floor.r1.tele")
 VLAN_GROUP_FLOOR = VLANGroup.objects.get(slug="floor")
 MULTIRATE_DEVICE_TYPE = DeviceType.objects.get(model="EX4300-48MP")
 CORE_DEVICE = Device.objects.get(name="r1.tele")
 CORE_INTERFACE_FLOOR = Interface.objects.get(device=CORE_DEVICE, description="d1.roof")
 
-
 # Copied from examples/tg19/netbox_tools/switchestxt2netbox.py
-def parse_switches_txt(switches_txt_lines, logger):
-    distros = {}
+def parse_switches_txt(switches_txt_lines):
     switches = {}
     for switch in switches_txt_lines:
         # example:
@@ -47,13 +36,12 @@ def parse_switches_txt(switches_txt_lines, logger):
             'mgmt6': switch[4],
             'vlan_id': int(switch[5]),
             'distro_name': switch[6],
-            'is_distro': False,
             'device_type': DEFAULT_DEVICE_TYPE,
             'lag_name': "ae0",
         }
     return switches
 
-def parse_patchlist_txt(patchlist_txt_lines, switches, logger):
+def parse_patchlist_txt(patchlist_txt_lines, switches):
     for patchlist in patchlist_txt_lines:
         columns = patchlist.split()
         switch_name = columns[0]
@@ -100,12 +88,11 @@ class Planning2Netbox(Script):
         for i in range(0, len(patchlist_txt_lines)-1):
             patchlist_txt_lines[i] = patchlist_txt_lines[i].strip()
 
-        switches = parse_switches_txt(switches_txt_lines, self.log_debug)
-        patchlist = parse_patchlist_txt(patchlist_txt_lines, switches, self.log_debug)
+        switches = parse_switches_txt(switches_txt_lines)
+        # this modifies 'switches' 🙈
+        parse_patchlist_txt(patchlist_txt_lines, switches)
 
-        self.log_info(f"Configuring {len(switches)} switches")
-
-        self.log_info("Importing switches")
+        self.log_info(f"Importing {len(switches)} switches")
         for switch_name in switches:
             data = switches[switch_name]
             self.log_debug(f"Creating switch {switch_name} from {data}")
@@ -121,7 +108,7 @@ class Planning2Netbox(Script):
             distro = Device.objects.get(name=data['distro_name'])
             mgmt_vlan = FLOOR_MGMT_VLAN
             ae_interface = None
-            ae_interface, created_ae_interface = Interface.objects.get_or_create(
+            ae_interface, _created_ae_interface = Interface.objects.get_or_create(
                 device=switch,
                 name=f"{data['lag_name']}",
                 description=distro.name,
@@ -161,7 +148,6 @@ class Planning2Netbox(Script):
 
             # patchlist
             switch_uplinks = data['uplinks']
-            #self.log_debug(f"uplinks: {switch_uplinks}")
 
             # from planning we always cable from port 44 and upwards
             # except for multirate then we always use 47 and 48
@@ -229,7 +215,6 @@ class Planning2Netbox(Script):
                 #self.log_debug(f"Cabled switch port {b} to distro port {a}")
 
                 uplink_port += 1
-            
 
             # Set mgmt ip
             mgmt_addr_v4, _ = IPAddress.objects.get_or_create(
