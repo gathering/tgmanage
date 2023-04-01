@@ -18,6 +18,11 @@ MULTIRATE_DEVICE_TYPE = DeviceType.objects.get(model="EX4300-48MP")
 CORE_DEVICE = Device.objects.get(name="r1.tele")
 CORE_INTERFACE_FLOOR = Interface.objects.get(device=CORE_DEVICE, description="d1.roof")
 
+TG = Tag.objects.get
+ACCESS_FLOOR_TAGS = [TG(slug="deltagere")]
+EX2200_TAGS = [TG(slug='3-uplinks')]
+MULTIRATE_TAGS = [TG(slug="multirate"), TG(slug="10g-uplink"), TG(slug="10g-copper"), TG(slug="2-uplinks")]
+
 # Copied from examples/tg19/netbox_tools/switchestxt2netbox.py
 def parse_switches_txt(switches_txt_lines):
     switches = {}
@@ -215,6 +220,13 @@ class Planning2Netbox(Script):
                 #self.log_debug(f"Cabled switch port {b} to distro port {a}")
 
                 uplink_port += 1
+
+            tags = ACCESS_FLOOR_TAGS.copy()
+            if is_multirate:
+                tags += MULTIRATE_TAGS.copy()
+            else:
+                tags += EX2200_TAGS.copy()
+            switch.tags.add(*tags)
 
             # Set mgmt ip
             mgmt_addr_v4, _ = IPAddress.objects.get_or_create(
