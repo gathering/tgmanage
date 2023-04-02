@@ -211,8 +211,12 @@ class Netbox2Gondul(Script):
             vlan: VLAN = None
             prefix_v4: Prefix = None
             if device.primary_ip4:
-                prefix_v4 = Prefix.objects.get(NetHostContained(F('prefix'), str(device.primary_ip4)))
-                vlan = prefix_v4.vlan
+                try:
+                    prefix_v4 = Prefix.objects.get(NetHostContained(F('prefix'), str(device.primary_ip4)))
+                    vlan = prefix_v4.vlan
+                except Exception as e:
+                    self.log_warning(f"Failed to configure {device} for import: {e}")
+                    continue
             else:
                 self.log_warning(f'Device <a href="{device.get_absolute_url()}">{device.name}</a> is missing primary IPv4 address.')
 
