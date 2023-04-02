@@ -116,7 +116,7 @@ class Netbox2Gondul(Script):
             self.log_warning(f'Network for VLAN <a href="{vlan.get_absolute_url()}">{vlan.name}</a> is missing IPv6 Prefix')
 
         try:
-            router = str(IPAddress.objects.get(address=gw4))
+            router = str(IPAddress.objects.get(address=f"{gw4}/{subnet4.prefixlen}"))
         except IPAddress.DoesNotExist:
             self.log_warning(f'Router not found for VLAN <a href="{vlan.get_absolute_url()}">{vlan.name}</a>')
             router = "r1.tele"
