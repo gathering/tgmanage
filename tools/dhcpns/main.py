@@ -5,6 +5,8 @@ import json
 from pdns import PowerDNS
 import ipaddress
 import subprocess
+import re
+import netaddr
 
 from config.dhcp4 import base as dhcp4
 from config.dhcp6 import base as dhcp6
@@ -59,7 +61,7 @@ for vlan in vlans:
             subnet6(vlan, prefix, DOMAIN_NAME, vlan_domain_name))
         prefixes6.append(prefix)
 
-    if vlan_domain_name not in zones and len(prefixes4) >= 1:
+    if f"{vlan_domain_name}." not in zones and len(prefixes4) >= 1:
         print(pdns.create_zone(f"{vlan_domain_name}.", NAMESERVERS))
         print(pdns.create_zone_metadata(
             f"{vlan_domain_name}.", 'TSIG-ALLOW-DNSUPDATE', 'dhcpns'))
@@ -70,16 +72,19 @@ for vlan in vlans:
             network = ipaddress.ip_network(prefix)
 
             # Network ID
-            zone_rrsets.append({'name': f'net-{network[0]}.{vlan_domain_name}', 'changetype': 'replace', 'type': 'A', 'records': [
+            zone_rrsets.append({'name': f'net-{network[0]}.{vlan_domain_name}.', 'changetype': 'replace', 'type': 'A', 'records': [
                 {'content': str(network[0]), 'disabled': False, 'type':'A'}], 'ttl': 900})
 
             # Gateway
-            zone_rrsets.append({'name': f'gw-{network[1]}.{vlan_domain_name}', 'changetype': 'replace', 'type': 'A', 'records': [
+            zone_rrsets.append({'name': f'gw-{network[1]}.{vlan_domain_name}.', 'changetype': 'replace', 'type': 'A', 'records': [
                 {'content': str(network[1]), 'disabled': False, 'type':'A'}], 'ttl': 900})
 
             # Broadcast
-            zone_rrsets.append({'name': f'broadcast-{network[-1]}.{vlan_domain_name}', 'changetype': 'replace', 'type': 'A', 'records': [
+            zone_rrsets.append({'name': f'broadcast-{network[-1]}.{vlan_domain_name}.', 'changetype': 'replace', 'type': 'A', 'records': [
                 {'content': str(network[-1]), 'disabled': False, 'type':'A'}], 'ttl': 900})
+
+            # Apply zone_rrsets
+            pdns.set_records(vlan_domain_name, zone_rrsets)
 
             rdns_zone = pdns.get_rdns_zone_from_ip(network[0])
             rdns_rrsets = []
@@ -88,15 +93,18 @@ for vlan in vlans:
 
             # Network ID
             rdns_rrsets.append({"name": network[0].reverse_pointer + '.', "changetype": "replace", "type": "PTR", "records": [
-                {"content": f'net-{network[0]}.{vlan_domain_name}', "disabled": False, "type": "PTR"}], "ttl": 900})
+                {"content": f'net-{network[0]}.{vlan_domain_name}.', "disabled": False, "type": "PTR"}], "ttl": 900})
 
             # Gateway
             rdns_rrsets.append({"name": network[1].reverse_pointer + '.', "changetype": "replace", "type": "PTR", "records": [
-                {"content": f'gw-{network[1]}.{vlan_domain_name}', "disabled": False, "type": "PTR"}], "ttl": 900})
+                {"content": f'gw-{network[1]}.{vlan_domain_name}.', "disabled": False, "type": "PTR"}], "ttl": 900})
 
             # Broadcast
             rdns_rrsets.append({"name": network[-1].reverse_pointer + '.', "changetype": "replace", "type": "PTR", "records": [
-                {"content": f'broadcast-{network[-1]}.{vlan_domain_name}', "disabled": False, "type": "PTR"}], "ttl": 900})
+                {"content": f'broadcast-{network[-1]}.{vlan_domain_name}.', "disabled": False, "type": "PTR"}], "ttl": 900})
+
+            # Apply rdns_rrsets
+            pdns.set_records(network[1].reverse_pointer + '.', rdns_rrsets)
 
 # dhcp-mgmt-edge
 vlans = nb.ipam.vlans.filter(tag='dhcp-mgmt-edge')
@@ -128,12 +136,69 @@ if os.environ['KEA_DHCP6_FILE'] is not None:
 
 # Test DHCPv4
 try:
-    subprocess.check_call(['/usr/sbin/kea-dhcp4', '-t', os.environ['KEA_DHCP4_FILE']])
+    subprocess.check_call(['/usr/sbin/kea-dhcp4', '-t',
+                          os.environ['KEA_DHCP4_FILE']])
 except subprocess.CalledProcessError:
     print("Failed to validate kea-dhcp4 config. What do we do now?")
-    
+
 # Test DHCPv6
 try:
-    subprocess.check_call(['/usr/sbin/kea-dhcp6', '-t', os.environ['KEA_DHCP6_FILE']])
+    subprocess.check_call(['/usr/sbin/kea-dhcp6', '-t',
+                          os.environ['KEA_DHCP6_FILE']])
 except subprocess.CalledProcessError:
     print("Failed to validate kea-dhcp6 config. What do we do now?")
+
+
+# Reload all zones
+zones = [zone['name'] for zone in pdns.list_zones()]
+
+# Create DNS for devices
+devices = nb.dcim.devices.all()
+for device in devices:
+    if device.primary_ip4 is None or device.primary_ip6 is None:
+        continue
+
+    zone = "tg23.gathering.org"
+
+    print(device.name)
+    r = re.search('^([A-Za-z1-9]*)\.([A-Za-z1-9]*)$', device.name)
+
+    if f"{device.name}.{zone}." in zones:
+        device_name = ""
+        zone = f"{device.name}.{zone}"
+    elif r is not None:
+        device_name = r.group(1) + "."
+        zone = "{}.{}".format(r.group(2), zone)
+    elif re.search('^([A-Za-z1-9]*) \(([A-Za-z1-9 -\/]*)\)', device.name) is not None:
+        zone = "{}".format(zone)
+        device_name = re.search(
+            '^([A-Za-z1-9]*) \(([A-Za-z1-9 -\/]*)\)', device.name).group(1) + "."
+    else:
+        zone = "{}".format(zone)
+        device_name = device.name + "."
+
+    print(f"zone: {zone}")
+    print(f"name: {device_name}")
+    print(str(netaddr.IPNetwork(str(device.primary_ip4)).ip))
+    print()
+
+    # Network ID
+    zone_rrsets = []
+    zone_rrsets.append({'name': f'{device_name}{zone}.', 'changetype': 'replace', 'type': 'A', 'records': [
+        {'content': str(netaddr.IPNetwork(str(device.primary_ip4)).ip), 'disabled': False, 'type': 'A'}], 'ttl': 900})
+
+    # Apply zone_rrsets
+    print(pdns.set_records(f"{zone}", zone_rrsets))
+
+    rdns_zone = pdns.get_rdns_zone_from_ip(
+        str(netaddr.IPNetwork(str(device.primary_ip4)).ip))
+    rdns_rrsets = []
+    if rdns_zone is None:
+        print(f"Failed to find RDNS Zone for IP")
+
+    # Broadcast
+    rdns_rrsets.append({"name": ipaddress.ip_address(str(netaddr.IPNetwork(str(device.primary_ip4)).ip)).reverse_pointer + '.', "changetype": "replace", "type": "PTR", "records": [
+        {"content": f'{device_name}{zone}.', "disabled": False, "type": "PTR"}], "ttl": 900})
+
+    # Apply rdns_rrsets
+    print(pdns.set_records(rdns_zone, rdns_rrsets))
