@@ -35,8 +35,8 @@ DEFAULT_IPV6_RING_DELIVERY = Prefix.objects.get(prefix='2a06:5841:e:2000::/52')
 
 UPLINK_TYPES = (
     (InterfaceTypeChoices.TYPE_10GE_SFP_PLUS, '10G SFP+'),
-    (InterfaceTypeChoices.TYPE_1GE_FIXED, '1G CAT'),
-    (InterfaceTypeChoices.TYPE_10GE_FIXED, '10G CAT')
+    (InterfaceTypeChoices.TYPE_1GE_FIXED, '1G RJ45'),
+    (InterfaceTypeChoices.TYPE_10GE_FIXED, '10G RJ45')
 )
 
 LEVERANSE_TYPES = (
