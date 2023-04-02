@@ -29,6 +29,6 @@ def rename_switches_in_file(filename, num=14, skips=[]):
 
 
 if __name__ == "__main__":
-    rename_switches_in_file('./switches.txt', num=14, skips=[25, 27, 29, 31])
-    rename_switches_in_file('./patchlist.txt', num=14, skips=[25, 27, 29, 31])
-    rename_switches_in_file('./patchlist.txt.distrosort', num=14, skips=[25, 27, 29, 31])
+    rename_switches_in_file('./switches.txt', num=14, skips=[25, 27, 29, 31, 57])
+    rename_switches_in_file('./patchlist.txt', num=14, skips=[25, 27, 29, 31, 57])
+    rename_switches_in_file('./patchlist.txt.distrosort', num=14, skips=[25, 27, 29, 31, 57])

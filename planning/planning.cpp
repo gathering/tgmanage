@@ -372,7 +372,14 @@ void Planner::init_switches()
 			//switches.push_back(Switch(i, 3));
 		}
 
-		if (i >= 21 && i <= 36) {
+		if (i >= 21 && i <= 28) {
+			switches.push_back(Switch(i, 0));
+			switches.push_back(Switch(i, 1));
+			switches.push_back(Switch(i, 2));
+			switches.push_back(Switch(i, 3));
+		}
+
+		if (i >= 30 && i <= 36) {
 			switches.push_back(Switch(i, 0));
 			switches.push_back(Switch(i, 1));
 			switches.push_back(Switch(i, 2));
