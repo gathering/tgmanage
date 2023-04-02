@@ -694,7 +694,7 @@ int Planner::do_work(int distro_placements[NUM_DISTRO])
 	num_ports_used.clear();
 	vector<in_addr_t> distro_mgmt_ip;
 	for (unsigned i = 0; i < NUM_DISTRO + 1; i++) {
-		distro_mgmt_ip.push_back(htonl(ntohl(inet_addr(FIRST_MGMT_ADDRESS))+ 1 + i * 64));
+		distro_mgmt_ip.push_back(htonl(ntohl(inet_addr(FIRST_MGMT_ADDRESS))+ 1 + i * 32));
 	}
 	for (unsigned i = 0; i < switches.size(); ++i) {
 		const auto distro_it = switches_to_distros.find(i);
