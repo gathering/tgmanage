@@ -266,11 +266,15 @@ class Planning2Netbox(Script):
             # and then some of the features of it doesn't work,
             # e.g. prefix.get_first_available_ip().
 
+            subnet4 = IPNetwork(data['subnet4'])
+            uplink_addr_v4_raw = subnet4[1]
             uplink_addr_v4, _ = IPAddress.objects.get_or_create(
-                address=IPNetwork(data['subnet4'])[1],
+                address=f"{uplink_addr_v4_raw}/{subnet4.prefixlen}",
             )
+            subnet6 = IPNetwork(data['subnet6'])
+            uplink_addr_v6_raw = subnet6[1]
             uplink_addr_v6, _ = IPAddress.objects.get_or_create(
-                address=IPNetwork(data['subnet6'])[1],
+                address=f"{uplink_addr_v6_raw}/{subnet6.prefixlen}",
             )
             core_subinterface.ip_addresses.add(uplink_addr_v4)
             core_subinterface.ip_addresses.add(uplink_addr_v6)
