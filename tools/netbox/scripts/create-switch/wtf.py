@@ -27,7 +27,6 @@ ACCESS_SWITCH_DEVICE_ROLE = DeviceRole.objects.get(name='Access Switch')
 DEFAULT_SITE = Site.objects.get(slug='ring') # Site.objects.first()  # TODO: pick default site ?
 DEFAULT_L1_SWITCH = Device.objects.get(name='d1.ring') # Site.objects.first()  # TODO: pick default site ?
 DEFAULT_DEVICE_TYPE = DeviceType.objects.get(model='EX2200-48T') # Site.objects.first()  # TODO: pick default site ?
-DEFAULT_NETWORK_TAGS = [Tag.objects.get(name='dhcp-client')]
 
 DEFAULT_IPV4_RING_DELIVERY = Prefix.objects.get(prefix='151.216.160.0/20')
 DEFAULT_IPV6_RING_DELIVERY = Prefix.objects.get(prefix='2a06:5841:e:2000::/52')
@@ -35,8 +34,8 @@ DEFAULT_IPV6_RING_DELIVERY = Prefix.objects.get(prefix='2a06:5841:e:2000::/52')
 
 UPLINK_TYPES = (
     (InterfaceTypeChoices.TYPE_10GE_SFP_PLUS, '10G SFP+'),
-    (InterfaceTypeChoices.TYPE_1GE_FIXED, '1G RJ45'),
-    (InterfaceTypeChoices.TYPE_10GE_FIXED, '10G RJ45')
+    (InterfaceTypeChoices.TYPE_1GE_FIXED, '1G CAT'),
+    (InterfaceTypeChoices.TYPE_10GE_FIXED, '10G CAT')
 )
 
 LEVERANSE_TYPES = (
@@ -110,11 +109,11 @@ def getDeviceRole(type):
     return out
 
 
-class CreateSwitch(Script):
+class CreateSwitchSimen(Script):
 
     class Meta:
-        name = "Create Switch"
-        description = "Provision a new switch"
+        name = "Create Switch Simen"
+        description = "Simen Version - Provision a new switch"
         commit_default = False
         field_order = ['site_name', 'switch_count', 'switch_model']
         fieldsets = ""
@@ -187,13 +186,13 @@ class CreateSwitch(Script):
     network_tags = MultiObjectVar(
         label="Network tags",
         description="Tags to be sent to Gondul. These are used for templating, so be sure what they do.",
-        default=DEFAULT_NETWORK_TAGS,
         model=Tag,
         required=False,
         query_params={
             "description__ic": "for:network",
         },
     )
+
 
     nat = BooleanVar(
         label='NAT?',
@@ -243,9 +242,8 @@ class CreateSwitch(Script):
                 vid=vid
             )
             vlan.save()
+  
 
-            for tag in data['network_tags']:
-                vlan.tags.add(tag)
 
         # Only do this if access switch
         if data['leveranse'].name == "Access Switch":
@@ -407,14 +405,11 @@ class CreateSwitch(Script):
         if len(interfaces) < 1:
             raise AbortScript(f"You chose a device type without any {data['uplink_type']} interfaces! Pick another model :)")
         interface_type = ContentType.objects.get_for_model(Interface)
-
-        # Ask Håkon about this, idfk
         for uplink_num in range(0, num_uplinks):
             # mark last ports as uplinks
-            a_interface = data['destination_interfaces'][uplink_num]
-            # Ask Håkon ESPECIALLY about this madness
-            b_interface = interfaces[::-1][0:4][::-1][uplink_num]
-            self.log_debug(f'a_interface: {a_interface}, b_interface: {b_interface}')
+            a_interface = data['destination_interfaces'][::-1][uplink_num]
+            b_interface = interfaces[(uplink_num * -1) -1]
+
             # Fix Descriptions
             a_interface.description = f'G: {switch.name} (ae0)'
             b_interface.description = f"G: {data['destination_device'].name} (ae0)"
@@ -449,14 +444,14 @@ class CreateSwitch(Script):
         try:
             uplink_tag = Tag.objects.get(slug=f"{num_uplinks}-uplinks")
             switch.tags.add(uplink_tag)
-            self.log_info(f"Added tag for number of uplinks if it wasn't present already: {uplink_tag}")
+            self.log_info(f"Added uplink tag for device if it wasn't present already: {uplink_tag}")
         except Tag.DoesNotExist as e:
             self.log_error("Failed to find device tag with {num_uplinks} uplinks.")
             raise e
 
         uplink_type = data['uplink_type']
         if uplink_type in [InterfaceTypeChoices.TYPE_10GE_SFP_PLUS, InterfaceTypeChoices.TYPE_10GE_FIXED]:
-            uplink_type_tag = Tag.objects.get(slug="10g-uplink")
+            uplink_type_tag = Tag.objects.get(slug=f"10g-uplink")
             switch.tags.add(uplink_type_tag)
             self.log_info(f"Added device tag for 10g uplinks if it wasn't present already: {uplink_type_tag}")
 
