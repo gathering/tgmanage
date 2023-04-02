@@ -205,8 +205,8 @@ class Netbox2Gondul(Script):
         # sanity check
         for device in input_devices:
             if not device.primary_ip4 and not device.primary_ip6:
-                self.log_failure(f'Device <a href="{device.get_absolute_url()}">{device.name}</a> is missing primary IPv4 and IPv6 address.')
-                return
+                self.log_warning(f'Device <a href="{device.get_absolute_url()}">{device.name}</a> is missing primary IPv4 and IPv6 address, skipping...')
+                continue
 
             vlan: VLAN = None
             prefix_v4: Prefix = None
@@ -224,8 +224,8 @@ class Netbox2Gondul(Script):
                 self.log_warning(f'Device <a href="{device.get_absolute_url()}">{device.name}</a> is missing primary IPv6 address.')
 
             if prefix_v4 is not None and prefix_v6 is not None and prefix_v4.vlan != prefix_v6.vlan:
-                self.log_failure(f'VLANs differ for the IPv4 and IPv6 addresses.')
-                return
+                self.log_warning(f'VLANs differ for the IPv4 and IPv6 addresses, skipping...')
+                continue
 
 
             networks.append(self.network_to_gondul_format(vlan, prefix_v4, prefix_v6))
