@@ -197,7 +197,7 @@ class Netbox2Gondul(Script):
         input_devices: list[Type[Device]] = data['device']
 
         if len(input_devices) == 0:
-            input_devices = Device.objects.all()
+            input_devices = Device.objects.filter(status=DeviceStatusChoices.STATUS_ACTIVE)
 
         networks = []
         switches = []
@@ -218,19 +218,38 @@ class Netbox2Gondul(Script):
                     self.log_warning(f"Failed to configure {device} for import: {e}")
                     continue
             else:
-                self.log_warning(f'Device <a href="{device.get_absolute_url()}">{device.name}</a> is missing primary IPv4 address.')
+                self.log_warning(f'Device <a href="{device.get_absolute_url()}">{device.name}</a> is missing primary IPv4 address. Skipping.')
+                continue
 
             prefix_v6: Prefix = None
             if device.primary_ip6:
                 prefix_v6 = Prefix.objects.get(NetHostContained(F('prefix'), str(device.primary_ip6)))
                 vlan = prefix_v6.vlan
             else:
-                self.log_warning(f'Device <a href="{device.get_absolute_url()}">{device.name}</a> is missing primary IPv6 address.')
+                self.log_warning(f'Device <a href="{device.get_absolute_url()}">{device.name}</a> is missing primary IPv6 address. Skipping.')
+                continue
+
+            if not vlan:
+                self.log_warning(f"Skipping {device}: missing vlan")
+                continue
 
             if prefix_v4 is not None and prefix_v6 is not None and prefix_v4.vlan != prefix_v6.vlan:
                 self.log_warning(f'VLANs differ for the IPv4 and IPv6 addresses, skipping...')
                 continue
 
+            if (uplink_aes := list(device.interfaces.filter(name="ae0"))):
+                if len(uplink_aes) == 0:
+                    self.log_warning(f"Skipping {device}: Missing uplink AE")
+                    continue
+
+                uplink_ae = uplink_aes[0]
+                first_uplink_interface = uplink_ae.member_interfaces.first()
+                if first_uplink_interface is None:
+                    self.log_warning(f"Skipping {device}: Missing lag member for ae0")
+                    continue
+                if not first_uplink_interface.cable:
+                    self.log_warning(f"Skipping {device}: Missing netbox cable for uplink AE")
+                    continue
 
             networks.append(self.network_to_gondul_format(vlan, prefix_v4, prefix_v6))
             switch, traffic_network = self.device_to_gondul_format(device)
