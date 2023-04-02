@@ -104,13 +104,13 @@ class Netbox2Gondul(Script):
         router = None
 
         if prefix_v4:
-            subnet4 = str(prefix_v4.prefix)
+            subnet4 = prefix_v4.prefix
             gw4 = str(ipaddress.IPv4Network(prefix_v4.prefix)[1])
         else:
             self.log_warning(f'Network for VLAN <a href="{vlan.get_absolute_url()}">{vlan.name}</a> is missing IPv4 Prefix')
 
         if prefix_v6:
-            subnet6 = str(prefix_v6.prefix)
+            subnet6 = prefix_v6.prefix
             gw6 = str(ipaddress.IPv6Network(prefix_v6.prefix)[1])
         else:
             self.log_warning(f'Network for VLAN <a href="{vlan.get_absolute_url()}">{vlan.name}</a> is missing IPv6 Prefix')
@@ -128,8 +128,8 @@ class Netbox2Gondul(Script):
             vlan_name = override
         return {
             "name": vlan_name,
-            "subnet4": subnet4,
-            "subnet6": subnet6,
+            "subnet4": str(subnet4),
+            "subnet6": str(subnet6),
             "gw4": gw4,
             "gw6": gw6,
             "router": router,
