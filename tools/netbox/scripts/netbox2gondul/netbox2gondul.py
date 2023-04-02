@@ -1,7 +1,7 @@
 import os
 
 from django.contrib.contenttypes.models import ContentType
-from django.db.models import F
+from django.db.models import F, Q
 from django.utils.text import slugify
 
 from dcim.choices import DeviceStatusChoices, InterfaceModeChoices, InterfaceTypeChoices, SiteStatusChoices
@@ -15,6 +15,9 @@ import json
 import re
 import requests
 from requests.models import HTTPBasicAuth
+
+FLOOR = Site.objects.get(slug="floor")
+RING = Site.objects.get(slug="ring")
 
 class GondulConfigError(Exception):
     def __init__(self, msg):
@@ -197,7 +200,11 @@ class Netbox2Gondul(Script):
         input_devices: list[Type[Device]] = data['device']
 
         if len(input_devices) == 0:
-            input_devices = Device.objects.filter(status=DeviceStatusChoices.STATUS_ACTIVE)
+            input_devices = Device.objects.filter(
+                Q(site=FLOOR) | Q(site=RING)
+            ).filter(
+                status=DeviceStatusChoices.STATUS_ACTIVE,
+            )
 
         networks = []
         switches = []
