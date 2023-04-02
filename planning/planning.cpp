@@ -381,10 +381,12 @@ void Planner::init_switches()
 
 	    // No seats here for TG23
 		if (i >= 37 && i <= 41) {
-			// switches.push_back(Switch(i,0));
-			// switches.push_back(Switch(i,1));
-			// switches.push_back(Switch(i,2));
-			// switches.push_back(Switch(i,3));
+			//switches.push_back(Switch(i,0));
+			//switches.push_back(Switch(i,1));
+			if (i == 37) {
+				switches.push_back(Switch(i,2));
+				switches.push_back(Switch(i,3));
+			}
 		}
 
 	}

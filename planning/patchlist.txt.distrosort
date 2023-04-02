@@ -71,6 +71,8 @@ e69-3 d5.floor ge-0/0/10 ge-1/0/10 ge-2/0/10
 e69-4 d5.floor ge-0/0/11 ge-1/0/11 ge-2/0/11
 e71-3 d5.floor ge-0/0/12 ge-1/0/12 ge-2/0/12
 e71-4 d5.floor ge-0/0/13 ge-1/0/13 ge-2/0/13
+e73-3 d5.floor ge-0/0/14 ge-1/0/14 ge-2/0/14
+e73-4 d5.floor ge-0/0/15 ge-1/0/15 ge-2/0/15
 e59-1 d6.floor ge-0/0/0 ge-1/0/0 ge-2/0/0
 e59-2 d6.floor ge-0/0/1 ge-1/0/1 ge-2/0/1
 e61-1 d6.floor ge-0/0/2 ge-1/0/2 ge-2/0/2
