@@ -231,9 +231,13 @@ class Planning2Netbox(Script):
             # Set mgmt ip
             mgmt_addr_v4, _ = IPAddress.objects.get_or_create(
                 address=data['mgmt4'],
+                assigned_object_type=interface_type,
+                assigned_object_id=vlan_interface.id,
             )
             mgmt_addr_v6, _ = IPAddress.objects.get_or_create(
                 address=data['mgmt6'],
+                assigned_object_type=interface_type,
+                assigned_object_id=vlan_interface.id,
             )
             switch.primary_ip4 = mgmt_addr_v4
             switch.primary_ip6 = mgmt_addr_v6
