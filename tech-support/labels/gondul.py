@@ -7,7 +7,7 @@ import urllib.request
 
 GONDUL_USERNAME = os.getenv("GONDUL_USERNAME", "")
 GONDUL_PASSWORD = os.getenv("GONDUL_PASSWORD", "")
-GONDUL_API = os.getenv("GONDUL_API", "https://tg18.gondul.gathering.org/api")
+GONDUL_API = os.getenv("GONDUL_API", "https://gondul.tg23.gathering.org/api")
 GONDUL_SWITCHES_ENDPOINT = os.getenv(
     "GONDUL_SWITCHES_ENDPOINT", "/public/switches")
 
@@ -40,7 +40,7 @@ def _do_switches_request(
     return switches
 
 
-def _match_switches(switches, match="^e(.*)"):
+def _match_switches(switches, match="^e([0-9]+-[0-9]+)"):
     pattern = re.compile(match)
 
     included_switches = []
@@ -61,7 +61,7 @@ def _sort_switches(switches):
     return sorted(switches, key=lambda x: (int(x[1:].split("-")[0]), x.split("-")[1]))
 
 
-def fetch_gondul_switches(api=None, endpoint=None, username=None, password=None, match="^e(.*)"):
+def fetch_gondul_switches(api=None, endpoint=None, username=None, password=None, match="^e([0-9]+-[0-9]+)"):
     # Use provided arg instead of environment variable if defined.
     _api = api if api is not None else GONDUL_API
     _endpoint = endpoint if endpoint is not None else GONDUL_SWITCHES_ENDPOINT

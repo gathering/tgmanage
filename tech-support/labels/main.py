@@ -18,7 +18,7 @@ parser.add_argument("--gondul-api", type=str,
                     help="Gondul API base. Overrides env GONDUL_API")
 parser.add_argument("--gondul-switches", type=str,
                     help="Gondul switches endpoint. Overrides env GONDUL_SWITCHES_ENDPOINT")
-parser.add_argument("--match-switches", type=str, default="^e(.*)",
+parser.add_argument("--match-switches", type=str, default="^e([0-9]+-[0-9]+)",
                     help="Regex for matching switches")
 parser.add_argument("--outfile", "-o", type=str, default=None,
                     help="Output (base) file name. Might be appended with numbers for cables.")
