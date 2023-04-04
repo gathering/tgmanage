@@ -155,7 +155,7 @@ class Netbox2Gondul(Script):
         cable: Cable = first_ae_interface.cable
         # Assuming we only have one entry in the cable termination list.
         distro_interface: Interface = cable.a_terminations[0]
-        distro = distro_interface.device
+        distro = distro_interface.device if distro_interface.device != device else cable.b_terminations[0].device
 
         # This is the same way as we fetch mgmt vlan in the main run() function.
         # We could pass it in directly to device_to_gondul().
