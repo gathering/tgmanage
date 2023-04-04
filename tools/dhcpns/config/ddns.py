@@ -8,7 +8,13 @@ def base(ddns_domains = [], ddns_reverse_domains = []):
             "socket-type": "unix",
             "socket-name": "/tmp/kea-ddns-ctrl-socket"
         },
-        "tsig-keys": [],
+        "tsig-keys": [
+            {
+                "name": os.environ['KEA_DDNS_KEY_NAME'],
+                "algorithm": os.environ['KEA_DDNS_ALGORITHM'],
+                "secret": os.environ['KEA_DDNS_SECRET']
+            }
+        ],
         "forward-ddns": {
             "ddns-domains": ddns_domains
         },
@@ -37,7 +43,7 @@ def ddns_domain(domain_name):
             "key-name": os.environ['KEA_DDNS_KEY_NAME'],
             "dns-servers": [
                     {
-                        "ip-address": os.environ['NS1_V6'],
+                        "ip-address": "::1",
                         "port": 53
                     }
             ]

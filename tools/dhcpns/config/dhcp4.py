@@ -37,6 +37,17 @@ def base(subnet4):
                 }
             }
         ],
+        "dhcp-ddns": {
+            "enable-updates": True,
+            "server-ip": "::1",
+        },
+        "ddns-send-updates": True,
+        "ddns-override-no-update": False,
+        "ddns-override-client-update": False,
+        "ddns-replace-client-name": "always",
+        "ddns-generated-prefix": "dyn",
+        "ddns-update-on-renew": False,
+        "ddns-use-conflict-resolution": True,
         "interfaces-config": {
             "interfaces": [
                 os.environ.get('DHCP_INTERFACE', 'eth0')
@@ -222,10 +233,14 @@ def base(subnet4):
 def subnet(vlan, prefix, domain_name, vlan_domain_name):
     network = ipaddress.ip_network(prefix.prefix)
     gw, start_ip, end_ip = network[1], network[2], network[-2]
+    
     return {
         "id": prefix.id,
         "subnet": prefix.prefix,
         "ddns-qualifying-suffix": vlan_domain_name,
+        # Check if the VLAN in netbox has dhcp-ddns. This will enable full ddns using client hostnames.
+        # Generate automatically using IP if not.
+        "ddns-replace-client-name": "always" if not any(t['slug'] == 'dhcp-ddns' for t in vlan.tags) else "when-not-present",
         "pools": [
             {
                 "pool": f"{start_ip} - {end_ip}"
@@ -256,6 +271,7 @@ def fap(vlan, prefix):
     network = ipaddress.ip_network(prefix.prefix)
     gw, start_ip, end_ip = network[1], network[(
         math.ceil(network.num_addresses / 2))], network[-2]
+
     return {
         "id": prefix.id,
         "client-class": "fap-class",

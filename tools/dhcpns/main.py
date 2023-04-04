@@ -46,7 +46,7 @@ kea_rddns_domains = []
 # dhcp-client
 vlans = nb.ipam.vlans.filter(tag='dhcp-client')
 for vlan in vlans:
-    vlan_domain_name = f"{vlan.name}.{DOMAIN_NAME}"
+    vlan_domain_name = f"net-{vlan.name}.{DOMAIN_NAME}"
     prefixes4 = []
     prefixes6 = []
     kea_ddns_domains.append(ddns_domain(vlan_domain_name))
@@ -72,7 +72,7 @@ for vlan in vlans:
             network = ipaddress.ip_network(prefix)
 
             # Network ID
-            zone_rrsets.append({'name': f'net-{network[0]}.{vlan_domain_name}.', 'changetype': 'replace', 'type': 'A', 'records': [
+            zone_rrsets.append({'name': f'id-{network[0]}.{vlan_domain_name}.', 'changetype': 'replace', 'type': 'A', 'records': [
                 {'content': str(network[0]), 'disabled': False, 'type':'A'}], 'ttl': 900})
 
             # Gateway
@@ -160,45 +160,30 @@ for device in devices:
 
     zone = "tg23.gathering.org"
 
-    print(device.name)
-    r = re.search('^([A-Za-z1-9]*)\.([A-Za-z1-9]*)$', device.name)
-
-    if f"{device.name}.{zone}." in zones:
-        device_name = ""
-        zone = f"{device.name}.{zone}"
-    elif r is not None:
-        device_name = r.group(1) + "."
-        zone = "{}.{}".format(r.group(2), zone)
-    elif re.search('^([A-Za-z1-9]*) \(([A-Za-z1-9 -\/]*)\)', device.name) is not None:
-        zone = "{}".format(zone)
-        device_name = re.search(
-            '^([A-Za-z1-9]*) \(([A-Za-z1-9 -\/]*)\)', device.name).group(1) + "."
-    else:
-        zone = "{}".format(zone)
-        device_name = device.name + "."
-
-    print(f"zone: {zone}")
-    print(f"name: {device_name}")
-    print(str(netaddr.IPNetwork(str(device.primary_ip4)).ip))
-    print()
-
-    # Network ID
+    # IPv4
     zone_rrsets = []
-    zone_rrsets.append({'name': f'{device_name}{zone}.', 'changetype': 'replace', 'type': 'A', 'records': [
-        {'content': str(netaddr.IPNetwork(str(device.primary_ip4)).ip), 'disabled': False, 'type': 'A'}], 'ttl': 900})
+    if device.primary_ip4 is not None:
+        zone_rrsets.append({'name': f'{device.name}.{zone}.', 'changetype': 'replace', 'type': 'A', 'records': [
+            {'content': str(netaddr.IPNetwork(str(device.primary_ip4)).ip), 'disabled': False, 'type': 'A'}], 'ttl': 900})
 
-    # Apply zone_rrsets
-    print(pdns.set_records(f"{zone}", zone_rrsets))
+    # IPv6    
+    if device.primary_ip6 is not None:
+        zone_rrsets.append({'name': f'{device.name}.{zone}.', 'changetype': 'replace', 'type': 'AAAA', 'records': [
+            {'content': str(netaddr.IPNetwork(str(device.primary_ip6)).ip), 'disabled': False, 'type': 'A'}], 'ttl': 900})
 
-    rdns_zone = pdns.get_rdns_zone_from_ip(
-        str(netaddr.IPNetwork(str(device.primary_ip4)).ip))
-    rdns_rrsets = []
-    if rdns_zone is None:
-        print(f"Failed to find RDNS Zone for IP")
+    if len(zone_rrsets) > 1:
+        # Apply zone_rrsets
+        print(pdns.set_records(zone, zone_rrsets))
 
-    # Broadcast
+        rdns_zone = pdns.get_rdns_zone_from_ip(
+            str(netaddr.IPNetwork(str(device.primary_ip4)).ip))
+        rdns_rrsets = []
+        if rdns_zone is None:
+            print(f"Failed to find RDNS Zone for IP")
+
+    # IPv4 RDNS
     rdns_rrsets.append({"name": ipaddress.ip_address(str(netaddr.IPNetwork(str(device.primary_ip4)).ip)).reverse_pointer + '.', "changetype": "replace", "type": "PTR", "records": [
-        {"content": f'{device_name}{zone}.', "disabled": False, "type": "PTR"}], "ttl": 900})
+        {"content": f'{device.name}.{zone}.', "disabled": False, "type": "PTR"}], "ttl": 900})
 
     # Apply rdns_rrsets
     print(pdns.set_records(rdns_zone, rdns_rrsets))
