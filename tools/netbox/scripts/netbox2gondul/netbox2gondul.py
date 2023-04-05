@@ -134,6 +134,7 @@ class Netbox2Gondul(Script):
             "gw6": gw6,
             "router": router,
             "vlan": vlan.vid,
+            "tags": [tag.slug for tag in list(vlan.tags.all())],
         }
 
     def switches_to_gondul(self, switches):
