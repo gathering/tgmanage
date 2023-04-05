@@ -1,0 +1,8 @@
+[Unit]
+Description=Monitor syslog
+
+[Service]
+ExecStart=/opt/tools/monitor.sh
+
+[Install]
+WantedBy=multi-user.target

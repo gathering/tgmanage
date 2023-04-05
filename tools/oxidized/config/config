@@ -1,0 +1,60 @@
+---
+username: oxidized
+password: <PASSWORD>
+interval: 0
+debug: true
+use_max_threads: true
+# Default value
+threads: 30
+# Default value
+timeout: 20
+# Default value
+log: /opt/oxidized/logs
+retries: 3
+prompt: !ruby/regexp /^([\w.@-]+[#>]\s?)$/
+rest: 127.0.0.1:8888
+pid: "/opt/oxidized/pid"
+crash:
+  directory: "/opt/oxidized/crashes"
+  hostnames: false
+
+source:
+  default: http
+  debug: false
+  http:
+    secure: false
+    scheme: https
+    url: https://gondul.tg23.gathering.org/api/templates/oxidized.json
+    map:
+      name: hostname
+      model: os
+      ip: ipv4
+    headers:
+      Authorization: Basic <BASIC>
+
+input:
+  default: ssh
+  debug: false
+  ssh:
+    secure: false
+  utf8_encoded: true
+
+output:
+  default: git
+  file:
+    directory: "/opt/oxidized/output/configs"
+  git:
+    single_repo: true
+    user: yolomation
+    email: yolomation@gathering.org
+    repo: "/opt/oxidized/output/configs.git"
+
+hooks:
+  yolomation:
+    type: exec
+    events: [post_store]
+    cmd: '/opt/oxidized/tools/yolo.sh'
+
+use_syslog: true
+resolve_dns: true
+next_adds_job: true

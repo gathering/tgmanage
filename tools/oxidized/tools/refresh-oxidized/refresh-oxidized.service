@@ -1,0 +1,4 @@
+[Unit]
+Description=Update git folder
+[Service]
+ExecStart=/opt/tools/refresh-oxidized.sh
