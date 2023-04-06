@@ -18,7 +18,7 @@ CONFIG_FILE = '/etc/netbox/scripts/mist.json'
 AP_DEVICE_ROLE = DeviceRole.objects.get(name='AP')
 DEFAULT_SITE = Site.objects.get(slug='hele-skpet')
 WIFI_MGMT_VLAN = VLAN.objects.get(name="wifi-mgmt.floor.r1.tele")
-WIFI_TRAFFIC_VLAN = VLAN.objects.get(name="wifi-clients-ssid-the-gathering.floor.r1.tele")
+WIFI_TRAFFIC_VLAN = VLAN.objects.get(name="wifi-lol")
 CORE_DEVICE = Device.objects.get(name="r1.tele")
 
 TG = Tag.objects.get
