@@ -18,6 +18,7 @@ from requests.models import HTTPBasicAuth
 
 FLOOR = Site.objects.get(slug="floor")
 RING = Site.objects.get(slug="ring")
+WIFI_TRAFFIC_VLAN = VLAN.objects.get(name="wifi-clients-ssid-the-gathering.floor.r1.tele")
 
 class GondulConfigError(Exception):
     def __init__(self, msg):
@@ -176,17 +177,21 @@ class Netbox2Gondul(Script):
             self.log_info(f'Overriding management vlan name with: {override} (was: {mgmt_vlan_name})')
             mgmt_vlan_name = override
 
+        traffic_vlan = None
         traffic_network = None
         traffic_vlan_name = None
         try:
             traffic_vlan = VLAN.objects.get(name=device.name)
+        except VLAN.DoesNotExist:
+            if device.name[0:2] == "ap":
+                traffic_vlan = WIFI_TRAFFIC_VLAN
+                traffic_vlan_name = traffic_vlan.name
+
+        if traffic_vlan:
             traffic_prefix_v4 = Prefix.objects.get(vlan=traffic_vlan, prefix__family=4)
             traffic_prefix_v6 = Prefix.objects.get(vlan=traffic_vlan, prefix__family=6)
             traffic_vlan_name = traffic_vlan.name
-
             traffic_network = self.network_to_gondul_format(traffic_vlan, traffic_prefix_v4, traffic_prefix_v6)
-        except VLAN.DoesNotExist:
-            pass
 
         return {
             # "community": "", # Not implemented
