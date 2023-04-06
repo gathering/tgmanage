@@ -20,7 +20,7 @@ from requests.models import HTTPBasicAuth
 FLOOR = Site.objects.get(slug="floor")
 RING = Site.objects.get(slug="ring")
 WIFI = Site.objects.get(slug="hele-skpet")
-WIFI_TRAFFIC_VLAN = VLAN.objects.get(name="wifi-clients-ssid-the-gathering.floor.r1.tele")
+WIFI_TRAFFIC_VLAN = VLAN.objects.get(name="wifi-lol")
 
 class GondulConfigError(Exception):
     def __init__(self, msg):
