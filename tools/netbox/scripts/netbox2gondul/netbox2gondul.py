@@ -244,7 +244,7 @@ class Netbox2Gondul(Script):
                 continue
 
             prefix_v6: Prefix = None
-            if device.primary_ip6 and IPv6Address(str(device.primary_ip6.ip)).is_global:
+            if device.primary_ip6 and IPv6Address(str(device.primary_ip6).split('/')[0]).is_global:
                 prefix_v6 = Prefix.objects.get(NetHostContained(F('prefix'), str(device.primary_ip6)))
                 vlan = prefix_v6.vlan
             else:
