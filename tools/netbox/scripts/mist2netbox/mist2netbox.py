@@ -189,6 +189,8 @@ class Mist2Netbox(Script):
                     assigned_object_type=interface_type,
                     assigned_object_id=interface.id,
                 )
+            else:
+                mgmt_addr_v6 = None
             device = Device.objects.get(pk=device.pk)
             device.primary_ip4 = mgmt_addr_v4
             device.primary_ip6 = mgmt_addr_v6
