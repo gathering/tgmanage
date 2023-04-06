@@ -7,6 +7,7 @@ from django.utils.text import slugify
 from dcim.choices import DeviceStatusChoices, InterfaceModeChoices, InterfaceTypeChoices, SiteStatusChoices
 from dcim.models import Cable, CableTermination, Device, DeviceRole, DeviceType, Interface, Manufacturer, Site
 from extras.scripts import *
+from ipaddress import IPv6Address
 from ipam.models import IPAddress, Prefix, VLAN
 from ipam.lookups import NetHostContained
 
@@ -243,11 +244,11 @@ class Netbox2Gondul(Script):
                 continue
 
             prefix_v6: Prefix = None
-            if device.primary_ip6:
+            if device.primary_ip6 and IPv6Address(str(device.primary_ip6)).is_global:
                 prefix_v6 = Prefix.objects.get(NetHostContained(F('prefix'), str(device.primary_ip6)))
                 vlan = prefix_v6.vlan
             else:
-                self.log_warning(f'Device <a href="{device.get_absolute_url()}">{device.name}</a> is missing primary IPv6 address. Skipping.')
+                self.log_warning(f'Device <a href="{device.get_absolute_url()}">{device.name}</a> is missing global primary IPv6 address. Skipping.')
                 continue
 
             if not vlan:
