@@ -204,4 +204,6 @@ class Mist2Netbox(Script):
                 mgmt_addr_v6,
             ]
             for thing in things_we_created:
+                if not thing:
+                    continue
                 thing.tags.add(import_tag)
