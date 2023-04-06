@@ -5,6 +5,7 @@ from django.contrib.contenttypes.models import ContentType
 
 from dcim.choices import InterfaceModeChoices, InterfaceTypeChoices
 from dcim.models import Cable, CableTermination, Device, DeviceRole, DeviceType, Interface, Site
+from ipaddress import IPv6Address
 from extras.models import Tag
 from extras.scripts import *
 from ipam.models import IPAddress, Prefix, VLAN, VLANGroup
@@ -181,11 +182,13 @@ class Mist2Netbox(Script):
             mgmt_addr_v6 = f"{mgmt_addr_ipv6}{mgmt_addr_ipv6_netmask}"
             if device.primary_ip6 and device.primary_ip6 != mgmt_addr_v6:
                 device.primary_ip6.delete()
-            mgmt_addr_v6, _ = IPAddress.objects.get_or_create(
-                address=mgmt_addr_v6,
-                assigned_object_type=interface_type,
-                assigned_object_id=interface.id,
-            )
+            if IPv6Address(str(mgmt_addr_ipv6)).is_global:
+                self.log_warning(f"AP {device.name} missing global IPv6 address")
+                mgmt_addr_v6, _ = IPAddress.objects.get_or_create(
+                    address=mgmt_addr_v6,
+                    assigned_object_type=interface_type,
+                    assigned_object_id=interface.id,
+                )
             device = Device.objects.get(pk=device.pk)
             device.primary_ip4 = mgmt_addr_v4
             device.primary_ip6 = mgmt_addr_v6
