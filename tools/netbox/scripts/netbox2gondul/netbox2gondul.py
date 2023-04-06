@@ -18,6 +18,7 @@ from requests.models import HTTPBasicAuth
 
 FLOOR = Site.objects.get(slug="floor")
 RING = Site.objects.get(slug="ring")
+WIFI = Site.objects.get(slug="hele-skpet")
 WIFI_TRAFFIC_VLAN = VLAN.objects.get(name="wifi-clients-ssid-the-gathering.floor.r1.tele")
 
 class GondulConfigError(Exception):
@@ -214,7 +215,7 @@ class Netbox2Gondul(Script):
 
         if len(input_devices) == 0:
             input_devices = Device.objects.filter(
-                Q(site=FLOOR) | Q(site=RING)
+                Q(site=FLOOR) | Q(site=RING) | Q(site=WIFI)
             ).filter(
                 status=DeviceStatusChoices.STATUS_ACTIVE,
             )
