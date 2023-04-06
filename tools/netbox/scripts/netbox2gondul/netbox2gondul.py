@@ -196,7 +196,8 @@ class Netbox2Gondul(Script):
         return {
             # "community": "", # Not implemented
             "tags": [tag.slug for tag in list(device.tags.all())],
-            "distro_name": distro.name,
+            # Ultrahack: Remove distro name because that breaks templating
+            "distro_name": distro.name if traffic_vlan != WIFI_TRAFFIC_VLAN else None,
             "distro_phy_port": f"{distro_interface.name}.0",
             "mgmt_v4_addr": str(device.primary_ip4.address.ip) if device.primary_ip4 is not None else None,
             "mgmt_v6_addr": str(device.primary_ip6.address.ip) if device.primary_ip6 is not None else None,
