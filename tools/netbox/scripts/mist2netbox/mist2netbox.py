@@ -167,7 +167,7 @@ class Mist2Netbox(Script):
             mgmt_addr_ipv4 = device_data['ip_stat']['ip']
             mgmt_addr_ipv4_netmask = device_data['ip_stat']['netmask']
             mgmt_addr_v4 = f"{mgmt_addr_ipv4}/25"  # netmask is in cidr notation, and netmask6 is in prefix notation. why?
-            if device.primary_ip4 != mgmt_addr_v4:
+            if device.primary_ip4 and device.primary_ip4 != mgmt_addr_v4:
                 device.primary_ip4.delete()
             mgmt_addr_v4, _ = IPAddress.objects.get_or_create(
                 address=mgmt_addr_v4,
@@ -177,7 +177,7 @@ class Mist2Netbox(Script):
             mgmt_addr_ipv6 = device_data['ip_stat']['ip6']
             mgmt_addr_ipv6_netmask = device_data['ip_stat']['netmask6']
             mgmt_addr_v6 = f"{mgmt_addr_ipv6}{mgmt_addr_ipv6_netmask}"
-            if device.primary_ip6 != mgmt_addr_v6:
+            if device.primary_ip6 and device.primary_ip6 != mgmt_addr_v6:
                 device.primary_ip6.delete()
             mgmt_addr_v6, _ = IPAddress.objects.get_or_create(
                 address=mgmt_addr_v6,
