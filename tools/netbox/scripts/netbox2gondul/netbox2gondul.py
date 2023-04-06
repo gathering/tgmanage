@@ -148,12 +148,18 @@ class Netbox2Gondul(Script):
             self.log_failure(f"Gondul said HTTP {req.status_code} and {req.text}")
 
     def device_to_gondul_format(self, device: Device):
+        an_uplink_interface = None
+
         # Find distro and distro port through the cable connected on uplink ae.
         # Assuming the uplink AE is always named 'ae0'.
-        uplink_ae: Interface = device.interfaces.get(name="ae0")
+        try:
+            uplink_ae: Interface = device.interfaces.get(name="ae0")
+            an_uplink_interface: Interface = uplink_ae.member_interfaces.first()
+        except Interface.DoesNotExist:
+            # If we don't have ae0, assume we're an AP and have eth0.
+            an_uplink_interface = device.interfaces.get(name="eth0")
 
-        first_ae_interface: Interface = uplink_ae.member_interfaces.first()
-        cable: Cable = first_ae_interface.cable
+        cable: Cable = an_uplink_interface.cable
         # Assuming we only have one entry in the cable termination list.
         distro_interface: Interface = cable.a_terminations[0] if cable.a_terminations[0].device != device else cable.b_terminations[0]
         distro = distro_interface.device
