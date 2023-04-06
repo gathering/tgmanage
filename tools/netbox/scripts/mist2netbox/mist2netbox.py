@@ -58,8 +58,10 @@ def create_device_from_mist(data):
 def get_distro_from_mist(data):
     if 'lldp_stat' not in data:
         return None, None
+    distro_name = data['lldp_stat']['system_name']
+    distro_name = distro_name.replace(".tg23.gathering.org", "")
     try:
-        distro = Device.objects.get(name=data['lldp_stat']['system_name'])
+        distro = Device.objects.get(name=distro_name)
         distro_port = distro.interfaces.get(name=data['lldp_stat']['port_id'])
         return distro, distro_port
     except Device.DoesNotExist:
