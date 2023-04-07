@@ -248,8 +248,7 @@ class Netbox2Gondul(Script):
                 prefix_v6 = Prefix.objects.get(NetHostContained(F('prefix'), str(device.primary_ip6)))
                 vlan = prefix_v6.vlan
             else:
-                self.log_warning(f'Device <a href="{device.get_absolute_url()}">{device.name}</a> is missing global primary IPv6 address. Skipping.')
-                continue
+                self.log_warning(f'Device <a href="{device.get_absolute_url()}">{device.name}</a> is missing global primary IPv6 address.')
 
             if not vlan:
                 self.log_warning(f"Skipping {device}: missing vlan")
