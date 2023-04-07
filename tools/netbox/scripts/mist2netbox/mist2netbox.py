@@ -197,7 +197,7 @@ class Mist2Netbox(Script):
             device.save()
 
             if "locating" in device_data and device_data["locating"]:
-                locating_tag = Tag.objects.get_or_create(name="locating")
+                locating_tag, _ = Tag.objects.get_or_create(name="locating")
                 device.tags.add(locating_tag)
 
 
