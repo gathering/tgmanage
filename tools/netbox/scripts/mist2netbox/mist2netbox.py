@@ -196,10 +196,12 @@ class Mist2Netbox(Script):
             device.primary_ip6 = mgmt_addr_v6
             device.save()
 
-            if "locating" in device_data and device_data["locating"]:
+            if "locating" in device_data:
                 locating_tag, _ = Tag.objects.get_or_create(name="locating")
-                device.tags.add(locating_tag)
-
+                if device_data["locating"]:
+                    device.tags.add(locating_tag)
+                else:
+                    device.tags.remove(locating_tag)
 
             # Add tag to everything we created so it's easy to identify in case we
             # want to recreate
