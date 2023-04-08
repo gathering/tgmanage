@@ -28,20 +28,19 @@ WIFI_TAGS = [TG(slug="deltagere")]
 
 def fetch_from_mist():
     site = None
-    auth = None
+    token = None
     with open(CONFIG_FILE, 'r') as f:
         contents = f.read()
         j = json.loads(contents)
         site = j['site']
-        auth = j['auth']
+        token = j['token']
 
     site_url = f"https://api.eu.mist.com/api/v1/sites/{site}/stats/devices"
     resp = requests.get(site_url,
         None,
         headers={
-           # 'authorization': f'Bearer {TOKEN}',
+           'authorization': f'Token {token}',
         },
-        cookies={'sessionid.eu': auth},
     )
     return resp.json()
 
