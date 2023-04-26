@@ -270,7 +270,7 @@ def subnet(vlan, prefix, domain_name, vlan_domain_name):
 def fap(vlan, prefix):
     network = ipaddress.ip_network(prefix.prefix)
     gw, start_ip, end_ip = network[1], network[(
-        math.ceil(network.num_addresses / 2))], network[-2]
+        math.ceil(network.num_addresses - 50))], network[-2]
 
     return {
         "id": prefix.id,
