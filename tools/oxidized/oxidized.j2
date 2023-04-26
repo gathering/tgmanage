@@ -1,0 +1,13 @@
+{% set mgmt = objects["read/switches-management"].switches %}
+{% set ping = objects["public/ping"].switches %}
+{% set switches = objects["public/switches"].switches %}
+[
+{% for switch, state in ping.items() if state.latency4 is not none and not "server" in switches[switch].tags%}
+    {
+        "hostname": "{{ mgmt[switch].sysname }}.tg23.gathering.org",
+        "os": "junos",
+        "ipv4": "{{ mgmt[switch].mgmt_v4_addr }}",
+        "ipv6": "{{ mgmt[switch].mgmt_v6_addr }}"
+    }{% if not loop.last -%},{% endif %}
+{%endfor%}
+]

@@ -1,0 +1,8 @@
+[Unit]
+Description=Update Oxidized
+[Timer]
+OnBootSec=60
+OnUnitActiveSec=60
+AccuracySec=1ms
+[Install]
+WantedBy=timers.target
