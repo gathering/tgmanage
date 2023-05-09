@@ -1,0 +1,6 @@
+= NetBox Custom Scripts
+
+NetBox supports https://demo.netbox.dev/static/docs/customization/custom-scripts/[Custom Scripts]
+which are simple Python scripts working from inside NetBox with its Django (and NetBox) context.
+
+These scripts should live in `SCRIPTS_ROOT`, e.g. `/etc/netbox/scripts`.
