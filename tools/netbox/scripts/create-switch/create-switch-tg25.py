@@ -8,6 +8,10 @@ from dcim.choices import InterfaceModeChoices, InterfaceTypeChoices
 from ipam.models import VLANGroup, VLAN, Role, Prefix, IPAddress
 from ipam.choices import PrefixStatusChoices
 
+import random
+import string
+
+DEFAULT_SWITCH_NAME = "e1.test"
 DEFAULT_SITE = Site.objects.get(name='Vikingskipet')
 DEFAULT_DEVICE_TYPE = DeviceType.objects.get(model='EX2200-48T-4G')
 DEFAULT_DEVICE_ROLE = DeviceRole.objects.get(slug='access-switch')
@@ -61,7 +65,7 @@ class CreateSwitch(Script):
     switch_name = StringVar(
         description="Switch name. Remember, e = access switch, d = distro switch",
         required=True,
-        default="e1.test"  # default during development
+        default=DEFAULT_SWITCH_NAME
     )
     device_type = ObjectVar(
         description="Device model",
@@ -252,8 +256,12 @@ class CreateSwitch(Script):
         return vlan
 
     def create_switch(self, data):
+        switch_name = data['switch_name']
+        if switch_name == DEFAULT_SWITCH_NAME:
+            switch_name = f"e1.test-{''.join(random.sample(string.ascii_uppercase * 6, 6))}"
+
         switch = Device(
-            name=data['switch_name'],
+            name=switch_name,
             device_type=data['device_type'],
             location=data['location'],
             role=data['device_role'],
