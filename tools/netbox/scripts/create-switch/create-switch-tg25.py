@@ -29,8 +29,9 @@ DEFAULT_DEVICE_ROLE = DeviceRole.objects.get(slug='access-switch')
 DEFAULT_TG_DNS_SUFFIX = "tg25.tg.no"
 DEFAULT_UPLINK_SWITCH = Device.objects.get(name='d1.ring')
 
-DEVICE_ROLE_LEAF = "leaf"
+DEVICE_ROLE_ACCESS = "access-switch"
 DEVICE_ROLE_DISTRO = "distro"
+DEVICE_ROLE_LEAF = "leaf"
 DEVICE_ROLE_UTSKUTT_DISTRO = "utskutt-distro"
 
 # VLAN Group to allocate VLANs from
@@ -79,7 +80,6 @@ class CreateSwitch(Script):
         name = "Create Switch"
         description = "Provision a new switch"
         commit_default = True
-        field_order = ['site_name', 'switch_count', 'switch_model']
         fieldsets = ""
         scheduling_enabled = False
 
@@ -137,19 +137,20 @@ class CreateSwitch(Script):
     def run(self, data, commit):
         switch = self.create_switch(data)
 
-        vlan = self.create_vlan(switch)
-
-        v4_prefix, v6_prefix = self.allocate_prefixes(vlan)
-
-        self.set_traffic_vlan(switch, vlan)
+        if switch.role.slug == DEVICE_ROLE_ACCESS:
+            vlan = self.create_vlan(switch)
+            v4_prefix, v6_prefix = self.allocate_prefixes(vlan)
+            self.set_traffic_vlan(switch, vlan)
 
         self.connect_switch(data, switch, vlan)
 
         self.log_success(f"✅ Script completed successfully.")
         self.log_success(f"🔗 Switch:     <a href=\"{switch.get_absolute_url()}\">{switch}</a>")
-        self.log_success(f"🔗 v6 Prefix:  <a href=\"{v6_prefix.get_absolute_url()}\">{v6_prefix}</a>")
-        self.log_success(f"🔗 v4 Prefix:  <a href=\"{v4_prefix.get_absolute_url()}\">{v4_prefix}</a>")
-        self.log_success(f"🔗 VLAN:       <a href=\"{vlan.get_absolute_url()}\">{vlan}</a>")
+
+        if switch.role.slug == DEVICE_ROLE_ACCESS:
+            self.log_success(f"🔗 v6 Prefix:  <a href=\"{v6_prefix.get_absolute_url()}\">{v6_prefix}</a>")
+            self.log_success(f"🔗 v4 Prefix:  <a href=\"{v4_prefix.get_absolute_url()}\">{v4_prefix}</a>")
+            self.log_success(f"🔗 VLAN:       <a href=\"{vlan.get_absolute_url()}\">{vlan}</a>")
         self.log_success(f"⚠️ <strong>️Fabric config must be deployed before switch can be fapped.</strong>")
 
     def allocate_prefixes(self, vlan):
@@ -171,10 +172,8 @@ class CreateSwitch(Script):
     def connect_switch(self, data, switch, vlan):
         uplink_device_a = data['destination_device_a']
         uplink_device_b = data['destination_device_b']
-        uplink_lag_name = f"ae{vlan.id}"
 
-        if uplink_device_a.device_type.manufacturer.name == "Arista":
-            uplink_lag_name = f"Po{vlan.id}"
+        uplink_lag_name = self.get_next_free_lag_number(uplink_device_a)
 
         switch_uplink_description = f"B: {uplink_device_a} {uplink_lag_name}"
         if uplink_device_b:
@@ -270,6 +269,20 @@ class CreateSwitch(Script):
             cable.save()
             self.log_debug(
                 f"Connected: {uplink_device} - {uplink_device_interface} to {switch} - {switch_uplink_interface}")
+
+    def get_next_free_lag_number(self, uplink_device_a):
+        existing_lag_names = [x.name for x in list(Interface.objects.filter(device=uplink_device_a, type=InterfaceTypeChoices.TYPE_LAG))]
+
+        lag_prefix = "ae"
+        if uplink_device_a.device_type.manufacturer.name == "Arista":
+            lag_prefix = "Po"
+
+        if "ae10" not in existing_lag_names and "Po10" not in existing_lag_names:
+            return f"{lag_prefix}10"
+
+        lag_numbers = [int(lag[2:]) for lag in existing_lag_names]
+        next_free = max(lag_numbers) + 1
+        return f"{lag_prefix}{next_free}"
 
     def create_switch(self, data):
         switch_name = data['switch_name']
