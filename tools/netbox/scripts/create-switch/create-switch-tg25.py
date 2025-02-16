@@ -14,11 +14,11 @@ import string
 from utilities.exceptions import AbortScript
 
 ## Features and if tested
-# ✅- Edge switch on Ringen
-# ✅- Edge on "utskutt distro"
-# ✅- Edge switch on distro leaf
+# ✅ Edge switch on Ringen
+# ✅ Edge on "utskutt distro"
+# ✅ Edge switch on distro leaf
 # ✅ Edge switch on leaf-pair
-# - Utskutt distro (nice to have)
+# ✅ Utskutt distro (nice to have)
 # - Should be able to select 2.5 G ports on Arista devices even if we want 1G
 
 
