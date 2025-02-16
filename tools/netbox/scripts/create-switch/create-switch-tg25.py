@@ -140,9 +140,6 @@ class CreateSwitch(Script):
     )
 
     def run(self, data, commit):
-        if not data['switch_name'].startswith("e") and not data['switch_name'].startswith("d"):
-            raise ValidationError("Switch name must start whit e or d")
-
         switch = self.create_switch(data)
 
         vlan = self.create_vlan(switch)
