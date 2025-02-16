@@ -64,6 +64,8 @@ UPLINK_TYPES = (
 UPLINK_SUPPORT_MATRIX = {
     InterfaceTypeChoices.TYPE_25GE_SFP28: [InterfaceTypeChoices.TYPE_10GE_SFP_PLUS,
                                            InterfaceTypeChoices.TYPE_25GE_SFP28],
+    InterfaceTypeChoices.TYPE_10GE_SFP_PLUS: [InterfaceTypeChoices.TYPE_10GE_SFP_PLUS,
+                                              InterfaceTypeChoices.TYPE_25GE_SFP28],
     InterfaceTypeChoices.TYPE_2GE_FIXED: [InterfaceTypeChoices.TYPE_2GE_FIXED, InterfaceTypeChoices.TYPE_1GE_FIXED],
     InterfaceTypeChoices.TYPE_1GE_FIXED: [InterfaceTypeChoices.TYPE_2GE_FIXED, InterfaceTypeChoices.TYPE_1GE_FIXED]
 }
@@ -137,6 +139,11 @@ class CreateSwitch(Script):
     def run(self, data, commit):
         switch = self.create_switch(data)
 
+        # These only exists if we are provisioning an access switch
+        vlan = None
+        v6_prefix = None
+        v4_prefix = None
+
         if switch.role.slug == DEVICE_ROLE_ACCESS:
             vlan = self.create_vlan(switch)
             v4_prefix, v6_prefix = self.allocate_prefixes(vlan)
@@ -169,7 +176,7 @@ class CreateSwitch(Script):
         self.log_info("Created network. Created new VLAN and assigned prefixes")
         return v4_prefix, v6_prefix
 
-    def connect_switch(self, data, switch, vlan):
+    def connect_switch(self, data, switch, vlan=None):
         uplink_device_a = data['destination_device_a']
         uplink_device_b = data['destination_device_b']
 
@@ -192,7 +199,8 @@ class CreateSwitch(Script):
             self.log_info(f"Added vlan to utskutt distro uplink LAG")
 
         switch_uplink_lag.tagged_vlans.add(FABRIC_V4_JUNIPER_MGMT_PREFIX.vlan.id)
-        switch_uplink_lag.tagged_vlans.add(vlan.id)
+        if switch.role.slug == DEVICE_ROLE_ACCESS:
+            switch_uplink_lag.tagged_vlans.add(vlan.id)
 
         possible_uplink_types = []
         uplink_type = data['uplink_type']
@@ -271,7 +279,8 @@ class CreateSwitch(Script):
                 f"Connected: {uplink_device} - {uplink_device_interface} to {switch} - {switch_uplink_interface}")
 
     def get_next_free_lag_number(self, uplink_device_a):
-        existing_lag_names = [x.name for x in list(Interface.objects.filter(device=uplink_device_a, type=InterfaceTypeChoices.TYPE_LAG))]
+        existing_lag_names = [x.name for x in list(
+            Interface.objects.filter(device=uplink_device_a, type=InterfaceTypeChoices.TYPE_LAG))]
 
         lag_prefix = "ae"
         if uplink_device_a.device_type.manufacturer.name == "Arista":
@@ -354,7 +363,7 @@ class CreateSwitch(Script):
             interface.save()
         self.log_info("Configured traffic vlan on all client ports")
 
-    def create_uplink_lag(self, switch, uplink_device_a, uplink_lag_name, vlan):
+    def create_uplink_lag(self, switch, uplink_device_a, uplink_lag_name, vlan=None):
         destination_lag = Interface.objects.create(
             device=uplink_device_a,
             name=f"{uplink_lag_name}",
@@ -364,7 +373,8 @@ class CreateSwitch(Script):
         )
         destination_lag.save()
         destination_lag.tagged_vlans.add(FABRIC_V4_JUNIPER_MGMT_PREFIX.vlan.id)
-        destination_lag.tagged_vlans.add(vlan.id)
+        if switch.role.slug == DEVICE_ROLE_ACCESS:
+            destination_lag.tagged_vlans.add(vlan.id)
         self.log_debug(
             f"Created destination LAG <a href=\"{destination_lag.get_absolute_url()}\">{destination_lag}</a>")
         return destination_lag
