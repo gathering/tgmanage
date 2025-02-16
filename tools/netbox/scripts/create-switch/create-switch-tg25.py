@@ -11,6 +11,17 @@ from ipam.choices import PrefixStatusChoices
 import random
 import string
 
+from utilities.exceptions import AbortScript
+
+## Features and if tested
+# ✅- Edge switch on Ringen
+# ✅- Edge on "utskutt distro"
+# ✅- Edge switch on distro leaf
+# ✅ Edge switch on leaf-pair
+# - Utskutt distro (nice to have)
+# - Should be able to select 2.5 G ports on Arista devices even if we want 1G
+
+
 DEFAULT_SWITCH_NAME = "e1.test"
 DEFAULT_SITE = Site.objects.get(name='Vikingskipet')
 DEFAULT_DEVICE_TYPE = DeviceType.objects.get(model='EX2200-48T-4G')
@@ -38,13 +49,23 @@ FABRIC_V6_JUNIPER_MGMT_PREFIX = Prefix.objects.get(prefix='2a06:5841:f::/64')
 
 UPLINK_PORTS = {
     'EX2200-48T-4G': ["ge-0/0/44", "ge-0/0/45", "ge-0/0/46", "ge-0/0/47"],
+    'EX3300-48P': ["xe-0/1/0", "xe-0/1/1"],  # xe-0/1/2 and xe-0/1/3 can be used for clients
 }
 
 UPLINK_TYPES = (
+    (InterfaceTypeChoices.TYPE_10GE_FIXED, '10G RJ45'),
     (InterfaceTypeChoices.TYPE_10GE_SFP_PLUS, '10G SFP+'),
+    (InterfaceTypeChoices.TYPE_25GE_SFP28, '25G SFP28'),
     (InterfaceTypeChoices.TYPE_1GE_FIXED, '1G RJ45'),
-    (InterfaceTypeChoices.TYPE_10GE_FIXED, '10G RJ45')
+    (InterfaceTypeChoices.TYPE_2GE_FIXED, '2.5G RJ45')
 )
+
+UPLINK_SUPPORT_MATRIX = {
+    InterfaceTypeChoices.TYPE_25GE_SFP28: [InterfaceTypeChoices.TYPE_10GE_SFP_PLUS,
+                                           InterfaceTypeChoices.TYPE_25GE_SFP28],
+    InterfaceTypeChoices.TYPE_2GE_FIXED: [InterfaceTypeChoices.TYPE_2GE_FIXED, InterfaceTypeChoices.TYPE_1GE_FIXED],
+    InterfaceTypeChoices.TYPE_1GE_FIXED: [InterfaceTypeChoices.TYPE_2GE_FIXED, InterfaceTypeChoices.TYPE_1GE_FIXED]
+}
 
 
 def generatePrefix(prefix, length):
@@ -65,7 +86,8 @@ class CreateSwitch(Script):
     switch_name = StringVar(
         description="Switch name. Remember, e = access switch, d = distro switch",
         required=True,
-        default=DEFAULT_SWITCH_NAME
+        default=DEFAULT_SWITCH_NAME,
+        regex="^[ed]\d{1,2}\."
     )
     device_type = ObjectVar(
         description="Device model",
@@ -82,7 +104,7 @@ class CreateSwitch(Script):
         required=True,
         default=Location.objects.get(name="Ringen")  # Default during development
     )
-    uplink_type = ChoiceVar(
+    uplink_type = MultiChoiceVar(
         label='Uplink Type',
         required=True,
         description="What type of interface should this switch be delivered on",
@@ -155,105 +177,107 @@ class CreateSwitch(Script):
         return v4_prefix, v6_prefix
 
     def connect_switch(self, data, switch, vlan):
-        uplink_description = f"B: {data['destination_device_a'].name}"
-        if data['destination_device_b']:
-            uplink_description = f"B: {data['destination_device_a'].name} / {data['destination_device_b'].name} - ae{vlan.id}"
-        uplink_ae = Interface.objects.create(
+        uplink_device_a = data['destination_device_a']
+        uplink_device_b = data['destination_device_b']
+        uplink_lag_name = f"ae{vlan.id}"
+
+        if uplink_device_a.device_type.manufacturer.name == "Arista":
+            uplink_lag_name = f"Po{vlan.id}"
+
+        switch_uplink_description = f"B: {uplink_device_a} {uplink_lag_name}"
+        if uplink_device_b:
+            switch_uplink_description = f"B: {uplink_device_a.name} / {uplink_device_a.name} {uplink_lag_name}"
+
+        switch_uplink_lag = Interface.objects.create(
             device=switch,
             name="ae0",
-            description=uplink_description,
+            description=switch_uplink_description,
             type=InterfaceTypeChoices.TYPE_LAG,
             mode=InterfaceModeChoices.MODE_TAGGED,
         )
-        if data['destination_device_a'].role == DEVICE_ROLE_UTSKUTT_DISTRO:
-            self.log_debug(f"{data['destination_device_a']} is utskutt-distro")
-            # TODO make sure we add traffic vlan on AE between distro and utskutt-distro as well.
-        uplink_ae.tagged_vlans.add(FABRIC_V4_JUNIPER_MGMT_PREFIX.vlan.id)
-        uplink_ae.tagged_vlans.add(vlan.id)
-        ## We only need this if not connected to leaf (since they are provisioned using AVD)
-        if data['destination_device_a'].role != DEVICE_ROLE_LEAF:
-            destination_ae = Interface.objects.create(
-                device=data['destination_device_a'],
-                name=f"ae{vlan.id}",
-                description=f'B: {switch.name} ae0',
-                type=InterfaceTypeChoices.TYPE_LAG,
-                mode=InterfaceModeChoices.MODE_TAGGED,
+        if uplink_device_a.role.slug == DEVICE_ROLE_UTSKUTT_DISTRO:
+            uplink_lag = Interface.objects.get(device=data['destination_device_a'], name="ae0")
+            uplink_lag.tagged_vlans.add(vlan.id)
+            self.log_info(f"Added vlan to utskutt distro uplink LAG")
+
+        switch_uplink_lag.tagged_vlans.add(FABRIC_V4_JUNIPER_MGMT_PREFIX.vlan.id)
+        switch_uplink_lag.tagged_vlans.add(vlan.id)
+
+        possible_uplink_types = []
+        uplink_type = data['uplink_type']
+        self.log_debug(f"uplink type {uplink_type}")
+        for type in uplink_type:
+            self.log_debug(f"for type {type} - adding {UPLINK_SUPPORT_MATRIX.get(type, [])} to possible uplinks")
+            possible_uplink_types.append(UPLINK_SUPPORT_MATRIX.get(type, []))
+
+        # flatten list
+        possible_uplink_types = [x for xs in possible_uplink_types for x in xs]
+        self.log_debug(f"possible types {possible_uplink_types}")
+
+        uplink_interfaces = list(Interface.objects.filter(device=switch, type__in=possible_uplink_types))
+        if len(uplink_interfaces) < 1:
+            raise AbortScript(
+                f"You chose a device type without any {possible_uplink_types} interfaces! Pick another model :)")
+
+        netbox_interface_type = ContentType.objects.get_for_model(Interface)
+        uplink_ports = [interface for interface in uplink_interfaces if
+                        interface.name in UPLINK_PORTS.get(switch.device_type.model, [])]
+
+        if len(uplink_ports) < 1:
+            raise AbortScript(f"No uplink ports defined for {switch.device_type.model}")
+
+        ## Only create LAG on uplink device if not leaf-pair (no mlag support out of the box in Netbox)
+        if not uplink_device_b:
+            uplink_device_lag = self.create_uplink_lag(switch, uplink_device_a, uplink_lag_name, vlan)
+
+        num_uplinks = len(data['destination_interfaces'])
+        if uplink_device_b:
+            num_uplinks = 2  # If connected to a leaf-pair, num uplinks are two
+
+        for uplink_num in range(0, num_uplinks):
+            switch_uplink_interface = uplink_ports[uplink_num]
+
+            uplink_device = uplink_device_a
+            if uplink_device_b and uplink_num == 1:
+                uplink_device = uplink_device_b
+
+            if uplink_device_b and uplink_num == 1:
+                uplink_ifname = data['destination_interfaces'][0].name
+                uplink_device_interface = Interface.objects.get(device=uplink_device_b, name=uplink_ifname)
+            else:
+                uplink_device_interface = data['destination_interfaces'][uplink_num]
+
+            uplink_device_interface.description = f'G: {switch.name} {switch_uplink_interface.name} (ae0)'
+            uplink_device_interface.save()
+
+            switch_uplink_interface.description = f"G: {data['destination_device_a'].name} {uplink_device_interface.name} ({uplink_lag_name})"
+            switch_uplink_interface.lag = switch_uplink_lag
+            switch_uplink_interface.save()
+
+            ## Only create LAG on uplink device if not leaf-pair (no mlag support out of the box in Netbox)
+            if not uplink_device_b:
+                switch_uplink_interface.lag = uplink_device_lag
+                switch_uplink_interface.save()
+
+            cable = Cable.objects.create()
+            a = CableTermination.objects.create(
+                cable=cable,
+                cable_end='A',
+                termination_id=uplink_device_interface.id,
+                termination_type=netbox_interface_type,
             )
-            destination_ae.save()
-            destination_ae.tagged_vlans.add(FABRIC_V4_JUNIPER_MGMT_PREFIX.vlan.id)
-            destination_ae.tagged_vlans.add(vlan.id)
+            b = CableTermination.objects.create(
+                cable_end='B',
+                cable=cable,
+                termination_id=switch_uplink_interface.id,
+                termination_type=netbox_interface_type,
+            )
+            cable = Cable.objects.get(id=cable.id)
+            # https://github.com/netbox-community/netbox/discussions/10199
+            cable._terminations_modified = True
+            cable.save()
             self.log_debug(
-                f"Created destination AE <a href=\"{destination_ae.get_absolute_url()}\">{destination_ae}</a>")
-
-            ## TODO support leaf pair
-            num_uplinks = len(data['destination_interfaces'])
-            uplink_interfaces = list(Interface.objects.filter(device=switch, type=data['uplink_type']))
-            if len(uplink_interfaces) < 1:
-                raise AbortScript(
-                    f"You chose a device type without any {data['uplink_type']} interfaces! Pick another model :)")
-
-            interface_type = ContentType.objects.get_for_model(Interface)
-            interfaces_filtered = [interface for interface in uplink_interfaces if
-                                   interface.name in UPLINK_PORTS.get(switch.device_type.model, [])]
-            for uplink_num in range(0, num_uplinks):
-                a_interface = data['destination_interfaces'][uplink_num]
-                b_interface = interfaces_filtered[uplink_num]
-
-                self.log_debug(
-                    f"Connecting: {data['destination_device_a']} - {a_interface} to {switch} - {b_interface}")
-
-                a_interface.description = f'G: {switch.name} {b_interface.name} (ae0)'
-                b_interface.description = f"G: {data['destination_device_a'].name} {a_interface.name} (ae{vlan.id})"
-
-                b_interface.lag = uplink_ae
-                b_interface.save()
-
-                a_interface.lag = destination_ae
-                a_interface.save()
-
-                cable = Cable.objects.create()
-                a = CableTermination.objects.create(
-                    cable=cable,
-                    cable_end='A',
-                    termination_id=a_interface.id,
-                    termination_type=interface_type,
-                )
-                b = CableTermination.objects.create(
-                    cable_end='B',
-                    cable=cable,
-                    termination_id=b_interface.id,
-                    termination_type=interface_type,
-                )
-                cable = Cable.objects.get(id=cable.id)
-                # https://github.com/netbox-community/netbox/discussions/10199
-                cable._terminations_modified = True
-                cable.save()
-
-    def set_traffic_vlan(self, switch, vlan):
-        interfaces = list(Interface.objects.filter(device=switch, type=InterfaceTypeChoices.TYPE_1GE_FIXED))
-        if len(interfaces) == 0:
-            self.log_error(f"no interfaces found")
-
-        for interface in interfaces:
-            if interface.name in UPLINK_PORTS.get(switch.device_type.model, []):
-                continue
-            interface.mode = 'access'
-            interface.untagged_vlan = vlan
-            interface.description = "C: Clients"
-            interface.save()
-        self.log_info("Configured traffic vlan on all client ports")
-
-    def create_vlan(self, switch):
-        vid = FABRIC_VLAN_GROUP.get_next_available_vid()
-        vlan = VLAN.objects.create(
-            name=switch.name,
-            group=FABRIC_VLAN_GROUP,
-            role=FABRIC_CLIENTS_ROLE,
-            vid=vid
-        )
-        vlan.save()
-        self.log_info("Created VLAN")
-        return vlan
+                f"Connected: {uplink_device} - {uplink_device_interface} to {switch} - {switch_uplink_interface}")
 
     def create_switch(self, data):
         switch_name = data['switch_name']
@@ -298,6 +322,47 @@ class CreateSwitch(Script):
         self.log_info("Created switch")
         self.log_info("Allocated and assigned mgmt addresses on switch")
         return switch
+
+    def create_vlan(self, switch):
+        vid = FABRIC_VLAN_GROUP.get_next_available_vid()
+        vlan = VLAN.objects.create(
+            name=switch.name,
+            group=FABRIC_VLAN_GROUP,
+            role=FABRIC_CLIENTS_ROLE,
+            vid=vid
+        )
+        vlan.save()
+        self.log_info("Created VLAN")
+        return vlan
+
+    def set_traffic_vlan(self, switch, vlan):
+        interfaces = list(Interface.objects.filter(device=switch, type=InterfaceTypeChoices.TYPE_1GE_FIXED))
+        if len(interfaces) == 0:
+            self.log_error(f"no interfaces found")
+
+        for interface in interfaces:
+            if interface.name in UPLINK_PORTS.get(switch.device_type.model, []):
+                continue
+            interface.mode = 'access'
+            interface.untagged_vlan = vlan
+            interface.description = "C: Clients"
+            interface.save()
+        self.log_info("Configured traffic vlan on all client ports")
+
+    def create_uplink_lag(self, switch, uplink_device_a, uplink_lag_name, vlan):
+        destination_lag = Interface.objects.create(
+            device=uplink_device_a,
+            name=f"{uplink_lag_name}",
+            description=f'B: {switch.name} ae0',
+            type=InterfaceTypeChoices.TYPE_LAG,
+            mode=InterfaceModeChoices.MODE_TAGGED,
+        )
+        destination_lag.save()
+        destination_lag.tagged_vlans.add(FABRIC_V4_JUNIPER_MGMT_PREFIX.vlan.id)
+        destination_lag.tagged_vlans.add(vlan.id)
+        self.log_debug(
+            f"Created destination LAG <a href=\"{destination_lag.get_absolute_url()}\">{destination_lag}</a>")
+        return destination_lag
 
 
 script = CreateSwitch
