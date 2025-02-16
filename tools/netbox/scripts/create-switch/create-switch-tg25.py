@@ -99,11 +99,6 @@ class CreateSwitch(Script):
         model=DeviceRole,
         default=DEFAULT_DEVICE_ROLE.id,
     )
-    location = ObjectVar(
-        model=Location,
-        required=True,
-        default=Location.objects.get(name="Ringen")  # Default during development
-    )
     uplink_type = MultiChoiceVar(
         label='Uplink Type',
         required=True,
@@ -284,7 +279,7 @@ class CreateSwitch(Script):
         switch = Device(
             name=switch_name,
             device_type=data['device_type'],
-            location=data['location'],
+            location=data['destination_device_a'].location,
             role=data['device_role'],
             site=DEFAULT_SITE
         )
