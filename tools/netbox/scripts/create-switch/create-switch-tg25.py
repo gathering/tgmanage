@@ -5,7 +5,7 @@ from django.contrib.contenttypes.models import ContentType
 from dcim.models import Cable, CableTermination, Device, DeviceType, Location, DeviceRole, Site, Interface
 from dcim.choices import InterfaceModeChoices, InterfaceTypeChoices
 
-from ipam.models import VLANGroup, VLAN, Role, Prefix, IPAddress
+from ipam.models import VLANGroup, VLAN, Role, Prefix, IPAddress, VRF
 from ipam.choices import PrefixStatusChoices
 
 import random
@@ -21,6 +21,11 @@ from utilities.exceptions import AbortScript
 # ✅ Utskutt distro (nice to have)
 # - Should be able to select 2.5 G ports on Arista devices even if we want 1G
 
+## TODO:
+# - legge porter på uplink device i LAGen
+# - ser ut som swithcen man lager sine porter blir knytta til remote LAG. wtf
+
+# -
 
 DEFAULT_SWITCH_NAME = "e1.test"
 DEFAULT_SITE = Site.objects.get(name='Vikingskipet')
@@ -40,6 +45,9 @@ FABRIC_VLAN_GROUP = VLANGroup.objects.get(slug='client-vlans')
 # Vlan role for fabric clients
 FABRIC_CLIENTS_ROLE = Role.objects.get(slug='clients')
 
+# VRF for fabric clients
+FABRIC_CLIENTS_VRF = VRF.objects.get(name='CLIENTS')
+
 # Client networks allocated from here
 FABRIC_V4_CLIENTS_PREFIX = Prefix.objects.get(prefix='10.25.0.0/16')
 FABRIC_V6_CLIENTS_PREFIX = Prefix.objects.get(prefix='2a06:5844:e::/48')
@@ -48,6 +56,7 @@ FABRIC_V6_CLIENTS_PREFIX = Prefix.objects.get(prefix='2a06:5844:e::/48')
 FABRIC_V4_JUNIPER_MGMT_PREFIX = Prefix.objects.get(prefix='185.110.149.0/25')
 FABRIC_V6_JUNIPER_MGMT_PREFIX = Prefix.objects.get(prefix='2a06:5841:f::/64')
 
+## TODO support 1G uplinks on EX3300
 UPLINK_PORTS = {
     'EX2200-48T-4G': ["ge-0/0/44", "ge-0/0/45", "ge-0/0/46", "ge-0/0/47"],
     'EX3300-48P': ["xe-0/1/0", "xe-0/1/1"],  # xe-0/1/2 and xe-0/1/3 can be used for clients
@@ -165,12 +174,14 @@ class CreateSwitch(Script):
             prefix=generatePrefix(FABRIC_V6_CLIENTS_PREFIX, 64),
             status=PrefixStatusChoices.STATUS_ACTIVE,
             role=FABRIC_CLIENTS_ROLE,
+            vrf=FABRIC_CLIENTS_VRF,
             vlan=vlan
         )
         v4_prefix = Prefix.objects.create(
             prefix=generatePrefix(FABRIC_V4_CLIENTS_PREFIX, 26),
             status=PrefixStatusChoices.STATUS_ACTIVE,
             role=FABRIC_CLIENTS_ROLE,
+            vrf=FABRIC_CLIENTS_VRF,
             vlan=vlan
         )
         self.log_info("Created network. Created new VLAN and assigned prefixes")
@@ -246,17 +257,17 @@ class CreateSwitch(Script):
             else:
                 uplink_device_interface = data['destination_interfaces'][uplink_num]
 
-            uplink_device_interface.description = f'G: {switch.name} {switch_uplink_interface.name} (ae0)'
+            uplink_device_interface.description = f'G: {switch.name} {switch_uplink_interface.name} ({uplink_lag_name})'
             uplink_device_interface.save()
 
-            switch_uplink_interface.description = f"G: {data['destination_device_a'].name} {uplink_device_interface.name} ({uplink_lag_name})"
+            switch_uplink_interface.description = f"G: {data['destination_device_a'].name} {uplink_device_interface.name} (ae0)"
             switch_uplink_interface.lag = switch_uplink_lag
             switch_uplink_interface.save()
 
             ## Only create LAG on uplink device if not leaf-pair (no mlag support out of the box in Netbox)
             if not uplink_device_b:
-                switch_uplink_interface.lag = uplink_device_lag
-                switch_uplink_interface.save()
+                uplink_device_interface.lag = uplink_device_lag
+                uplink_device_interface.save()
 
             cable = Cable.objects.create()
             a = CableTermination.objects.create(
