@@ -26,8 +26,11 @@ def base(ddns_domains = [], ddns_reverse_domains = []):
                 "name": "kea-dhcp-ddns",
                 "output_options": [
                     {
-                        "output": "stdout",
-                        "pattern": "%-5p %m\n"
+                        "output": "/var/log/kea/ddns-debug.log",
+                        "maxver": 8,
+                        "maxsize": 204800,
+                        "flush": True,
+                        "pattern": "%d{%j %H:%M:%S.%q} %c %m\n"
                     }
                 ],
                 "severity": "INFO",

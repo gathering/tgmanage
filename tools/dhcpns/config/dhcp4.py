@@ -17,7 +17,7 @@ def base(subnet4):
                                     {
                                         "name": "config-file-name",
                                         "space": "vendor-encapsulated-options-space",
-                                        "supersede": "ifelse(option[82].option[1].exists,concat('api/templates/magic.conf/a=', option[82].option[1].hex),'')"
+                                        "supersede": "ifelse(option[82].option[1].exists,concat('ztp', option[82].option[1].hex),'')"
                                     }
                             ]
                         },
@@ -27,13 +27,6 @@ def base(subnet4):
                             "remove": "option[12].exists"
                         }
                     ]
-                }
-            },
-            {
-                "library": "/usr/lib/x86_64-linux-gnu/kea/hooks/libdhcp_run_script.so",
-                "parameters": {
-                    "name": "/etc/kea/gondul.sh",
-                    "sync": False
                 }
             }
         ],
@@ -45,7 +38,7 @@ def base(subnet4):
         "ddns-override-no-update": False,
         "ddns-override-client-update": False,
         "ddns-replace-client-name": "always",
-        "ddns-generated-prefix": "dyn",
+        "ddns-generated-prefix": "dhcp",
         "ddns-update-on-renew": False,
         "ddns-use-conflict-resolution": True,
         "interfaces-config": {
@@ -75,7 +68,7 @@ def base(subnet4):
         "authoritative": True,
         "renew-timer": 900,
         "rebind-timer": 1800,
-        "valid-lifetime": 3600,
+        "valid-lifetime": 3600, # TODO 4 timer
         "option-def": [
             {
                 "name": "image-file-name",

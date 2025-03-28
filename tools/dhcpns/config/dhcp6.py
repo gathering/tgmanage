@@ -40,7 +40,7 @@ def base(subnet6):
         "renew-timer": 900,
         "rebind-timer": 1800,
         "preferred-lifetime": 3000,
-        "valid-lifetime": 3600,
+        "valid-lifetime": 3600, # TODO 4 timer
         "option-data": [
             {
                 "name": "dns-servers",
