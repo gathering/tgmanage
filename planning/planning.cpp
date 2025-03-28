@@ -34,10 +34,10 @@
 #include <string>
 #include <queue>
 
-#define NUM_DISTRO 6
-#define NUM_ROWS 41
+#define NUM_DISTRO 4
+#define NUM_ROWS 21
 #define SWITCHES_PER_ROW 4
-#define PORTS_PER_DISTRO 31
+#define PORTS_PER_DISTRO 32
 
 #define TRUNCATE_METRIC 1
 #define EXTENSION_COST 70
@@ -158,9 +158,9 @@ struct VerticalGap {
 // After row 20: 4.0m+0.1m slack = 1.7m cost
 // After row 29: 3.6m+0.1m slack = 1.3m cost
 vector<VerticalGap> vertical_gaps = {
-	{ 12, 23 },
-	{ 20, 17 },
-	{ 29, 13 },
+	{ 5, 50 },
+	{ 13, 50 },
+	{ 29, 50 },
 };
 
 class Planner {
@@ -254,6 +254,7 @@ Inventory Planner::find_inventory(Switch from_where, int distro)
 		inv.num_10m = _INF;
 	}
 
+
 	// distro0-2 shouldn't cross the mid
 	//if ((distro_placements[distro] >= 0) == (from_where.num >= 2)) {
 	//	inv.horiz_gap_crossings = 0;
@@ -271,7 +272,7 @@ Inventory Planner::find_inventory(Switch from_where, int distro)
 	//}
 
 	// Gap over the scene
-	if ((abs(distro_placements[distro]) <= 12) == (from_where.row >= 13)) {
+	if ((abs(distro_placements[distro]) <= 14) == (from_where.row >= 14)) {
 		inv.vert_chasm_crossings = 1;
 	}
 
@@ -332,15 +333,16 @@ void Planner::logprintf(const char *fmt, ...)
 string distro_name(unsigned distro)
 {
 	char buf[16];
-	sprintf(buf, "d%d.floor", distro+1);
+	sprintf(buf, "d%d-floor", distro+1);
 	return buf;
 }
 
 string port_name(unsigned distro, unsigned portnum)
 {
 	char buf[16];
-	int distros[] = { 0, 1, 2 }; // must equal the number of switches in distro-stack
-	sprintf(buf, "ge-%u/0/%u", distros[portnum / 48], (portnum % 48));
+        //int distros[] = { 0, 1, 2 }; // must equal the number of switches in distro-stack
+	//sprintf(buf, "ge-%u/0/%u", distros[portnum / 48], (portnum % 48));
+	sprintf(buf, "Ethernet%u", (portnum + 1));
 	return buf;
 }
 
@@ -349,53 +351,26 @@ void Planner::init_switches()
 	switches.clear();
 	for (unsigned i = 1; i <= NUM_ROWS; ++i) {
 
-	    // No seats here for TG23
-		if (i >= 1 && i <= 8) {
-			// switches.push_back(Switch(i,0));
-			// switches.push_back(Switch(i,1));
-			// switches.push_back(Switch(i,2));
-			// switches.push_back(Switch(i,3));
+	        // row 1 to 10
+		if (i >= 1 && i <= 5) {
+			switches.push_back(Switch(i,0));
+			switches.push_back(Switch(i,1));
 		}
-
-		if (i >= 8 && i <= 12) {
+                // row 11 to 26
+		if (i >= 6 && i <= 13) {
 			switches.push_back(Switch(i, 0));
 			switches.push_back(Switch(i, 1));
-			switches.push_back(Switch(i, 2));
-			switches.push_back(Switch(i, 3));
 		}
-
-        // 1 1/2 rader motsatt av scenen.
-		if (i >= 18 && i <= 20) {
-			switches.push_back(Switch(i, 0));
-			//switches.push_back(Switch(i, 1));
-			//switches.push_back(Switch(i, 2));
-			//switches.push_back(Switch(i, 3));
-		}
-
-		if (i >= 21 && i <= 28) {
-			switches.push_back(Switch(i, 0));
-			switches.push_back(Switch(i, 1));
-			switches.push_back(Switch(i, 2));
-			switches.push_back(Switch(i, 3));
-		}
-
-		if (i >= 30 && i <= 36) {
-			switches.push_back(Switch(i, 0));
-			switches.push_back(Switch(i, 1));
-			switches.push_back(Switch(i, 2));
-			switches.push_back(Switch(i, 3));
-		}
-
-	    // No seats here for TG23
-		if (i >= 37 && i <= 41) {
-			//switches.push_back(Switch(i,0));
-			//switches.push_back(Switch(i,1));
-			if (i == 37) {
-				switches.push_back(Switch(i,2));
-				switches.push_back(Switch(i,3));
-			}
-		}
-
+                // row 27 to 42 - upper
+                if (i >= 14 && i <= 17) {
+                        switches.push_back(Switch(i, 2));
+                        switches.push_back(Switch(i, 3));
+                }
+                // row 27 to 42 - lower
+                if (i >= 14 && i <= 21) {
+                        switches.push_back(Switch(i, 0));
+                        switches.push_back(Switch(i, 1));
+                }
 	}
 }
 
@@ -469,7 +444,7 @@ void Planner::construct_graph(const vector<Switch> &switches, Graph *g)
 	strcpy(g->source_node.name, "source");
 	strcpy(g->sink_node.name, "sink");
 	for (unsigned i = 0; i < NUM_DISTRO; ++i) {
-		sprintf(g->distro_nodes[i].name, "s%d.floor", i);
+		sprintf(g->distro_nodes[i].name, "s%d-floor", i);
 	}
 	for (unsigned i = 0; i < switches.size(); ++i) {
 		sprintf(g->switch_nodes[i].name, "switch%d", i);
@@ -569,7 +544,7 @@ void Planner::print_switch(const Graph &g, int i, int distro)
 		return;
 	}
 	if (distro == -1) {
-		logprintf("[%u;22m- ", distro + 32);
+		logprintf(";22m- ", distro + 32);
 #if TRUNCATE_METRIC
 		logprintf("(XXXXX) (XXXX)");
 #else
@@ -577,9 +552,9 @@ void Planner::print_switch(const Graph &g, int i, int distro)
 #endif
 	} else {
 		if(distro >= 6)
-			logprintf("[%u;1m%u ", distro + 32 - 7, distro+1);
+			logprintf(";1m%u ", distro + 32 - 7, distro+1);
 		else
-			logprintf("[%u;22m%u ", distro + 32, distro+1);
+			logprintf(";22m%u ", distro + 32, distro+1);
 
 
 		int this_distance = find_distance(switches[i], distro);
@@ -636,15 +611,15 @@ int Planner::do_work(int distro_placements[NUM_DISTRO])
 		for (int d = 0; d < NUM_DISTRO; ++d) {
 			if (int(row) == distro_placements[d]) {
 				if(d >= 6)
-					sprintf(distro_marker_left, "[%u;1m*", d + 32 - 7);
+					sprintf(distro_marker_left, ";1m*", d + 32 - 7);
 				else
-					sprintf(distro_marker_left, "[%u;22m*", d + 32);
+					sprintf(distro_marker_left, ";22m*", d + 32);
 			}
 			if (int(row) == -distro_placements[d]) {
 				if(d >= 6)
-					sprintf(distro_marker_right, "[%u;22m*", d + 32 - 7);
+					sprintf(distro_marker_right, ";22m*", d + 32 - 7);
 				else
-					sprintf(distro_marker_right, "[%u;1m*", d + 32);
+					sprintf(distro_marker_right, ";1m*", d + 32);
 			}
 		}
 
@@ -660,7 +635,7 @@ int Planner::do_work(int distro_placements[NUM_DISTRO])
 		}
 
 		// Print row header.
-		logprintf("[31;22m%2u (%2u-%2u)    ", row, row * 2 - 1, row * 2 + 0);
+		logprintf("%2u (%2u-%2u)    ", row, row * 2 - 1, row * 2 + 0);
 
 		for (unsigned num = 0; num < SWITCHES_PER_ROW; ++num) {
 			const auto distro_it = switches_to_distros.find(switch_indexes[num]);
@@ -685,7 +660,7 @@ int Planner::do_work(int distro_placements[NUM_DISTRO])
 			}
 		}
 	}
-	logprintf("[%u;22m\n", 37);
+	logprintf(";22m\n", 37);
 
 #if OUTPUT_FILES
 	FILE *patchlist = fopen("patchlist.txt", "w");
@@ -710,8 +685,8 @@ int Planner::do_work(int distro_placements[NUM_DISTRO])
 			switches[i].row * 2 - 1, switches[i].num + 1,
 			distro_name(distro).c_str(),
 			port_name(distro, port_num).c_str(),
-			port_name(distro, port_num + 48).c_str(),
-			port_name(distro, port_num + 96).c_str()
+			port_name(distro, port_num + 24).c_str(),
+			port_name(distro, port_num + 48).c_str()
 			// if we have 4 switches in a distro-stack
 			//port_name(distro, port_num + 144).c_str()
 			);
@@ -761,7 +736,7 @@ int Planner::do_work(int distro_placements[NUM_DISTRO])
 
 	for (int i = 0; i < NUM_DISTRO; ++i) {
 		Edge *e = g.source_node.edges[i];
-		logprintf("Remaining ports on d%d.floor: %d\n", i+1, e->capacity - e->flow);
+		logprintf("Remaining ports on d%d-floor: %d\n", i+1, e->capacity - e->flow);
 	}
 	return total_cost;
 }
