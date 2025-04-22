@@ -1,0 +1,277 @@
+system {
+{% if device.virtual_chassis %}
+    host-name {{ device.virtual_chassis.name }};
+{% else %}
+    host-name {{ device.name }};
+{% endif %}
+    auto-snapshot;
+    domain-name {{ domainName }};
+    time-zone Europe/Oslo;
+    /* tacacs primary, failbacks to local users */
+    authentication-order tacplus;
+    ports {
+        console log-out-on-disconnect;
+    }
+    root-authentication {
+        encrypted-password "{{ hashes.handle_root }}";
+    }
+    name-server {
+{% for server in nameServers %}
+        {{ server }};
+{% endfor %}
+    }
+    tacplus-server {
+{% for server in tacacsServers %}
+        {{ server }} {
+            secret "{{ hashes.tacacs }}";
+        }
+{% endfor %}
+    }
+    login {
+        user admin {
+            uid 2000;
+            class super-user;
+            authentication {
+                encrypted-password "{{ hashes.handle_tech }}";
+            }
+        }
+        user tech {
+            uid 2001;
+            class super-user;
+            authentication {
+                encrypted-password "{{ hashes.handle_tech }}";
+            }
+        }
+    }
+    services {
+        ssh {
+            root-login deny;
+            protocol-version v2;
+            client-alive-count-max 2;
+            client-alive-interval 300;
+            connection-limit 50;
+            rate-limit 5;
+        }
+        netconf {
+            ssh {
+                port 830;
+            }
+        }
+    }
+    syslog {
+        user * {
+            any emergency;
+        }
+        host log.{{ domainName }} {
+            any warning;
+            authorization info;
+            daemon warning;
+            user warning;
+            change-log any;
+            interactive-commands any;
+            match "!(.*License.*)";
+            allow-duplicates;
+            facility-override local7;
+            explicit-priority;
+        }
+        /* Oxidized syslog */
+{% for server in oxidizedServers %}
+        host {{ server }} {
+            interactive-commands notice;
+            match UI_COMMIT_COMPLETED;
+        }
+{% endfor %}
+        /* Local logging of syslog messages */
+        file messages {
+            any notice;
+            authorization info;
+            /* Fjerner mye graps i loggene */
+            match "!(.*License.*|.*EX-BCM PIC.*|.*mojito_i2c_read.*|.*qsfp_tk_read_mem_page.*)";
+        }
+        /* Local logging of all user-commands typed in the CLI */
+        file interactive-commands {
+            interactive-commands any;
+            match "UI_CMDLINE_READ_LINE|UI_COMMIT_COMPLETED";
+        }
+    }
+    commit synchronize;
+    ntp {
+{% for server in ntpServers %}
+        server {{ server }};
+{% endfor %}
+    }
+}
+chassis {
+    redundancy {
+        graceful-switchover;
+    }
+    aggregated-devices {
+        ethernet {
+            device-count 32;
+        }
+    }
+    alarm {
+        management-ethernet {
+            link-down ignore;
+        }
+    }
+}
+snmp {
+    contact "{{ SNMP.contact }}";
+    location "{{ SNMP.location }}";
+    community "{{ SNMP.community }}" {
+        authorization read-only;
+        client-list-name mgmt;
+    }
+}
+policy-options {
+    prefix-list mgmt-v4 {
+	{% for x in mgmt_addresses_v4 %}
+        {{ x }};
+    {% endfor %}
+    }
+    prefix-list mgmt-v6 {
+	{% for x in mgmt_addresses_v6 %}
+        {{ x }};
+    {% endfor %}
+    }
+    /* Merged separate v4- og v6-lister */
+    prefix-list mgmt {
+        apply-path "policy-options prefix-list <mgmt-v*> <*>";
+    }
+}
+firewall {
+    family inet {
+        filter mgmt-v4 {
+            term accept-ssh {
+                from {
+                    source-prefix-list {
+                        mgmt-v4;
+                    }
+                    destination-port 22;
+                }
+                then accept;
+            }
+            term discard-ssh {
+                from {
+                    destination-port 22;
+                }
+                then {
+                    discard;
+                }
+            }
+            term accept-all {
+                then accept;
+            }
+        }
+    }
+    family inet6 {
+        filter mgmt-v6 {
+            term accept-ssh {
+                from {
+                    source-prefix-list {
+                        mgmt-v6;
+                    }
+                    destination-port 22;
+                }
+                then accept;
+            }
+            term discard-ssh {
+                from {
+                    destination-port 22;
+                }
+                then discard;
+            }
+            term accept-all {
+                then accept;
+            }
+        }
+    }
+}
+protocols {
+    igmp-snooping {
+        vlan all {
+            immediate-leave;
+        }
+    }
+    mld-snooping {
+        vlan all {
+            immediate-leave;
+        }
+    }
+}
+
+protocols {
+    rstp {
+    {% if device.role.slug == "access-switch" %}
+        bridge-priority 32k;
+        interface edge-ports {
+            edge;
+            no-root-port;
+        }
+    {% elif device.role.slug == "utskutt-distro" %}
+        bridge-priority 8k;
+    {% elif device.role.slug == "distro" %}
+        bridge-priority 4k;
+        interface all;
+    {% endif %}
+
+    }
+    lldp {
+        port-id-subtype interface-name;
+        port-description-type interface-description;
+        interface all;
+    }
+}
+
+
+poe {
+    interface all;
+}
+
+routing-options {
+    rib inet.0 {
+        static {
+{% if "d1-ring" in device.name %}
+            route 0.0.0.0/0 next-hop 185.110.148.12;
+{% else %}
+            route 0.0.0.0/0 next-hop 185.110.149.1;
+{% endif %}
+        }
+    }
+    rib inet6.0 {
+        static {
+{% if "d1-ring" in device.name %}
+            route ::/0 next-hop 2a06:5841:f:106::1;
+{% else %}
+            route ::/0 next-hop 2a06:5841:f:0::1;
+{% endif %}
+        }
+    }
+    nonstop-routing;
+}
+
+{% if device.virtual_chassis %}
+{#
+    VC mastership logikk:
+    vc-priority angir hvem som blir routing-engine, backup-routing-engine og line-cards. 0-255. Jo høyere, jo bedre. Alt over 200 blir satt til "master"
+    128 = default
+#}
+virtual-chassis {
+    preprovisioned;
+    vcp-snmp-statistics;
+    {% for member in dcim.Device.objects.filter(virtual_chassis_id=device.virtual_chassis.id) %}
+    member {{ member.vc_position }} {
+        serial-number {{ member.serial }};
+        {% if member.vc_priority is not none and member.vc_priority > 200 %}
+        role routing-engine;
+        {% else %}
+        role line-card;
+        {% endif %}
+        {% if member.location is defined %}
+        location {{ member.location }};
+        {% endif %}
+    }
+    {% endfor %}
+}
+{% endif %}

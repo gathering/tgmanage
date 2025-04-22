@@ -1,0 +1,281 @@
+{% include 'templates/juniper-global.j2' %}
+
+{% set interfaces = [] %}
+{% if device.virtual_chassis %}
+    {% for vc_member in dcim.VirtualChassis.objects.get(id=device.virtual_chassis.id).members.all() %}
+        {% for vc_interfaces in dcim.Interface.objects.filter(device_id=vc_member.id) %}
+            {% do interfaces.append(vc_interfaces) %}
+        {% endfor %}
+    {% endfor %}
+{% else %}
+    {% set interfaces = device.interfaces.filter() %}
+{% endif %}
+
+{% set edge_interfaces = [] %}
+{% for interface in interfaces if interface.type not in ["virtual", "lag"] %}
+    {% if interface.mode == "access" %}
+        {% do edge_interfaces.append(interface) %}
+    {% endif %}
+{% endfor %}
+
+interfaces {
+{% if edge_interfaces | length > 0  %}
+    interface-range edge-ports {
+        description "edge-ports";
+    {% for interface in edge_interfaces %}
+        member {{ interface.name }};
+    {% endfor %}
+    }
+{% endif %}
+{% for interface in interfaces %}
+    {% if interface.type in ["virtual"] %}
+    {% set interface_name_parts =  interface.name.split(".") %}
+    {{ interface_name_parts[0] }} {
+        unit {{ interface_name_parts[1] }} {
+        {% if interface.description %}
+            description "{{ interface.description }}";
+        {% endif %}
+        {% if interface.count_ipaddresses > 0 %}
+            {% for ip in interface.ip_addresses.all() %}
+                {% if ip.family == 4 %}
+            family inet {
+                filter {
+                    input mgmt-v4;
+                }
+                {% elif ip.family == 6 %}
+            family inet6 {
+                filter {
+                    input mgmt-v6;
+                }
+                {% endif %}
+                address {{ ip.address }};
+            }
+            {% endfor %}
+        {% endif %}
+        }
+    }
+    {% elif interface.type in ["1000base-t", "lag", "10gbase-x-sfpp"] %}
+    {{ interface.name }} {
+    {% if interface.description %}
+        description "{{ interface.description }}";
+    {% endif %}
+    {% if interface.type == "lag" %}
+        aggregated-ether-options {
+            lacp {
+                active;
+            }
+        }
+    {% endif %}
+    {% if interface.lag and 'fap-interface' in interface.tags.slugs() and interface.connected_endpoints[0].device.status == "active" %}
+        ether-options {
+            802.3ad {{ interface.lag.name }};
+        }
+        inactive: unit 0 {
+            family ethernet-switching {
+                port-mode access;
+                vlan {
+                    members juniper-mgmt;
+                }
+            }
+        }
+    {% elif interface.lag and 'fap-interface' in interface.tags.slugs() and interface.connected_endpoints[0].device.status == "staged" %}
+        inactive: ether-options {
+            802.3ad {{ interface.lag.name }};
+        }
+        unit 0 {
+            family ethernet-switching {
+                port-mode access;
+                vlan {
+                    members juniper-mgmt;
+                }
+            }
+        }
+    {% elif interface.lag %}
+        ether-options {
+            802.3ad {{ interface.lag.name }};
+        }
+    {% else %}
+        unit 0 {
+        {% if interface.count_ipaddresses > 0 %}
+            {% for ip in interface.ip_addresses.all() %}
+                {% if ip.family == 4 %}
+            family inet {
+                filter {
+                    input mgmt-v4;
+                }
+                {% elif ip.family == 6 %}
+            family inet6 {
+                filter {
+                    input mgmt-v6;
+                }
+                {% endif %}
+                address {{ ip.address }};
+            }
+            {% endfor %}
+        {% elif interface.mode == "access" %}
+            family ethernet-switching {
+                port-mode access;
+                vlan {
+                    members {{ interface.untagged_vlan.name }};
+                }
+            }
+        {% elif interface.mode == "tagged" or interface.mode == "tagged-all" %}
+            family ethernet-switching {
+                port-mode trunk;
+                vlan {
+            {% if interface.mode == "tagged-all" %}
+                    members all;
+            {% else %}
+                    members [ {% for vlan in interface.tagged_vlans.all() %}{{ vlan.name }} {% endfor -%} ];
+            {% endif %}
+                }
+                {% if interface.untagged_vlan %}
+                native-vlan-id {{ interface.untagged_vlan.vid }};
+                {% endif %}
+            }
+        {% endif %}
+        }
+    {% endif %}
+    }
+    {% else %}
+    {% endif %}
+{% endfor %}
+}
+
+ethernet-switching-options {
+    secure-access-port {
+        vlan juniper-mgmt {
+            dhcp-option82 {
+                circuit-id {
+                    prefix hostname;
+                    use-vlan-id;
+                }
+            }
+        }
+    }
+}
+
+{% set vlans = [] %}
+{% for interface in interfaces %}
+    {% for vlan in interface.tagged_vlans.all() %}
+        {% if vlan not in vlans %}
+            {% do vlans.append(vlan) %}
+        {% endif %}
+    {% endfor %}
+    {% if interface.untagged_vlan and interface.untagged_vlan not in vlans %}
+        {% do vlans.append(interface.untagged_vlan) %}
+    {% endif %}
+{% endfor %}
+ethernet-switching-options {
+    secure-access-port {
+        vlan juniper-mgmt  {
+            dhcp-option82 {
+                circuit-id {
+                    prefix hostname;
+                    use-vlan-id;
+                }
+            }
+        }
+{% if device.role.slug == "access-switch" %}
+        interface edge-ports {
+            no-dhcp-trusted;
+        }
+    {% for vlan in vlans if not vlan.name == "juniper-mgmt" %} {# TOOD maybe also ignore wifi vlans #}
+        vlan {{ vlan.name }} {
+            arp-inspection;
+            examine-dhcp;
+            examine-dhcpv6;
+            inactive: neighbor-discovery-inspection;
+            ip-source-guard;
+            ipv6-source-guard;
+            dhcp-option82 {
+                circuit-id {
+                    use-vlan-id;
+                }
+            }
+            no-option-37;
+            /* inactive due to DHCP drops on MX platform */
+            inactive: dhcpv6-option18 {
+                use-option-82;
+            }
+        }
+        {% endfor %}
+        ipv6-source-guard-sessions {
+            max-number 128;
+        }
+    {% endif %}
+    }
+    port-error-disable {
+        /* 30 minutes in seconds */
+        disable-timeout 1800;
+    }
+    storm-control {
+    {% if device.role.slug == "access-switch" %}
+        action-shutdown;
+        interface edge-ports {
+            bandwidth 20000;
+            multicast;
+        }
+    {% else %}
+        {% for interface in interfaces if interface.type == "lag" and interface.name != "ae0" %}
+        interface {{ interface }}.0;
+        {% endfor %}
+    {% endif %}
+    }
+}
+vlans {
+{% for vlan in vlans %}
+    {{ vlan.name }} {
+        vlan-id {{ vlan.vid }};
+    {% if vlan.name == "juniper-mgmt" %}
+        l3-interface vlan.{{ vlan.vid }};
+    {% endif %}
+    }
+{% endfor %}
+}
+
+{% if device.role.slug == "utskutt-distro" %}
+event-options {
+    {% for interface in interfaces if interface.type == "lag" and interface.name != "ae0" %}
+        {% set fap_interface = dcim.Interface.objects.filter(lag_id=interface.id) %}
+    policy {{ interface.name }}down {
+        events snmp_trap_link_down;
+        attributes-match {
+            snmp_trap_link_down.interface-name matches "{{ interface.name }}$";
+        }
+        then {
+            change-configuration {
+                retry count 10 interval 10;
+                commands {
+                    "activate interfaces {{ fap_interface[0].name }} unit 0";
+                    "deactivate interfaces {{ fap_interface[0].name }} ether-options";
+                }
+                user-name tech;
+                commit-options {
+                    log "Autoconfig-script: {{ interface.name }}went down so removed {{ fap_interface[0].name }} from bundle";
+                }
+            }
+        }
+    }
+    policy {{ interface.name }}up {
+        events snmp_trap_link_up;
+        attributes-match {
+            snmp_trap_link_up.interface-name matches "{{ interface.name }}$";
+        }
+        then {
+            change-configuration {
+                retry count 10 interval 10;
+                commands {
+                    "deactivate interfaces {{ fap_interface[0].name }} unit 0";
+                    "activate interfaces {{ fap_interface[0].name }} ether-options";
+                }
+                user-name tech;
+                commit-options {
+                    log "Autoconfig-script: {{ interface.name }} came up so added {{ fap_interface[0].name }} to bundle";
+                }
+            }
+        }
+    }
+    {% endfor %}
+}
+{% endif %}

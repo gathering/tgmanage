@@ -1,0 +1,166 @@
+{% include 'templates/juniper-global.j2' %}
+
+{% set interfaces = [] %}
+{% if device.virtual_chassis %}
+    {% for vc_member in dcim.VirtualChassis.objects.get(id=device.virtual_chassis.id).members.all() %}
+        {% for vc_interfaces in dcim.Interface.objects.filter(device_id=vc_member.id) %}
+            {% do interfaces.append(vc_interfaces) %}
+        {% endfor %}
+    {% endfor %}
+{% else %}
+    {% set interfaces = device.interfaces.filter() %}
+{% endif %}
+
+interfaces {
+{% for interface in interfaces %}
+    {% if interface.type in ["virtual"] %}
+    {% set interface_name_parts =  interface.name.split(".") %}
+    {{ interface_name_parts[0] }} {
+        unit {{ interface_name_parts[1] }} {
+        {% if interface.description %}
+            description "{{ interface.description }}";
+        {% endif %}
+        {% if interface.count_ipaddresses > 0 %}
+            {% for ip in interface.ip_addresses.all() %}
+                {% if ip.family == 4 %}
+            family inet {
+                filter {
+                    input mgmt-v4;
+                }
+                {% elif ip.family == 6 %}
+            family inet6 {
+                filter {
+                    input mgmt-v6;
+                }
+                {% endif %}
+                address {{ ip.address }};
+            }
+            {% endfor %}
+        {% endif %}
+        }
+    }
+    {% elif interface.type in ["40gbase-x-qsfpp","10gbase-x-sfpp", "1000base-t", "lag", "1000base-x-sfp"] %}
+    {{ interface.name }} {
+    {% if interface.description %}
+        description "{{ interface.description }}";
+    {% endif %}
+    {% if interface.untagged_vlan %}
+        native-vlan-id {{ interface.untagged_vlan.vid }};
+    {% endif %}
+    {% if interface.type == "lag" %}
+        aggregated-ether-options {
+            lacp {
+                active;
+            }
+        }
+    {% endif %}
+    {% if 'template-no-interface-autoneg' in interface.tags.slugs() %}
+        ether-options {
+            no-auto-negotiation;
+        }
+    {% endif %}
+    {% if interface.lag %}
+        ether-options {
+        {% if 'fap-interface' in interface.tags.slugs() %}
+            802.3ad {
+                lacp {
+                    force-up;
+                }
+                {{ interface.lag.name }};
+            }
+        {% else %}
+            802.3ad {{ interface.lag.name }};
+        {% endif %}
+        }
+    {% else %}
+        unit 0 {
+        {% if interface.count_ipaddresses > 0 %}
+            family inet {
+                address 185.110.148.13/31;
+            }
+            family inet6 {
+                address 2a06:5841:f:106::2/64;
+            }
+        {% elif interface.mode == "access" %}
+            family ethernet-switching {
+                interface-mode access;
+                vlan {
+                    members {{ interface.untagged_vlan.name }};
+                }
+            }
+        {% elif interface.mode == "tagged" or interface.mode == "tagged-all" %}
+            family ethernet-switching {
+                interface-mode trunk;
+                vlan {
+                {% if interface.mode == "tagged-all" %}
+                    members all;
+                {% else %}
+                    members [ {% for vlan in interface.tagged_vlans.all() %}{{ vlan.name }} {% endfor -%} ];
+                {% endif %}
+                }
+            }
+        {% endif %}
+        }
+    {% endif %}
+    }
+    {% endif %}
+{% endfor %}
+}
+
+
+{% set vlans = [] %}
+{% for interface in interfaces %}
+    {% for vlan in interface.tagged_vlans.all() %}
+        {% if vlan not in vlans %}
+            {% do vlans.append(vlan) %}
+        {% endif %}
+    {% endfor %}
+    {% if interface.untagged_vlan and interface.untagged_vlan not in vlans %}
+        {% do vlans.append(interface.untagged_vlan) %}
+    {% endif %}
+{% endfor %}
+
+{% set aes_to_utskutt = [] %}
+{% for interface in interfaces %}
+    {% if interface.connected_endpoints | length > 0 and interface.connected_endpoints[0].device.role.slug == "utskutt-distro" %}
+        {% if interface.lag.name not in aes_to_utskutt %}
+            {% do aes_to_utskutt.append(interface.lag.name) %}
+        {% endif %}
+    {% endif %}
+{% endfor %}
+
+vlans {
+{% for vlan in vlans %}
+    {{ vlan.name }} {
+        vlan-id {{ vlan.vid }};
+    {% if vlan.name == "d1-ring" %}
+        l3-interface irb.{{ vlan.vid }};
+    {% endif %}
+    {% if vlan.name == "juniper-mgmt" %}
+        forwarding-options {
+            dhcp-security {
+        {% if aes_to_utskutt | length > 0 %}
+                group utskutt {
+                    overrides {
+                        trusted;
+                        no-option82;
+                    }
+            {% for ae in aes_to_utskutt %}
+                    interface {{ ae }}.0;
+            {% endfor %}
+                }
+        {% endif %}
+                option-82 {
+                    circuit-id {
+                        prefix {
+                            host-name;
+                        }
+                        use-vlan-id;
+                    }
+                }
+            }
+        }
+    {% endif %}
+    }
+{% endfor %}
+}
