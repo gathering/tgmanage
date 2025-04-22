@@ -4,6 +4,7 @@ import sys
 from cables import make_cable_labels
 from gondul import fetch_gondul_switches
 from switches import make_switch_labels
+from planning_output import read_planning_switches
 
 parser = argparse.ArgumentParser(
     "Label generator script 2000",
@@ -22,6 +23,7 @@ parser.add_argument("--match-switches", type=str, default="^e([0-9]+-[0-9]+)",
                     help="Regex for matching switches")
 parser.add_argument("--outfile", "-o", type=str, default=None,
                     help="Output (base) file name. Might be appended with numbers for cables.")
+parser.add_argument("--planning-input-file", type=str, help="Output file from planning, to use as input")
 
 cables_args = parser.add_argument_group("cables")
 cables_args.add_argument("--ap", type=str, action="append",
@@ -38,13 +40,17 @@ cables_args.add_argument("--split", "-s", type=int, default=100,
 if __name__ == "__main__":
     args = parser.parse_args()
 
-    switches = fetch_gondul_switches(
-        api=args.gondul_api,
-        endpoint=args.gondul_switches,
-        username=args.gondul_user,
-        password=args.gondul_pass,
-        match=args.match_switches,
-    )
+    switches = None
+    if args.planning_input_file:
+        switches = read_planning_switches(args.planning_input_file, match=args.match_switches)
+    else:
+        switches = fetch_gondul_switches(
+            api=args.gondul_api,
+            endpoint=args.gondul_switches,
+            username=args.gondul_user,
+            password=args.gondul_pass,
+            match=args.match_switches,
+        )
 
     kwargs = {}
     if args.outfile is not None:

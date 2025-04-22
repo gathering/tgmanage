@@ -12,10 +12,12 @@ Run the script with either ``cables`` or ``switches``,
 depending if you want labels for cables or switches.
 Configure the application further if needed. Consult ``--help``.
 
-Specify gondul credentials either using environment variables
-(``GONDUL_USERNAME``, ``GONDUL_PASSWORD``) or the command line.
-It's also possible to update the API root or API endpoint to use,
-as well as a regex for matching switches.
+Specify gondul credentials using environment variables
+(``GONDUL_USERNAME``, ``GONDUL_PASSWORD``) or the command line
+to fetch from Gondul. It's possible to specify the API root
+or API endpoint to use.
+Use ``--planning-input-file`` to read from a local file
+which contains the output from `planning <../../planning>`_.
 
 Specify the output file with the ``--outfile`` argument.
 
