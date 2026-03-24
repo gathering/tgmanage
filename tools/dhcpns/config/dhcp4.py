@@ -2,10 +2,12 @@ import os
 import ipaddress
 import math
 
+from .base import POSTGRESQL_HOOK
 
 def base(subnet4):
     return {
         "hooks-libraries": [
+            POSTGRESQL_HOOK,
             {
                 "library": "/usr/lib/x86_64-linux-gnu/kea/hooks/libdhcp_flex_option.so",
                 "parameters": {

@@ -1,10 +1,12 @@
 import os
 import ipaddress
 
+from .base import POSTGRESQL_HOOK
 
 def base(subnet6):
     return {
         "hooks-libraries": [
+            POSTGRESQL_HOOK,
             {
                 "library": "/usr/lib/x86_64-linux-gnu/kea/hooks/libdhcp_run_script.so",
                 "parameters": {
