@@ -186,3 +186,38 @@ for device in devices:
 
     # Apply rdns_rrsets
     print(pdns.set_records(rdns_zone, rdns_rrsets))
+
+# Create DNS for VMs
+vms = nb.virtualization.virtual_machines.all()
+for device in vms:
+    print(device)
+    if device.primary_ip4 is None or device.primary_ip6 is None:
+        continue
+
+    # IPv4
+    zone_rrsets = []
+    if device.primary_ip4 is not None:
+        zone_rrsets.append({'name': f'{device.name}.{ZONE}.', 'changetype': 'replace', 'type': 'A', 'records': [
+            {'content': str(netaddr.IPNetwork(str(device.primary_ip4)).ip), 'disabled': False, 'type': 'A'}], 'ttl': 900})
+
+    # IPv6
+    if device.primary_ip6 is not None:
+        zone_rrsets.append({'name': f'{device.name}.{ZONE}.', 'changetype': 'replace', 'type': 'AAAA', 'records': [
+            {'content': str(netaddr.IPNetwork(str(device.primary_ip6)).ip), 'disabled': False, 'type': 'A'}], 'ttl': 900})
+
+    if len(zone_rrsets) > 1:
+        # Apply zone_rrsets
+        print(pdns.set_records(ZONE, zone_rrsets))
+
+        rdns_zone = pdns.get_rdns_zone_from_ip(
+            str(netaddr.IPNetwork(str(device.primary_ip4)).ip))
+        rdns_rrsets = []
+        if rdns_zone is None:
+            print(f"Failed to find RDNS Zone for IP")
+
+    # IPv4 RDNS
+    rdns_rrsets.append({"name": ipaddress.ip_address(str(netaddr.IPNetwork(str(device.primary_ip4)).ip)).reverse_pointer + '.', "changetype": "replace", "type": "PTR", "records": [
+        {"content": f'{device.name}.{ZONE}.', "disabled": False, "type": "PTR"}], "ttl": 900})
+
+    # Apply rdns_rrsets
+    print(pdns.set_records(rdns_zone, rdns_rrsets))
