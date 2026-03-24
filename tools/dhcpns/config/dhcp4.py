@@ -49,7 +49,7 @@ def base(subnet4):
         },
         "control-socket": {
             "socket-type": "unix",
-            "socket-name": "/tmp/kea4-ctrl-socket"
+            "socket-name": "/var/run/kea/dhcp4"
         },
         "lease-database": {
             "type": "postgresql",

@@ -21,7 +21,7 @@ def base(subnet6):
         },
         "control-socket": {
             "socket-type": "unix",
-            "socket-name": "/tmp/kea6-ctrl-socket"
+            "socket-name": "/var/run/kea/dhcp6"
         },
         "lease-database": {
             "type": "postgresql",
