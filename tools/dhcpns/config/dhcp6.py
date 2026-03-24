@@ -1,7 +1,7 @@
 import os
 import ipaddress
 
-from .base import POSTGRESQL_HOOK
+from .base import LEASE_DATABASE, POSTGRESQL_HOOK
 
 def base(subnet6):
     return {
@@ -25,12 +25,7 @@ def base(subnet6):
             "socket-type": "unix",
             "socket-name": "/var/run/kea/dhcp6"
         },
-        "lease-database": {
-            "type": "postgresql",
-            "name": "kea",
-            "user": "kea",
-            "password": os.environ['DHCP_LEASE_DB_PASSWORD']
-        },
+        "lease-database": LEASE_DATABASE,
         "expired-leases-processing": {
             "reclaim-timer-wait-time": 10,
             "flush-reclaimed-timer-wait-time": 25,
