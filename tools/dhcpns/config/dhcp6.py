@@ -1,7 +1,7 @@
 import os
 import ipaddress
 
-from .base import LEASE_DATABASE, POSTGRESQL_HOOK
+from .base_config import LEASE_DATABASE, POSTGRESQL_HOOK
 
 def base(subnet6):
     return {
