@@ -127,13 +127,39 @@ def base(subnet4):
                 "name": "client-juniper-vendor",
                 "test": "substring(option[vendor-class-identifier].hex,0,7) == 'Juniper'"
             },
+            
             {
                 "name": "client-juniper-mac",
                 "test": "substring(pkt4.mac, 0, 2) == '0x44f477' or substring(pkt4.mac, 0, 2) == '0xf01c2d'"
             },
             {
+                "name": "client-arista-vendor",
+                "test": "substring(option[vendor-class-identifier].hex,0,7) == 'Arista'"
+            },
+            {
                 "name": "fap-class",
                 "test": "member('client-juniper-vendor') or member('client-juniper-mac')",
+                "option-data": [
+                    {
+                        "name": "vendor-encapsulated-options",
+                        "always-send": True
+                    },
+                    {
+                        "name": "transfer-mode",
+                        "space": "vendor-encapsulated-options-space",
+                        "data": "http",
+                        "always-send": True
+                    },
+                    {
+                        "name": "tftp-server-address",
+                        "data": os.environ['FAP_V4'],
+                        "always-send": True
+                    }
+                ]
+            },
+            {
+                "name": "fap-class-arista",
+                "test": "member('client-arista-vendor')",
                 "option-data": [
                     {
                         "name": "vendor-encapsulated-options",
@@ -266,6 +292,31 @@ def fap(vlan, prefix):
     network = ipaddress.ip_network(prefix.prefix)
     gw, start_ip, end_ip = network[1], network[(
         math.ceil(network.num_addresses - 50))], network[-2]
+
+    return {
+        "id": prefix.id,
+        "client-class": "fap-class",
+        "subnet": prefix.prefix,
+        "pools": [
+            {
+                "pool": f"{start_ip} - {end_ip}"
+            }
+        ],
+        "option-data": [
+            {
+                "name": "routers",
+                "data": f"{gw}"
+            }
+        ],
+        "user-context": {
+            "name": vlan.name,
+            "type": "fap"
+        }
+    }
+
+def fap_arista(vlan, prefix):
+    network = ipaddress.ip_network(prefix.prefix)
+    gw, start_ip, end_ip = network[1], 90, 95
 
     return {
         "id": prefix.id,

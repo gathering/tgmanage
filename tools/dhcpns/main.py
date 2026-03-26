@@ -10,7 +10,7 @@ import netaddr
 
 from config.dhcp4 import base as dhcp4
 from config.dhcp6 import base as dhcp6
-from config.dhcp4 import fap
+from config.dhcp4 import fap,fap_arista
 from config.ddns import base as ddns
 from config.ddns import ddns_domain
 from config.dhcp4 import subnet as subnet4
@@ -115,6 +115,13 @@ for vlan in vlans:
         kea4_subnets.append(
             fap(vlan, prefix))
 
+# dhcp-mgmt-edge
+vlans = nb.ipam.vlans.filter(tag='dhcp-arista-oob')
+for vlan in vlans:
+    prefixes4 = []
+    for prefix in nb.ipam.prefixes.filter(vlan_id=vlan.id, family=4):
+        kea4_subnets.append(
+            fap_arista(vlan, prefix))
 
 for zone in rdns_zones:
     kea_rddns_domains.append(ddns_domain(zone['name'][:-1]))
