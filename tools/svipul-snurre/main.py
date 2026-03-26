@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 nb = pynetbox.Api(settings.netbox_url, token=settings.netbox_token, threading=True)
 rabbit = pika.BlockingConnection(pika.ConnectionParameters(settings.broker_url))
-rabbit_channel = rabbit.Channel()
+rabbit_channel = rabbit.channel()
 
 
 def create_order(target: str, mode="Get", oids=['sysName.0']):
@@ -27,7 +27,7 @@ def create_order(target: str, mode="Get", oids=['sysName.0']):
     }
 
 def send_order(order):
-    rabbit_channel.basic_publish(exchange='', routing_key=settings.queue_name, body=json.dums(order))
+    rabbit_channel.basic_publish(exchange='', routing_key=settings.queue_name, body=json.dumps(order))
 
 
 def main():
