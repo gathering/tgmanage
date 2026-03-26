@@ -1,4 +1,5 @@
 import logging
+import netaddr
 import pika
 import pynetbox
 import time
@@ -41,9 +42,11 @@ def main():
                 logger.debug(f'Skipping {device.name} because it has no primary ip')
                 continue
             if device.primary_ip4:
-                orders.append(create_order(device.primary_ip4))
+                addr = netaddr.IPNetwork(device.primary_ip4.address)
+                send_order(create_order(addr.ip))
             if device.primary_ip6:
-                orders.append(create_order(device.primary_ip6))
+                addr = netaddr.IPNetwork(device.primary_ip6.address)
+                send_order(create_order(addr.ip))
 
             print("poll", device)
 
