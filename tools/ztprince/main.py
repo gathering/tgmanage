@@ -40,4 +40,4 @@ def read_item(response: Response):
     bootstrap = env.get_template("bootstrap_template.j2")
     return PlainTextResponse(content=bootstrap.render(cvAddr=settings.cvAddr,
         enrollmentToken=settings.enrollmentToken,
-        ntpServer=settings.ntpServer))
+        ntpServer=settings.ntpServer,eosUrl=settings.eosUrl))

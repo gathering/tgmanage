@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     cvAddr: str
     enrollmentToken: str
     ntpServer: str
+    eosUrl: str
 
     model_config = SettingsConfigDict(
         env_file='.env',
