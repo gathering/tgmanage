@@ -19,9 +19,9 @@ rabbit_channel = rabbit.channel()
 
 def create_order(target: str, id=None, mode="Get", oids=['sysName.0'], elements=[]):
     if id is None:
-        id = fastuuid.uuid7()
+        id = str(fastuuid.uuid7())
     return {
-        'target': target,
+        'target': str(target),
         'mode': mode,
         'oids': oids,
         'id': id,
