@@ -50,8 +50,8 @@ def main():
                 addrs.append(addr)
 
             for addr in addrs:
-                send_order(create_order(addr.ip, id='system', mode='Get', oids=system_oids))
-                send_order(create_order(addr.ip, id='ports', mode='GetElements', oids=ports_oids, elements=['.*']))
+                send_order(create_order(addr.ip, id=f'{device.name};system', mode='Get', oids=system_oids))
+                send_order(create_order(addr.ip, id=f'{device.name};ports', mode='GetElements', oids=ports_oids, elements=['.*']))
 
             print("poll", device)
 
