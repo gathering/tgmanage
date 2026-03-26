@@ -1,11 +1,12 @@
+import os
 import pynetbox
 
 from fastapi import FastAPI, Response
 from fastapi.responses import PlainTextResponse
-from jinja2 import Environment, PackageLoader, select_autoescape
+from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 env = Environment(
-    loader=PackageLoader("ztprince"),
+    loader=FileSystemLoader('%s/templates/' % os.path.dirname(__file__)),
     autoescape=select_autoescape()
 )
 
