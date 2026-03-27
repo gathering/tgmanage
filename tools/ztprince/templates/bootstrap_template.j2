@@ -204,8 +204,12 @@ def configureHostname(hostname):
    """
    cli = CliManager()
 
-   configureHostnameCmds = ["en", "configure", "hostname {hostname}", "exit"]
-   cmdOut = cli.runCommands(configureHostnameCmds)
+   configureHostnameCmds = ["en", "configure", "hostname {hostname}".format(hostname=hostname), "exit"]
+   rc, cmdOut = cli.runCommands(configureHostnameCmds)
+   if rc:
+      err = "Could not set the provided hostname, err: {cmdOut}. Aborting".format(cmdOut=cmdOut)
+      log(err)
+      raise Exception(err)
 
 
 
