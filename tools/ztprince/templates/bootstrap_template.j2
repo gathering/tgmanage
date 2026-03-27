@@ -379,7 +379,7 @@ class BootstrapManager(object):
          cmd += " -cvproxy={cvproxy}".format(cvproxy=cvproxy)
 
       try:
-         subprocess.check_output(cmd, shell=True, stderr=subprocess.STDOUT)d
+         subprocess.check_output(cmd, shell=True, stderr=subprocess.STDOUT)
       except subprocess.CalledProcessError as e:
          # If the above subprocess call times out, it means that -cvproxy
          # flag is not present in the TerminAttr version running on that device
