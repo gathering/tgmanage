@@ -297,12 +297,10 @@ class BootstrapManager(object):
       """
       cli = CliManager()
 
-      response = requests.get("{{ztprinceUrl}}/serial-2-hostname/{serialNum}".format(
-               serialNum=self.mibStatus.root.serialNum))
+      response = requests.get("{{ztprinceUrl}}/serial-2-hostname/{serialNum}".format(serialNum=self.mibStatus.root.serialNum))
       if response.status_code == 404:
          log("No hostname mapping found for this device, skipping hostname configuration")
          return
-      response.raise_for_status()
 
       configureHostnameCmds = ["en", "configure", "hostname {hostname}".format(hostname=response.text), "exit"]
       rc, cmdOut = cli.runCommands(configureHostnameCmds)
