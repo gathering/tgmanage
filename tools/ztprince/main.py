@@ -41,4 +41,12 @@ def read_item(response: Response):
     bootstrap = env.get_template("bootstrap_template.j2")
     return PlainTextResponse(content=bootstrap.render(cvAddr=settings.cvAddr,
         enrollmentToken=settings.enrollmentToken,
-        ntpServer=settings.ntpServer,eosUrl=settings.eosUrl,hostname="d1-noc"))
+        ntpServer=settings.ntpServer,eosUrl=settings.eosUrl,ztprinceUrl=settings.ztprinceUrl))
+
+@app.get("/serial-2-hostname/{serial}")
+def read_item(serial: str, response: Response):
+    device = nb.dcim.devices.get(serial=serial)
+    if not device:
+        response.status_code = 404
+        return
+    return PlainTextResponse(content=device.name)

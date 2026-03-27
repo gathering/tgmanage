@@ -198,13 +198,17 @@ def configureAndRestartNTP(ntpServer):
    # Polls and monitors ntpstat command for synchronization status with intervals
    monitorNtpSync()
 
-def configureHostname(hostname):
+def configureHostname():
    """
    Configure Hostname on the Switch
    """
+   response = requests.get("{{ztprinceUrl}}/serial-2-hostname/{serialNum}".format(
+            serialNum=self.mibStatus.root.serialNum), headers=headers)
+      response.raise_for_status()
+
    cli = CliManager()
 
-   configureHostnameCmds = ["en", "configure", "hostname {hostname}".format(hostname=hostname), "exit"]
+   configureHostnameCmds = ["en", "configure", "hostname {hostname}".format(hostname=response.text), "exit"]
    rc, cmdOut = cli.runCommands(configureHostnameCmds)
    if rc:
       err = "Could not set the provided hostname, err: {cmdOut}. Aborting".format(cmdOut=cmdOut)
@@ -549,7 +553,7 @@ if __name__ == "__main__":
       configureAndRestartNTP(ntpServer)
 
    if hostname != "":
-      configureHostname(hostname)
+      configureHostname()
 
    # Check for enrollment token expiry
    expiryEpoch, parseSuccess = getExpiryFromToken(enrollmentToken)

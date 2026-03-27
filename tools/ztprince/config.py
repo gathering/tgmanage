@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     enrollmentToken: str
     ntpServer: str
     eosUrl: str
+    ztprinceUrl: str
 
     model_config = SettingsConfigDict(
         env_file='.env',
