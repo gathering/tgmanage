@@ -316,11 +316,12 @@ def fap(vlan, prefix):
 
 def fap_arista(vlan, prefix):
     network = ipaddress.ip_network(prefix.prefix)
-    gw, start_ip, end_ip = network[1], 90, 95
+    gw, start_ip, end_ip = network[1], network[(
+        math.ceil(network.num_addresses - 6))], network[-1]
 
     return {
         "id": prefix.id,
-        "client-class": "fap-class",
+        "client-class": "fap-class-arista",
         "subnet": prefix.prefix,
         "pools": [
             {
