@@ -37,6 +37,9 @@ cvAddr = "{{ cvAddr }}"
 # enrollment token to be copied from CVaaS Device Registration page
 enrollmentToken = "{{ enrollmentToken }}"
 
+# Set Hostname so we can push correct Config trough CVP
+hostname = "{{ hostname }}"
+
 # Add proxy url if device is behind proxy server, leave it as an empty string otherwise
 cvproxy = "{{ cvproxy }}"
 
@@ -194,6 +197,17 @@ def configureAndRestartNTP(ntpServer):
 
    # Polls and monitors ntpstat command for synchronization status with intervals
    monitorNtpSync()
+
+def configureHostname(hostname)
+   """
+   Configure Hostname on the Switch
+   """
+   cli = CliManager()
+
+   configureHostnameCmds = ["en", "configure", "hostname {hostname}", "exit"]
+   cmdOut = cli.runCommands(configureHostnameCmds)
+
+
 
 
 def getKeyValueFromFile(filename, key):
@@ -365,7 +379,7 @@ class BootstrapManager(object):
          cmd += " -cvproxy={cvproxy}".format(cvproxy=cvproxy)
 
       try:
-         subprocess.check_output(cmd, shell=True, stderr=subprocess.STDOUT)
+         subprocess.check_output(cmd, shell=True, stderr=subprocess.STDOUT)d
       except subprocess.CalledProcessError as e:
          # If the above subprocess call times out, it means that -cvproxy
          # flag is not present in the TerminAttr version running on that device
@@ -529,6 +543,9 @@ if __name__ == "__main__":
    # Restart ntp process in case a ntpServer value is passed.
    if ntpServer != "":
       configureAndRestartNTP(ntpServer)
+
+   if hostname != "":
+      configureHostname(hostname)
 
    # Check for enrollment token expiry
    expiryEpoch, parseSuccess = getExpiryFromToken(enrollmentToken)

@@ -10,16 +10,16 @@ env = Environment(
     autoescape=select_autoescape()
 )
 
-from .config import settings
+from config import settings
 
 
 app = FastAPI()
 
-nb = pynetbox.api(
-    settings.netbox_url,
-    token=settings.netbox_token,
-    threading=True,
-)
+#nb = pynetbox.api(
+#    settings.netbox_url,
+#    token=settings.netbox_token,
+#    threading=True,
+#)
 
 
 @app.get("/")
@@ -41,4 +41,4 @@ def read_item(response: Response):
     bootstrap = env.get_template("bootstrap_template.j2")
     return PlainTextResponse(content=bootstrap.render(cvAddr=settings.cvAddr,
         enrollmentToken=settings.enrollmentToken,
-        ntpServer=settings.ntpServer,eosUrl=settings.eosUrl))
+        ntpServer=settings.ntpServer,eosUrl=settings.eosUrl,hostname="d1-noc"))
