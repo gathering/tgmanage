@@ -15,11 +15,11 @@ from config import settings
 
 app = FastAPI()
 
-#nb = pynetbox.api(
-#    settings.netbox_url,
-#    token=settings.netbox_token,
-#    threading=True,
-#)
+nb = pynetbox.api(
+    settings.netbox_url,
+    token=settings.netbox_token,
+    threading=True,
+)
 
 
 @app.get("/")
