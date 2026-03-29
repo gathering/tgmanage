@@ -16,7 +16,7 @@ SUBNET_CMDS_HOOK = {
 
 FAP_VALID_LIFETIME = timedelta(minutes=15)
 FAP_LEASE = {
-    "rebind-timer": FAP_VALID_LIFETIME.seconds * 0.875,
-    "renew-timer": FAP_VALID_LIFETIME.seconds * 0.5,
-    "valid-lifetime": FAP_VALID_LIFETIME.seconds,
+    "rebind-timer": round(FAP_VALID_LIFETIME.seconds * 0.875),
+    "renew-timer": round(FAP_VALID_LIFETIME.seconds * 0.5),
+    "valid-lifetime": round(FAP_VALID_LIFETIME.seconds),
 }
