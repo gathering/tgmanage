@@ -1,13 +1,14 @@
 import os
 import ipaddress
 
-from .base import POSTGRESQL_HOOK, LEASE_API_HOOK
+from .base import POSTGRESQL_HOOK, LEASE_API_HOOK, SUBNET_CMDS_HOOK
 
 def base(subnet6):
     return {
         "hooks-libraries": [
             POSTGRESQL_HOOK,
-            LEASE_API_HOOK
+            LEASE_API_HOOK,
+            SUBNET_CMDS_HOOK
         ],
         "interfaces-config": {
             "interfaces": [
