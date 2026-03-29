@@ -2,7 +2,7 @@ import os
 import ipaddress
 import math
 
-from .base import DHCP_LEASE, DHCP_LEASE_VALID_LIFETIME, FAP_LEASE, POSTGRESQL_HOOK, LEASE_API_HOOK, SUBNET_CMDS_HOOK
+from .base import DHCP_LEASE, FAP_LEASE, POSTGRESQL_HOOK, LEASE_API_HOOK, SUBNET_CMDS_HOOK
 
 def base(subnet4):
     return {
