@@ -129,32 +129,41 @@ for vlan in vlans:
 for zone in rdns_zones:
     kea_rddns_domains.append(ddns_domain(zone['name'][:-1]))
 
+def write_kea_config(filename, content):
+    current_content = None
+    try:
+        with open(filename, "r") as current:
+            current_content = current.read()
+    except FileNotFoundError:
+        pass
+
+    if current_content != content or current_content is None:
+        with open(filename, "w") as outfile:
+            outfile.write(content)
+            return True
+    return False
+
+
 # Write DDNS
 if os.environ['KEA_DDNS_FILE'] is not None:
-    with open(os.environ['KEA_DDNS_FILE'], "w") as outfile:
-        outfile.write(json.dumps(
-            {"DhcpDdns": ddns(kea_ddns_domains, kea_rddns_domains)}, indent=2))
+    write_kea_config('KEA_DDNS_FILE', json.dumps(
+        {"DhcpDdns": ddns(kea_ddns_domains, kea_rddns_domains)}, indent=2))
+
 
 # Write DHCPv4
 if os.environ['KEA_DHCP4_FILE'] is not None:
-    content = json.dumps({"Dhcp4": dhcp4(kea4_subnets)}, indent=2)
-    with open(os.environ['KEA_DHCP4_FILE'], "r") as current:
-        if current.read() != content:
-            with open(os.environ['KEA_DHCP4_FILE'], "w") as outfile:
-                outfile.write(content)
-                print("reloading kea dhcp4-server")
-                result = subprocess.run(["sudo", "systemctl", "reload", "isc-kea-dhcp4-server.service"], check=True)
+    changed = write_kea_config(os.environ['KEA_DHCP4_FILE'], json.dumps({"Dhcp4": dhcp4(kea4_subnets)}, indent=2))
+    if changed:
+        print("reloading kea dhcp4-server")
+        result = subprocess.run(["sudo", "systemctl", "reload", "isc-kea-dhcp4-server.service"], check=True)
 
 
 # Write DHCPv6
 if os.environ['KEA_DHCP6_FILE'] is not None:
-    content = json.dumps({"Dhcp6": dhcp6(kea6_subnets)}, indent=2)
-    with open(os.environ['KEA_DHCP6_FILE'], "r") as current:
-        if current.read() != content:
-            with open(os.environ['KEA_DHCP6_FILE'], "w") as outfile:
-                outfile.write(content)
-                print("reloading kea dhcp6-server")
-                result = subprocess.run(["sudo", "systemctl", "reload", "isc-kea-dhcp6-server.service"], check=True)
+    changed = write_kea_config(os.environ['KEA_DHCP6_FILE'], json.dumps({"Dhcp6": dhcp6(kea6_subnets)}, indent=2))
+    if changed:
+        print("reloading kea dhcp6-server")
+        result = subprocess.run(["sudo", "systemctl", "reload", "isc-kea-dhcp6-server.service"], check=True)
 
 
 # Test DHCPv4
