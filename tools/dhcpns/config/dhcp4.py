@@ -20,7 +20,7 @@ def base(subnet4):
                                     {
                                         "name": "config-file-name",
                                         "space": "vendor-encapsulated-options-space",
-                                        "supersede": "ifelse(option[82].option[1].exists,concat('ztp', option[82].option[1].hex),'')"
+                                        "supersede": "ifelse(option[82].option[1].exists,concat('ztp/', option[82].option[1].hex),'')"
                                     }
                             ]
                         },
