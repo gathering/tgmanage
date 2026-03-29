@@ -68,6 +68,7 @@ def base(subnet4):
             "user": "kea",
             "password": os.environ['DHCP_LEASE_DB_PASSWORD']
         },
+        # https://kea.readthedocs.io/en/latest/arm/lease-expiration.html#lease-expiration
         "expired-leases-processing": {
             "reclaim-timer-wait-time": 10,
             "flush-reclaimed-timer-wait-time": 25,
