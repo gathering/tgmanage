@@ -7,14 +7,7 @@ def base(subnet6):
     return {
         "hooks-libraries": [
             POSTGRESQL_HOOK,
-            LEASE_API_HOOK,
-            {
-                "library": "/usr/lib/x86_64-linux-gnu/kea/hooks/libdhcp_run_script.so",
-                "parameters": {
-                    "name": "/etc/kea/gondul.sh",
-                    "sync": False
-                }
-            }
+            LEASE_API_HOOK
         ],
         "interfaces-config": {
             "interfaces": [
