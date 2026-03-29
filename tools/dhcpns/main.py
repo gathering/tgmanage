@@ -154,31 +154,31 @@ if os.environ['KEA_DDNS_FILE'] is not None:
 if os.environ['KEA_DHCP4_FILE'] is not None:
     changed = write_kea_config(os.environ['KEA_DHCP4_FILE'], json.dumps({"Dhcp4": dhcp4(kea4_subnets)}, indent=2))
     if changed:
-        print("reloading kea dhcp4-server")
-        result = subprocess.run(["sudo", "systemctl", "reload", "isc-kea-dhcp4-server.service"], check=True)
+        # Test DHCPv4 config and reload if it works
+        try:
+            subprocess.check_call(['/usr/sbin/kea-dhcp4', '-t',
+                                  os.environ['KEA_DHCP4_FILE']])
+
+            print("reloading kea dhcp4-server")
+            result = subprocess.run(["sudo", "systemctl", "reload", "isc-kea-dhcp4-server.service"], check=True)
+        except subprocess.CalledProcessError:
+            print("Failed to validate kea-dhcp4 config. What do we do now?")
 
 
 # Write DHCPv6
 if os.environ['KEA_DHCP6_FILE'] is not None:
     changed = write_kea_config(os.environ['KEA_DHCP6_FILE'], json.dumps({"Dhcp6": dhcp6(kea6_subnets)}, indent=2))
     if changed:
-        print("reloading kea dhcp6-server")
-        result = subprocess.run(["sudo", "systemctl", "reload", "isc-kea-dhcp6-server.service"], check=True)
+        # Test DHCPv6 config and reload if it works
+        try:
+            subprocess.check_call(['/usr/sbin/kea-dhcp6', '-t',
+                                  os.environ['KEA_DHCP6_FILE']])
 
+            print("reloading kea dhcp6-server")
+            result = subprocess.run(["sudo", "systemctl", "reload", "isc-kea-dhcp6-server.service"], check=True)
+        except subprocess.CalledProcessError:
+            print("Failed to validate kea-dhcp6 config. What do we do now?")
 
-# Test DHCPv4
-try:
-    subprocess.check_call(['/usr/sbin/kea-dhcp4', '-t',
-                          os.environ['KEA_DHCP4_FILE']])
-except subprocess.CalledProcessError:
-    print("Failed to validate kea-dhcp4 config. What do we do now?")
-
-# Test DHCPv6
-try:
-    subprocess.check_call(['/usr/sbin/kea-dhcp6', '-t',
-                          os.environ['KEA_DHCP6_FILE']])
-except subprocess.CalledProcessError:
-    print("Failed to validate kea-dhcp6 config. What do we do now?")
 
 
 # Reload all zones
