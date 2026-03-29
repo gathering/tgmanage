@@ -34,8 +34,8 @@
 #include <string>
 #include <queue>
 
-#define NUM_DISTRO 4
-#define NUM_ROWS 23
+#define NUM_DISTRO 5
+#define NUM_ROWS 20
 #define SWITCHES_PER_ROW 4
 #define PORTS_PER_DISTRO 32
 
@@ -158,9 +158,8 @@ struct VerticalGap {
 // After row 20: 4.0m+0.1m slack = 1.7m cost
 // After row 29: 3.6m+0.1m slack = 1.3m cost
 vector<VerticalGap> vertical_gaps = {
-	{ 5, 50 },
-	{ 13, 50 },
-	{ 29, 50 },
+	{ 8, 50 },
+	{ 17, 50 },
 };
 
 class Planner {
@@ -271,13 +270,13 @@ Inventory Planner::find_inventory(Switch from_where, int distro)
 	//	inv.vert_chasm_crossings = 0;
 	//}
 
-	// Gap over the scene
-	if ((abs(distro_placements[distro]) <= 14) == (from_where.row >= 14)) {
+	// Fire gate by scene
+	if ((abs(distro_placements[distro]) <= 8) == (from_where.row >= 9)) {
 		inv.vert_chasm_crossings = 1;
 	}
 
-        // Gap over the scene
-        if ((abs(distro_placements[distro]) <= 6) == (from_where.row >= 6)) {
+        // Fire gate south
+        if ((abs(distro_placements[distro]) <= 17) == (from_where.row >= 18)) {
                 inv.vert_chasm_crossings = 1;
         }
 
@@ -289,9 +288,9 @@ Inventory Planner::find_inventory(Switch from_where, int distro)
 	*/
 
 	// Gaps between fire gates
-	if ((abs(distro_placements[distro]) <= 29) == (from_where.row >= 30)) {
-		inv.vert_chasm_crossings = 1;
-	}
+	// if ((abs(distro_placements[distro]) <= 29) == (from_where.row >= 30)) {
+	// 	inv.vert_chasm_crossings = 1;
+	// }
 
 	return inv;
 }
@@ -356,25 +355,24 @@ void Planner::init_switches()
 	switches.clear();
 	for (unsigned i = 1; i <= NUM_ROWS; ++i) {
 
-	        // row 1 to 10
-		if (i >= 1 && i <= 5) {
+	        // row 1 to 16
+		if (i >= 1 && i <= 8) {
 			switches.push_back(Switch(i,0));
 			switches.push_back(Switch(i,1));
 		}
-                // row 11 to 26
-		if (i >= 6 && i <= 13) {
+                // row 17 to 34
+		if (i >= 9 && i <= 17) {
 			switches.push_back(Switch(i, 0));
 			switches.push_back(Switch(i, 1));
-		}
-                // row 27 to 42 - upper
-                if (i >= 14 && i <= 17) {
                         switches.push_back(Switch(i, 2));
                         switches.push_back(Switch(i, 3));
-                }
-                // row 27 to 44 - lower
-                if (i >= 14 && i <= 23) {
+		}
+                // row 35 to 40
+                if (i >= 18 && i <= 20) {
                         switches.push_back(Switch(i, 0));
                         switches.push_back(Switch(i, 1));
+                        switches.push_back(Switch(i, 2));
+                        switches.push_back(Switch(i, 3));
                 }
 	}
 }
