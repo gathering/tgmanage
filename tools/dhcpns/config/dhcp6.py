@@ -1,12 +1,13 @@
 import os
 import ipaddress
 
-from .base import POSTGRESQL_HOOK
+from .base import POSTGRESQL_HOOK, LEASE_API_HOOK
 
 def base(subnet6):
     return {
         "hooks-libraries": [
             POSTGRESQL_HOOK,
+            LEASE_API_HOOK,
             {
                 "library": "/usr/lib/x86_64-linux-gnu/kea/hooks/libdhcp_run_script.so",
                 "parameters": {
@@ -21,10 +22,18 @@ def base(subnet6):
                                'eth0'), os.environ.get('DHCP_INTERFACE_V6'))
             ]
         },
-        "control-socket": {
-            "socket-type": "unix",
-            "socket-name": "/var/run/kea/dhcp6"
-        },
+        "control-sockets":[ 
+            {
+                "socket-type": "unix",
+                "socket-name": "/var/run/kea/dhcp6"
+            },
+            {
+                "socket-type": "http",
+                "socket-address": "0.0.0.0",
+                "socket-port": 8086
+            }
+        ],
+
         "lease-database": {
             "type": "postgresql",
             "name": "kea",

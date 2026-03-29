@@ -2,12 +2,13 @@ import os
 import ipaddress
 import math
 
-from .base import POSTGRESQL_HOOK
+from .base import POSTGRESQL_HOOK, LEASE_API_HOOK
 
 def base(subnet4):
     return {
         "hooks-libraries": [
             POSTGRESQL_HOOK,
+            LEASE_API_HOOK,
             {
                 "library": "/usr/lib/x86_64-linux-gnu/kea/hooks/libdhcp_flex_option.so",
                 "parameters": {
@@ -49,10 +50,17 @@ def base(subnet4):
             ],
             "dhcp-socket-type": "udp"
         },
-        "control-socket": {
-            "socket-type": "unix",
-            "socket-name": "/var/run/kea/dhcp4"
-        },
+        "control-sockets":[ 
+            {
+                "socket-type": "unix",
+                "socket-name": "/var/run/kea/dhcp4"
+            },
+            {
+                "socket-type": "http",
+                "socket-address": "0.0.0.0",
+                "socket-port": 8084
+            }
+        ],
         "lease-database": {
             "type": "postgresql",
             "name": "kea",
