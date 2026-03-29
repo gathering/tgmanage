@@ -2,7 +2,7 @@ import os
 import ipaddress
 import math
 
-from .base import POSTGRESQL_HOOK, LEASE_API_HOOK, SUBNET_CMDS_HOOK
+from .base import FAP_LEASE, POSTGRESQL_HOOK, LEASE_API_HOOK, SUBNET_CMDS_HOOK
 
 def base(subnet4):
     return {
@@ -302,7 +302,7 @@ def fap(vlan, prefix):
     gw, start_ip, end_ip = network[1], network[(
         math.ceil(network.num_addresses - 50))], network[-2]
 
-    return {
+    obj = {
         "id": prefix.id,
         "client-class": "fap-class",
         "subnet": prefix.prefix,
@@ -322,13 +322,15 @@ def fap(vlan, prefix):
             "type": "fap"
         }
     }
+    obj.update(FAP_LEASE)
+    return obj
 
 def fap_arista(vlan, prefix):
     network = ipaddress.ip_network(prefix.prefix)
     gw, start_ip, end_ip = network[1], network[(
         math.ceil(network.num_addresses - 6))], network[-1]
 
-    return {
+    obj = {
         "id": prefix.id,
         "client-class": "fap-class-arista",
         "subnet": prefix.prefix,
@@ -348,3 +350,5 @@ def fap_arista(vlan, prefix):
             "type": "fap"
         }
     }
+    obj.update(FAP_LEASE)
+    return obj
