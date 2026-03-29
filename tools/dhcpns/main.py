@@ -46,8 +46,9 @@ kea_rddns_domains = []
 
 # VLANs which should be dhcp-enabled
 CLIENT_VLANS_VLAN_GROUP_NAME='client-vlans'
-client_vlans_role = nb.ipam.vlans.filter(group=CLIENT_VLANS_VLAN_GROUP_NAME)
-tagged_vlans = nb.ipam.vlans.filter(tag='dhcp-client', group_n=CLIENT_VLANS_VLAN_GROUP_NAME)
+WIFI_CLIENTS_VLAN_GROUP_NAME='wifi-clients'
+client_vlans_role = nb.ipam.vlans.filter(group=[CLIENT_VLANS_VLAN_GROUP_NAME, WIFI_CLIENTS_VLAN_GROUP_NAME])
+tagged_vlans = nb.ipam.vlans.filter(tag='dhcp-client', group_n=[CLIENT_VLANS_VLAN_GROUP_NAME, WIFI_CLIENTS_VLAN_GROUP_NAME])
 vlans = list(client_vlans_role) + list(tagged_vlans)
 for vlan in vlans:
     vlan_domain_name = f"net-{vlan.name}.{DOMAIN_NAME}"
