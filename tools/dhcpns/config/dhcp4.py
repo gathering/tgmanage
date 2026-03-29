@@ -2,7 +2,7 @@ import os
 import ipaddress
 import math
 
-from .base import FAP_LEASE, POSTGRESQL_HOOK, LEASE_API_HOOK, SUBNET_CMDS_HOOK
+from .base import DHCP_LEASE, DHCP_LEASE_VALID_LIFETIME, FAP_LEASE, POSTGRESQL_HOOK, LEASE_API_HOOK, SUBNET_CMDS_HOOK
 
 def base(subnet4):
     return {
@@ -78,9 +78,9 @@ def base(subnet4):
             "unwarned-reclaim-cycles": 5
         },
         "authoritative": True,
-        "renew-timer": 900,
-        "rebind-timer": 1800,
-        "valid-lifetime": 3600, # TODO 4 timer
+        "renew-timer": DHCP_LEASE['renew-timer'],
+        "rebind-timer": DHCP_LEASE['rebind-timer'],
+        "valid-lifetime": DHCP_LEASE['valid-lifetime'],
         "option-def": [
             {
                 "name": "image-file-name",
@@ -261,11 +261,11 @@ def base(subnet4):
     }
 
 
-def subnet(vlan, prefix, domain_name, vlan_domain_name):
+def subnet(vlan, prefix, domain_name, vlan_domain_name, tags=[]):
     network = ipaddress.ip_network(prefix.prefix)
     gw, start_ip, end_ip = network[1], network[2], network[-2]
     
-    return {
+    obj = {
         "id": prefix.id,
         "subnet": prefix.prefix,
         "ddns-qualifying-suffix": vlan_domain_name,
@@ -296,6 +296,15 @@ def subnet(vlan, prefix, domain_name, vlan_domain_name):
             "type": "clients"
         }
     }
+    if 'ipv6-mostly' in tags:
+        if 'option-data' in obj and isinstance(obj, list):
+            obj['option-data'].append({
+                "name": "v6-only-preferred",
+                "data": f"{DHCP_LEASE['valid-lifetime']}",
+            })
+
+
+    return obj
 
 
 def fap(vlan, prefix):

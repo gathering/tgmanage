@@ -14,6 +14,13 @@ SUBNET_CMDS_HOOK = {
     "parameters": {}
 }
 
+_DHCP_LEASE_VALID_LIFETIME = timedelta(hours=1)  # TODO: 4 timer (?)
+DHCP_LEASE = {
+    "rebind-timer": round(_DHCP_LEASE_VALID_LIFETIME.seconds * 0.875),
+    "renew-timer": round(_DHCP_LEASE_VALID_LIFETIME.seconds * 0.5),
+    "valid-lifetime": round(_DHCP_LEASE_VALID_LIFETIME.seconds),
+}
+
 FAP_VALID_LIFETIME = timedelta(minutes=15)
 FAP_LEASE = {
     "rebind-timer": round(FAP_VALID_LIFETIME.seconds * 0.875),
