@@ -58,7 +58,7 @@ for vlan in vlans:
 
     for prefix in nb.ipam.prefixes.filter(vlan_id=vlan.id, family=4):
         kea4_subnets.append(
-            subnet4(vlan, prefix, DOMAIN_NAME, vlan_domain_name))
+            subnet4(vlan, prefix, DOMAIN_NAME, vlan_domain_name, tags=vlan.tags))
         prefixes4.append(prefix)
 
     for prefix in nb.ipam.prefixes.filter(vlan_id=vlan.id, family=6):
