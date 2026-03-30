@@ -296,8 +296,8 @@ def subnet(vlan, prefix, domain_name, vlan_domain_name, tags=[]):
             "type": "clients"
         }
     }
-    if 'ipv6-mostly' in tags:
-        if 'option-data' in obj and isinstance(obj, list):
+    if 'ipv6-mostly' in [tag.name for tag in tags]:
+        if 'option-data' in obj:
             obj['option-data'].append({
                 "name": "v6-only-preferred",
                 "data": f"{DHCP_LEASE['valid-lifetime']}",
