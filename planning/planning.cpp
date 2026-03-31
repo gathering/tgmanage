@@ -48,11 +48,11 @@
 // 5.5m between the two half rows
 #define HORIZ_GAP_COST 55
 
-#define FIRST_SUBNET_ADDRESS "88.92.0.0"
-#define FIRST_MGMT_ADDRESS "151.216.130.0"
+#define FIRST_SUBNET_ADDRESS "10.25.5.0"
+#define FIRST_MGMT_ADDRESS "185.110.149.20"
 #define SUBNET_SIZE 26
 #define IPV6_PREFIX "2a06:5844:e:"
-#define IPV6_MGMT_PREFIX "2a06:5841:f:10:"
+#define IPV6_MGMT_PREFIX "2a06:5841:f::"
 
 #define _INF 99999
 
