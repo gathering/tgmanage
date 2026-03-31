@@ -14,7 +14,7 @@ DEFAULT_SITE = Site.objects.get(slug='vikingskipet')
 DEFAULT_DEVICE_TYPE = DeviceType.objects.get(model='EX2200-48T-4G')
 FLOOR_MGMT_VLAN = VLAN.objects.get(name="juniper-mgmt")
 VLAN_GROUP_FLOOR = VLANGroup.objects.get(slug="floor")
-CORE_DEVICE = Device.objects.get(name="r1.tele")
+CORE_DEVICE = Device.objects.get(name="r1-tele")
 CORE_INTERFACE_FLOOR = Interface.objects.get(device=CORE_DEVICE, description="d1.roof")
 
 TG = Tag.objects.get
