@@ -99,6 +99,7 @@ def subnet(vlan, prefix, domain_name, vlan_domain_name):
         ],
         "user-context": {
             "name": vlan.name,
+            "vlan-id": vlan.id,
             "type": "clients"
         }
     }

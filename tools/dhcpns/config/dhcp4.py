@@ -293,6 +293,7 @@ def subnet(vlan, prefix, domain_name, vlan_domain_name, tags=[]):
         ],
         "user-context": {
             "name": vlan.name,
+            "vlan-id": vlan.id,
             "type": "clients"
         }
     }
@@ -329,6 +330,7 @@ def fap(vlan, prefix):
         ],
         "user-context": {
             "name": vlan.name,
+            "vlan-id": vlan.id,
             "type": "fap"
         }
     }
@@ -357,6 +359,7 @@ def fap_arista(vlan, prefix):
         ],
         "user-context": {
             "name": vlan.name,
+            "vlan-id": vlan.id,
             "type": "fap"
         }
     }
