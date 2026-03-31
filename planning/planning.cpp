@@ -52,7 +52,7 @@
 #define FIRST_MGMT_ADDRESS "185.110.149.20"
 #define SUBNET_SIZE 26
 #define IPV6_PREFIX "2a06:5844:e:"
-#define IPV6_MGMT_PREFIX "2a06:5841:f::"
+#define IPV6_MGMT_PREFIX "2a06:5841:f:"
 
 #define _INF 99999
 
@@ -693,6 +693,8 @@ int Planner::do_work(int distro_placements[NUM_DISTRO])
 			// if we have 4 switches in a distro-stack
 			//port_name(distro, port_num + 144).c_str()
 			);
+
+		port_num = num_ports_used[distro]++;
 
 		in_addr mgmt_ip4;
 		in_addr subnet_addr4;
