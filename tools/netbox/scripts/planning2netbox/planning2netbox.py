@@ -14,7 +14,6 @@ DEFAULT_SITE = Site.objects.get(slug='vikingskipet')
 DEFAULT_DEVICE_TYPE = DeviceType.objects.get(model='EX2200-48T-4G')
 FLOOR_MGMT_VLAN = VLAN.objects.get(name="juniper-mgmt")
 VLAN_GROUP_FLOOR = VLANGroup.objects.get(slug="floor")
-MULTIRATE_DEVICE_TYPE = DeviceType.objects.get(model="EX4300-48MP")
 CORE_DEVICE = Device.objects.get(name="r1.tele")
 CORE_INTERFACE_FLOOR = Interface.objects.get(device=CORE_DEVICE, description="d1.roof")
 
@@ -50,8 +49,6 @@ def parse_patchlist_txt(patchlist_txt_lines, switches):
     for patchlist in patchlist_txt_lines:
         columns = patchlist.split()
         switch_name = columns[0]
-        if 'multirate' in patchlist:
-            switches[switch_name]['device_type'] = MULTIRATE_DEVICE_TYPE
 
         uplinks = []
         links = columns[2:]
