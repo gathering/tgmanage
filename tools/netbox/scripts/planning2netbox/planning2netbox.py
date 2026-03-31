@@ -11,7 +11,7 @@ from netaddr import IPNetwork
 # Used for getting existing types/objects from Netbox.
 ACCESS_SWITCH_DEVICE_ROLE = DeviceRole.objects.get(name='Access switch')
 DEFAULT_SITE = Site.objects.get(slug='vikingskipet')
-DEFAULT_DEVICE_TYPE = DeviceType.objects.get(model='EX2200-48T')
+DEFAULT_DEVICE_TYPE = DeviceType.objects.get(model='EX2200-48T-4G')
 FLOOR_MGMT_VLAN = VLAN.objects.get(name="juniper-mgmt")
 VLAN_GROUP_FLOOR = VLANGroup.objects.get(slug="floor")
 MULTIRATE_DEVICE_TYPE = DeviceType.objects.get(model="EX4300-48MP")
