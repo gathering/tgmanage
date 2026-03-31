@@ -9,10 +9,10 @@ from netaddr import IPNetwork
 
 
 # Used for getting existing types/objects from Netbox.
-ACCESS_SWITCH_DEVICE_ROLE = DeviceRole.objects.get(name='Access Switch')
-DEFAULT_SITE = Site.objects.get(slug='floor')
+ACCESS_SWITCH_DEVICE_ROLE = DeviceRole.objects.get(name='Access switch')
+DEFAULT_SITE = Site.objects.get(slug='vikingskipet')
 DEFAULT_DEVICE_TYPE = DeviceType.objects.get(model='EX2200-48T')
-FLOOR_MGMT_VLAN = VLAN.objects.get(name="edge-mgmt.floor.r1.tele")
+FLOOR_MGMT_VLAN = VLAN.objects.get(name="juniper-mgmt")
 VLAN_GROUP_FLOOR = VLANGroup.objects.get(slug="floor")
 MULTIRATE_DEVICE_TYPE = DeviceType.objects.get(model="EX4300-48MP")
 CORE_DEVICE = Device.objects.get(name="r1.tele")
@@ -57,7 +57,7 @@ def parse_patchlist_txt(patchlist_txt_lines, switches):
         links = columns[2:]
         for link in links:
             # Skip columns with comments
-            if 'ge-' in link or 'mge-' in link:
+            if 'ge-' in link or 'mge-' in link or 'Ethernet' in link:
                 uplinks.append(link)
         switches[switch_name]['uplinks'] = uplinks
 
@@ -104,7 +104,7 @@ class Planning2Netbox(Script):
             switch, created_switch = Device.objects.get_or_create(
                 name=switch_name,
                 device_type=data['device_type'],
-                device_role=ACCESS_SWITCH_DEVICE_ROLE,
+                role=ACCESS_SWITCH_DEVICE_ROLE,
                 site=DEFAULT_SITE,
             )
             if not created_switch:
