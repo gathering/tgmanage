@@ -1,0 +1,48 @@
+---
+- name: Load override Juniper
+  hosts: switches
+  connection: ansible.netcommon.netconf
+  gather_facts: no
+  vars_prompt:
+  - name: ansible_user
+    prompt: SSH username
+    private: false
+  - name: ansible_password
+    prompt: SSH password
+    private: true
+  vars:
+    ansible_network_os: junos
+    ansible_command_timeout: 180
+    ansible_ssh_common_args: '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
+
+  tasks:
+  - name: Create temp file
+    ansible.builtin.tempfile:
+      state: directory
+    register: tempfile
+    delegate_to: localhost
+
+  - name: Fetch configuration from ZTP server
+    ansible.builtin.get_url:
+      url: "http://ztprince.tg26.tg.no/ztp/{{ inventory_hostname }}"
+      dest: "{{ tempfile.path }}/{{ inventory_hostname }}"
+    delegate_to: localhost
+
+  - name: Load override configuration from ZTP server
+    junipernetworks.junos.junos_config:
+      src: "{{ tempfile.path }}/{{ inventory_hostname }}"
+      src_format: text
+      update: override
+    register: result
+
+  - name: Remove temp file
+    ansible.builtin.file:
+      path: "{{ tempfile.path }}/{{ inventory_hostname }}"
+      state: absent
+    delegate_to: localhost
+    when: tempfile.path is defined
+
+  - name: Show diff
+    ansible.builtin.debug:
+      var: result.diff
+    when: result.diff is defined
