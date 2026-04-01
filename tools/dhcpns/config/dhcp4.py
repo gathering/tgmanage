@@ -6,6 +6,18 @@ from .base import DHCP_LEASE, FAP_LEASE, POSTGRESQL_HOOK, LEASE_API_HOOK, SUBNET
 
 def base(subnet4):
     return {
+        "loggers": [
+            {
+                "name": "kea-dhcp4",
+                "severity": "INFO",
+                "output_options": [
+                    {
+                        "output": "/var/log/kea/kea-dhcp4.log",
+                        "pattern": "%-5p %m\n"
+                    }
+                ]
+            }
+        ],
         "hooks-libraries": [
             POSTGRESQL_HOOK,
             LEASE_API_HOOK,
