@@ -5,6 +5,18 @@ from .base import POSTGRESQL_HOOK, LEASE_API_HOOK, SUBNET_CMDS_HOOK
 
 def base(subnet6):
     return {
+        "loggers": [
+            {
+                "name": "kea-dhcp6",
+                "severity": "INFO",
+                "output_options": [
+                    {
+                        "output": "/var/log/kea/kea-dhcp66.log",
+                        "pattern": "%-5p %m\n"
+                    }
+                ]
+            }
+        ],
         "hooks-libraries": [
             POSTGRESQL_HOOK,
             LEASE_API_HOOK,
