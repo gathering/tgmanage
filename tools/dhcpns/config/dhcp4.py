@@ -352,7 +352,7 @@ def fap(vlan, prefix):
 def fap_arista(vlan, prefix):
     network = ipaddress.ip_network(prefix.prefix)
     gw, start_ip, end_ip = network[1], network[(
-        math.ceil(network.num_addresses - 6))], network[-1]
+        math.ceil(network.num_addresses - 11))], network[-2]
 
     obj = {
         "id": prefix.id,

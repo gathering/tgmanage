@@ -20,7 +20,7 @@ def base(subnet6):
         "hooks-libraries": [
             POSTGRESQL_HOOK,
             LEASE_API_HOOK,
-            SUBNET_CMDS_HOOK
+            SUBNET_CMDS_HOOK,
         ],
         "interfaces-config": {
             "interfaces": [
