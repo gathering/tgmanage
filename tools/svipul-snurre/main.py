@@ -11,6 +11,7 @@ import fastuuid
 
 from config import settings
 
+logging.basicConfig(level=logging.INFO)
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +22,7 @@ rabbit_channel = rabbit.channel()
 devices = []
 
 def get_devices():
-    print("Loading devices from netbox")
+    logger.info("Loading devices from netbox")
     global devices
 
     updated_devices = nb.dcim.devices.filter(status="active")
@@ -34,7 +35,7 @@ def read_pollconf():
         try:
             j = json.loads(content)
         except Exception as e:
-            print(f'failed to load polling config: {e}')
+            logger.error(f'failed to load polling config: {e}')
             return None
     return j
 
@@ -54,7 +55,7 @@ def send_order(order):
 
 
 def main():
-    print("Hello from svipul-snurre!")
+    logging.info("Hello from svipul-snurre!")
 
     pollconf = {}
 
@@ -81,11 +82,11 @@ def main():
                 send_order(create_order(addr.ip, id=f'{device.name};system', mode='Get', oids=pollconf['system_oids']))
                 second_polls.append(create_order(addr.ip, id=f'{device.name};ports', mode='GetElements', oids=pollconf['ports_oids'], elements=['.*']))
 
-            print("poll system", device)
+            logging.info("poll system", device)
 
         time.sleep(1)
 
-        print("poll ports")
+        logging.info("poll ports")
         for order in second_polls:
             send_order(order)
 
