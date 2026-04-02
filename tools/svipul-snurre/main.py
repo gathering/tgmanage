@@ -82,7 +82,7 @@ def main():
                 send_order(create_order(addr.ip, id=f'{device.name};system', mode='Get', oids=pollconf['system_oids']))
                 second_polls.append(create_order(addr.ip, id=f'{device.name};ports', mode='GetElements', oids=pollconf['ports_oids'], elements=['.*']))
 
-            logging.info("poll system", device)
+            logging.info(f"poll system {device}")
 
         time.sleep(1)
 
