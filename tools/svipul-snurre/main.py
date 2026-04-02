@@ -64,6 +64,7 @@ def main():
         if new_pollconf:
             pollconf = new_pollconf
 
+        second_polls = []
         for device in devices:
             if not device.primary_ip:
                 logger.debug(f'Skipping {device.name} because it has no primary ip')
@@ -78,10 +79,15 @@ def main():
 
             for addr in addrs:
                 send_order(create_order(addr.ip, id=f'{device.name};system', mode='Get', oids=pollconf['system_oids']))
-                send_order(create_order(addr.ip, id=f'{device.name};ports', mode='GetElements', oids=pollconf['ports_oids'], elements=['.*']))
+                second_polls.append(create_order(addr.ip, id=f'{device.name};ports', mode='GetElements', oids=pollconf['ports_oids'], elements=['.*']))
 
-            print("poll", device)
+            print("poll system", device)
 
+        time.sleep(1)
+
+        print("poll ports")
+        for order in second_polls:
+            send_order(order)
 
         time.sleep(10)
 
