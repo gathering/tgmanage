@@ -1,11 +1,13 @@
 {
   "ports_oids": [
     "ifAdminStatus",
+    "ifAlias",
+    "ifName",
     "ifDescr",
     "ifInDiscards",
     "ifInErrors",
     "ifInNUcastPkts",
-    "ifInOctets",
+    "ifHCInOctets",
     "ifInUcastPkts",
     "ifInUnknownProtos",
     "ifIndex",
@@ -15,12 +17,12 @@
     "ifOutDiscards",
     "ifOutErrors",
     "ifOutNUcastPkts",
-    "ifOutOctets",
+    "ifHCOutOctets",
     "ifOutQLen",
     "ifOutUcastPkts",
     "ifPhysAddress",
-    "ifSpecific",
     "ifSpeed",
+    "ifHighSpeed",
     "ifType"
   ],
   "system_oids": [
