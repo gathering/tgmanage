@@ -26,7 +26,7 @@ def get_devices():
     global devices
 
     updated_devices = nb.dcim.devices.filter(status="active")
-    devices = updated_devices
+    devices = list(updated_devices)
 
 def read_pollconf():
     j = {}
