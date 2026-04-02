@@ -2,6 +2,8 @@ import logging
 import netaddr
 import pika
 import pynetbox
+import schedule
+import threading
 import time
 
 from pynetbox.core.query import json
@@ -16,6 +18,25 @@ nb = pynetbox.Api(settings.netbox_url, token=settings.netbox_token, threading=Tr
 rabbit = pika.BlockingConnection(pika.ConnectionParameters(settings.broker_url))
 rabbit_channel = rabbit.channel()
 
+devices = []
+
+def get_devices():
+    print("Loading devices from netbox")
+    global devices
+
+    updated_devices = nb.dcim.devices.filter(status="active")
+    devices = updated_devices
+
+def read_pollconf():
+    j = {}
+    with open('polling.json', 'r') as f:
+        content = f.read()
+        try:
+            j = json.loads(content)
+        except Exception as e:
+            print(f'failed to load polling config: {e}')
+            return None
+    return j
 
 def create_order(target: str, id=None, mode="Get", oids=['sysName.0'], elements=[]):
     if id is None:
@@ -35,8 +56,14 @@ def send_order(order):
 def main():
     print("Hello from svipul-snurre!")
 
+    pollconf = {}
+
     while True:
-        devices = nb.dcim.devices.filter(status="active")
+        new_pollconf = read_pollconf()
+        # if it fails to load, keep using the old conf
+        if new_pollconf:
+            pollconf = new_pollconf
+
         for device in devices:
             if not device.primary_ip:
                 logger.debug(f'Skipping {device.name} because it has no primary ip')
@@ -50,27 +77,22 @@ def main():
                 addrs.append(addr)
 
             for addr in addrs:
-                send_order(create_order(addr.ip, id=f'{device.name};system', mode='Get', oids=system_oids))
-                send_order(create_order(addr.ip, id=f'{device.name};ports', mode='GetElements', oids=ports_oids, elements=['.*']))
+                send_order(create_order(addr.ip, id=f'{device.name};system', mode='Get', oids=pollconf['system_oids']))
+                send_order(create_order(addr.ip, id=f'{device.name};ports', mode='GetElements', oids=pollconf['ports_oids'], elements=['.*']))
 
             print("poll", device)
 
 
         time.sleep(10)
 
+def start_device_updater():
+    while True:
+        schedule.run_pending()
 
-ports_oids = ["ifAdminStatus", "ifDescr", "ifInDiscards", "ifInErrors", "ifInNUcastPkts", "ifInOctets", "ifInUcastPkts", "ifInUnknownProtos", "ifIndex", "ifLastChange", "ifMtu", "ifOperStatus", "ifOutDiscards", "ifOutErrors", "ifOutNUcastPkts", "ifOutOctets", "ifOutQLen", "ifOutUcastPkts", "ifPhysAddress", "ifSpecific", "ifSpeed", "ifType"]
-system_oids = [
-    "sysUpTime.0",
-    "sysName.0",
-    "sysDescr.0",
-    "entPhysicalSerialNum.0",
-    "sysUpTime.0",
-    "sysName.0",
-    "sysDescr.0",
-    "entPhysicalSerialNum.0",
-]
 
 if __name__ == "__main__":
+    get_devices()
+    schedule.every(5).minutes.do(get_devices)
+    t = threading.Thread(target=start_device_updater, daemon=True)
     main()
     rabbit.close()
