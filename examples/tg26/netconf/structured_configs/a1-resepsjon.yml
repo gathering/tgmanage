@@ -1,0 +1,1195 @@
+aaa_root:
+  disabled: true
+clock:
+  timezone: CET
+config_end: true
+daemon_terminattr:
+  cvaddrs:
+    - apiserver.cv-prod-euwest-2.arista.io:443
+  cvauth:
+    method: token-secure
+    token_file: /tmp/cv-onboarding-token
+  cvvrf: INET
+  disable_aaa: false
+  smashexcludes: ale,flexCounter,hardware,kni,pulse,strata
+dns_domain: tg26.tg.no
+enable_password:
+  disabled: true
+ethernet_interfaces:
+  - name: Ethernet25
+    description: L2_d1-1-tele_Ethernet48
+    shutdown: false
+    channel_group:
+      id: 25
+      mode: active
+    metadata:
+      peer: d1-1-tele
+      peer_interface: Ethernet48
+      peer_type: l3leaf
+  - name: Ethernet26
+    description: L2_d1-2-tele_Ethernet48
+    shutdown: false
+    channel_group:
+      id: 25
+      mode: active
+    metadata:
+      peer: d1-2-tele
+      peer_interface: Ethernet48
+      peer_type: l3leaf
+  - name: Ethernet1
+    description: 'G: e1-medic_ge-0/0/44'
+    shutdown: false
+    channel_group:
+      id: 10
+      mode: active
+    lacp_timer:
+      mode: fast
+    lacp_port_priority: 8192
+    metadata:
+      peer: 'G: e1-medic'
+      peer_interface: ge-0/0/44
+      peer_type: endpoint
+      peer_key: endpoints
+  - name: Ethernet2
+    description: 'C: Clients'
+    shutdown: false
+    spanning_tree_portfast: edge
+    metadata:
+      peer_type: network_port
+      peer_key: network_ports
+    sflow:
+      enable: true
+    switchport:
+      enabled: true
+      mode: access
+      access_vlan: 105
+  - name: Ethernet3
+    description: 'C: Clients'
+    shutdown: false
+    spanning_tree_portfast: edge
+    metadata:
+      peer_type: network_port
+      peer_key: network_ports
+    sflow:
+      enable: true
+    switchport:
+      enabled: true
+      mode: access
+      access_vlan: 105
+  - name: Ethernet4
+    description: 'C: Clients'
+    shutdown: false
+    spanning_tree_portfast: edge
+    metadata:
+      peer_type: network_port
+      peer_key: network_ports
+    sflow:
+      enable: true
+    switchport:
+      enabled: true
+      mode: access
+      access_vlan: 105
+  - name: Ethernet5
+    description: 'C: Clients'
+    shutdown: false
+    spanning_tree_portfast: edge
+    metadata:
+      peer_type: network_port
+      peer_key: network_ports
+    sflow:
+      enable: true
+    switchport:
+      enabled: true
+      mode: access
+      access_vlan: 105
+  - name: Ethernet6
+    description: 'C: Clients'
+    shutdown: false
+    spanning_tree_portfast: edge
+    metadata:
+      peer_type: network_port
+      peer_key: network_ports
+    sflow:
+      enable: true
+    switchport:
+      enabled: true
+      mode: access
+      access_vlan: 105
+  - name: Ethernet7
+    description: 'C: Clients'
+    shutdown: false
+    spanning_tree_portfast: edge
+    metadata:
+      peer_type: network_port
+      peer_key: network_ports
+    sflow:
+      enable: true
+    switchport:
+      enabled: true
+      mode: access
+      access_vlan: 105
+  - name: Ethernet8
+    description: 'C: Clients'
+    shutdown: false
+    spanning_tree_portfast: edge
+    metadata:
+      peer_type: network_port
+      peer_key: network_ports
+    sflow:
+      enable: true
+    switchport:
+      enabled: true
+      mode: access
+      access_vlan: 105
+  - name: Ethernet9
+    description: 'C: Clients'
+    shutdown: false
+    spanning_tree_portfast: edge
+    metadata:
+      peer_type: network_port
+      peer_key: network_ports
+    sflow:
+      enable: true
+    switchport:
+      enabled: true
+      mode: access
+      access_vlan: 105
+  - name: Ethernet10
+    description: 'C: Clients'
+    shutdown: false
+    spanning_tree_portfast: edge
+    metadata:
+      peer_type: network_port
+      peer_key: network_ports
+    sflow:
+      enable: true
+    switchport:
+      enabled: true
+      mode: access
+      access_vlan: 105
+  - name: Ethernet11
+    description: 'C: Clients'
+    shutdown: false
+    spanning_tree_portfast: edge
+    metadata:
+      peer_type: network_port
+      peer_key: network_ports
+    sflow:
+      enable: true
+    switchport:
+      enabled: true
+      mode: access
+      access_vlan: 105
+  - name: Ethernet12
+    description: 'C: Clients'
+    shutdown: false
+    spanning_tree_portfast: edge
+    metadata:
+      peer_type: network_port
+      peer_key: network_ports
+    sflow:
+      enable: true
+    switchport:
+      enabled: true
+      mode: access
+      access_vlan: 105
+  - name: Ethernet13
+    description: 'C: Clients'
+    shutdown: false
+    spanning_tree_portfast: edge
+    metadata:
+      peer_type: network_port
+      peer_key: network_ports
+    sflow:
+      enable: true
+    switchport:
+      enabled: true
+      mode: access
+      access_vlan: 105
+  - name: Ethernet14
+    description: 'C: Clients'
+    shutdown: false
+    spanning_tree_portfast: edge
+    metadata:
+      peer_type: network_port
+      peer_key: network_ports
+    sflow:
+      enable: true
+    switchport:
+      enabled: true
+      mode: access
+      access_vlan: 105
+  - name: Ethernet15
+    description: 'C: Clients'
+    shutdown: false
+    spanning_tree_portfast: edge
+    metadata:
+      peer_type: network_port
+      peer_key: network_ports
+    sflow:
+      enable: true
+    switchport:
+      enabled: true
+      mode: access
+      access_vlan: 105
+  - name: Ethernet16
+    description: 'C: Clients'
+    shutdown: false
+    spanning_tree_portfast: edge
+    metadata:
+      peer_type: network_port
+      peer_key: network_ports
+    sflow:
+      enable: true
+    switchport:
+      enabled: true
+      mode: access
+      access_vlan: 105
+  - name: Ethernet17
+    description: 'C: Clients'
+    shutdown: false
+    spanning_tree_portfast: edge
+    metadata:
+      peer_type: network_port
+      peer_key: network_ports
+    sflow:
+      enable: true
+    switchport:
+      enabled: true
+      mode: access
+      access_vlan: 105
+  - name: Ethernet18
+    description: 'C: Clients'
+    shutdown: false
+    spanning_tree_portfast: edge
+    metadata:
+      peer_type: network_port
+      peer_key: network_ports
+    sflow:
+      enable: true
+    switchport:
+      enabled: true
+      mode: access
+      access_vlan: 105
+  - name: Ethernet19
+    description: 'C: Clients'
+    shutdown: false
+    spanning_tree_portfast: edge
+    metadata:
+      peer_type: network_port
+      peer_key: network_ports
+    sflow:
+      enable: true
+    switchport:
+      enabled: true
+      mode: access
+      access_vlan: 105
+  - name: Ethernet20
+    description: 'C: Clients'
+    shutdown: false
+    spanning_tree_portfast: edge
+    metadata:
+      peer_type: network_port
+      peer_key: network_ports
+    sflow:
+      enable: true
+    switchport:
+      enabled: true
+      mode: access
+      access_vlan: 105
+  - name: Ethernet21
+    description: 'W: Access Point'
+    shutdown: false
+    spanning_tree_portfast: edge
+    metadata:
+      peer_type: network_port
+      peer_key: network_ports
+    sflow:
+      enable: true
+    switchport:
+      enabled: true
+      mode: trunk
+      trunk:
+        allowed_vlan: 667,1337,1338,1339,1340,1341,3306
+        native_vlan: 667
+  - name: Ethernet22
+    description: 'W: Access Point'
+    shutdown: false
+    spanning_tree_portfast: edge
+    metadata:
+      peer_type: network_port
+      peer_key: network_ports
+    sflow:
+      enable: true
+    switchport:
+      enabled: true
+      mode: trunk
+      trunk:
+        allowed_vlan: 667,1337,1338,1339,1340,1341,3306
+        native_vlan: 667
+  - name: Ethernet23
+    description: 'W: Access Point'
+    shutdown: false
+    spanning_tree_portfast: edge
+    metadata:
+      peer_type: network_port
+      peer_key: network_ports
+    sflow:
+      enable: true
+    switchport:
+      enabled: true
+      mode: trunk
+      trunk:
+        allowed_vlan: 667,1337,1338,1339,1340,1341,3306
+        native_vlan: 667
+  - name: Ethernet24
+    description: 'W: Access Point'
+    shutdown: false
+    spanning_tree_portfast: edge
+    metadata:
+      peer_type: network_port
+      peer_key: network_ports
+    sflow:
+      enable: true
+    switchport:
+      enabled: true
+      mode: trunk
+      trunk:
+        allowed_vlan: 667,1337,1338,1339,1340,1341,3306
+        native_vlan: 667
+  - name: Po10
+    description: 'B: e1-medic ae0'
+    shutdown: false
+    spanning_tree_portfast: edge
+    metadata:
+      peer_type: network_port
+      peer_key: network_ports
+    sflow:
+      enable: true
+    switchport:
+      enabled: true
+      mode: trunk
+      trunk:
+        allowed_vlan: 10,221,1337,1338,1339,1340,1341,667,3306
+        native_vlan: 10
+hostname: a1-resepsjon
+ip_igmp_snooping:
+  globally_enabled: true
+ip_name_server:
+  vrfs:
+    - name: INET
+      servers:
+        - ip_address: 185.110.148.226
+        - ip_address: 185.110.148.230
+    - name: MGMT
+      servers:
+        - ip_address: 185.110.148.226
+        - ip_address: 185.110.148.230
+ipv6_static_routes:
+  - vrf: INET
+    prefix: ::/0
+    next_hop: 2a06:5841:f:2::1
+local_users:
+  - name: admin
+    privilege: 15
+    role: network-admin
+    sha512_password: <removed>
+  - name: cvpadmin
+    privilege: 15
+    role: network-admin
+    sha512_password: <removed>
+logging:
+  format:
+    rfc5424: true
+  vrfs:
+    - name: MGMT
+      hosts:
+        - name: <removed taillight>
+          protocol: udp
+  level:
+    - facility: all
+      severity: '6'
+management_interfaces:
+  - name: Management1
+    description: OOB_MANAGEMENT
+    shutdown: false
+    vrf: MGMT
+    ip_address: 185.110.148.11/26
+    type: oob
+    gateway: 185.110.148.65
+metadata:
+  is_deployed: true
+  platform: eos
+  fabric_name: FABRIC
+  cv_tags:
+    device_tags:
+      - name: topology_hint_fabric
+        value: FABRIC
+      - name: topology_hint_type
+        value: leaf
+      - name: topology_hint_rack
+        value: a1-resepsjon
+ntp:
+  local_interface:
+    name: Vlan668
+    vrf: INET
+  servers:
+    - name: ntp.uio.no
+      preferred: true
+  vrf: INET
+port_channel_interfaces:
+  - name: Port-Channel25
+    description: L2_tele-leaf_Port-Channel48
+    shutdown: false
+    sflow:
+      enable: true
+    switchport:
+      enabled: true
+      mode: trunk
+      trunk:
+        allowed_vlan: 4-7,10,12-13,15-16,18-20,22,31,50,100-114,200-289,300-301,667-668,1337-1341,2222,3306
+  - name: Port-Channel10
+    description: 'ENDPOINT_G: e1-medic_ae0'
+    shutdown: false
+    lacp_fallback_timeout: 30
+    lacp_fallback_mode: static
+    sflow:
+      enable: true
+    switchport:
+      enabled: true
+      mode: trunk
+      trunk:
+        allowed_vlan: 10,221,1337,1338,1339,1340,1341,667,3306
+        native_vlan: 10
+    eos_cli: ip dhcp snooping interface information option circuit-id type none value e1-medic
+queue_monitor_length:
+  enabled: true
+  default_thresholds:
+    high: 2048
+    low: 1024
+service_routing_protocols_model: multi-agent
+sflow:
+  sample: 16384
+  polling_interval: 10
+  vrfs:
+    - name: INET
+      destinations:
+        - destination: influx.tg26.tg.no
+      source_interface: Loopback42
+  destinations:
+    - destination: 127.0.0.1
+  source_interface: Loopback0
+  run: true
+snmp_server:
+  contact: TechNet
+  location: FABRIC a1-resepsjon
+  communities:
+    - name: SkulleBruktTelemetri
+      access: ro
+  ipv4_acls:
+    - name: mgmt_access
+      vrf: MGMT
+    - name: mgmt_access
+      vrf: INET
+  vrfs:
+    - name: INET
+      enable: true
+    - name: MGMT
+      enable: true
+spanning_tree:
+  mode: rstp
+  rstp_priority: 32768
+static_routes:
+  - vrf: MGMT
+    prefix: 0.0.0.0/0
+    next_hop: 185.110.148.65
+  - vrf: INET
+    prefix: 0.0.0.0/0
+    next_hop: 185.110.148.209
+tacacs_servers:
+  hosts:
+    - host: 185.80.182.73
+      vrf: MGMT
+      key: <removed>
+  policy_unknown_mandatory_attribute_ignore: false
+transceiver_qsfp_default_mode_4x10: true
+vlan_interfaces:
+  - name: Vlan668
+    description: Inband Management
+    shutdown: false
+    vrf: INET
+    ip_address: 185.110.148.210/28
+    ipv6_enable: true
+    ipv6_addresses:
+      - 2a06:5841:f:2::210/64
+    mtu: 1500
+    metadata:
+      type: inband_mgmt
+vlan_internal_order:
+  allocation: ascending
+  range:
+    beginning: 1006
+    ending: 1199
+vlans:
+  - id: 6
+    name: fw-clients-linknet-1
+    metadata:
+      tenants:
+        - TG26
+  - id: 7
+    name: fw-clients-linknet-2
+    metadata:
+      tenants:
+        - TG26
+  - id: 18
+    name: noc-mostly
+    metadata:
+      tenants:
+        - TG26
+  - id: 19
+    name: Lars-Server-MGMT
+    metadata:
+      tenants:
+        - TG26
+  - id: 100
+    name: d1-bird
+    metadata:
+      tenants:
+        - TG26
+  - id: 101
+    name: d1-media
+    metadata:
+      tenants:
+        - TG26
+  - id: 102
+    name: d1-log
+    metadata:
+      tenants:
+        - TG26
+  - id: 103
+    name: d1-noc
+    metadata:
+      tenants:
+        - TG26
+  - id: 104
+    name: a1-noc
+    metadata:
+      tenants:
+        - TG26
+  - id: 105
+    name: a1-resepsjon
+    metadata:
+      tenants:
+        - TG26
+  - id: 106
+    name: d2-stand
+    metadata:
+      tenants:
+        - TG26
+  - id: 107
+    name: d1-swing
+    metadata:
+      tenants:
+        - TG26
+  - id: 108
+    name: d1-floor
+    metadata:
+      tenants:
+        - TG26
+  - id: 109
+    name: a1-crew-care
+    metadata:
+      tenants:
+        - TG26
+  - id: 110
+    name: d2-floor
+    metadata:
+      tenants:
+        - TG26
+  - id: 111
+    name: d3-floor
+    metadata:
+      tenants:
+        - TG26
+  - id: 112
+    name: d4-floor
+    metadata:
+      tenants:
+        - TG26
+  - id: 113
+    name: d5-floor
+    metadata:
+      tenants:
+        - TG26
+  - id: 114
+    name: d1-north
+    metadata:
+      tenants:
+        - TG26
+  - id: 200
+    name: e1-crew
+    metadata:
+      tenants:
+        - TG26
+  - id: 201
+    name: e1-achievements
+    metadata:
+      tenants:
+        - TG26
+  - id: 202
+    name: e1-noc
+    metadata:
+      tenants:
+        - TG26
+  - id: 203
+    name: e1-systemstotte
+    metadata:
+      tenants:
+        - TG26
+  - id: 204
+    name: e2-systemstotte
+    metadata:
+      tenants:
+        - TG26
+  - id: 205
+    name: e1-secbula
+    metadata:
+      tenants:
+        - TG26
+  - id: 206
+    name: e1-log
+    metadata:
+      tenants:
+        - TG26
+  - id: 207
+    name: e2-log
+    metadata:
+      tenants:
+        - TG26
+  - id: 208
+    name: e1-vip
+    metadata:
+      tenants:
+        - TG26
+  - id: 209
+    name: e1-taakeheimen
+    metadata:
+      tenants:
+        - TG26
+  - id: 210
+    name: e2-crew
+    metadata:
+      tenants:
+        - TG26
+  - id: 211
+    name: e1-expo
+    metadata:
+      tenants:
+        - TG26
+  - id: 212
+    name: e1-ombud
+    metadata:
+      tenants:
+        - TG26
+  - id: 213
+    name: e2-expo
+    metadata:
+      tenants:
+        - TG26
+  - id: 214
+    name: e1-foh
+    metadata:
+      tenants:
+        - TG26
+  - id: 215
+    name: e1-backstage
+    metadata:
+      tenants:
+        - TG26
+  - id: 216
+    name: e3-expo
+    metadata:
+      tenants:
+        - TG26
+  - id: 217
+    name: e2-backstage
+    metadata:
+      tenants:
+        - TG26
+  - id: 218
+    name: e4-expo
+    metadata:
+      tenants:
+        - TG26
+  - id: 219
+    name: e1-creative
+    metadata:
+      tenants:
+        - TG26
+  - id: 220
+    name: e3-backstage
+    metadata:
+      tenants:
+        - TG26
+  - id: 221
+    name: e1-medic
+    metadata:
+      tenants:
+        - TG26
+  - id: 222
+    name: e1-supportdesk
+    metadata:
+      tenants:
+        - TG26
+  - id: 223
+    name: e2-noc
+    metadata:
+      tenants:
+        - TG26
+  - id: 224
+    name: e39-2
+    metadata:
+      tenants:
+        - TG26
+  - id: 225
+    name: e15-2
+    metadata:
+      tenants:
+        - TG26
+  - id: 226
+    name: e1-1
+    metadata:
+      tenants:
+        - TG26
+  - id: 227
+    name: e1-2
+    metadata:
+      tenants:
+        - TG26
+  - id: 228
+    name: e3-1
+    metadata:
+      tenants:
+        - TG26
+  - id: 229
+    name: e3-2
+    metadata:
+      tenants:
+        - TG26
+  - id: 230
+    name: e5-1
+    metadata:
+      tenants:
+        - TG26
+  - id: 231
+    name: e5-2
+    metadata:
+      tenants:
+        - TG26
+  - id: 232
+    name: e7-1
+    metadata:
+      tenants:
+        - TG26
+  - id: 233
+    name: e7-2
+    metadata:
+      tenants:
+        - TG26
+  - id: 234
+    name: e9-1
+    metadata:
+      tenants:
+        - TG26
+  - id: 235
+    name: e9-2
+    metadata:
+      tenants:
+        - TG26
+  - id: 236
+    name: e11-1
+    metadata:
+      tenants:
+        - TG26
+  - id: 237
+    name: e11-2
+    metadata:
+      tenants:
+        - TG26
+  - id: 238
+    name: e13-1
+    metadata:
+      tenants:
+        - TG26
+  - id: 239
+    name: e13-2
+    metadata:
+      tenants:
+        - TG26
+  - id: 240
+    name: e15-1
+    metadata:
+      tenants:
+        - TG26
+  - id: 241
+    name: e17-1
+    metadata:
+      tenants:
+        - TG26
+  - id: 242
+    name: e17-2
+    metadata:
+      tenants:
+        - TG26
+  - id: 243
+    name: e17-3
+    metadata:
+      tenants:
+        - TG26
+  - id: 244
+    name: e17-4
+    metadata:
+      tenants:
+        - TG26
+  - id: 245
+    name: e19-1
+    metadata:
+      tenants:
+        - TG26
+  - id: 246
+    name: e19-2
+    metadata:
+      tenants:
+        - TG26
+  - id: 247
+    name: e19-3
+    metadata:
+      tenants:
+        - TG26
+  - id: 248
+    name: e19-4
+    metadata:
+      tenants:
+        - TG26
+  - id: 249
+    name: e21-1
+    metadata:
+      tenants:
+        - TG26
+  - id: 250
+    name: e21-2
+    metadata:
+      tenants:
+        - TG26
+  - id: 251
+    name: e21-3
+    metadata:
+      tenants:
+        - TG26
+  - id: 252
+    name: e21-4
+    metadata:
+      tenants:
+        - TG26
+  - id: 253
+    name: e23-1
+    metadata:
+      tenants:
+        - TG26
+  - id: 254
+    name: e23-2
+    metadata:
+      tenants:
+        - TG26
+  - id: 255
+    name: e23-3
+    metadata:
+      tenants:
+        - TG26
+  - id: 256
+    name: e23-4
+    metadata:
+      tenants:
+        - TG26
+  - id: 257
+    name: e25-1
+    metadata:
+      tenants:
+        - TG26
+  - id: 258
+    name: e25-2
+    metadata:
+      tenants:
+        - TG26
+  - id: 259
+    name: e25-3
+    metadata:
+      tenants:
+        - TG26
+  - id: 260
+    name: e25-4
+    metadata:
+      tenants:
+        - TG26
+  - id: 261
+    name: e27-1
+    metadata:
+      tenants:
+        - TG26
+  - id: 262
+    name: e27-2
+    metadata:
+      tenants:
+        - TG26
+  - id: 263
+    name: e27-3
+    metadata:
+      tenants:
+        - TG26
+  - id: 264
+    name: e27-4
+    metadata:
+      tenants:
+        - TG26
+  - id: 265
+    name: e29-1
+    metadata:
+      tenants:
+        - TG26
+  - id: 266
+    name: e29-2
+    metadata:
+      tenants:
+        - TG26
+  - id: 267
+    name: e29-3
+    metadata:
+      tenants:
+        - TG26
+  - id: 268
+    name: e29-4
+    metadata:
+      tenants:
+        - TG26
+  - id: 269
+    name: e31-1
+    metadata:
+      tenants:
+        - TG26
+  - id: 270
+    name: e31-2
+    metadata:
+      tenants:
+        - TG26
+  - id: 271
+    name: e31-3
+    metadata:
+      tenants:
+        - TG26
+  - id: 272
+    name: e31-4
+    metadata:
+      tenants:
+        - TG26
+  - id: 273
+    name: e33-1
+    metadata:
+      tenants:
+        - TG26
+  - id: 274
+    name: e33-2
+    metadata:
+      tenants:
+        - TG26
+  - id: 275
+    name: e33-3
+    metadata:
+      tenants:
+        - TG26
+  - id: 276
+    name: e33-4
+    metadata:
+      tenants:
+        - TG26
+  - id: 277
+    name: e35-1
+    metadata:
+      tenants:
+        - TG26
+  - id: 278
+    name: e35-2
+    metadata:
+      tenants:
+        - TG26
+  - id: 279
+    name: e35-3
+    metadata:
+      tenants:
+        - TG26
+  - id: 280
+    name: e35-4
+    metadata:
+      tenants:
+        - TG26
+  - id: 281
+    name: e37-1
+    metadata:
+      tenants:
+        - TG26
+  - id: 282
+    name: e37-2
+    metadata:
+      tenants:
+        - TG26
+  - id: 283
+    name: e37-3
+    metadata:
+      tenants:
+        - TG26
+  - id: 284
+    name: e37-4
+    metadata:
+      tenants:
+        - TG26
+  - id: 285
+    name: e39-1
+    metadata:
+      tenants:
+        - TG26
+  - id: 286
+    name: e39-3
+    metadata:
+      tenants:
+        - TG26
+  - id: 287
+    name: e39-4
+    metadata:
+      tenants:
+        - TG26
+  - id: 288
+    name: e1-bristol
+    metadata:
+      tenants:
+        - TG26
+  - id: 289
+    name: e5-expo
+    metadata:
+      tenants:
+        - TG26
+  - id: 300
+    name: creativia-vdi
+    metadata:
+      tenants:
+        - TG26
+  - id: 301
+    name: creative-closed
+    metadata:
+      tenants:
+        - TG26
+  - id: 667
+    name: ap-mgmt
+    metadata:
+      tenants:
+        - TG26
+  - id: 1337
+    name: WIFI-1337
+    metadata:
+      tenants:
+        - TG26
+  - id: 1338
+    name: WIFI-1338
+    metadata:
+      tenants:
+        - TG26
+  - id: 1339
+    name: WIFI-1339
+    metadata:
+      tenants:
+        - TG26
+  - id: 1340
+    name: WIFI-1340
+    metadata:
+      tenants:
+        - TG26
+  - id: 1341
+    name: WIFI-1341
+    metadata:
+      tenants:
+        - TG26
+  - id: 3306
+    name: WIFI-LEGACY
+    metadata:
+      tenants:
+        - TG26
+  - id: 4
+    name: fw-inet-linknet-1
+    metadata:
+      tenants:
+        - TG26
+  - id: 5
+    name: fw-inet-linknet-2
+    metadata:
+      tenants:
+        - TG26
+  - id: 10
+    name: juniper-mgmt
+    metadata:
+      tenants:
+        - TG26
+  - id: 12
+    name: tech-hypervisor
+    metadata:
+      tenants:
+        - TG26
+  - id: 13
+    name: tech-servers
+    metadata:
+      tenants:
+        - TG26
+  - id: 15
+    name: noc
+    metadata:
+      tenants:
+        - TG26
+  - id: 16
+    name: pve-management
+    metadata:
+      tenants:
+        - TG26
+  - id: 20
+    name: TG-hack
+    metadata:
+      tenants:
+        - TG26
+  - id: 22
+    name: pve-quorum
+    metadata:
+      tenants:
+        - TG26
+  - id: 31
+    name: minecraft-server
+    metadata:
+      tenants:
+        - TG26
+  - id: 50
+    name: LARS-Kube
+    metadata:
+      tenants:
+        - TG26
+  - id: 668
+    name: INBAND_MGMT
+    metadata:
+      tenants:
+        - TG26
+        - system
+  - id: 2222
+    name: dummy
+    metadata:
+      tenants:
+        - TG26
+vrfs:
+  - name: MGMT
+    ip_routing: false
+  - name: INET
+snmp_servers:
+  communities: []

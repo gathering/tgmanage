@@ -1,0 +1,678 @@
+aaa_root:
+  disabled: true
+clock:
+  timezone: CET
+config_end: true
+daemon_terminattr:
+  cvaddrs:
+    - apiserver.cv-prod-euwest-2.arista.io:443
+  cvauth:
+    method: token-secure
+    token_file: /tmp/cv-onboarding-token
+  cvvrf: MGMT
+  disable_aaa: false
+  smashexcludes: ale,flexCounter,hardware,kni,pulse,strata
+dns_domain: tg26.tg.no
+enable_password:
+  disabled: true
+eos_cli: service unsupported-transceiver <removed>
+ethernet_interfaces:
+  - name: Ethernet1/1
+    description: P2P_d1-1-tele_Ethernet55/1
+    shutdown: false
+    mtu: 9100
+    ipv6_enable: true
+    metadata:
+      peer: d1-1-tele
+      peer_interface: Ethernet55/1
+      peer_type: l3leaf
+    sflow:
+      enable: true
+    switchport:
+      enabled: false
+  - name: Ethernet2/1
+    description: P2P_d1-2-tele_Ethernet55/1
+    shutdown: false
+    mtu: 9100
+    ipv6_enable: true
+    metadata:
+      peer: d1-2-tele
+      peer_interface: Ethernet55/1
+      peer_type: l3leaf
+    sflow:
+      enable: true
+    switchport:
+      enabled: false
+  - name: Ethernet3/1
+    description: P2P_d1-noc_Ethernet97/1
+    shutdown: false
+    mtu: 9100
+    ipv6_enable: true
+    metadata:
+      peer: d1-noc
+      peer_interface: Ethernet97/1
+      peer_type: l3leaf
+    sflow:
+      enable: true
+    switchport:
+      enabled: false
+  - name: Ethernet4/1
+    description: P2P_d1-north_Ethernet53/1
+    shutdown: false
+    mtu: 9100
+    ipv6_enable: true
+    metadata:
+      peer: d1-north
+      peer_interface: Ethernet53/1
+      peer_type: l3leaf
+    sflow:
+      enable: true
+    switchport:
+      enabled: false
+  - name: Ethernet5/1
+    description: P2P_d1-swing_Ethernet53/1
+    shutdown: false
+    mtu: 9100
+    ipv6_enable: true
+    metadata:
+      peer: d1-swing
+      peer_interface: Ethernet53/1
+      peer_type: l3leaf
+    sflow:
+      enable: true
+    switchport:
+      enabled: false
+  - name: Ethernet6/1
+    description: P2P_d2-tele_Ethernet53/1
+    shutdown: false
+    mtu: 9100
+    ipv6_enable: true
+    metadata:
+      peer: d2-tele
+      peer_interface: Ethernet53/1
+      peer_type: l3leaf
+    sflow:
+      enable: true
+    switchport:
+      enabled: false
+  - name: Ethernet7/1
+    description: P2P_d1-south_Ethernet53/1
+    shutdown: false
+    mtu: 9100
+    ipv6_enable: true
+    metadata:
+      peer: d1-south
+      peer_interface: Ethernet53/1
+      peer_type: l3leaf
+    sflow:
+      enable: true
+    switchport:
+      enabled: false
+  - name: Ethernet8/1
+    description: P2P_d1-log_Ethernet53/1
+    shutdown: false
+    mtu: 9100
+    ipv6_enable: true
+    metadata:
+      peer: d1-log
+      peer_interface: Ethernet53/1
+      peer_type: l3leaf
+    sflow:
+      enable: true
+    switchport:
+      enabled: false
+  - name: Ethernet9/1
+    description: P2P_d1-floor_Ethernet97/1
+    shutdown: false
+    mtu: 9100
+    ipv6_enable: true
+    metadata:
+      peer: d1-floor
+      peer_interface: Ethernet97/1
+      peer_type: l3leaf
+    sflow:
+      enable: true
+    switchport:
+      enabled: false
+  - name: Ethernet10/1
+    description: P2P_d2-floor_Ethernet97/1
+    shutdown: false
+    mtu: 9100
+    ipv6_enable: true
+    metadata:
+      peer: d2-floor
+      peer_interface: Ethernet97/1
+      peer_type: l3leaf
+    sflow:
+      enable: true
+    switchport:
+      enabled: false
+  - name: Ethernet11/1
+    description: P2P_d3-floor_Ethernet97/1
+    shutdown: false
+    mtu: 9100
+    ipv6_enable: true
+    metadata:
+      peer: d3-floor
+      peer_interface: Ethernet97/1
+      peer_type: l3leaf
+    sflow:
+      enable: true
+    switchport:
+      enabled: false
+  - name: Ethernet12/1
+    description: P2P_d4-floor_Ethernet97/1
+    shutdown: false
+    mtu: 9100
+    ipv6_enable: true
+    metadata:
+      peer: d4-floor
+      peer_interface: Ethernet97/1
+      peer_type: l3leaf
+    sflow:
+      enable: true
+    switchport:
+      enabled: false
+  - name: Ethernet13/1
+    description: P2P_d5-floor_Ethernet97/1
+    shutdown: false
+    mtu: 9100
+    ipv6_enable: true
+    metadata:
+      peer: d5-floor
+      peer_interface: Ethernet97/1
+      peer_type: l3leaf
+    sflow:
+      enable: true
+    switchport:
+      enabled: false
+  - name: Ethernet14/1
+    description: P2P_d1-1-stand_Ethernet55/1
+    shutdown: false
+    mtu: 9100
+    ipv6_enable: true
+    metadata:
+      peer: d1-1-stand
+      peer_interface: Ethernet55/1
+      peer_type: l3leaf
+    sflow:
+      enable: true
+    switchport:
+      enabled: false
+  - name: Ethernet15/1
+    description: P2P_d1-2-stand_Ethernet55/1
+    shutdown: false
+    mtu: 9100
+    ipv6_enable: true
+    metadata:
+      peer: d1-2-stand
+      peer_interface: Ethernet55/1
+      peer_type: l3leaf
+    sflow:
+      enable: true
+    switchport:
+      enabled: false
+  - name: Ethernet16/1
+    description: P2P_d2-stand_Ethernet97/1
+    shutdown: false
+    mtu: 9100
+    ipv6_enable: true
+    metadata:
+      peer: d2-stand
+      peer_interface: Ethernet97/1
+      peer_type: l3leaf
+    sflow:
+      enable: true
+    switchport:
+      enabled: false
+  - name: Ethernet17/1
+    description: P2P_d1-bird_Ethernet53/1
+    shutdown: false
+    mtu: 9100
+    ipv6_enable: true
+    metadata:
+      peer: d1-bird
+      peer_interface: Ethernet53/1
+      peer_type: l3leaf
+    sflow:
+      enable: true
+    switchport:
+      enabled: false
+  - name: Ethernet18/1
+    description: P2P_d1-media_Ethernet53/1
+    shutdown: false
+    mtu: 9100
+    ipv6_enable: true
+    metadata:
+      peer: d1-media
+      peer_interface: Ethernet53/1
+      peer_type: l3leaf
+    sflow:
+      enable: true
+    switchport:
+      enabled: false
+hostname: s1-noc
+ip_name_server:
+  vrfs:
+    - name: INET
+      servers:
+        - ip_address: 185.110.148.226
+        - ip_address: 185.110.148.230
+    - name: MGMT
+      servers:
+        - ip_address: 185.110.148.226
+        - ip_address: 185.110.148.230
+ip_routing_ipv6_interfaces: true
+ipv6_prefix_lists:
+  - name: PL-LOOPBACKS-EVPN-OVERLAY-V6
+    sequence_numbers:
+      - sequence: 10
+        action: permit 2a06:5841:e::/64 eq 128
+ipv6_static_routes:
+  - vrf: MGMT
+    prefix: ::/0
+    next_hop: 2a06:5841:f:1::1
+ipv6_unicast_routing: true
+local_users:
+  - name: admin
+    privilege: 15
+    role: network-admin
+    sha512_password: <removed>
+  - name: cvpadmin
+    privilege: 15
+    role: network-admin
+    sha512_password: <removed>
+logging:
+  format:
+    rfc5424: true
+  vrfs:
+    - name: MGMT
+      hosts:
+        - name: <removed taillight>
+          protocol: udp
+  level:
+    - facility: all
+      severity: '6'
+loopback_interfaces:
+  - name: Loopback0
+    description: ROUTER_ID
+    shutdown: false
+    ip_address: 10.255.0.1/32
+    ipv6_addresses:
+      - 2a06:5841:e::1/128
+management_interfaces:
+  - name: Management1
+    description: OOB_MANAGEMENT
+    shutdown: false
+    vrf: MGMT
+    ip_address: 185.110.148.66/26
+    ipv6_enable: true
+    ipv6_addresses:
+      - 2a06:5841:f:1::66/64
+    type: oob
+    gateway: 185.110.148.65
+    ipv6_gateway: 2a06:5841:f:1::1
+metadata:
+  is_deployed: true
+  platform: EOS
+  fabric_name: FABRIC
+  cv_tags:
+    device_tags:
+      - name: topology_hint_fabric
+        value: FABRIC
+      - name: topology_hint_type
+        value: spine
+ntp:
+  local_interface:
+    name: Management1
+    vrf: MGMT
+  servers:
+    - name: ntp.uio.no
+      preferred: true
+  vrf: MGMT
+prefix_lists:
+  - name: PL-LOOPBACKS-EVPN-OVERLAY
+    sequence_numbers:
+      - sequence: 10
+        action: permit 10.255.0.0/27 eq 32
+queue_monitor_length:
+  enabled: true
+  default_thresholds:
+    high: 2048
+    low: 1024
+route_maps:
+  - name: RM-CONN-2-BGP
+    sequence_numbers:
+      - sequence: 10
+        type: permit
+        match:
+          - ip address prefix-list PL-LOOPBACKS-EVPN-OVERLAY
+      - sequence: 30
+        type: permit
+        match:
+          - ipv6 address prefix-list PL-LOOPBACKS-EVPN-OVERLAY-V6
+router_bfd:
+  multihop:
+    interval: 300
+    min_rx: 300
+    multiplier: 3
+router_bgp:
+  as: '65000'
+  router_id: 10.255.0.1
+  maximum_paths:
+    paths: 4
+  updates:
+    wait_install: true
+  bgp:
+    default:
+      ipv4_unicast: false
+  peer_groups:
+    - name: IPv4-UNDERLAY-PEERS
+      metadata:
+        type: ipv4
+      password: 7x4B4rnJhZB438m9+BrBfQ==
+      send_community: all
+      maximum_routes: 256000
+    - name: EVPN-OVERLAY-PEERS
+      metadata:
+        type: evpn
+      next_hop_unchanged: true
+      update_source: Loopback0
+      bfd: true
+      ebgp_multihop: 3
+      password: Q4fqtbqcZ7oQuKfuWtNGRQ==
+      send_community: all
+      maximum_routes: 0
+  neighbors:
+    - ip_address: 2a06:5841:e::9
+      peer_group: EVPN-OVERLAY-PEERS
+      remote_as: '65011'
+      metadata:
+        peer: d1-1-stand
+      description: d1-1-stand_Loopback0
+    - ip_address: 2a06:5841:e::7
+      peer_group: EVPN-OVERLAY-PEERS
+      remote_as: '65010'
+      metadata:
+        peer: d1-1-tele
+      description: d1-1-tele_Loopback0
+    - ip_address: 2a06:5841:e::a
+      peer_group: EVPN-OVERLAY-PEERS
+      remote_as: '65011'
+      metadata:
+        peer: d1-2-stand
+      description: d1-2-stand_Loopback0
+    - ip_address: 2a06:5841:e::8
+      peer_group: EVPN-OVERLAY-PEERS
+      remote_as: '65010'
+      metadata:
+        peer: d1-2-tele
+      description: d1-2-tele_Loopback0
+    - ip_address: 2a06:5841:e::17
+      peer_group: EVPN-OVERLAY-PEERS
+      remote_as: '65024'
+      metadata:
+        peer: d1-bird
+      description: d1-bird_Loopback0
+    - ip_address: 2a06:5841:e::11
+      peer_group: EVPN-OVERLAY-PEERS
+      remote_as: '65018'
+      metadata:
+        peer: d1-floor
+      description: d1-floor_Loopback0
+    - ip_address: 2a06:5841:e::10
+      peer_group: EVPN-OVERLAY-PEERS
+      remote_as: '65017'
+      metadata:
+        peer: d1-log
+      description: d1-log_Loopback0
+    - ip_address: 2a06:5841:e::18
+      peer_group: EVPN-OVERLAY-PEERS
+      remote_as: '65025'
+      metadata:
+        peer: d1-media
+      description: d1-media_Loopback0
+    - ip_address: 2a06:5841:e::b
+      peer_group: EVPN-OVERLAY-PEERS
+      remote_as: '65012'
+      metadata:
+        peer: d1-noc
+      description: d1-noc_Loopback0
+    - ip_address: 2a06:5841:e::c
+      peer_group: EVPN-OVERLAY-PEERS
+      remote_as: '65013'
+      metadata:
+        peer: d1-north
+      description: d1-north_Loopback0
+    - ip_address: 2a06:5841:e::f
+      peer_group: EVPN-OVERLAY-PEERS
+      remote_as: '65016'
+      metadata:
+        peer: d1-south
+      description: d1-south_Loopback0
+    - ip_address: 2a06:5841:e::d
+      peer_group: EVPN-OVERLAY-PEERS
+      remote_as: '65014'
+      metadata:
+        peer: d1-swing
+      description: d1-swing_Loopback0
+    - ip_address: 2a06:5841:e::12
+      peer_group: EVPN-OVERLAY-PEERS
+      remote_as: '65019'
+      metadata:
+        peer: d2-floor
+      description: d2-floor_Loopback0
+    - ip_address: 2a06:5841:e::16
+      peer_group: EVPN-OVERLAY-PEERS
+      remote_as: '65023'
+      metadata:
+        peer: d2-stand
+      description: d2-stand_Loopback0
+    - ip_address: 2a06:5841:e::e
+      peer_group: EVPN-OVERLAY-PEERS
+      remote_as: '65015'
+      metadata:
+        peer: d2-tele
+      description: d2-tele_Loopback0
+    - ip_address: 2a06:5841:e::13
+      peer_group: EVPN-OVERLAY-PEERS
+      remote_as: '65020'
+      metadata:
+        peer: d3-floor
+      description: d3-floor_Loopback0
+    - ip_address: 2a06:5841:e::14
+      peer_group: EVPN-OVERLAY-PEERS
+      remote_as: '65021'
+      metadata:
+        peer: d4-floor
+      description: d4-floor_Loopback0
+    - ip_address: 2a06:5841:e::15
+      peer_group: EVPN-OVERLAY-PEERS
+      remote_as: '65022'
+      metadata:
+        peer: d5-floor
+      description: d5-floor_Loopback0
+  neighbor_interfaces:
+    - name: Ethernet1/1
+      remote_as: '65010'
+      metadata:
+        peer: d1-1-tele
+      peer_group: IPv4-UNDERLAY-PEERS
+      description: d1-1-tele_Ethernet55/1
+    - name: Ethernet2/1
+      remote_as: '65010'
+      metadata:
+        peer: d1-2-tele
+      peer_group: IPv4-UNDERLAY-PEERS
+      description: d1-2-tele_Ethernet55/1
+    - name: Ethernet3/1
+      remote_as: '65012'
+      metadata:
+        peer: d1-noc
+      peer_group: IPv4-UNDERLAY-PEERS
+      description: d1-noc_Ethernet97/1
+    - name: Ethernet4/1
+      remote_as: '65013'
+      metadata:
+        peer: d1-north
+      peer_group: IPv4-UNDERLAY-PEERS
+      description: d1-north_Ethernet53/1
+    - name: Ethernet5/1
+      remote_as: '65014'
+      metadata:
+        peer: d1-swing
+      peer_group: IPv4-UNDERLAY-PEERS
+      description: d1-swing_Ethernet53/1
+    - name: Ethernet6/1
+      remote_as: '65015'
+      metadata:
+        peer: d2-tele
+      peer_group: IPv4-UNDERLAY-PEERS
+      description: d2-tele_Ethernet53/1
+    - name: Ethernet7/1
+      remote_as: '65016'
+      metadata:
+        peer: d1-south
+      peer_group: IPv4-UNDERLAY-PEERS
+      description: d1-south_Ethernet53/1
+    - name: Ethernet8/1
+      remote_as: '65017'
+      metadata:
+        peer: d1-log
+      peer_group: IPv4-UNDERLAY-PEERS
+      description: d1-log_Ethernet53/1
+    - name: Ethernet9/1
+      remote_as: '65018'
+      metadata:
+        peer: d1-floor
+      peer_group: IPv4-UNDERLAY-PEERS
+      description: d1-floor_Ethernet97/1
+    - name: Ethernet10/1
+      remote_as: '65019'
+      metadata:
+        peer: d2-floor
+      peer_group: IPv4-UNDERLAY-PEERS
+      description: d2-floor_Ethernet97/1
+    - name: Ethernet11/1
+      remote_as: '65020'
+      metadata:
+        peer: d3-floor
+      peer_group: IPv4-UNDERLAY-PEERS
+      description: d3-floor_Ethernet97/1
+    - name: Ethernet12/1
+      remote_as: '65021'
+      metadata:
+        peer: d4-floor
+      peer_group: IPv4-UNDERLAY-PEERS
+      description: d4-floor_Ethernet97/1
+    - name: Ethernet13/1
+      remote_as: '65022'
+      metadata:
+        peer: d5-floor
+      peer_group: IPv4-UNDERLAY-PEERS
+      description: d5-floor_Ethernet97/1
+    - name: Ethernet14/1
+      remote_as: '65011'
+      metadata:
+        peer: d1-1-stand
+      peer_group: IPv4-UNDERLAY-PEERS
+      description: d1-1-stand_Ethernet55/1
+    - name: Ethernet15/1
+      remote_as: '65011'
+      metadata:
+        peer: d1-2-stand
+      peer_group: IPv4-UNDERLAY-PEERS
+      description: d1-2-stand_Ethernet55/1
+    - name: Ethernet16/1
+      remote_as: '65023'
+      metadata:
+        peer: d2-stand
+      peer_group: IPv4-UNDERLAY-PEERS
+      description: d2-stand_Ethernet97/1
+    - name: Ethernet17/1
+      remote_as: '65024'
+      metadata:
+        peer: d1-bird
+      peer_group: IPv4-UNDERLAY-PEERS
+      description: d1-bird_Ethernet53/1
+    - name: Ethernet18/1
+      remote_as: '65025'
+      metadata:
+        peer: d1-media
+      peer_group: IPv4-UNDERLAY-PEERS
+      description: d1-media_Ethernet53/1
+  redistribute:
+    connected:
+      enabled: true
+      route_map: RM-CONN-2-BGP
+  address_family_evpn:
+    peer_groups:
+      - name: EVPN-OVERLAY-PEERS
+        activate: true
+  address_family_ipv4:
+    peer_groups:
+      - name: IPv4-UNDERLAY-PEERS
+        activate: true
+        next_hop:
+          address_family_ipv6:
+            enabled: true
+            originate: true
+      - name: EVPN-OVERLAY-PEERS
+        activate: false
+  address_family_ipv6:
+    peer_groups:
+      - name: IPv4-UNDERLAY-PEERS
+        activate: true
+service_routing_protocols_model: multi-agent
+sflow:
+  sample: 16384
+  polling_interval: 10
+  vrfs:
+    - name: INET
+      destinations:
+        - destination: influx.tg26.tg.no
+      source_interface: Loopback42
+  destinations:
+    - destination: 127.0.0.1
+  source_interface: Loopback0
+  run: true
+snmp_server:
+  contact: TechNet
+  location: FABRIC s1-noc
+  communities:
+    - name: SkulleBruktTelemetri
+      access: ro
+  ipv4_acls:
+    - name: mgmt_access
+      vrf: MGMT
+    - name: mgmt_access
+      vrf: INET
+  vrfs:
+    - name: INET
+      enable: true
+    - name: MGMT
+      enable: true
+spanning_tree:
+  mode: none
+static_routes:
+  - vrf: MGMT
+    prefix: 0.0.0.0/0
+    next_hop: 185.110.148.65
+tacacs_servers:
+  hosts:
+    - host: 185.80.182.73
+      vrf: MGMT
+      key: <removed>
+  policy_unknown_mandatory_attribute_ignore: false
+transceiver_qsfp_default_mode_4x10: true
+vlan_internal_order:
+  allocation: ascending
+  range:
+    beginning: 1006
+    ending: 1199
+vrfs:
+  - name: MGMT
+    ip_routing: false
+    ipv6_routing: false
+snmp_servers:
+  communities: []

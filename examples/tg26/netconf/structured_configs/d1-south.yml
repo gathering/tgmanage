@@ -1,0 +1,5811 @@
+aaa_root:
+  disabled: true
+clock:
+  timezone: CET
+config_end: true
+daemon_terminattr:
+  cvaddrs:
+    - apiserver.cv-prod-euwest-2.arista.io:443
+  cvauth:
+    method: token-secure
+    token_file: /tmp/cv-onboarding-token
+  cvsourceintf: Loopback42
+  cvvrf: INET
+  disable_aaa: false
+  smashexcludes: ale,flexCounter,hardware,kni,pulse,strata
+dns_domain: tg26.tg.no
+enable_password:
+  disabled: true
+eos_cli: service unsupported-transceiver <removed>
+ethernet_interfaces:
+  - name: Ethernet53/1
+    description: P2P_s1-noc_Ethernet7/1
+    shutdown: false
+    mtu: 9100
+    ipv6_enable: true
+    metadata:
+      peer: s1-noc
+      peer_interface: Ethernet7/1
+      peer_type: spine
+    sflow:
+      enable: true
+    switchport:
+      enabled: false
+  - name: Ethernet54/1
+    description: P2P_s2-noc_Ethernet7/1
+    shutdown: false
+    mtu: 9100
+    ipv6_enable: true
+    metadata:
+      peer: s2-noc
+      peer_interface: Ethernet7/1
+      peer_type: spine
+    sflow:
+      enable: true
+    switchport:
+      enabled: false
+  - name: Ethernet1
+    description: 'G: e1-ombud_ge-0/0/44'
+    shutdown: false
+    channel_group:
+      id: 10
+      mode: active
+    lacp_timer:
+      mode: fast
+    lacp_port_priority: 8192
+    metadata:
+      peer: 'G: e1-ombud'
+      peer_interface: ge-0/0/44
+      peer_type: endpoint
+      peer_key: endpoints
+  - name: Ethernet2
+    description: 'G: e1-ombud_ge-0/0/45'
+    shutdown: false
+    channel_group:
+      id: 10
+      mode: active
+    lacp_timer:
+      mode: fast
+    lacp_port_priority: 32768
+    metadata:
+      peer: 'G: e1-ombud'
+      peer_interface: ge-0/0/45
+      peer_type: endpoint
+      peer_key: endpoints
+  - name: Po10
+    description: 'B: e1-ombud ae0'
+    shutdown: false
+    spanning_tree_portfast: edge
+    metadata:
+      peer_type: network_port
+      peer_key: network_ports
+    sflow:
+      enable: true
+    switchport:
+      enabled: true
+      mode: trunk
+      trunk:
+        allowed_vlan: 10,212
+        native_vlan: 10
+hostname: d1-south
+ip_dhcp_relay:
+  information_option: true
+ip_dhcp_snooping:
+  enabled: true
+  bridging: false
+  information_option:
+    enabled: true
+    circuit_id_type: none
+    circuit_id_format: '%h:%p'
+  vlan: 1-4094
+ip_igmp_snooping:
+  globally_enabled: true
+ip_name_server:
+  vrfs:
+    - name: INET
+      servers:
+        - ip_address: 185.110.148.226
+        - ip_address: 185.110.148.230
+    - name: MGMT
+      servers:
+        - ip_address: 185.110.148.226
+        - ip_address: 185.110.148.230
+ip_routing_ipv6_interfaces: true
+ip_virtual_router_mac_address: 00:1c:73:00:00:99
+ipv6_prefix_lists:
+  - name: PL-LOOPBACKS-EVPN-OVERLAY-V6
+    sequence_numbers:
+      - sequence: 10
+        action: permit 2a06:5841:e::/64 eq 128
+ipv6_static_routes:
+  - vrf: MGMT
+    prefix: ::/0
+    next_hop: 2a06:5841:f:1::1
+ipv6_unicast_routing: true
+local_users:
+  - name: admin
+    privilege: 15
+    role: network-admin
+    sha512_password: <removed>
+  - name: cvpadmin
+    privilege: 15
+    role: network-admin
+    sha512_password: <removed>
+logging:
+  format:
+    rfc5424: true
+  vrfs:
+    - name: MGMT
+      hosts:
+        - name: <removed taillight>
+          protocol: udp
+  level:
+    - facility: all
+      severity: '6'
+loopback_interfaces:
+  - name: Loopback0
+    description: ROUTER_ID
+    shutdown: false
+    ip_address: 10.255.0.15/32
+    ipv6_addresses:
+      - 2a06:5841:e::f/128
+  - name: Loopback1
+    description: VXLAN_TUNNEL_SOURCE
+    shutdown: false
+    ip_address: 10.255.1.15/32
+  - name: Loopback13
+    description: DIAG_VRF_CLIENTS
+    shutdown: false
+    vrf: CLIENTS
+    ip_address: 10.255.13.15/32
+    ipv6_addresses:
+      - 2a06:5841:e:104::f/128
+  - name: Loopback11
+    description: DIAG_VRF_INET
+    shutdown: false
+    vrf: INET
+    ip_address: 10.255.11.15/32
+    ipv6_addresses:
+      - 2a06:5841:e:102::f/128
+  - name: Loopback42
+    description: in_band_MGMT-lo42
+    shutdown: false
+    vrf: INET
+    ip_address: 185.110.148.45/32
+    eos_cli: ipv6 address 2a06:5841:f:200::45/128
+  - name: Loopback18
+    description: DIAG_VRF_LARS-CEPH
+    shutdown: false
+    vrf: LARS-CEPH
+    ip_address: 10.255.18.15/32
+    ipv6_addresses:
+      - 2a06:5841:e:109::f/128
+management_interfaces:
+  - name: Management1
+    description: OOB_MANAGEMENT
+    shutdown: false
+    vrf: MGMT
+    ip_address: 185.110.148.78/26
+    ipv6_enable: true
+    ipv6_addresses:
+      - 2a06:5841:f:1::78/64
+    type: oob
+    gateway: 185.110.148.65
+    ipv6_gateway: 2a06:5841:f:1::1
+metadata:
+  is_deployed: true
+  platform: EOS
+  fabric_name: FABRIC
+  cv_tags:
+    device_tags:
+      - name: topology_hint_fabric
+        value: FABRIC
+      - name: topology_hint_type
+        value: leaf
+      - name: topology_hint_rack
+        value: d1-south
+ntp:
+  local_interface:
+    name: Loopback42
+    vrf: INET
+  servers:
+    - name: ntp.uio.no
+      preferred: true
+  vrf: INET
+port_channel_interfaces:
+  - name: Port-Channel10
+    description: 'ENDPOINT_G: e1-ombud_ae0'
+    shutdown: false
+    lacp_fallback_timeout: 30
+    lacp_fallback_mode: static
+    sflow:
+      enable: true
+    switchport:
+      enabled: true
+      mode: trunk
+      trunk:
+        allowed_vlan: 10,212
+        native_vlan: 10
+    eos_cli: ip dhcp snooping interface information option circuit-id type none value e1-ombud
+prefix_lists:
+  - name: PL-LOOPBACKS-EVPN-OVERLAY
+    sequence_numbers:
+      - sequence: 10
+        action: permit 10.255.0.0/27 eq 32
+      - sequence: 20
+        action: permit 10.255.1.0/27 eq 32
+queue_monitor_length:
+  enabled: true
+  default_thresholds:
+    high: 2048
+    low: 1024
+route_maps:
+  - name: RM-CONN-2-BGP
+    sequence_numbers:
+      - sequence: 10
+        type: permit
+        match:
+          - ip address prefix-list PL-LOOPBACKS-EVPN-OVERLAY
+      - sequence: 30
+        type: permit
+        match:
+          - ipv6 address prefix-list PL-LOOPBACKS-EVPN-OVERLAY-V6
+router_bfd:
+  multihop:
+    interval: 300
+    min_rx: 300
+    multiplier: 3
+router_bgp:
+  as: '65016'
+  router_id: 10.255.0.15
+  maximum_paths:
+    paths: 4
+  updates:
+    wait_install: true
+  bgp:
+    default:
+      ipv4_unicast: false
+  peer_groups:
+    - name: IPv4-UNDERLAY-PEERS
+      metadata:
+        type: ipv4
+      password: 7x4B4rnJhZB438m9+BrBfQ==
+      send_community: all
+      maximum_routes: 256000
+    - name: EVPN-OVERLAY-PEERS
+      metadata:
+        type: evpn
+      update_source: Loopback0
+      bfd: true
+      ebgp_multihop: 3
+      password: Q4fqtbqcZ7oQuKfuWtNGRQ==
+      send_community: all
+      maximum_routes: 0
+  neighbors:
+    - ip_address: 2a06:5841:e::1
+      peer_group: EVPN-OVERLAY-PEERS
+      remote_as: '65000'
+      metadata:
+        peer: s1-noc
+      description: s1-noc_Loopback0
+    - ip_address: 2a06:5841:e::2
+      peer_group: EVPN-OVERLAY-PEERS
+      remote_as: '65000'
+      metadata:
+        peer: s2-noc
+      description: s2-noc_Loopback0
+  neighbor_interfaces:
+    - name: Ethernet53/1
+      remote_as: '65000'
+      metadata:
+        peer: s1-noc
+      peer_group: IPv4-UNDERLAY-PEERS
+      description: s1-noc_Ethernet7/1
+    - name: Ethernet54/1
+      remote_as: '65000'
+      metadata:
+        peer: s2-noc
+      peer_group: IPv4-UNDERLAY-PEERS
+      description: s2-noc_Ethernet7/1
+  redistribute:
+    connected:
+      enabled: true
+      route_map: RM-CONN-2-BGP
+  vlans:
+    - id: 6
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10006
+      route_targets:
+        both:
+          - 10006:10006
+      redistribute_routes:
+        - learned
+    - id: 7
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10007
+      route_targets:
+        both:
+          - 10007:10007
+      redistribute_routes:
+        - learned
+    - id: 18
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10018
+      route_targets:
+        both:
+          - 10018:10018
+      redistribute_routes:
+        - learned
+    - id: 19
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10019
+      route_targets:
+        both:
+          - 10019:10019
+      redistribute_routes:
+        - learned
+    - id: 100
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10100
+      route_targets:
+        both:
+          - 10100:10100
+      redistribute_routes:
+        - learned
+    - id: 101
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10101
+      route_targets:
+        both:
+          - 10101:10101
+      redistribute_routes:
+        - learned
+    - id: 102
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10102
+      route_targets:
+        both:
+          - 10102:10102
+      redistribute_routes:
+        - learned
+    - id: 103
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10103
+      route_targets:
+        both:
+          - 10103:10103
+      redistribute_routes:
+        - learned
+    - id: 104
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10104
+      route_targets:
+        both:
+          - 10104:10104
+      redistribute_routes:
+        - learned
+    - id: 105
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10105
+      route_targets:
+        both:
+          - 10105:10105
+      redistribute_routes:
+        - learned
+    - id: 106
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10106
+      route_targets:
+        both:
+          - 10106:10106
+      redistribute_routes:
+        - learned
+    - id: 107
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10107
+      route_targets:
+        both:
+          - 10107:10107
+      redistribute_routes:
+        - learned
+    - id: 108
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10108
+      route_targets:
+        both:
+          - 10108:10108
+      redistribute_routes:
+        - learned
+    - id: 109
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10109
+      route_targets:
+        both:
+          - 10109:10109
+      redistribute_routes:
+        - learned
+    - id: 110
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10110
+      route_targets:
+        both:
+          - 10110:10110
+      redistribute_routes:
+        - learned
+    - id: 111
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10111
+      route_targets:
+        both:
+          - 10111:10111
+      redistribute_routes:
+        - learned
+    - id: 112
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10112
+      route_targets:
+        both:
+          - 10112:10112
+      redistribute_routes:
+        - learned
+    - id: 113
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10113
+      route_targets:
+        both:
+          - 10113:10113
+      redistribute_routes:
+        - learned
+    - id: 114
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10114
+      route_targets:
+        both:
+          - 10114:10114
+      redistribute_routes:
+        - learned
+    - id: 200
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10200
+      route_targets:
+        both:
+          - 10200:10200
+      redistribute_routes:
+        - learned
+    - id: 201
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10201
+      route_targets:
+        both:
+          - 10201:10201
+      redistribute_routes:
+        - learned
+    - id: 202
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10202
+      route_targets:
+        both:
+          - 10202:10202
+      redistribute_routes:
+        - learned
+    - id: 203
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10203
+      route_targets:
+        both:
+          - 10203:10203
+      redistribute_routes:
+        - learned
+    - id: 204
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10204
+      route_targets:
+        both:
+          - 10204:10204
+      redistribute_routes:
+        - learned
+    - id: 205
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10205
+      route_targets:
+        both:
+          - 10205:10205
+      redistribute_routes:
+        - learned
+    - id: 206
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10206
+      route_targets:
+        both:
+          - 10206:10206
+      redistribute_routes:
+        - learned
+    - id: 207
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10207
+      route_targets:
+        both:
+          - 10207:10207
+      redistribute_routes:
+        - learned
+    - id: 208
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10208
+      route_targets:
+        both:
+          - 10208:10208
+      redistribute_routes:
+        - learned
+    - id: 209
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10209
+      route_targets:
+        both:
+          - 10209:10209
+      redistribute_routes:
+        - learned
+    - id: 210
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10210
+      route_targets:
+        both:
+          - 10210:10210
+      redistribute_routes:
+        - learned
+    - id: 211
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10211
+      route_targets:
+        both:
+          - 10211:10211
+      redistribute_routes:
+        - learned
+    - id: 212
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10212
+      route_targets:
+        both:
+          - 10212:10212
+      redistribute_routes:
+        - learned
+    - id: 213
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10213
+      route_targets:
+        both:
+          - 10213:10213
+      redistribute_routes:
+        - learned
+    - id: 214
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10214
+      route_targets:
+        both:
+          - 10214:10214
+      redistribute_routes:
+        - learned
+    - id: 215
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10215
+      route_targets:
+        both:
+          - 10215:10215
+      redistribute_routes:
+        - learned
+    - id: 216
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10216
+      route_targets:
+        both:
+          - 10216:10216
+      redistribute_routes:
+        - learned
+    - id: 217
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10217
+      route_targets:
+        both:
+          - 10217:10217
+      redistribute_routes:
+        - learned
+    - id: 218
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10218
+      route_targets:
+        both:
+          - 10218:10218
+      redistribute_routes:
+        - learned
+    - id: 219
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10219
+      route_targets:
+        both:
+          - 10219:10219
+      redistribute_routes:
+        - learned
+    - id: 220
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10220
+      route_targets:
+        both:
+          - 10220:10220
+      redistribute_routes:
+        - learned
+    - id: 221
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10221
+      route_targets:
+        both:
+          - 10221:10221
+      redistribute_routes:
+        - learned
+    - id: 222
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10222
+      route_targets:
+        both:
+          - 10222:10222
+      redistribute_routes:
+        - learned
+    - id: 223
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10223
+      route_targets:
+        both:
+          - 10223:10223
+      redistribute_routes:
+        - learned
+    - id: 224
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10224
+      route_targets:
+        both:
+          - 10224:10224
+      redistribute_routes:
+        - learned
+    - id: 225
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10225
+      route_targets:
+        both:
+          - 10225:10225
+      redistribute_routes:
+        - learned
+    - id: 226
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10226
+      route_targets:
+        both:
+          - 10226:10226
+      redistribute_routes:
+        - learned
+    - id: 227
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10227
+      route_targets:
+        both:
+          - 10227:10227
+      redistribute_routes:
+        - learned
+    - id: 228
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10228
+      route_targets:
+        both:
+          - 10228:10228
+      redistribute_routes:
+        - learned
+    - id: 229
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10229
+      route_targets:
+        both:
+          - 10229:10229
+      redistribute_routes:
+        - learned
+    - id: 230
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10230
+      route_targets:
+        both:
+          - 10230:10230
+      redistribute_routes:
+        - learned
+    - id: 231
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10231
+      route_targets:
+        both:
+          - 10231:10231
+      redistribute_routes:
+        - learned
+    - id: 232
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10232
+      route_targets:
+        both:
+          - 10232:10232
+      redistribute_routes:
+        - learned
+    - id: 233
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10233
+      route_targets:
+        both:
+          - 10233:10233
+      redistribute_routes:
+        - learned
+    - id: 234
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10234
+      route_targets:
+        both:
+          - 10234:10234
+      redistribute_routes:
+        - learned
+    - id: 235
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10235
+      route_targets:
+        both:
+          - 10235:10235
+      redistribute_routes:
+        - learned
+    - id: 236
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10236
+      route_targets:
+        both:
+          - 10236:10236
+      redistribute_routes:
+        - learned
+    - id: 237
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10237
+      route_targets:
+        both:
+          - 10237:10237
+      redistribute_routes:
+        - learned
+    - id: 238
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10238
+      route_targets:
+        both:
+          - 10238:10238
+      redistribute_routes:
+        - learned
+    - id: 239
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10239
+      route_targets:
+        both:
+          - 10239:10239
+      redistribute_routes:
+        - learned
+    - id: 240
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10240
+      route_targets:
+        both:
+          - 10240:10240
+      redistribute_routes:
+        - learned
+    - id: 241
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10241
+      route_targets:
+        both:
+          - 10241:10241
+      redistribute_routes:
+        - learned
+    - id: 242
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10242
+      route_targets:
+        both:
+          - 10242:10242
+      redistribute_routes:
+        - learned
+    - id: 243
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10243
+      route_targets:
+        both:
+          - 10243:10243
+      redistribute_routes:
+        - learned
+    - id: 244
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10244
+      route_targets:
+        both:
+          - 10244:10244
+      redistribute_routes:
+        - learned
+    - id: 245
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10245
+      route_targets:
+        both:
+          - 10245:10245
+      redistribute_routes:
+        - learned
+    - id: 246
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10246
+      route_targets:
+        both:
+          - 10246:10246
+      redistribute_routes:
+        - learned
+    - id: 247
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10247
+      route_targets:
+        both:
+          - 10247:10247
+      redistribute_routes:
+        - learned
+    - id: 248
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10248
+      route_targets:
+        both:
+          - 10248:10248
+      redistribute_routes:
+        - learned
+    - id: 249
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10249
+      route_targets:
+        both:
+          - 10249:10249
+      redistribute_routes:
+        - learned
+    - id: 250
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10250
+      route_targets:
+        both:
+          - 10250:10250
+      redistribute_routes:
+        - learned
+    - id: 251
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10251
+      route_targets:
+        both:
+          - 10251:10251
+      redistribute_routes:
+        - learned
+    - id: 252
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10252
+      route_targets:
+        both:
+          - 10252:10252
+      redistribute_routes:
+        - learned
+    - id: 253
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10253
+      route_targets:
+        both:
+          - 10253:10253
+      redistribute_routes:
+        - learned
+    - id: 254
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10254
+      route_targets:
+        both:
+          - 10254:10254
+      redistribute_routes:
+        - learned
+    - id: 255
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10255
+      route_targets:
+        both:
+          - 10255:10255
+      redistribute_routes:
+        - learned
+    - id: 256
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10256
+      route_targets:
+        both:
+          - 10256:10256
+      redistribute_routes:
+        - learned
+    - id: 257
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10257
+      route_targets:
+        both:
+          - 10257:10257
+      redistribute_routes:
+        - learned
+    - id: 258
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10258
+      route_targets:
+        both:
+          - 10258:10258
+      redistribute_routes:
+        - learned
+    - id: 259
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10259
+      route_targets:
+        both:
+          - 10259:10259
+      redistribute_routes:
+        - learned
+    - id: 260
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10260
+      route_targets:
+        both:
+          - 10260:10260
+      redistribute_routes:
+        - learned
+    - id: 261
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10261
+      route_targets:
+        both:
+          - 10261:10261
+      redistribute_routes:
+        - learned
+    - id: 262
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10262
+      route_targets:
+        both:
+          - 10262:10262
+      redistribute_routes:
+        - learned
+    - id: 263
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10263
+      route_targets:
+        both:
+          - 10263:10263
+      redistribute_routes:
+        - learned
+    - id: 264
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10264
+      route_targets:
+        both:
+          - 10264:10264
+      redistribute_routes:
+        - learned
+    - id: 265
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10265
+      route_targets:
+        both:
+          - 10265:10265
+      redistribute_routes:
+        - learned
+    - id: 266
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10266
+      route_targets:
+        both:
+          - 10266:10266
+      redistribute_routes:
+        - learned
+    - id: 267
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10267
+      route_targets:
+        both:
+          - 10267:10267
+      redistribute_routes:
+        - learned
+    - id: 268
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10268
+      route_targets:
+        both:
+          - 10268:10268
+      redistribute_routes:
+        - learned
+    - id: 269
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10269
+      route_targets:
+        both:
+          - 10269:10269
+      redistribute_routes:
+        - learned
+    - id: 270
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10270
+      route_targets:
+        both:
+          - 10270:10270
+      redistribute_routes:
+        - learned
+    - id: 271
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10271
+      route_targets:
+        both:
+          - 10271:10271
+      redistribute_routes:
+        - learned
+    - id: 272
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10272
+      route_targets:
+        both:
+          - 10272:10272
+      redistribute_routes:
+        - learned
+    - id: 273
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10273
+      route_targets:
+        both:
+          - 10273:10273
+      redistribute_routes:
+        - learned
+    - id: 274
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10274
+      route_targets:
+        both:
+          - 10274:10274
+      redistribute_routes:
+        - learned
+    - id: 275
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10275
+      route_targets:
+        both:
+          - 10275:10275
+      redistribute_routes:
+        - learned
+    - id: 276
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10276
+      route_targets:
+        both:
+          - 10276:10276
+      redistribute_routes:
+        - learned
+    - id: 277
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10277
+      route_targets:
+        both:
+          - 10277:10277
+      redistribute_routes:
+        - learned
+    - id: 278
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10278
+      route_targets:
+        both:
+          - 10278:10278
+      redistribute_routes:
+        - learned
+    - id: 279
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10279
+      route_targets:
+        both:
+          - 10279:10279
+      redistribute_routes:
+        - learned
+    - id: 280
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10280
+      route_targets:
+        both:
+          - 10280:10280
+      redistribute_routes:
+        - learned
+    - id: 281
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10281
+      route_targets:
+        both:
+          - 10281:10281
+      redistribute_routes:
+        - learned
+    - id: 282
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10282
+      route_targets:
+        both:
+          - 10282:10282
+      redistribute_routes:
+        - learned
+    - id: 283
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10283
+      route_targets:
+        both:
+          - 10283:10283
+      redistribute_routes:
+        - learned
+    - id: 284
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10284
+      route_targets:
+        both:
+          - 10284:10284
+      redistribute_routes:
+        - learned
+    - id: 285
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10285
+      route_targets:
+        both:
+          - 10285:10285
+      redistribute_routes:
+        - learned
+    - id: 286
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10286
+      route_targets:
+        both:
+          - 10286:10286
+      redistribute_routes:
+        - learned
+    - id: 287
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10287
+      route_targets:
+        both:
+          - 10287:10287
+      redistribute_routes:
+        - learned
+    - id: 288
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10288
+      route_targets:
+        both:
+          - 10288:10288
+      redistribute_routes:
+        - learned
+    - id: 289
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10289
+      route_targets:
+        both:
+          - 10289:10289
+      redistribute_routes:
+        - learned
+    - id: 300
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10300
+      route_targets:
+        both:
+          - 10300:10300
+      redistribute_routes:
+        - learned
+    - id: 301
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10301
+      route_targets:
+        both:
+          - 10301:10301
+      redistribute_routes:
+        - learned
+    - id: 667
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10667
+      route_targets:
+        both:
+          - 10667:10667
+      redistribute_routes:
+        - learned
+    - id: 1337
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:11337
+      route_targets:
+        both:
+          - 11337:11337
+      redistribute_routes:
+        - learned
+    - id: 1338
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:11338
+      route_targets:
+        both:
+          - 11338:11338
+      redistribute_routes:
+        - learned
+    - id: 1339
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:11339
+      route_targets:
+        both:
+          - 11339:11339
+      redistribute_routes:
+        - learned
+    - id: 1340
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:11340
+      route_targets:
+        both:
+          - 11340:11340
+      redistribute_routes:
+        - learned
+    - id: 1341
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:11341
+      route_targets:
+        both:
+          - 11341:11341
+      redistribute_routes:
+        - learned
+    - id: 3306
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:13306
+      route_targets:
+        both:
+          - 13306:13306
+      redistribute_routes:
+        - learned
+    - id: 4
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10004
+      route_targets:
+        both:
+          - 10004:10004
+      redistribute_routes:
+        - learned
+    - id: 5
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10005
+      route_targets:
+        both:
+          - 10005:10005
+      redistribute_routes:
+        - learned
+    - id: 10
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10010
+      route_targets:
+        both:
+          - 10010:10010
+      redistribute_routes:
+        - learned
+    - id: 12
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10012
+      route_targets:
+        both:
+          - 10012:10012
+      redistribute_routes:
+        - learned
+    - id: 13
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10013
+      route_targets:
+        both:
+          - 10013:10013
+      redistribute_routes:
+        - learned
+    - id: 15
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10015
+      route_targets:
+        both:
+          - 10015:10015
+      redistribute_routes:
+        - learned
+    - id: 16
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10016
+      route_targets:
+        both:
+          - 10016:10016
+      redistribute_routes:
+        - learned
+    - id: 20
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10020
+      route_targets:
+        both:
+          - 10020:10020
+      redistribute_routes:
+        - learned
+    - id: 22
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10022
+      route_targets:
+        both:
+          - 10022:10022
+      redistribute_routes:
+        - learned
+    - id: 31
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10031
+      route_targets:
+        both:
+          - 10031:10031
+      redistribute_routes:
+        - learned
+    - id: 50
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10050
+      route_targets:
+        both:
+          - 10050:10050
+      redistribute_routes:
+        - learned
+    - id: 668
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:10668
+      route_targets:
+        both:
+          - 10668:10668
+      redistribute_routes:
+        - learned
+    - id: 2222
+      metadata:
+        tenants:
+          - TG26
+      rd: 10.255.0.15:12222
+      route_targets:
+        both:
+          - 12222:12222
+      redistribute_routes:
+        - learned
+  address_family_evpn:
+    peer_groups:
+      - name: EVPN-OVERLAY-PEERS
+        activate: true
+    evpn_hostflap_detection:
+      enabled: true
+      window: 20
+      threshold: 20
+      expiry_timeout: 30
+  address_family_ipv4:
+    peer_groups:
+      - name: IPv4-UNDERLAY-PEERS
+        activate: true
+        next_hop:
+          address_family_ipv6:
+            enabled: true
+            originate: true
+      - name: EVPN-OVERLAY-PEERS
+        activate: false
+  address_family_ipv6:
+    peer_groups:
+      - name: IPv4-UNDERLAY-PEERS
+        activate: true
+  vrfs:
+    - name: CLIENTS
+      rd: 10.255.0.15:4
+      route_targets:
+        import:
+          - address_family: evpn
+            route_targets:
+              - '4:4'
+        export:
+          - address_family: evpn
+            route_targets:
+              - '4:4'
+      router_id: 10.255.13.15
+      redistribute:
+        connected:
+          enabled: true
+    - name: INET
+      rd: 10.255.0.15:2
+      route_targets:
+        import:
+          - address_family: evpn
+            route_targets:
+              - '2:2'
+        export:
+          - address_family: evpn
+            route_targets:
+              - '2:2'
+      router_id: 10.255.11.15
+      redistribute:
+        connected:
+          enabled: true
+    - name: LARS-CEPH
+      rd: 10.255.0.15:9
+      route_targets:
+        import:
+          - address_family: evpn
+            route_targets:
+              - '9:9'
+        export:
+          - address_family: evpn
+            route_targets:
+              - '9:9'
+      router_id: 10.255.18.15
+      redistribute:
+        connected:
+          enabled: true
+service_routing_protocols_model: multi-agent
+sflow:
+  sample: 16384
+  polling_interval: 10
+  vrfs:
+    - name: INET
+      destinations:
+        - destination: influx.tg26.tg.no
+      source_interface: Loopback42
+  destinations:
+    - destination: 127.0.0.1
+  source_interface: Loopback0
+  run: true
+snmp_server:
+  contact: TechNet
+  location: FABRIC d1-south
+  communities:
+    - name: SkulleBruktTelemetri
+      access: ro
+  ipv4_acls:
+    - name: mgmt_access
+      vrf: MGMT
+    - name: mgmt_access
+      vrf: INET
+  vrfs:
+    - name: INET
+      enable: true
+    - name: MGMT
+      enable: true
+spanning_tree:
+  mode: rstp
+  rstp_priority: 4096
+static_routes:
+  - vrf: MGMT
+    prefix: 0.0.0.0/0
+    next_hop: 185.110.148.65
+tacacs_servers:
+  hosts:
+    - host: 185.80.182.73
+      vrf: MGMT
+      key: <removed>
+  policy_unknown_mandatory_attribute_ignore: false
+transceiver_qsfp_default_mode_4x10: false
+virtual_source_nat_vrfs:
+  - name: CLIENTS
+    ip_address: 10.255.13.15
+    ipv6_address: 2a06:5841:e:104::f
+  - name: INET
+    ip_address: 10.255.11.15
+    ipv6_address: 2a06:5841:e:102::f
+  - name: LARS-CEPH
+    ip_address: 10.255.18.15
+    ipv6_address: 2a06:5841:e:109::f
+vlan_interfaces:
+  - name: Vlan6
+    description: fw-clients-linknet-1
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 185.110.148.4/31
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5841:f:102::1/64
+    ipv6_nd_ra_disabled: true
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: ipv6 nd prefix 2a06:5841:f:102::/64 no-autoconfig
+  - name: Vlan7
+    description: fw-clients-linknet-2
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 185.110.148.6/31
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5841:f:103::1/64
+    ipv6_nd_ra_disabled: true
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: ipv6 nd prefix 2a06:5841:f:103::/64 no-autoconfig
+  - name: Vlan18
+    description: noc-mostly
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.0.65/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:1::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd ra pref64 64:ff9b::/96
+
+      ipv6 nd ra dns-server 2a06:5841:f:300::226
+
+      ipv6 nd ra dns-server 2a06:5841:f:300::230
+
+      ipv6 nd ra dns-suffix tg26.tg.no'
+  - name: Vlan19
+    description: Lars-Server-MGMT
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.22.193/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:59::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:59::/64 no-autoconfig'
+  - name: Vlan100
+    description: d1-bird
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.128.1/25
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:a000::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:a000::/64 no-autoconfig'
+  - name: Vlan101
+    description: d1-media
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.128.129/25
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:a005::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:a005::/64 no-autoconfig'
+  - name: Vlan102
+    description: d1-log
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.129.1/25
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:a001::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:a001::/64 no-autoconfig'
+  - name: Vlan103
+    description: d1-noc
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.129.129/25
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:a002::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:a002::/64 no-autoconfig'
+  - name: Vlan104
+    description: a1-noc
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.130.1/25
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:a003::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:a003::/64 no-autoconfig'
+  - name: Vlan105
+    description: a1-resepsjon
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.130.129/25
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:a004::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:a004::/64 no-autoconfig'
+  - name: Vlan106
+    description: d2-stand
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.131.1/25
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:a006::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:a006::/64 no-autoconfig'
+  - name: Vlan107
+    description: d1-swing
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.131.129/25
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:a007::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:a007::/64 no-autoconfig'
+  - name: Vlan108
+    description: d1-floor
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.133.1/25
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:a008::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:a008::/64 no-autoconfig'
+  - name: Vlan109
+    description: a1-crew-care
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.133.129/25
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:a009::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:a009::/64 no-autoconfig'
+  - name: Vlan110
+    description: d2-floor
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.134.1/25
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:a00a::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:a00a::/64 no-autoconfig'
+  - name: Vlan111
+    description: d3-floor
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.134.129/25
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:a00b::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:a00b::/64 no-autoconfig'
+  - name: Vlan112
+    description: d4-floor
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.135.1/25
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:a00c::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:a00c::/64 no-autoconfig'
+  - name: Vlan113
+    description: d5-floor
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.135.129/25
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:a00d::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:a00d::/64 no-autoconfig'
+  - name: Vlan114
+    description: d1-north
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.136.1/25
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:a00e::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:a00e::/64 no-autoconfig'
+  - name: Vlan200
+    description: e1-crew
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.0.1/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e::/64 no-autoconfig'
+  - name: Vlan201
+    description: e1-achievements
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.22.1/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:57::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:57::/64 no-autoconfig'
+  - name: Vlan202
+    description: e1-noc
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.0.129/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:2::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:2::/64 no-autoconfig'
+  - name: Vlan203
+    description: e1-systemstotte
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.0.193/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:3::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:3::/64 no-autoconfig'
+  - name: Vlan204
+    description: e2-systemstotte
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.1.1/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:4::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:4::/64 no-autoconfig'
+  - name: Vlan205
+    description: e1-secbula
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.1.65/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:5::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:5::/64 no-autoconfig'
+  - name: Vlan206
+    description: e1-log
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.1.129/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:6::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:6::/64 no-autoconfig'
+  - name: Vlan207
+    description: e2-log
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.1.193/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:7::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:7::/64 no-autoconfig'
+  - name: Vlan208
+    description: e1-vip
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.2.1/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:8::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:8::/64 no-autoconfig'
+  - name: Vlan209
+    description: e1-taakeheimen
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.2.65/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:9::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:9::/64 no-autoconfig'
+  - name: Vlan210
+    description: e2-crew
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.2.129/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:a::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:a::/64 no-autoconfig'
+  - name: Vlan211
+    description: e1-expo
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.2.193/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:b::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:b::/64 no-autoconfig'
+  - name: Vlan212
+    description: e1-ombud
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.3.1/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:c::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:c::/64 no-autoconfig'
+  - name: Vlan213
+    description: e2-expo
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.3.65/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:d::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:d::/64 no-autoconfig'
+  - name: Vlan214
+    description: e1-foh
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.3.129/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:e::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:e::/64 no-autoconfig'
+  - name: Vlan215
+    description: e1-backstage
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.3.193/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:f::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:f::/64 no-autoconfig'
+  - name: Vlan216
+    description: e3-expo
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.4.1/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:10::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:10::/64 no-autoconfig'
+  - name: Vlan217
+    description: e2-backstage
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.4.65/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:502::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:502::/64 no-autoconfig'
+  - name: Vlan218
+    description: e4-expo
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.4.129/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:11::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:11::/64 no-autoconfig'
+  - name: Vlan219
+    description: e1-creative
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.4.193/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:12::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:12::/64 no-autoconfig'
+  - name: Vlan220
+    description: e3-backstage
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.5.1/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:13::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:13::/64 no-autoconfig'
+  - name: Vlan221
+    description: e1-medic
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.5.65/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:14::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:14::/64 no-autoconfig'
+  - name: Vlan222
+    description: e1-supportdesk
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.5.129/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:15::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:15::/64 no-autoconfig'
+  - name: Vlan223
+    description: e2-noc
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.5.193/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:16::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:16::/64 no-autoconfig'
+  - name: Vlan224
+    description: e39-2
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.6.1/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:17::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:17::/64 no-autoconfig'
+  - name: Vlan225
+    description: e15-2
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.6.65/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:18::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:18::/64 no-autoconfig'
+  - name: Vlan226
+    description: e1-1
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.6.129/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:19::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:19::/64 no-autoconfig'
+  - name: Vlan227
+    description: e1-2
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.6.193/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:1a::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:1a::/64 no-autoconfig'
+  - name: Vlan228
+    description: e3-1
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.7.1/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:1b::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:1b::/64 no-autoconfig'
+  - name: Vlan229
+    description: e3-2
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.7.65/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:1c::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:1c::/64 no-autoconfig'
+  - name: Vlan230
+    description: e5-1
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.7.129/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:1d::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:1d::/64 no-autoconfig'
+  - name: Vlan231
+    description: e5-2
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.7.193/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:1e::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:1e::/64 no-autoconfig'
+  - name: Vlan232
+    description: e7-1
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.8.1/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:1f::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:1f::/64 no-autoconfig'
+  - name: Vlan233
+    description: e7-2
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.8.65/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:20::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:20::/64 no-autoconfig'
+  - name: Vlan234
+    description: e9-1
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.8.129/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:21::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:21::/64 no-autoconfig'
+  - name: Vlan235
+    description: e9-2
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.8.193/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:22::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:22::/64 no-autoconfig'
+  - name: Vlan236
+    description: e11-1
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.9.1/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:23::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:23::/64 no-autoconfig'
+  - name: Vlan237
+    description: e11-2
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.9.65/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:24::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:24::/64 no-autoconfig'
+  - name: Vlan238
+    description: e13-1
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.9.129/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:25::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:25::/64 no-autoconfig'
+  - name: Vlan239
+    description: e13-2
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.9.193/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:26::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:26::/64 no-autoconfig'
+  - name: Vlan240
+    description: e15-1
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.10.1/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:27::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:27::/64 no-autoconfig'
+  - name: Vlan241
+    description: e17-1
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.10.65/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:28::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:28::/64 no-autoconfig'
+  - name: Vlan242
+    description: e17-2
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.10.129/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:29::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:29::/64 no-autoconfig'
+  - name: Vlan243
+    description: e17-3
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.10.193/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:2a::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:2a::/64 no-autoconfig'
+  - name: Vlan244
+    description: e17-4
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.11.1/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:2b::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:2b::/64 no-autoconfig'
+  - name: Vlan245
+    description: e19-1
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.11.65/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:2c::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:2c::/64 no-autoconfig'
+  - name: Vlan246
+    description: e19-2
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.11.129/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:2d::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:2d::/64 no-autoconfig'
+  - name: Vlan247
+    description: e19-3
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.11.193/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:2e::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:2e::/64 no-autoconfig'
+  - name: Vlan248
+    description: e19-4
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.12.1/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:2f::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:2f::/64 no-autoconfig'
+  - name: Vlan249
+    description: e21-1
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.12.65/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:30::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:30::/64 no-autoconfig'
+  - name: Vlan250
+    description: e21-2
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.12.129/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:31::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:31::/64 no-autoconfig'
+  - name: Vlan251
+    description: e21-3
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.12.193/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:32::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:32::/64 no-autoconfig'
+  - name: Vlan252
+    description: e21-4
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.13.1/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:33::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:33::/64 no-autoconfig'
+  - name: Vlan253
+    description: e23-1
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.13.65/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:34::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:34::/64 no-autoconfig'
+  - name: Vlan254
+    description: e23-2
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.13.129/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:35::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:35::/64 no-autoconfig'
+  - name: Vlan255
+    description: e23-3
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.13.193/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:36::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:36::/64 no-autoconfig'
+  - name: Vlan256
+    description: e23-4
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.14.1/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:37::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:37::/64 no-autoconfig'
+  - name: Vlan257
+    description: e25-1
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.14.65/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:38::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:38::/64 no-autoconfig'
+  - name: Vlan258
+    description: e25-2
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.14.129/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:39::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:39::/64 no-autoconfig'
+  - name: Vlan259
+    description: e25-3
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.14.193/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:3a::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:3a::/64 no-autoconfig'
+  - name: Vlan260
+    description: e25-4
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.15.1/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:3b::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:3b::/64 no-autoconfig'
+  - name: Vlan261
+    description: e27-1
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.15.65/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:3c::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:3c::/64 no-autoconfig'
+  - name: Vlan262
+    description: e27-2
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.15.129/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:3d::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:3d::/64 no-autoconfig'
+  - name: Vlan263
+    description: e27-3
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.15.193/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:3e::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:3e::/64 no-autoconfig'
+  - name: Vlan264
+    description: e27-4
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.16.1/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:3f::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:3f::/64 no-autoconfig'
+  - name: Vlan265
+    description: e29-1
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.16.65/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:40::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:40::/64 no-autoconfig'
+  - name: Vlan266
+    description: e29-2
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.16.129/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:41::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:41::/64 no-autoconfig'
+  - name: Vlan267
+    description: e29-3
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.16.193/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:42::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:42::/64 no-autoconfig'
+  - name: Vlan268
+    description: e29-4
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.17.1/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:43::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:43::/64 no-autoconfig'
+  - name: Vlan269
+    description: e31-1
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.17.65/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:44::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:44::/64 no-autoconfig'
+  - name: Vlan270
+    description: e31-2
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.17.129/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:45::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:45::/64 no-autoconfig'
+  - name: Vlan271
+    description: e31-3
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.17.193/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:46::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:46::/64 no-autoconfig'
+  - name: Vlan272
+    description: e31-4
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.18.1/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:47::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:47::/64 no-autoconfig'
+  - name: Vlan273
+    description: e33-1
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.18.65/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:48::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:48::/64 no-autoconfig'
+  - name: Vlan274
+    description: e33-2
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.18.129/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:49::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:49::/64 no-autoconfig'
+  - name: Vlan275
+    description: e33-3
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.18.193/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:4a::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:4a::/64 no-autoconfig'
+  - name: Vlan276
+    description: e33-4
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.19.1/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:4b::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:4b::/64 no-autoconfig'
+  - name: Vlan277
+    description: e35-1
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.19.65/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:4c::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:4c::/64 no-autoconfig'
+  - name: Vlan278
+    description: e35-2
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.19.129/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:4d::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:4d::/64 no-autoconfig'
+  - name: Vlan279
+    description: e35-3
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.19.193/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:4e::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:4e::/64 no-autoconfig'
+  - name: Vlan280
+    description: e35-4
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.20.1/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:4f::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:4f::/64 no-autoconfig'
+  - name: Vlan281
+    description: e37-1
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.20.65/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:50::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:50::/64 no-autoconfig'
+  - name: Vlan282
+    description: e37-2
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.20.129/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:51::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:51::/64 no-autoconfig'
+  - name: Vlan283
+    description: e37-3
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.20.193/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:52::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:52::/64 no-autoconfig'
+  - name: Vlan284
+    description: e37-4
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.21.1/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:53::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:53::/64 no-autoconfig'
+  - name: Vlan285
+    description: e39-1
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.21.65/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:54::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:54::/64 no-autoconfig'
+  - name: Vlan286
+    description: e39-3
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.21.129/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:55::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:55::/64 no-autoconfig'
+  - name: Vlan287
+    description: e39-4
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.21.193/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:56::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:56::/64 no-autoconfig'
+  - name: Vlan288
+    description: e1-bristol
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.22.129/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:5a::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:5a::/64 no-autoconfig'
+  - name: Vlan289
+    description: e5-expo
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.22.65/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:58::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:58::/64 no-autoconfig'
+  - name: Vlan300
+    description: creativia-vdi
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.132.1/25
+    ipv6_nd_ra_disabled: true
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+  - name: Vlan301
+    description: creative-closed
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.132.129/25
+    ipv6_nd_ra_disabled: true
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+  - name: Vlan667
+    description: ap-mgmt
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.101.1/24
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5841:f:3::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5841:f:3::/64 no-autoconfig'
+  - name: Vlan1337
+    description: WIFI-1337
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.112.1/24
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:1337::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd ra pref64 64:ff9b::/96
+
+      ipv6 nd ra dns-server 2a06:5841:f:300::226
+
+      ipv6 nd ra dns-server 2a06:5841:f:300::230
+
+      ipv6 nd ra dns-suffix tg26.tg.no'
+  - name: Vlan1338
+    description: WIFI-1338
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.113.1/24
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:1338::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd ra pref64 64:ff9b::/96
+
+      ipv6 nd ra dns-server 2a06:5841:f:300::226
+
+      ipv6 nd ra dns-server 2a06:5841:f:300::230
+
+      ipv6 nd ra dns-suffix tg26.tg.no'
+  - name: Vlan1339
+    description: WIFI-1339
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.114.1/24
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:1339::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd ra pref64 64:ff9b::/96
+
+      ipv6 nd ra dns-server 2a06:5841:f:300::226
+
+      ipv6 nd ra dns-server 2a06:5841:f:300::230
+
+      ipv6 nd ra dns-suffix tg26.tg.no'
+  - name: Vlan1340
+    description: WIFI-1340
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.115.1/24
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:1340::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd ra pref64 64:ff9b::/96
+
+      ipv6 nd ra dns-server 2a06:5841:f:300::226
+
+      ipv6 nd ra dns-server 2a06:5841:f:300::230
+
+      ipv6 nd ra dns-suffix tg26.tg.no'
+  - name: Vlan1341
+    description: WIFI-1341
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.116.1/24
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:1341::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd ra pref64 64:ff9b::/96
+
+      ipv6 nd ra dns-server 2a06:5841:f:300::226
+
+      ipv6 nd ra dns-server 2a06:5841:f:300::230
+
+      ipv6 nd ra dns-suffix tg26.tg.no'
+  - name: Vlan3306
+    description: WIFI-LEGACY
+    shutdown: false
+    vrf: CLIENTS
+    ip_address_virtual: 10.25.111.1/24
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:3306::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf CLIENTS local-interface Loopback13
+
+
+
+      ipv6 nd prefix 2a06:5844:e:3306::/64 no-autoconfig'
+  - name: Vlan4
+    description: fw-inet-linknet-1
+    shutdown: false
+    vrf: INET
+    ip_address_virtual: 185.110.148.0/31
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5841:f:100::1/64
+    ipv6_nd_ra_disabled: true
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: ipv6 nd prefix 2a06:5841:f:100::/64 no-autoconfig
+  - name: Vlan5
+    description: fw-inet-linknet-2
+    shutdown: false
+    vrf: INET
+    ip_address_virtual: 185.110.148.2/31
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5841:f:101::1/64
+    ipv6_nd_ra_disabled: true
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: ipv6 nd prefix 2a06:5841:f:101::/64 no-autoconfig
+  - name: Vlan10
+    description: juniper-mgmt
+    shutdown: false
+    vrf: INET
+    ip_address_virtual: 185.110.149.1/24
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5841:f::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf INET local-interface Loopback42
+
+
+      ipv6 nd prefix 2a06:5841:f::/64 no-autoconfig'
+  - name: Vlan12
+    description: tech-hypervisor
+    shutdown: false
+    vrf: INET
+    ip_address_virtual: 192.168.69.129/25
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:a008::1/64
+    ipv6_nd_ra_disabled: true
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: ipv6 nd prefix 2a06:5844:e:a008::/64 no-autoconfig
+  - name: Vlan13
+    description: tech-servers
+    shutdown: false
+    vrf: INET
+    ip_address_virtual: 185.110.148.225/27
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5841:f:300::1/64
+    ipv6_nd_ra_disabled: true
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: ipv6 nd prefix 2a06:5841:f:300::/64 no-autoconfig
+  - name: Vlan15
+    description: noc
+    shutdown: false
+    vrf: INET
+    ip_address_virtual: 185.110.148.129/26
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5841:f:301::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf INET local-interface Loopback42
+
+
+      ipv6 nd prefix 2a06:5841:f:301::/64 no-autoconfig'
+  - name: Vlan16
+    description: pve-management
+    shutdown: false
+    vrf: INET
+    ip_address_virtual: 185.110.148.193/28
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:a010::1/64
+    ipv6_nd_ra_disabled: true
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: ipv6 nd prefix 2a06:5844:e:a010::/64 no-autoconfig
+  - name: Vlan20
+    description: TG-hack
+    shutdown: false
+    vrf: INET
+    ip_address_virtual: 185.110.150.9/29
+    ipv6_nd_ra_disabled: true
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+  - name: Vlan22
+    description: pve-quorum
+    shutdown: false
+    vrf: INET
+    ip_address_virtual: 192.168.69.1/25
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:a009::1/64
+    ipv6_nd_ra_disabled: true
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: ipv6 nd prefix 2a06:5844:e:a009::/64 no-autoconfig
+  - name: Vlan31
+    description: minecraft-server
+    shutdown: false
+    vrf: INET
+    ip_address_virtual: 185.110.150.1/29
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5844:e:a007::1/64
+    ipv6_nd_ra_disabled: true
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: ipv6 nd prefix 2a06:5844:e:a007::/64 no-autoconfig
+  - name: Vlan50
+    description: LARS-Kube
+    shutdown: false
+    vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5841:f:210::1/64
+    ipv6_nd_ra_disabled: true
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: ipv6 nd prefix 2a06:5841:f:210::/64 no-autoconfig
+  - name: Vlan668
+    description: arista-inband-mgmt
+    shutdown: false
+    vrf: INET
+    ip_address_virtual: 185.110.148.209/28
+    ip_helpers:
+      - ip_helper: 185.110.148.231
+        source_interface: Loopback42
+        vrf: INET
+    ipv6_enable: true
+    ipv6_address_virtuals:
+      - 2a06:5841:f:2::1/64
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+    eos_cli: '
+
+      ipv6 nd managed-config-flag
+
+
+      ipv6 dhcp relay destination 2a06:5841:f:300::231 vrf INET local-interface Loopback42
+
+
+      ipv6 nd prefix 2a06:5841:f:2::/64 no-autoconfig'
+  - name: Vlan2222
+    description: dummy
+    shutdown: false
+    vrf: LARS-CEPH
+    ip_address_virtual: 10.0.0.1/24
+    ipv6_nd_ra_disabled: true
+    mtu: 1500
+    metadata:
+      tenants:
+        - TG26
+vlan_internal_order:
+  allocation: ascending
+  range:
+    beginning: 1006
+    ending: 1199
+vlans:
+  - id: 6
+    name: fw-clients-linknet-1
+    metadata:
+      tenants:
+        - TG26
+  - id: 7
+    name: fw-clients-linknet-2
+    metadata:
+      tenants:
+        - TG26
+  - id: 18
+    name: noc-mostly
+    metadata:
+      tenants:
+        - TG26
+  - id: 19
+    name: Lars-Server-MGMT
+    metadata:
+      tenants:
+        - TG26
+  - id: 100
+    name: d1-bird
+    metadata:
+      tenants:
+        - TG26
+  - id: 101
+    name: d1-media
+    metadata:
+      tenants:
+        - TG26
+  - id: 102
+    name: d1-log
+    metadata:
+      tenants:
+        - TG26
+  - id: 103
+    name: d1-noc
+    metadata:
+      tenants:
+        - TG26
+  - id: 104
+    name: a1-noc
+    metadata:
+      tenants:
+        - TG26
+  - id: 105
+    name: a1-resepsjon
+    metadata:
+      tenants:
+        - TG26
+  - id: 106
+    name: d2-stand
+    metadata:
+      tenants:
+        - TG26
+  - id: 107
+    name: d1-swing
+    metadata:
+      tenants:
+        - TG26
+  - id: 108
+    name: d1-floor
+    metadata:
+      tenants:
+        - TG26
+  - id: 109
+    name: a1-crew-care
+    metadata:
+      tenants:
+        - TG26
+  - id: 110
+    name: d2-floor
+    metadata:
+      tenants:
+        - TG26
+  - id: 111
+    name: d3-floor
+    metadata:
+      tenants:
+        - TG26
+  - id: 112
+    name: d4-floor
+    metadata:
+      tenants:
+        - TG26
+  - id: 113
+    name: d5-floor
+    metadata:
+      tenants:
+        - TG26
+  - id: 114
+    name: d1-north
+    metadata:
+      tenants:
+        - TG26
+  - id: 200
+    name: e1-crew
+    metadata:
+      tenants:
+        - TG26
+  - id: 201
+    name: e1-achievements
+    metadata:
+      tenants:
+        - TG26
+  - id: 202
+    name: e1-noc
+    metadata:
+      tenants:
+        - TG26
+  - id: 203
+    name: e1-systemstotte
+    metadata:
+      tenants:
+        - TG26
+  - id: 204
+    name: e2-systemstotte
+    metadata:
+      tenants:
+        - TG26
+  - id: 205
+    name: e1-secbula
+    metadata:
+      tenants:
+        - TG26
+  - id: 206
+    name: e1-log
+    metadata:
+      tenants:
+        - TG26
+  - id: 207
+    name: e2-log
+    metadata:
+      tenants:
+        - TG26
+  - id: 208
+    name: e1-vip
+    metadata:
+      tenants:
+        - TG26
+  - id: 209
+    name: e1-taakeheimen
+    metadata:
+      tenants:
+        - TG26
+  - id: 210
+    name: e2-crew
+    metadata:
+      tenants:
+        - TG26
+  - id: 211
+    name: e1-expo
+    metadata:
+      tenants:
+        - TG26
+  - id: 212
+    name: e1-ombud
+    metadata:
+      tenants:
+        - TG26
+  - id: 213
+    name: e2-expo
+    metadata:
+      tenants:
+        - TG26
+  - id: 214
+    name: e1-foh
+    metadata:
+      tenants:
+        - TG26
+  - id: 215
+    name: e1-backstage
+    metadata:
+      tenants:
+        - TG26
+  - id: 216
+    name: e3-expo
+    metadata:
+      tenants:
+        - TG26
+  - id: 217
+    name: e2-backstage
+    metadata:
+      tenants:
+        - TG26
+  - id: 218
+    name: e4-expo
+    metadata:
+      tenants:
+        - TG26
+  - id: 219
+    name: e1-creative
+    metadata:
+      tenants:
+        - TG26
+  - id: 220
+    name: e3-backstage
+    metadata:
+      tenants:
+        - TG26
+  - id: 221
+    name: e1-medic
+    metadata:
+      tenants:
+        - TG26
+  - id: 222
+    name: e1-supportdesk
+    metadata:
+      tenants:
+        - TG26
+  - id: 223
+    name: e2-noc
+    metadata:
+      tenants:
+        - TG26
+  - id: 224
+    name: e39-2
+    metadata:
+      tenants:
+        - TG26
+  - id: 225
+    name: e15-2
+    metadata:
+      tenants:
+        - TG26
+  - id: 226
+    name: e1-1
+    metadata:
+      tenants:
+        - TG26
+  - id: 227
+    name: e1-2
+    metadata:
+      tenants:
+        - TG26
+  - id: 228
+    name: e3-1
+    metadata:
+      tenants:
+        - TG26
+  - id: 229
+    name: e3-2
+    metadata:
+      tenants:
+        - TG26
+  - id: 230
+    name: e5-1
+    metadata:
+      tenants:
+        - TG26
+  - id: 231
+    name: e5-2
+    metadata:
+      tenants:
+        - TG26
+  - id: 232
+    name: e7-1
+    metadata:
+      tenants:
+        - TG26
+  - id: 233
+    name: e7-2
+    metadata:
+      tenants:
+        - TG26
+  - id: 234
+    name: e9-1
+    metadata:
+      tenants:
+        - TG26
+  - id: 235
+    name: e9-2
+    metadata:
+      tenants:
+        - TG26
+  - id: 236
+    name: e11-1
+    metadata:
+      tenants:
+        - TG26
+  - id: 237
+    name: e11-2
+    metadata:
+      tenants:
+        - TG26
+  - id: 238
+    name: e13-1
+    metadata:
+      tenants:
+        - TG26
+  - id: 239
+    name: e13-2
+    metadata:
+      tenants:
+        - TG26
+  - id: 240
+    name: e15-1
+    metadata:
+      tenants:
+        - TG26
+  - id: 241
+    name: e17-1
+    metadata:
+      tenants:
+        - TG26
+  - id: 242
+    name: e17-2
+    metadata:
+      tenants:
+        - TG26
+  - id: 243
+    name: e17-3
+    metadata:
+      tenants:
+        - TG26
+  - id: 244
+    name: e17-4
+    metadata:
+      tenants:
+        - TG26
+  - id: 245
+    name: e19-1
+    metadata:
+      tenants:
+        - TG26
+  - id: 246
+    name: e19-2
+    metadata:
+      tenants:
+        - TG26
+  - id: 247
+    name: e19-3
+    metadata:
+      tenants:
+        - TG26
+  - id: 248
+    name: e19-4
+    metadata:
+      tenants:
+        - TG26
+  - id: 249
+    name: e21-1
+    metadata:
+      tenants:
+        - TG26
+  - id: 250
+    name: e21-2
+    metadata:
+      tenants:
+        - TG26
+  - id: 251
+    name: e21-3
+    metadata:
+      tenants:
+        - TG26
+  - id: 252
+    name: e21-4
+    metadata:
+      tenants:
+        - TG26
+  - id: 253
+    name: e23-1
+    metadata:
+      tenants:
+        - TG26
+  - id: 254
+    name: e23-2
+    metadata:
+      tenants:
+        - TG26
+  - id: 255
+    name: e23-3
+    metadata:
+      tenants:
+        - TG26
+  - id: 256
+    name: e23-4
+    metadata:
+      tenants:
+        - TG26
+  - id: 257
+    name: e25-1
+    metadata:
+      tenants:
+        - TG26
+  - id: 258
+    name: e25-2
+    metadata:
+      tenants:
+        - TG26
+  - id: 259
+    name: e25-3
+    metadata:
+      tenants:
+        - TG26
+  - id: 260
+    name: e25-4
+    metadata:
+      tenants:
+        - TG26
+  - id: 261
+    name: e27-1
+    metadata:
+      tenants:
+        - TG26
+  - id: 262
+    name: e27-2
+    metadata:
+      tenants:
+        - TG26
+  - id: 263
+    name: e27-3
+    metadata:
+      tenants:
+        - TG26
+  - id: 264
+    name: e27-4
+    metadata:
+      tenants:
+        - TG26
+  - id: 265
+    name: e29-1
+    metadata:
+      tenants:
+        - TG26
+  - id: 266
+    name: e29-2
+    metadata:
+      tenants:
+        - TG26
+  - id: 267
+    name: e29-3
+    metadata:
+      tenants:
+        - TG26
+  - id: 268
+    name: e29-4
+    metadata:
+      tenants:
+        - TG26
+  - id: 269
+    name: e31-1
+    metadata:
+      tenants:
+        - TG26
+  - id: 270
+    name: e31-2
+    metadata:
+      tenants:
+        - TG26
+  - id: 271
+    name: e31-3
+    metadata:
+      tenants:
+        - TG26
+  - id: 272
+    name: e31-4
+    metadata:
+      tenants:
+        - TG26
+  - id: 273
+    name: e33-1
+    metadata:
+      tenants:
+        - TG26
+  - id: 274
+    name: e33-2
+    metadata:
+      tenants:
+        - TG26
+  - id: 275
+    name: e33-3
+    metadata:
+      tenants:
+        - TG26
+  - id: 276
+    name: e33-4
+    metadata:
+      tenants:
+        - TG26
+  - id: 277
+    name: e35-1
+    metadata:
+      tenants:
+        - TG26
+  - id: 278
+    name: e35-2
+    metadata:
+      tenants:
+        - TG26
+  - id: 279
+    name: e35-3
+    metadata:
+      tenants:
+        - TG26
+  - id: 280
+    name: e35-4
+    metadata:
+      tenants:
+        - TG26
+  - id: 281
+    name: e37-1
+    metadata:
+      tenants:
+        - TG26
+  - id: 282
+    name: e37-2
+    metadata:
+      tenants:
+        - TG26
+  - id: 283
+    name: e37-3
+    metadata:
+      tenants:
+        - TG26
+  - id: 284
+    name: e37-4
+    metadata:
+      tenants:
+        - TG26
+  - id: 285
+    name: e39-1
+    metadata:
+      tenants:
+        - TG26
+  - id: 286
+    name: e39-3
+    metadata:
+      tenants:
+        - TG26
+  - id: 287
+    name: e39-4
+    metadata:
+      tenants:
+        - TG26
+  - id: 288
+    name: e1-bristol
+    metadata:
+      tenants:
+        - TG26
+  - id: 289
+    name: e5-expo
+    metadata:
+      tenants:
+        - TG26
+  - id: 300
+    name: creativia-vdi
+    metadata:
+      tenants:
+        - TG26
+  - id: 301
+    name: creative-closed
+    metadata:
+      tenants:
+        - TG26
+  - id: 667
+    name: ap-mgmt
+    metadata:
+      tenants:
+        - TG26
+  - id: 1337
+    name: WIFI-1337
+    metadata:
+      tenants:
+        - TG26
+  - id: 1338
+    name: WIFI-1338
+    metadata:
+      tenants:
+        - TG26
+  - id: 1339
+    name: WIFI-1339
+    metadata:
+      tenants:
+        - TG26
+  - id: 1340
+    name: WIFI-1340
+    metadata:
+      tenants:
+        - TG26
+  - id: 1341
+    name: WIFI-1341
+    metadata:
+      tenants:
+        - TG26
+  - id: 3306
+    name: WIFI-LEGACY
+    metadata:
+      tenants:
+        - TG26
+  - id: 4
+    name: fw-inet-linknet-1
+    metadata:
+      tenants:
+        - TG26
+  - id: 5
+    name: fw-inet-linknet-2
+    metadata:
+      tenants:
+        - TG26
+  - id: 10
+    name: juniper-mgmt
+    metadata:
+      tenants:
+        - TG26
+  - id: 12
+    name: tech-hypervisor
+    metadata:
+      tenants:
+        - TG26
+  - id: 13
+    name: tech-servers
+    metadata:
+      tenants:
+        - TG26
+  - id: 15
+    name: noc
+    metadata:
+      tenants:
+        - TG26
+  - id: 16
+    name: pve-management
+    metadata:
+      tenants:
+        - TG26
+  - id: 20
+    name: TG-hack
+    metadata:
+      tenants:
+        - TG26
+  - id: 22
+    name: pve-quorum
+    metadata:
+      tenants:
+        - TG26
+  - id: 31
+    name: minecraft-server
+    metadata:
+      tenants:
+        - TG26
+  - id: 50
+    name: LARS-Kube
+    metadata:
+      tenants:
+        - TG26
+  - id: 668
+    name: arista-inband-mgmt
+    metadata:
+      tenants:
+        - TG26
+  - id: 2222
+    name: dummy
+    metadata:
+      tenants:
+        - TG26
+vrfs:
+  - name: MGMT
+    ip_routing: false
+    ipv6_routing: false
+  - name: CLIENTS
+    ip_routing: true
+    ipv6_routing: true
+    metadata:
+      tenants:
+        - TG26
+  - name: INET
+    ip_routing: true
+    ipv6_routing: true
+    metadata:
+      tenants:
+        - TG26
+  - name: LARS-CEPH
+    ip_routing: true
+    metadata:
+      tenants:
+        - TG26
+vxlan_interface:
+  vxlan1:
+    description: d1-south_VTEP
+    vxlan:
+      source_interface: Loopback1
+      udp_port: 4789
+      vlans:
+        - id: 6
+          vni: 10006
+        - id: 7
+          vni: 10007
+        - id: 18
+          vni: 10018
+        - id: 19
+          vni: 10019
+        - id: 100
+          vni: 10100
+        - id: 101
+          vni: 10101
+        - id: 102
+          vni: 10102
+        - id: 103
+          vni: 10103
+        - id: 104
+          vni: 10104
+        - id: 105
+          vni: 10105
+        - id: 106
+          vni: 10106
+        - id: 107
+          vni: 10107
+        - id: 108
+          vni: 10108
+        - id: 109
+          vni: 10109
+        - id: 110
+          vni: 10110
+        - id: 111
+          vni: 10111
+        - id: 112
+          vni: 10112
+        - id: 113
+          vni: 10113
+        - id: 114
+          vni: 10114
+        - id: 200
+          vni: 10200
+        - id: 201
+          vni: 10201
+        - id: 202
+          vni: 10202
+        - id: 203
+          vni: 10203
+        - id: 204
+          vni: 10204
+        - id: 205
+          vni: 10205
+        - id: 206
+          vni: 10206
+        - id: 207
+          vni: 10207
+        - id: 208
+          vni: 10208
+        - id: 209
+          vni: 10209
+        - id: 210
+          vni: 10210
+        - id: 211
+          vni: 10211
+        - id: 212
+          vni: 10212
+        - id: 213
+          vni: 10213
+        - id: 214
+          vni: 10214
+        - id: 215
+          vni: 10215
+        - id: 216
+          vni: 10216
+        - id: 217
+          vni: 10217
+        - id: 218
+          vni: 10218
+        - id: 219
+          vni: 10219
+        - id: 220
+          vni: 10220
+        - id: 221
+          vni: 10221
+        - id: 222
+          vni: 10222
+        - id: 223
+          vni: 10223
+        - id: 224
+          vni: 10224
+        - id: 225
+          vni: 10225
+        - id: 226
+          vni: 10226
+        - id: 227
+          vni: 10227
+        - id: 228
+          vni: 10228
+        - id: 229
+          vni: 10229
+        - id: 230
+          vni: 10230
+        - id: 231
+          vni: 10231
+        - id: 232
+          vni: 10232
+        - id: 233
+          vni: 10233
+        - id: 234
+          vni: 10234
+        - id: 235
+          vni: 10235
+        - id: 236
+          vni: 10236
+        - id: 237
+          vni: 10237
+        - id: 238
+          vni: 10238
+        - id: 239
+          vni: 10239
+        - id: 240
+          vni: 10240
+        - id: 241
+          vni: 10241
+        - id: 242
+          vni: 10242
+        - id: 243
+          vni: 10243
+        - id: 244
+          vni: 10244
+        - id: 245
+          vni: 10245
+        - id: 246
+          vni: 10246
+        - id: 247
+          vni: 10247
+        - id: 248
+          vni: 10248
+        - id: 249
+          vni: 10249
+        - id: 250
+          vni: 10250
+        - id: 251
+          vni: 10251
+        - id: 252
+          vni: 10252
+        - id: 253
+          vni: 10253
+        - id: 254
+          vni: 10254
+        - id: 255
+          vni: 10255
+        - id: 256
+          vni: 10256
+        - id: 257
+          vni: 10257
+        - id: 258
+          vni: 10258
+        - id: 259
+          vni: 10259
+        - id: 260
+          vni: 10260
+        - id: 261
+          vni: 10261
+        - id: 262
+          vni: 10262
+        - id: 263
+          vni: 10263
+        - id: 264
+          vni: 10264
+        - id: 265
+          vni: 10265
+        - id: 266
+          vni: 10266
+        - id: 267
+          vni: 10267
+        - id: 268
+          vni: 10268
+        - id: 269
+          vni: 10269
+        - id: 270
+          vni: 10270
+        - id: 271
+          vni: 10271
+        - id: 272
+          vni: 10272
+        - id: 273
+          vni: 10273
+        - id: 274
+          vni: 10274
+        - id: 275
+          vni: 10275
+        - id: 276
+          vni: 10276
+        - id: 277
+          vni: 10277
+        - id: 278
+          vni: 10278
+        - id: 279
+          vni: 10279
+        - id: 280
+          vni: 10280
+        - id: 281
+          vni: 10281
+        - id: 282
+          vni: 10282
+        - id: 283
+          vni: 10283
+        - id: 284
+          vni: 10284
+        - id: 285
+          vni: 10285
+        - id: 286
+          vni: 10286
+        - id: 287
+          vni: 10287
+        - id: 288
+          vni: 10288
+        - id: 289
+          vni: 10289
+        - id: 300
+          vni: 10300
+        - id: 301
+          vni: 10301
+        - id: 667
+          vni: 10667
+        - id: 1337
+          vni: 11337
+        - id: 1338
+          vni: 11338
+        - id: 1339
+          vni: 11339
+        - id: 1340
+          vni: 11340
+        - id: 1341
+          vni: 11341
+        - id: 3306
+          vni: 13306
+        - id: 4
+          vni: 10004
+        - id: 5
+          vni: 10005
+        - id: 10
+          vni: 10010
+        - id: 12
+          vni: 10012
+        - id: 13
+          vni: 10013
+        - id: 15
+          vni: 10015
+        - id: 16
+          vni: 10016
+        - id: 20
+          vni: 10020
+        - id: 22
+          vni: 10022
+        - id: 31
+          vni: 10031
+        - id: 50
+          vni: 10050
+        - id: 668
+          vni: 10668
+        - id: 2222
+          vni: 12222
+      vrfs:
+        - name: CLIENTS
+          vni: 4
+        - name: INET
+          vni: 2
+        - name: LARS-CEPH
+          vni: 9
+snmp_servers:
+  communities: []
