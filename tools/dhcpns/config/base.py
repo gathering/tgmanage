@@ -1,0 +1,29 @@
+from datetime import timedelta
+
+
+POSTGRESQL_HOOK = {
+    "library": "/usr/lib/x86_64-linux-gnu/kea/hooks/libdhcp_pgsql.so",
+    "parameters": {},
+}
+LEASE_API_HOOK =  {
+    "library": "/usr/lib/x86_64-linux-gnu/kea/hooks/libdhcp_lease_cmds.so",
+    "parameters": {}
+}
+SUBNET_CMDS_HOOK = {
+    "library": "/usr/lib/x86_64-linux-gnu/kea/hooks/libdhcp_subnet_cmds.so",
+    "parameters": {}
+}
+
+_DHCP_LEASE_VALID_LIFETIME = timedelta(hours=1)  # TODO: 4 timer (?)
+DHCP_LEASE = {
+    "rebind-timer": round(_DHCP_LEASE_VALID_LIFETIME.seconds * 0.875),
+    "renew-timer": round(_DHCP_LEASE_VALID_LIFETIME.seconds * 0.5),
+    "valid-lifetime": round(_DHCP_LEASE_VALID_LIFETIME.seconds),
+}
+
+FAP_VALID_LIFETIME = timedelta(minutes=15)
+FAP_LEASE = {
+    "rebind-timer": round(FAP_VALID_LIFETIME.seconds * 0.875),
+    "renew-timer": round(FAP_VALID_LIFETIME.seconds * 0.5),
+    "valid-lifetime": round(FAP_VALID_LIFETIME.seconds),
+}

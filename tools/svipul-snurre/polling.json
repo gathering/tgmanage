@@ -1,0 +1,38 @@
+{
+  "ports_oids": [
+    "ifAdminStatus",
+    "ifAlias",
+    "ifName",
+    "ifDescr",
+    "ifInDiscards",
+    "ifInErrors",
+    "ifInNUcastPkts",
+    "ifHCInOctets",
+    "ifInUcastPkts",
+    "ifInUnknownProtos",
+    "ifIndex",
+    "ifLastChange",
+    "ifMtu",
+    "ifOperStatus",
+    "ifOutDiscards",
+    "ifOutErrors",
+    "ifOutNUcastPkts",
+    "ifHCOutOctets",
+    "ifOutQLen",
+    "ifOutUcastPkts",
+    "ifPhysAddress",
+    "ifSpeed",
+    "ifHighSpeed",
+    "ifType"
+  ],
+  "system_oids": [
+    "sysUpTime.0",
+    "sysName.0",
+    "sysDescr.0",
+    "entPhysicalSerialNum.0",
+    "sysUpTime.0",
+    "sysName.0",
+    "sysDescr.0",
+    "entPhysicalSerialNum.0"
+  ]
+}
