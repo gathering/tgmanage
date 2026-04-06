@@ -10,7 +10,7 @@ based on the output from [../../planning](../../planning).
 for line in (bat patchlist.txt); set name (echo $line | awk '{print $1}'); set upstream (echo $line | awk '{print $2}'); set links (echo $line | awk '{print $3 "," $4 "," $5}'); curl -v -H "Authorization: Token $NETBOX_TOKEN" -H "content-type: application/json" https://netbox.tg26.tg.no/api/extras/scripts/create-switch.CreateSwitch/ --data '{"data": {"switch_name": "'$name'", "device_type": "EX2200-48T-4G", "device_role": "Access switch", "uplink_type": "", "destination_device_a": "'$upstream'", "destination_device_b": "", "destination_interfaces": "'$links'", "trigger_awx_playbook": false}, "commit": true}'; end
 ```
 
-Netbox was also used, via the [https://github.com/gathering/tg-netbox](tg-netbox repo).
+Netbox was also used, via the [tg-netbox repo](https://github.com/gathering/tg-netbox).
 
-AVD/CVP was configured via the private repo [https://github.com/gathering/tg25-arista-avd](arista-avd),
+AVD/CVP was configured via the private repo [arista-avd](https://github.com/gathering/tg25-arista-avd),
 based on Arista's example: [https://github.com/aristanetworks/avd](https://github.com/aristanetworks/avd).
